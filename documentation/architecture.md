@@ -19,8 +19,8 @@ page per entry point, and Three.js vendored locally.
 </script>
 ```
 
-Everything else is a relative import. Three.js is vendored rather than pulled from a CDN so the
-demo works offline and the version cannot drift under the game.
+Everything else is a relative import. Three.js is vendored, not pulled from a CDN, so the demo
+works offline and the version cannot drift under the game.
 
 ## Module map
 
