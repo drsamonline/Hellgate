@@ -5,12 +5,12 @@
 **A Doom-style 2.5D arena shooter that runs in a browser tab.**
 Sector maps generated from a seed string · three weapons · two enemy types · **zero external assets**.
 
-[![Play the demo](https://img.shields.io/badge/▶_play-live_demo-ff3b30?style=for-the-badge)](https://drsamonline.github.io/hellgate/play/)
+[![Play the demo](https://img.shields.io/badge/▶_play-live_demo-ff3b30?style=for-the-badge)](https://drsamonline.github.io/Hellgate/play/)
 [![Read the docs](https://img.shields.io/badge/docs-read-ffb454?style=for-the-badge&logo=readthedocs&logoColor=white)](documentation/architecture.md)
 [![Roadmap](https://img.shields.io/badge/roadmap-63_items-39ff9a?style=for-the-badge)](ENHANCEMENTS.md)
 
-[![License](https://img.shields.io/github/license/drsamonline/hellgate?style=flat-square&color=3da639)](LICENSE)
-[![Tests](https://img.shields.io/github/actions/workflow/status/drsamonline/hellgate/test.yml?style=flat-square&label=tests)](../../actions/workflows/test.yml)
+[![License](https://img.shields.io/github/license/drsamonline/Hellgate?style=flat-square&color=3da639)](LICENSE)
+[![Tests](https://img.shields.io/github/actions/workflow/status/drsamonline/Hellgate/test.yml?style=flat-square&label=tests)](../../actions/workflows/test.yml)
 [![Three.js](https://img.shields.io/badge/three.js-r187-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
 [![Assets](https://img.shields.io/badge/external_assets-0-c0392b?style=flat-square)](documentation/architecture.md#no-assets)
 [![Bundle](https://img.shields.io/badge/build_step-none-8d7f6c?style=flat-square)](#no-build-step)
@@ -31,7 +31,7 @@ Every sound is a WebAudio oscillator or noise burst. The level is a 40×40 grid 
 from whatever you type into the seed box.
 
 ```bash
-git clone https://github.com/drsamonline/hellgate.git
+git clone https://github.com/drsamonline/Hellgate.git
 cd hellgate
 python3 -m http.server 8000   # any static server
 # → http://localhost:8000        landing page
@@ -42,7 +42,7 @@ No `npm install`, no bundler, no build step. Three.js is vendored in `play/vendo
 
 ## Play
 
-**[▶ Live demo](https://drsamonline.github.io/hellgate/play/)** — served straight from this repo by GitHub Pages.
+**[▶ Live demo](https://drsamonline.github.io/Hellgate/play/)** — served straight from this repo by GitHub Pages.
 
 | Input | Action | Input | Action |
 | --- | --- | --- | --- |

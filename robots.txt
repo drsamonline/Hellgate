@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://drsamonline.github.io/hellgate/sitemap.xml
+Sitemap: https://drsamonline.github.io/Hellgate/sitemap.xml

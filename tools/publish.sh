@@ -2,10 +2,10 @@
 # Finish the GitHub setup in one shot: description, topics, homepage, Pages.
 # Run this after the empty repo exists and you have pushed main.
 #
-#   bash tools/publish.sh drsamonline/hellgate
+#   bash tools/publish.sh drsamonline/Hellgate
 set -euo pipefail
 
-REPO="${1:-drsamonline/hellgate}"
+REPO="${1:-drsamonline/Hellgate}"
 OWNER="${REPO%%/*}"
 NAME="${REPO##*/}"
 PAGES_URL="https://${OWNER}.github.io/${NAME}/"
