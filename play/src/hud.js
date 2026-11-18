@@ -23,6 +23,9 @@ export class HUD {
     this.elEnergy = document.getElementById('energy');
     this.elSlots = document.getElementById('powerSlots');
     this.elRelics = document.getElementById('relics');
+    this.elBoss = document.getElementById('bossbar');
+    this.elBossFill = document.getElementById('bossfill');
+    this.elBossName = document.getElementById('bossname');
     this.slotSig = '';
     this.slotEls = [];
     this.elKey = document.getElementById('keycard');
@@ -71,6 +74,18 @@ export class HUD {
       this.elWeapon.textContent = wname;
       this.lastWeapon = wname;
     }
+    // ---- boss bar --------------------------------------------------------
+    if (this.elBoss) {
+      const boss = state && state.boss;
+      if (boss) {
+        this.elBoss.classList.add('on');
+        this.elBossName.textContent = boss.T.label || 'BOSS';
+        this.elBossFill.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100).toFixed(1) + '%';
+      } else {
+        this.elBoss.classList.remove('on');
+      }
+    }
+
     // ---- powers: energy bar and three slots ------------------------------
     if (state && state.powers) {
       const pw = state.powers;

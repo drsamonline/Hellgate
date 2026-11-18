@@ -144,6 +144,17 @@ ok('animals present', sys.animals >= 0, String(sys.animals));
 ok('companion is active', sys.companion);
 ok('zone relics placed', sys.relics > 0, String(sys.relics));
 
+// the boss wave: one warden, a health bar, and a bigger silhouette
+const bossOk = await page.evaluate(() => {
+  const HG = window.HG;
+  HG.enemies.clear();
+  HG.enemies.spawnWave(3, HG.player.pos, { boss: true, waves: 3 });
+  const b = HG.enemies.list.find((e) => e.T && e.T.boss);
+  return { found: !!b, hp: b ? b.maxHp : 0, bar: !!document.getElementById('bossbar') };
+});
+ok('the boss wave spawns a warden', bossOk.found, JSON.stringify(bossOk));
+ok('the boss bar element exists', bossOk.bar);
+
 // a power fires and spends energy
 const cast = await page.evaluate(() => {
   const HG = window.HG;

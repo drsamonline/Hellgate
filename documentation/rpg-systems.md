@@ -51,7 +51,7 @@ Five arenas, unlocked in order. A zone is a seed, a palette and an objective:
 | 2 | The Foundry | `foundry-7` | tech, industrial | 18 rocks, 8 grass, 1 animal | Clear the foundry |
 | 3 | The Grove | `grove-3` | brick, green | 26 trees, 60 grass, 8 animals | Clear the grove |
 | 4 | The Vault | `vault-11` | tech, violet | 14 rocks | Clear the vault |
-| 5 | The Throne | `throne-0` | brick, red | 8 trees, 20 rocks, 2 animals | Kill the warden (4 waves) |
+| 5 | The Throne | `throne-0` | brick, red | 8 trees, 20 rocks, 2 animals | Kill the warden (4 waves, the last one is the boss) |
 
 The zone overrides every cell's wall and floor texture after generation, and sets the fog, ambient and
 hemisphere colours, so one generator produces five looks. Progress — which zones are cleared, and the
@@ -82,6 +82,7 @@ uses, so nothing downstream knows the difference.
 ## What this is not
 
 - No dialogue, no NPCs to talk to, no branching.
+- One boss, two attacks, no phases. It is a fight, not an encounter design.
 - No inventory: powers are fixed per class, pickups are ammo and health only.
 - No saving mid-run. Progress is per zone, not per step.
 - The zones are separate arenas, not one continuous world. "Open" means unlocked, not seamless.

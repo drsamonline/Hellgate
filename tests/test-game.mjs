@@ -203,6 +203,31 @@ ok(hounds.length > 0, `wave 4 brings hounds (${hounds.length} of ${HG.enemies.li
 ok(hounds.every((h) => h.T.melee === true && h.T.attackRange <= 3), 'hounds are melee only');
 ok(hounds[0].speed > HG.enemies.list.find((e) => e.type === 'imp').speed, 'hounds are faster than imps');
 
+console.log('\n== the warden (boss) ==');
+HG.enemies.clear();
+HG.enemies.spawnWave(3, HG.player.pos, { boss: true, waves: 3 });
+const boss = HG.enemies.list.find((e) => e.T && e.T.boss);
+ok(!!boss, 'the boss wave spawns a warden');
+ok(boss && boss.type === 'warden', 'it is the warden type');
+ok(boss && boss.maxHp > 300, 'it has boss-sized health: ' + (boss && boss.maxHp));
+ok(HG.enemies.boss === boss, 'the manager exposes the live boss');
+ok(boss && boss.height > 2.5, 'it is taller than the other enemies');
+frames(3);
+ok(HG.hud.elBoss.classList.contains('on'), 'the boss bar shows');
+ok(HG.hud.elBossName.textContent === 'WARDEN', 'the boss bar names it');
+const frac = parseFloat(HG.hud.elBossFill.style.width);
+ok(frac > 0 && frac <= 100, 'the boss bar has a fill: ' + frac + '%');
+boss.hurt(99999, { level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, onKill: () => HG.game.kills++ }, { x: 0, y: 0, z: 1 });
+frames(3);
+ok(!HG.hud.elBoss.classList.contains('on'), 'the boss bar hides when it dies');
+
+console.log('\n== prop LOD ==');
+ok(HG.props && HG.props.grassMesh, 'the level has a grass mesh');
+HG.props.setQuality(0);
+ok(HG.props.grassMesh.visible === false, 'low quality hides the grass');
+HG.props.setQuality(1);
+ok(HG.props.grassMesh.visible === true, 'high quality restores it');
+
 console.log('\n== score and timer (roadmap 26) ==');
 HG.enemies.clear();
 HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);

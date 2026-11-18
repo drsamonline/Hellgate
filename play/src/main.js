@@ -144,6 +144,9 @@ function adaptResolution(dt) {
   if (Math.abs(r - perf.ratio) > 0.001) {
     perf.ratio = r;
     renderer.setPixelRatio(r);
+    // grass is the first thing to go when the machine is struggling: it is the
+    // cheapest visual and the most instances
+    if (props) props.setQuality(r >= 1.0 ? 1 : 0);
   }
 }
 
@@ -350,7 +353,7 @@ function startWave(n) {
 
   clearPickups();
   enemies.clear(); // defensive: a wave always starts from an empty arena
-  enemies.spawnWave(n, player.pos);
+  enemies.spawnWave(n, player.pos, { boss: !!zone.boss, waves: game.wavesTarget });
   spawnPickups(n);
   if (n >= 3) spawnKeycard();
 
@@ -962,6 +965,7 @@ function update(dt) {
     relics: game.relicsTotal - game.relics.length,
     relicsTotal: game.relicsTotal,
     sideDone: game.sideDone,
+    boss: enemies.boss,
     exitOpen: game.exitOpen,
     exit: level.exit,
     camera,

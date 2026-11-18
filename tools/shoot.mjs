@@ -158,6 +158,29 @@ const SHOTS = [
     settleAfter: 600,
   },
   {
+    // the warden, last wave of the last zone
+    name: 'boss',
+    url: '/play/?auto=1&zone=throne&wave=4',
+    settle: 1500,
+    before: `(() => { ${HELPERS}
+      const HGx = window.HG;
+      HGx.enemies.clear();
+      HGx.enemies.spawnWave(4, HGx.player.pos, { boss: true, waves: 4 });
+      const b = HGx.enemies.list.find((e) => e.T && e.T.boss);
+      if (!b) return null;
+      const r = pickRoom(6, 6);
+      put(r.cx * 2, (r.z + r.h - 1.2) * 2, 0, 4);
+      b.pos.set(HGx.player.pos.x, 0, HGx.player.pos.z - 7);
+      b.pos.y = HGx.level.cells[HGx.level.idx(Math.round(b.pos.x/2), Math.round(b.pos.z/2))].floor;
+      b.mesh.position.set(b.pos.x, b.pos.y, b.pos.z);
+      HGx.player.health = 88; HGx.player.armor = 40;
+      HGx.weapons.select(2, true);
+      HGx.game.score = 4200;
+      HGx.hud.toast('');
+    })()`,
+    settleAfter: 700,
+  },
+  {
     // wide room, wave closing in: the README hero
     name: 'arena',
     url: '/play/?auto=1&seed=hellgate&wave=3',

@@ -16,6 +16,7 @@ export class Props {
     this.level = level;
     this.group = new THREE.Group();
     this.meshes = [];
+    this.grassMesh = null;
     this.animals = [];
     this.rng = makeRng(level.seed + ':props');
     this.t = 0;
@@ -144,6 +145,12 @@ export class Props {
       tufts.setMatrixAt(i, dummy.matrix);
     });
     tufts.instanceMatrix.needsUpdate = true;
+    this.grassMesh = tufts;
+  }
+
+  // 0 hides the grass, 1 restores it. Called when the pixel ratio drops.
+  setQuality(level) {
+    if (this.grassMesh) this.grassMesh.visible = level > 0;
   }
 
   buildAnimals(count) {

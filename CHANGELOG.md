@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.4.0 — 2026-11-19
+
+**The warden**
+- a real boss for the last zone: 620 hp, 3 m tall, a glowing chest core and a health bar across the
+  top of the screen. Roadmap item 22.
+- two alternating attacks: a ground slam that hits everything within 5 m, and a three-ball fireball
+  spread. Both telegraphed for 0.7 s.
+- spawns on the final wave of The Throne alongside three trash enemies
+
+**Performance**
+- prop LOD: the grass mesh hides itself when the adaptive resolution drops below a 1.0 pixel ratio,
+  because grass is the cheapest visual and the most instances
+
+**Tests**
+- 12 new assertions: the warden spawns, its health, the manager's boss accessor, the health bar
+  showing, naming and hiding, and the grass LOD switch
+
+
 ## 1.3.0 — 2026-11-19
 
 The RPG pass: classes, powers, a companion, five zones, a cold open and touch controls.

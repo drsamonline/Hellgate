@@ -14,6 +14,12 @@ const TYPES = {
     attackRange: 14, attackCd: 2.1, telegraph: 0.55, damage: 15,
     melee: false, sight: 22, color: 0x8a3524, label: 'IMP',
   },
+  warden: {
+    hp: 620, speed: 1.9, radius: 1.05, height: 3.0, hitRadius: 1.45,
+    attackRange: 20, attackCd: 2.3, telegraph: 0.7, damage: 18,
+    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN',
+    boss: true,
+  },
   hound: {
     hp: 22, speed: 4.4, radius: 0.36, height: 1.05, hitRadius: 0.45,
     attackRange: 2.4, attackCd: 0.9, telegraph: 0.25, damage: 9,
@@ -69,6 +75,10 @@ function mats() {
     houndBody: body(0x6d1a52),
     houndDark: body(0x3d0f2e),
     houndEye: plain(0xff4fd8, true),
+    wardenBody: body(0x5e1420),
+    wardenDark: body(0x320a12),
+    wardenEye: plain(0xffb454, true),
+    wardenGlow: plain(0xff3b30, true),
   };
   return MATS;
 }
@@ -132,6 +142,27 @@ function makeGrunt() {
   return { group: g, parts: { armL, armR: gun, legL, legR } };
 }
 
+function makeWarden() {
+  const M = mats();
+  const g = new THREE.Group();
+  // twice the height of an imp, and read as a silhouette from across a room
+  g.add(box(1.5, 1.5, 1.0, M.wardenBody, 0, 1.7, 0));
+  g.add(box(1.7, 0.35, 1.1, M.wardenDark, 0, 2.5, 0)); // shoulder plate
+  g.add(box(0.7, 0.6, 0.6, M.wardenDark, 0, 2.95, 0.06));
+  g.add(box(0.16, 0.12, 0.06, M.wardenEye, -0.18, 3.0, 0.36));
+  g.add(box(0.16, 0.12, 0.06, M.wardenEye, 0.18, 3.0, 0.36));
+  // a furnace in the chest
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), M.wardenGlow);
+  core.position.set(0, 1.75, 0.52);
+  g.add(core);
+  const armL = limb(0.34, 1.5, 0.34, M.wardenBody, -0.95, 2.35, 0, 0.62);
+  const armR = limb(0.34, 1.5, 0.34, M.wardenBody, 0.95, 2.35, 0, 0.62);
+  const legL = limb(0.42, 1.0, 0.42, M.wardenDark, -0.38, 1.0, 0, 0.5);
+  const legR = limb(0.42, 1.0, 0.42, M.wardenDark, 0.38, 1.0, 0, 0.5);
+  g.add(armL, armR, legL, legR);
+  return { group: g, parts: { armL, armR, legL, legR } };
+}
+
 function makeHound() {
   const M = mats();
   const g = new THREE.Group();
@@ -159,7 +190,10 @@ export class Enemy {
     this.T = T;
     this.scene = scene;
 
-    const built = typeName === 'imp' ? makeImp() : typeName === 'hound' ? makeHound() : makeGrunt();
+    const built = typeName === 'imp' ? makeImp()
+      : typeName === 'hound' ? makeHound()
+      : typeName === 'warden' ? makeWarden()
+      : makeGrunt();
     this.mesh = built.group;
     this.parts = built.parts;
 
@@ -338,6 +372,35 @@ export class Enemy {
 
   doAttack(ctx, dist, dx, dz, canSee, playerEye) {
     const { player, projectiles, audio } = ctx;
+
+    if (this.T.boss) {
+      // alternate a ground slam with a three-ball volley
+      this.attackMode = this.attackMode === 'slam' ? 'volley' : 'slam';
+      const from = this.chestPos();
+      if (this.attackMode === 'slam') {
+        const reach = this.T.meleeRange + 1.6;
+        if (dist <= reach) {
+          player.damage(this.T.meleeDamage, from);
+          ctx.effects.addShake(0.8);
+        }
+        ctx.effects.explosion({ x: this.pos.x, y: this.pos.y + 0.2, z: this.pos.z }, 1.3);
+        audio.play('boom', from);
+      } else {
+        for (let i = -1; i <= 1; i++) {
+          const dir = new THREE.Vector3(playerEye.x - from.x, playerEye.y - from.y, playerEye.z - from.z).normalize();
+          dir.x += i * 0.11;
+          dir.y += i * 0.02;
+          dir.normalize();
+          projectiles.spawn('fireball', new THREE.Vector3(from.x, from.y + 0.4, from.z), dir, {
+            damage: this.damage,
+            owner: 'enemy',
+          });
+        }
+        audio.play('fireball', from);
+      }
+      return;
+    }
+
     if (this.type === 'imp') {
       if (!canSee) return;
       const from = this.chestPos();
@@ -480,9 +543,11 @@ export class EnemyManager {
     this.list.length = 0;
   }
 
-  spawnWave(wave, playerPos) {
+  spawnWave(wave, playerPos, opts = {}) {
     const diff = this.diff || { hp: 1, dmg: 1, count: 1 };
-    const count = Math.max(2, Math.min(30, Math.round((4 + wave * 2) * diff.count)));
+    const bossWave = !!opts.boss && wave >= (opts.waves || 3);
+    const base = bossWave ? 3 : 4 + wave * 2;
+    const count = Math.max(2, Math.min(30, Math.round(base * diff.count)));
     const cells = this.level.openCells.filter((c) => {
       if (c.room < 0) return false;
       if (c.x === this.level.exit.cx && c.z === this.level.exit.cz) return false;
@@ -504,6 +569,20 @@ export class EnemyManager {
       this.list.push(e);
       this.effects.burst({ x: pos.x, y: e.pos.y + 0.8, z: pos.z }, 0xff3311, 10, 3, 0.5, 2);
     }
+
+    if (bossWave) {
+      const c = pool[Math.floor(Math.random() * pool.length)];
+      const pos = new THREE.Vector3(c.wx, 0, c.wz);
+      const boss = new Enemy('warden', pos, wave, this.scene, { diff });
+      boss.pos.y = floorHeightAt(this.level, pos.x, pos.z);
+      boss.mesh.position.y = boss.pos.y;
+      this.list.push(boss);
+      this.effects.burst({ x: pos.x, y: boss.pos.y + 1.5, z: pos.z }, 0xff3b30, 30, 6, 0.9, 3);
+    }
+  }
+
+  get boss() {
+    return this.list.find((e) => e.alive && e.T.boss) || null;
   }
 
   update(dt, player, projectiles) {

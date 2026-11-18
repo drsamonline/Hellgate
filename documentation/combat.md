@@ -69,16 +69,20 @@ One FSM, two parameter sets (`TYPES` in `enemies.js`).
                            └────────┘
 ```
 
-| | Imp | Grunt | Hound |
-| --- | --- | --- | --- |
-| Health | 55 (scales +10 %/wave) | 40 | 22 |
-| Speed | 2.5 | 3.3 | 4.4 |
-| Attack | fireball, 15 dmg, 13 u/s | hitscan 8 dmg, melee 12 | melee 11 |
-| Range | 14 | 16 ranged, 2.4 melee | 1.9 melee |
-| Telegraph | 0.55 s, charging particles at the chest | 0.40 s | 0.25 s |
-| Cooldown | 2.1 s | 1.4 s | 0.9 s |
-| Sight | 22 | 24 | 26 |
-| From wave | 1 | 2 | 4 |
+| | Imp | Grunt | Hound | Warden (boss) |
+| --- | --- | --- | --- | --- |
+| Health | 55 (scales +10 %/wave) | 40 | 22 | 620 |
+| Speed | 2.5 | 3.3 | 4.4 | 1.9 |
+| Attack | fireball, 15 dmg, 13 u/s | hitscan 8 dmg, melee 12 | melee 11 | slam 26 in 5 m, or 3 fireballs |
+| Range | 14 | 16 ranged, 2.4 melee | 1.9 melee | 3.4 melee, 20 ranged |
+| Telegraph | 0.55 s, charging particles at the chest | 0.40 s | 0.25 s | 0.70 s |
+| Cooldown | 2.1 s | 1.4 s | 0.9 s | 2.3 s |
+| Sight | 22 | 24 | 26 | 32 |
+| From wave | 1 | 2 | 4 | final wave of The Throne |
+
+The warden alternates its two attacks: a ground slam that hits anything within 5 m and lights the room,
+then a three-ball fireball spread. It is 3 m tall with a glowing chest core, so it reads as the boss
+before its health bar appears.
 
 - **Telegraph.** During the windup an imp emits particles and pulses; a grunt raises its gun. Both are
   the player's cue to break line of sight. The shot fires once, at the end of the windup.
