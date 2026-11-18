@@ -10,7 +10,7 @@ Sector maps generated from a seed string · three weapons · two enemy types · 
 [![Roadmap](https://img.shields.io/badge/roadmap-63_items-39ff9a?style=for-the-badge)](ENHANCEMENTS.md)
 
 [![License](https://img.shields.io/github/license/drsamonline/hellgate?style=flat-square&color=3da639)](LICENSE)
-[![Tests](https://img.shields.io/github/actions/workflow/status/drsamonline/hellgate/tests.yml?style=flat-square&label=tests)](../../actions/workflows/tests.yml)
+[![Tests](https://img.shields.io/github/actions/workflow/status/drsamonline/hellgate/test.yml?style=flat-square&label=tests)](../../actions/workflows/test.yml)
 [![Three.js](https://img.shields.io/badge/three.js-r187-000000?style=flat-square&logo=three.js&logoColor=white)](https://threejs.org)
 [![Assets](https://img.shields.io/badge/external_assets-0-c0392b?style=flat-square)](documentation/architecture.md#no-assets)
 [![Bundle](https://img.shields.io/badge/build_step-none-8d7f6c?style=flat-square)](#no-build-step)
@@ -96,6 +96,7 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 ```
 index.html            landing page (GitHub Pages root)
 play/index.html       the game: markup, HUD, screens, CSS, import map
+play/src/main.js      boot, input, state machine, wave flow, render loop
 play/src/level.js     LEVEL GEN + collision + wall raycast — no Three.js, unit-testable
 play/src/levelmesh.js sector grid → five merged BufferGeometries
 play/src/textures.js  canvas-painted textures and materials
@@ -127,6 +128,13 @@ bash tests/run.sh
 | `test-geometry.mjs` | every merged triangle's winding matches its normal **and** its normal points into open space — catches inverted faces, which logic tests cannot see |
 | `test-game.mjs` | boots, walks, looks, fires all three weapons, kills, takes damage, clears a wave, opens the exit, advances, checks the keycard gate, dies, restarts, pauses, then 2000 frames of random input without a crash |
 
+Two gates sit on top of the suites:
+
+| Gate | What it proves |
+| --- | --- |
+| `node tools/check-claims.js` | every number in this README matches the thing that produces it: roadmap count, suite count, module count, lines of code, licence, version, sponsor links |
+| `node tools/smoke.mjs` | the real pages load in headless Chromium: import map resolves, images decode, internal links return 200, the game boots, starts a run and honours the URL hooks, with no console errors |
+
 The suites run against a stub of the DOM and of Three.js so they need no browser and no network.
 They also pass unmodified against the real library (`three@0.187`, with only `WebGLRenderer` faked) —
 which is how the game was checked against the current release rather than against a mock.
@@ -148,29 +156,25 @@ fog from 9 to 32 units, and frustum culling on enemies. Each enemy is ~12 small 
 room of 24 is a few hundred calls — fine on a desktop GPU. Press `` ` `` in game to see the truth for
 your machine.
 
-## Sponsors
+## Support
 
-HELLGATE is MIT-licensed, has no ads, no telemetry and no paid tier. It is a few thousand lines of
-code and it will stay free. If it saved you an afternoon, or you want the roadmap to move faster:
+| | |
+| --- | --- |
+| GitHub Sponsors | [github.com/sponsors/drsamonline](https://github.com/sponsors/drsamonline) |
+| Ko-fi | [ko-fi.com/matneo](https://ko-fi.com/matneo) |
+| PayPal | [paypal.me/drsohilmomin](https://paypal.me/drsohilmomin?locale.x=en_GB&country.x=IN) |
+| My books | [Amazon author store](https://www.amazon.com/stores/author/B08ZT331LY/allbooks) |
+| More apps | [drsamonline.github.io](https://drsamonline.github.io/) |
+| Email | [sohilmomin2000@gmail.com](mailto:sohilmomin2000@gmail.com) |
 
-<a href="https://github.com/sponsors/drsamonline"><img src="https://img.shields.io/badge/❤_sponsor-ff69b4?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="Sponsor" /></a>
+Nothing is gated behind it: no accounts, no tracking, no network requests. HELLGATE is MIT-licensed
+and always will be — the support links pay for the hours that go into
+[the roadmap](ENHANCEMENTS.md), not for access to anything.
 
-| Tier | | Perks |
-| --- | --- | --- |
-| **Supporter** | $3 / mo | Your name in `SPONSORS.md`, early access to new seeds and builds |
-| **Studio** | $25 / mo | Logo in this README and on the landing page, priority on issues |
-| **Partner** | $100 / mo | Logo above the fold, a named feature from the roadmap, a call to walk through the engine |
+## Security and privacy
 
-<!-- Sponsors appear here. Send a logo (SVG, ~24px tall) and a link. -->
-<table>
-  <tr>
-    <td align="center" width="33%"><sub><b>YOUR LOGO HERE</b><br/>Studio tier</sub></td>
-    <td align="center" width="33%"><sub><b>YOUR LOGO HERE</b><br/>Studio tier</sub></td>
-    <td align="center" width="33%"><sub><b>YOUR LOGO HERE</b><br/>Studio tier</sub></td>
-  </tr>
-</table>
-
-<sub>Sponsorship is optional and buys nothing but time. Bug reports, seeds and pull requests are worth just as much.</sub>
+No server, no accounts, no telemetry, no third-party requests. See [SECURITY.md](SECURITY.md) for the
+reporting process and [PRIVACY.md](PRIVACY.md) for the one `localStorage` key this game writes.
 
 ## Contributing
 

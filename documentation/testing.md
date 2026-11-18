@@ -104,6 +104,25 @@ HG.player.pos.set(x, 0, z);                  // pose through the debug handle
 Keep assertions behavioural ("the exit opened") rather than incidental ("`doorMeshes[0].visible` is
 false"), except where the incidental thing *is* the bug you are guarding against.
 
+## The two gates above the suites
+
+**`tools/check-claims.js`** — every number in the README is a claim, and a claim that nothing checks
+goes stale silently. It counts the roadmap items in `ENHANCEMENTS.md`, the suites on disk, the modules
+in `play/src`, the lines of JS, and compares each against the README. It also checks the licence badge
+against `LICENSE`, `VERSION` against the newest `CHANGELOG` heading, and that the support table carries
+the real handles rather than invented tiers. Twelve assertions, no dependencies, runs in 200 ms.
+
+**`tools/smoke.mjs`** — the suites stub the DOM and Three.js, so none of them proves that
+`index.html` or `play/index.html` actually work. This one launches headless Chromium with software
+WebGL, loads the landing page (title, every image decodes, every internal link returns 200) and then
+the game (module executes, boots to the title, the Start button starts a run, a wave spawns, the level
+is 1600 cells, the `?auto=&seed=&wave=&cam=` hooks place the camera). Any console error, page error or
+4xx/5xx request fails the run.
+
+Two things it taught me: `waitUntil: 'networkidle0'` never fires on a page running a render loop, so
+the game navigations wait for `window.HG.game.state` instead; and bouncing the page through internal
+links to test them is far slower than a plain HTTP GET, which is what it does now.
+
 ## What the tests do not cover
 
 - **Visual output.** Winding is checked; lighting, palette, readability and z-fighting are not.

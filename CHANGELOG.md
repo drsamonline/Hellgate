@@ -26,6 +26,12 @@ First public release.
 **Quality**
 - three headless suites: 47-seed generator invariants, winding/normal validation over ~14k triangles,
   and a full gameplay run including a 2000-frame random-input soak
+- `tools/check-claims.js`: 12 assertions tying every README number to the code that produces it
+- `tools/smoke.mjs`: boots both real pages in headless Chromium and fails on any console error
+- CI runs syntax check, suites, claims and smoke, with actions pinned by SHA and read-only permissions
+- fleet conventions adopted: `SECURITY.md`, `PRIVACY.md`, `VERSION`, `PAGES.json`, `.editorconfig`,
+  `CODE_OF_CONDUCT.md`, `404.html`, `robots.txt`, `sitemap.xml`
+- support table uses the real handles instead of invented sponsor tiers
 - landing page, documentation, and an enhancement roadmap
 
 **Fixed during the build**

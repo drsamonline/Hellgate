@@ -1,0 +1,56 @@
+name: tests
+
+# Everything here runs without a GPU: the three Node suites stub the DOM and
+# Three.js, and the smoke test uses software WebGL in headless Chromium.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  headless:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # was @v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020   # was @v4
+        with:
+          node-version: '20'
+
+      # installed first: tests/run.sh writes node_modules/three, and a later
+      # npm install would prune it as extraneous
+      - name: Install puppeteer-core
+        run: npm install --no-save puppeteer-core
+
+      - name: Syntax check every module
+        run: |
+          for f in play/src/*.js; do node --check "$f"; done
+          for f in tools/*.mjs; do node --check "$f"; done
+
+      # 47 seeds of generator invariants, ~14k triangles of winding, and a full
+      # gameplay run. No browser, no network, about four seconds.
+      - name: Headless suites
+        run: bash tests/run.sh
+
+      # A README number is a claim. This fails the build when one drifts.
+      - name: Check the README's claims
+        run: node tools/check-claims.js
+
+      - name: Install a browser
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      # The suites stub the browser. This is the only step that proves the real
+      # pages load, resolve the import map and reach a playable state.
+      - name: Browser smoke test
+        run: node tools/smoke.mjs

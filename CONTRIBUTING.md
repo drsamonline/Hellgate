@@ -5,8 +5,12 @@ Thanks for looking. This is a small project, so the process is short.
 ## Before you open a PR
 
 ```bash
-bash tests/run.sh      # ~4 seconds, no install, no network
+bash tests/run.sh            # three suites, ~4 seconds, no install, no network
+node tools/check-claims.js   # README numbers vs reality, 200 ms
+node tools/smoke.mjs         # real pages in headless Chromium (needs puppeteer-core + a browser)
 ```
+
+If you change a number in the README, `check-claims` will tell you whether the code agrees.
 
 All three suites must pass. The geometry suite is the one that matters most: it recomputes every
 triangle's normal from its winding order and checks that the face points into open space. An inverted

@@ -1,0 +1,18 @@
+{
+  "_note": "Pages source is the repo root so one branch serves both the landing page and the game. Protected paths must not be moved, renamed or deleted by any sweep: the import map, the vendored engine and the landing page assets all break silently if they move.",
+  "manual": true,
+  "source": { "branch": "main", "path": "/" },
+  "landing": "index.html",
+  "app": "play/index.html",
+  "protected": [
+    "play/vendor/three.module.js",
+    "play/vendor/three.core.js",
+    "play/src/main.js",
+    "assets/banner.svg",
+    "assets/map.svg",
+    "assets/arena.png",
+    ".nojekyll"
+  ],
+  "deleted": [],
+  "updated": "2026-11-18"
+}
