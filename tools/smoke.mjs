@@ -90,8 +90,23 @@ page.on('response', (r) => { if (r.status() >= 400 && !ignorable(r.url())) probl
 console.log('\nlanding page');
 await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle0', timeout: 30000 });
 ok('title', (await page.title()).includes('HELLGATE'));
-const imgs = await page.evaluate(() => Array.from(document.images).map((i) => [i.currentSrc || i.src, i.naturalWidth]));
-ok('all images decode', imgs.every(([, w]) => w > 0), imgs.filter(([, w]) => !w).map(([s]) => s).join(', '));
+// Lazy images below the fold have not loaded yet, and on a slower machine they
+// legitimately never do before the check runs. Force them eager and wait.
+await page.evaluate(() => {
+  document.querySelectorAll('img').forEach((i) => { i.loading = 'eager'; });
+  window.scrollTo(0, document.body.scrollHeight);
+});
+await page
+  .waitForFunction(
+    () => Array.from(document.images).every((i) => i.complete),
+    { timeout: 15000 }
+  )
+  .catch(() => {});
+const imgs = await page.evaluate(() =>
+  Array.from(document.images).map((i) => ({ src: i.currentSrc || i.src, ok: i.complete && i.naturalWidth > 0 }))
+);
+const badImgs = imgs.filter((i) => !i.ok).map((i) => i.src);
+ok('all images decode', badImgs.length === 0, badImgs.join(', '));
 const links = await page.evaluate(() => Array.from(document.querySelectorAll('a[href^="./"]')).map((a) => a.getAttribute('href')));
 for (const href of [...new Set(links)]) {
   const target = `http://127.0.0.1:${PORT}/${href.replace('./', '')}`;
