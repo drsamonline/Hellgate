@@ -87,7 +87,7 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 **Combat** — hitscan pistol · 8-pellet shotgun with falloff · rocket with splash, light and shake · muzzle flash lights · tracers · scorch and blood decals · per-enemy hit flash.
 
-**Enemies** — imps (telegraphed fireballs) and grunts (hitscan, melee at close range) on one FSM: `IDLE → CHASE → ATTACK → PAIN → DEATH` · grid line-of-sight · wandering · gibs · shared geometry per type.
+**Enemies** — imps (telegraphed fireballs) and grunts (hitscan, melee at close range) on one FSM: `IDLE → CHASE → ATTACK → PAIN → DEATH` · **BFS flow-field navigation, one field shared by every enemy** · grid line-of-sight · wandering · gibs · shared geometry per type.
 
 **Audio** — synthesised, spatialised: every enemy sound is panned by direction and attenuated by distance, and no two plays are identical.
 
@@ -131,7 +131,7 @@ bash tests/run.sh
 | --- | --- |
 | `test-level.mjs` | 47 seeds: determinism, every room reachable, spawn free, exit pad unreachable while doors are shut, a 400-step random walk never ends inside a wall, raycast sanity |
 | `test-geometry.mjs` | every merged triangle's winding matches its normal **and** its normal points into open space, which catches inverted faces that logic tests cannot see |
-| `test-game.mjs` | boots, walks, looks, fires all three weapons, kills, takes damage, clears a wave, opens the exit, advances, checks the keycard gate, dies, restarts, pauses, then 2000 frames of random input without a crash |
+| `test-game.mjs` | boots, walks, looks, fires all three weapons, kills, takes damage, closes on an enemy along the flow field, clears a wave, opens the exit, advances, checks the keycard gate, dies, restarts, pauses, then 2000 frames of random input without a crash |
 
 Two gates sit on top of the suites:
 

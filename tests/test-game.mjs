@@ -149,6 +149,22 @@ mouseUp();
 ok(HG.player.ammo.rockets === 2, 'rocket consumed ammo');
 ok(HG.game.kills > killsBefore || !target.alive, 'rocket killed the imp (kills ' + killsBefore + ' -> ' + HG.game.kills + ')');
 
+console.log('\n== navigation (roadmap 17) ==');
+HG.enemies.clear();
+HG.enemies.spawnWave(1, HG.player.pos);
+frames(4);
+ok(HG.enemies.field && HG.enemies.field.length === 1600, 'a shared flow field is built');
+const far = HG.enemies.list[0];
+const spot3 = duelSpot(9) || duelSpot(6);
+HG.player.pos.set(spot3.a.x, spot3.a.floor, spot3.a.z);
+far.pos.set(spot3.b.x, spot3.b.floor, spot3.b.z);
+far.state = 'CHASE';
+const { buildFlowField: bff } = await import('../play/src/level.js');
+const d0 = (() => { const f = bff(HG.level, HG.player.pos.x, HG.player.pos.z); return f[Math.round(far.pos.z / 2) * HG.level.W + Math.round(far.pos.x / 2)]; })();
+for (let i = 0; i < 180; i++) frames(1);
+const d1 = (() => { const f = bff(HG.level, HG.player.pos.x, HG.player.pos.z); return f[Math.round(far.pos.z / 2) * HG.level.W + Math.round(far.pos.x / 2)]; })();
+ok(d0 > 0 && d1 >= 0 && d1 < d0, `enemy closed along the field (${d0} -> ${d1} cells)`);
+
 console.log('\n== enemy AI damages the player ==');
 HG.game.wave = 1;
 HG.enemies.clear();

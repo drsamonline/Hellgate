@@ -84,9 +84,11 @@ One FSM, two parameter sets (`TYPES` in `enemies.js`).
 - **Line of sight** is a grid march at 0.22 steps from the enemy's eye (85 % of its height) to the
   player's eye. Losing sight for 4 s returns it to wandering.
 - **Wandering** picks a random heading every 1.2–3.2 s at half speed.
-- **Movement** is direct steering with the same axis-separated sliding as the player, plus a
-  perpendicular slide when both axes are blocked. There is no pathfinding: an enemy behind a long wall
-  will stall against it. This is the top item on the [roadmap](../ENHANCEMENTS.md).
+- **Movement** follows a shared BFS flow field (see
+  [level generation](level-generation.md#navigation)) and resolves collisions with the same
+  axis-separated sliding as the player, plus a perpendicular slide when both axes are blocked. An
+  enemy behind a wall walks around it. Direct steering is the fallback for the one case the field
+  cannot answer: an enemy in the same cell as the player.
 - **Separation.** A cheap O(n²) pass pushes overlapping enemies apart so they do not stack into one
   blob, with a `circleBlocked` check so the push cannot shove one into a wall.
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.1.0 — 2026-11-19
+
+**Gameplay**
+- BFS flow-field navigation: one field for every enemy, rebuilt three times a second from the player's
+  cell. Enemies walk around walls instead of leaning on them. Roadmap item 17, the last known gameplay
+  defect.
+
+**Verification**
+- the smoke test now exercises audio in a real browser: AudioContext creation, master gain against the
+  volume setting, a spatialised play call, and mute/unmute. The Node suites cannot touch this path.
+- path-following assertions per seed: from twelve cells, following the field always ends at distance 0
+
+**Performance**
+- Lighthouse pass on the landing page: map SVG 96 KB of `<rect>` to 6.4 KB of paths, the blend-mode
+  grain layer replaced, two contrast failures fixed. Accessibility 91 to 100, LCP 2.0 s to 1.2 s.
+
+
 ## 1.0.0 — 2026-11-18
 
 First public release.

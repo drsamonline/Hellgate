@@ -30,7 +30,7 @@ python3 -m http.server 8000  # local dev: / is the landing page, /play/ is the g
 | `index.html` | landing page. Static, no game code |
 | `play/index.html` | game markup, HUD, screens, CSS, import map |
 | `play/src/main.js` | boot, input, state machine, wave flow, render loop |
-| `play/src/level.js` | level generation, collision, wall raycast. **No Three.js import** |
+| `play/src/level.js` | level generation, collision, wall raycast, flow-field navigation. **No Three.js import** |
 | `play/src/levelmesh.js` | grid to merged geometry, including baked vertex shade |
 | `play/src/enemies.js` | imp and grunt, one FSM, line of sight, shared geometry |
 | `play/src/effects.js` | pooled particles, tracers, decals, lights, shake |
@@ -63,6 +63,7 @@ python3 -m http.server 8000  # local dev: / is the landing page, /play/ is the g
 - **`gh-pages` is force-pushed by CI on every push to `main`.** A manual commit there is destroyed.
 - **Pointer lock is not guaranteed.** Iframes and preview panes fall back to raw mouse-move; do not
   assume `input.locked`.
+- **The flow field is shared and rebuilt 3×/s.** Never build one per enemy or per frame.
 - **Audio is a no-op in Node.** `AudioContext` does not exist, so `play()` returns early. Nothing in
   the suites proves a sound is audible.
 

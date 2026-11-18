@@ -338,6 +338,101 @@ function axisNormal(x, z, prevCx, prevCz) {
   return { x: 0, y: 0, z: z > pz1 ? -1 : 1 };
 }
 
+// ---------------------------------------------------------------------------
+// Navigation
+// A breadth-first flow field over the grid, rebuilt from the player's cell and
+// shared by every enemy. This is what stops a grunt grinding against the wrong
+// side of a wall: it walks toward the next cell on the path, not at the player.
+// ---------------------------------------------------------------------------
+
+export function buildFlowField(level, tx, tz) {
+  const W = level.W;
+  const H = level.H;
+  const dist = new Int32Array(W * H).fill(-1);
+
+  let cx = Math.round(tx / CELL);
+  let cz = Math.round(tz / CELL);
+  cx = Math.max(0, Math.min(W - 1, cx));
+  cz = Math.max(0, Math.min(H - 1, cz));
+
+  // if the player is standing in a blocked cell (should not happen), search out
+  let start = cz * W + cx;
+  if (level.cells[start].solid) {
+    let found = -1;
+    for (let r = 1; r <= 3 && found < 0; r++) {
+      for (let dz = -r; dz <= r && found < 0; dz++) {
+        for (let dx = -r; dx <= r && found < 0; dx++) {
+          const nx = cx + dx;
+          const nz = cz + dz;
+          if (nx < 0 || nz < 0 || nx >= W || nz >= H) continue;
+          if (!level.cells[nz * W + nx].solid) found = nz * W + nx;
+        }
+      }
+    }
+    if (found < 0) return dist;
+    start = found;
+  }
+
+  dist[start] = 0;
+  const queue = new Int32Array(W * H);
+  let head = 0;
+  let tail = 0;
+  queue[tail++] = start;
+
+  while (head < tail) {
+    const k = queue[head++];
+    const x = k % W;
+    const z = (k - x) / W;
+    const from = level.cells[k];
+    const d = dist[k] + 1;
+
+    for (let i = 0; i < 4; i++) {
+      const nx = x + (i === 0 ? 1 : i === 1 ? -1 : 0);
+      const nz = z + (i === 2 ? 1 : i === 3 ? -1 : 0);
+      if (nx < 0 || nz < 0 || nx >= W || nz >= H) continue;
+      const nk = nz * W + nx;
+      if (dist[nk] !== -1) continue;
+      const c = level.cells[nk];
+      if (c.solid) continue;
+      if (c.door && !level.doorOpen) continue;
+      if (c.floor - from.floor > MAX_STEP) continue;
+      dist[nk] = d;
+      queue[tail++] = nk;
+    }
+  }
+  return dist;
+}
+
+// The unit direction to the neighbouring cell one step closer to the target.
+// Returns null when there is no path (or the enemy is already in the target cell).
+export function flowStep(level, field, x, z) {
+  if (!field) return null;
+  const W = level.W;
+  const cx = Math.round(x / CELL);
+  const cz = Math.round(z / CELL);
+  if (cx < 0 || cz < 0 || cx >= level.W || cz >= level.H) return null;
+  const here = field[cz * W + cx];
+  if (here <= 0) return null; // unreachable, or already at the target
+
+  let best = here;
+  let bx = 0;
+  let bz = 0;
+  for (let i = 0; i < 4; i++) {
+    const dx = i === 0 ? 1 : i === 1 ? -1 : 0;
+    const dz = i === 2 ? 1 : i === 3 ? -1 : 0;
+    const nx = cx + dx;
+    const nz = cz + dz;
+    if (nx < 0 || nz < 0 || nx >= level.W || nz >= level.H) continue;
+    const d = field[nz * W + nx];
+    if (d === -1 || d >= best) continue;
+    best = d;
+    bx = dx;
+    bz = dz;
+  }
+  if (!bx && !bz) return null;
+  return { x: bx, z: bz };
+}
+
 export function hasLineOfSight(level, a, b) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;

@@ -116,6 +116,21 @@ Two step sizes: **0.09** for bullets and rockets (accuracy matters, and a shotgu
 **0.22** for enemy line-of-sight (cheap, and an enemy that thinks it can see you one frame early is not
 a bug anyone notices). `hasLineOfSight` is just `raycastWalls` with the target distance as the budget.
 
+## Navigation
+
+Enemies do not steer at the player. `buildFlowField(level, x, z)` runs a breadth-first search from
+the player's cell over every open cell, refusing edges that are blocked, that cross a closed door, or
+that climb more than `MAX_STEP`. It returns an `Int32Array` of step counts, `-1` for unreachable.
+
+`EnemyManager` rebuilds that field **three times a second, once for all enemies** — 1,600 cells of
+BFS costs less than a single enemy's line-of-sight ray. `flowStep(level, field, x, z)` then answers
+the only question an enemy asks each frame: which neighbouring cell is one step closer? The answer is
+a direction, not a target, so the enemy walks a corridor instead of leaning on the wall between.
+
+Cost: one 6.4 KB allocation per rebuild, no per-enemy work. `tests/test-level.mjs` follows the field
+from twelve cells per seed and asserts each walk ends at distance 0, which is the property that makes
+the whole thing worth having.
+
 ## Invariants the tests enforce
 
 - same seed → identical cells, always

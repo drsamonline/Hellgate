@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Eleven items shipped in 1.0.0 — marked **✓ shipped** below.
+Twelve items shipped — marked **✓ shipped** below.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -33,7 +33,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 ## Tier 1 — Small (an afternoon each)
 
-17. **Enemy navigation** — replace direct steering with a flow field over the grid (BFS from the player, recomputed every ~0.5 s, shared by all enemies). This is the single biggest gameplay fix: enemies currently stall on long walls. `level.js` + `enemies.js` · M · very high
+17. **Enemy navigation** — replace direct steering with a flow field over the grid (BFS from the player, recomputed every ~0.5 s, shared by all enemies). This is the single biggest gameplay fix: enemies currently stall on long walls. `level.js` + `enemies.js` · M · very high — ✓ shipped
 18. **Sound occlusion** — attenuate enemy sounds by line of sight, so a grunt behind a wall is muffled. `audio.js` · M · high
 19. **Directional audio** — a `PannerNode` per enemy, or at least a left/right gain based on the angle to the camera. `audio.js` · M · high — ✓ shipped
 20. **Hit-direction indicator on enemies** — a brief arc showing where damage came from, so you can find the imp shooting you from behind. `enemies.js` · M · high

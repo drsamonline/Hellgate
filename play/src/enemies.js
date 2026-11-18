@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { circleBlocked, floorHeightAt, hasLineOfSight, MAX_STEP } from './level.js';
+import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
 
 const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DEATH: 'DEATH' };
 
@@ -261,9 +261,9 @@ export class Enemy {
         break;
       }
       case STATE.CHASE: {
-        if (dist > 0.9) {
-          this.moving = this.stepMove(level, dx / dist, dz / dist, dt);
-        } else this.moving = false;
+        const nav = this.navDir(level, ctx.field, dx, dz, dist);
+        if (dist > 0.9 && nav) this.moving = this.stepMove(level, nav.x, nav.z, dt);
+        else this.moving = false;
         this.faceTo(dx, dz);
         if (canSee) this.lostSight = 0;
         else this.lostSight += dt;
@@ -346,6 +346,18 @@ export class Enemy {
     }
   }
 
+  // Follow the flow field when there is one, so a wall between us and the player
+  // is walked around instead of leaned on. Falls back to direct steering when the
+  // field has nothing to say (same cell, or no path at all).
+  navDir(level, field, dx, dz, dist) {
+    if (field) {
+      const step = flowStep(level, field, this.pos.x, this.pos.z);
+      if (step) return step;
+    }
+    if (dist < 0.001) return null;
+    return { x: dx / dist, z: dz / dist };
+  }
+
   faceTo(dx, dz) {
     this.mesh.rotation.y = Math.atan2(dx, dz);
   }
@@ -423,6 +435,8 @@ export class EnemyManager {
     this.audio = audio;
     this.list = [];
     this.onKill = null;
+    this.field = null;
+    this.fieldT = 0;
   }
 
   get aliveCount() {
@@ -457,8 +471,17 @@ export class EnemyManager {
   }
 
   update(dt, player, projectiles) {
+    // one field for every enemy, rebuilt from the player's cell a few times a
+    // second: 1600 cells of BFS costs less than one enemy's line-of-sight check
+    this.fieldT -= dt;
+    if (this.fieldT <= 0) {
+      this.field = buildFlowField(this.level, player.pos.x, player.pos.z);
+      this.fieldT = 0.35;
+    }
+
     const ctx = {
       level: this.level,
+      field: this.field,
       player,
       effects: this.effects,
       audio: this.audio,

@@ -125,6 +125,44 @@ ok('url hook: wave 3', (await page.evaluate(() => window.HG.game.wave)) === 3);
 ok('url hook: seed', (await page.evaluate(() => window.HG.game.seed)) === 'smoke');
 ok('renderer drew frames', (await page.evaluate(() => window.HG.game.state === 'playing')) === true);
 
+// --- audio ------------------------------------------------------------------
+// The Node suites cannot touch this: AudioContext does not exist there, so every
+// sound is a no-op. This is the only place the audio path is exercised at all.
+console.log('\naudio');
+await page.goto(`http://127.0.0.1:${PORT}/play/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForFunction('typeof window.HG === "object"', { timeout: 20000 });
+await page.click('#startBtn');
+await new Promise((r) => setTimeout(r, 500));
+
+const a0 = await page.evaluate(() => {
+  const a = window.HG.audio;
+  return { hasCtx: !!a.ctx, state: a.ctx && a.ctx.state, gain: a.master && a.master.gain.value, vol: a.volume };
+});
+ok('an AudioContext exists after the start click', a0.hasCtx, 'state ' + a0.state);
+ok('master gain matches the volume setting', Math.abs(a0.gain - a0.vol) < 0.001, `${a0.gain} vs ${a0.vol}`);
+
+const played = await page.evaluate(() => {
+  const a = window.HG.audio;
+  const before = a.ctx.currentTime;
+  try {
+    a.play('pistol');
+    a.play('pain', { x: a.listener.x + 4, z: a.listener.z }); // spatialised path
+    return { ok: true, t: a.ctx.currentTime - before };
+  } catch (e) {
+    return { ok: false, err: String(e) };
+  }
+});
+ok('a sound plays without throwing, spatialised or not', played.ok, played.err || '');
+
+const a1 = await page.evaluate(() => {
+  window.HG.changeSetting('muted', true);
+  const muted = window.HG.audio.master.gain.value;
+  window.HG.changeSetting('muted', false);
+  return { muted, restored: window.HG.audio.master.gain.value };
+});
+ok('mute drops the master gain to zero', a1.muted === 0, String(a1.muted));
+ok('unmute restores it', a1.restored > 0, String(a1.restored));
+
 // --- results ----------------------------------------------------------------
 ok('no console errors or failed requests', problems.length === 0, problems.slice(0, 4).join(' | '));
 

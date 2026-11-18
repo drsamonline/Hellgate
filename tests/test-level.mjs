@@ -1,4 +1,4 @@
-import { generateLevel, CELL, MAX_STEP, cellAt, isBlocked, circleBlocked, floorHeightAt, raycastWalls, hasLineOfSight } from '../play/src/level.js';
+import { generateLevel, CELL, MAX_STEP, cellAt, isBlocked, circleBlocked, floorHeightAt, raycastWalls, hasLineOfSight, buildFlowField, flowStep } from '../play/src/level.js';
 
 let fails = 0;
 const bad = (seed, msg) => { console.log(`FAIL [${seed}] ${msg}`); fails++; };
@@ -118,6 +118,39 @@ for (const seed of seeds) {
       }
     }
   }
+
+  // flow field: from the spawn, every reachable cell has a path, and following
+  // the field from any of them walks to the spawn
+  L.doorOpen = true; // path through the exit room too
+  const field = buildFlowField(L, L.spawn.x, L.spawn.z);
+  let openCells = 0;
+  let unreached = 0;
+  for (let i = 0; i < L.cells.length; i++) {
+    const c = L.cells[i];
+    if (c.solid || c.door) continue;
+    openCells++;
+    if (field[i] < 0) unreached++;
+  }
+  if (unreached > 0) bad(seed, unreached + ' open cells have no path from the spawn');
+
+  for (let t = 0; t < 12; t++) {
+    const c = L.openCells[Math.floor((t / 12) * L.openCells.length)];
+    let x = c.wx;
+    let z = c.wz;
+    let steps = 0;
+    const limit = 400;
+    while (steps < limit) {
+      const step = flowStep(L, field, x, z);
+      if (!step) break;
+      x += step.x * CELL;
+      z += step.z * CELL;
+      steps++;
+    }
+    const cx2 = Math.round(x / CELL);
+    const cz2 = Math.round(z / CELL);
+    if (field[cz2 * L.W + cx2] !== 0) bad(seed, 'following the field from a cell did not reach the spawn');
+  }
+  L.doorOpen = false;
 
   // LOS: self is always visible
   if (!hasLineOfSight(L, { x: L.spawn.x, y: 1.6, z: L.spawn.z }, { x: L.spawn.x + 0.1, y: 1.6, z: L.spawn.z }))
