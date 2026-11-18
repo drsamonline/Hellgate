@@ -121,10 +121,10 @@ function plate() {
 
 function concrete() {
   const c = ctx2d();
-  c.fillStyle = '#22201f';
+  c.fillStyle = '#34312e';
   c.fillRect(0, 0, S, S);
   for (let i = 0; i < 60; i++) {
-    const v = 26 + Math.random() * 20;
+    const v = 40 + Math.random() * 24;
     c.fillStyle = `rgba(${v},${v},${v},0.8)`;
     c.fillRect(Math.random() * S, Math.random() * S, 3 + Math.random() * 10, 2 + Math.random() * 6);
   }
@@ -228,7 +228,7 @@ function scorch() {
 export function makeMaterials(maxAnisotropy = 1) {
   const aniso = Math.max(1, Math.min(8, maxAnisotropy || 1));
   const L = (map) => {
-    const m = new THREE.MeshLambertMaterial({ map });
+    const m = new THREE.MeshLambertMaterial({ map, vertexColors: true });
     m.userData.shared = true;
     return m;
   };
@@ -240,7 +240,10 @@ export function makeMaterials(maxAnisotropy = 1) {
     'ceil': L(concrete()),
     'door': L(door()),
     'pad': new THREE.MeshBasicMaterial({ map: pad(), transparent: true }),
+    // the door box has no baked vertex colours, so it gets a material without them
+    'door_plain': new THREE.MeshLambertMaterial({ map: door() }),
   };
+  mats['door_plain'].userData.shared = true;
   mats['pad'].userData.shared = true;
   // Anisotropic filtering keeps floors and long walls from smearing at grazing
   // angles — the biggest single win for a corridor shooter's image quality.

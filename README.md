@@ -82,11 +82,13 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 ## Features
 
-**Engine** — sector grid with per-cell floor/ceiling heights · hand-built UVs and normals, no geometry library · merged geometry, five draw calls · circle-vs-wall sliding collision with a 0.5 m step limit · frame-rate independent movement (`v *= exp(-k·dt)`) · fog culling · anisotropic filtering.
+**Engine** — sector grid with per-cell floor/ceiling heights · hand-built UVs and normals, no geometry library · merged geometry, five draw calls · **baked sun/shade and corner AO in vertex colours** · filmic tone mapping · adaptive resolution (gives up pixels, not frames) · circle-vs-wall sliding collision with a 0.5 m step limit · frame-rate independent movement (`v *= exp(-k·dt)`) · fog culling · anisotropic filtering.
 
 **Combat** — hitscan pistol · 8-pellet shotgun with falloff · rocket with splash, light and shake · muzzle flash lights · tracers · scorch and blood decals · per-enemy hit flash.
 
 **Enemies** — imps (telegraphed fireballs) and grunts (hitscan, melee at close range) on one FSM: `IDLE → CHASE → ATTACK → PAIN → DEATH` · grid line-of-sight · wandering · gibs · shared geometry per type.
+
+**Audio** — synthesised, spatialised: every enemy sound is panned by direction and attenuated by distance, and no two plays are identical.
 
 **Feel** — Doom-style face that degrades with health · damage direction arrows · red edge vignette · weapon sway and bob · pooled particles, tracers, decals and lights (nothing allocates per shot).
 
@@ -189,6 +191,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Built with [Three.js](https://threejs.org). Inspired by id Software's Doom (1993) — the sector
 model, the face in the HUD, and the idea that a game is more fun than a tech demo.
+
+Four techniques are borrowed from [remorses/castle-valley](https://github.com/remorses/castle-valley),
+a painterly Three.js game: light and shade baked once into the geometry instead of computed per
+frame, a renderer-level grade rather than a flat output, resolution that adapts to the frame budget,
+and audio that is heard from where it stands. Credit to [@remorses](https://github.com/remorses).
 
 ## License
 

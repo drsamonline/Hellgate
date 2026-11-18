@@ -21,6 +21,11 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPrefer
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+// A renderer-level grade in place of castle-valley's post filter: filmic tone
+// mapping compresses the highlights instead of clipping them, which is what
+// stops the muzzle flashes and the exit pad from going pure white.
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.45;
 renderer.autoClear = false;
 
 const camera = new THREE.PerspectiveCamera(76, window.innerWidth / window.innerHeight, 0.05, 90);
@@ -38,8 +43,8 @@ function newScene() {
   const s = new THREE.Scene();
   s.background = new THREE.Color(0x07070a);
   s.fog = new THREE.Fog(0x07070a, 9, 32);
-  s.add(new THREE.AmbientLight(0xffffff, 0.6));
-  s.add(new THREE.HemisphereLight(0x9fb4c8, 0x463226, 0.85));
+  s.add(new THREE.AmbientLight(0xffffff, 0.55));
+  s.add(new THREE.HemisphereLight(0x9fb4c8, 0x6a5540, 0.95));
   const d = new THREE.DirectionalLight(0xffd9b0, 0.3);
   d.position.set(1, 2, 0.6);
   s.add(d);
@@ -87,6 +92,27 @@ let MATS = null;
 let DECALS = null;
 const clock = new THREE.Clock();
 let elapsed = 0;
+
+// Adaptive resolution, in the manner of castle-valley: draw at the screen's own
+// pixels until frames get slow, then give up pixels instead of frame rate.
+const RATIO_CAP = Math.min(window.devicePixelRatio || 1, 1.5);
+const perf = { ratio: RATIO_CAP, acc: 0, n: 0, min: 0.7 };
+
+function adaptResolution(dt) {
+  perf.acc += dt;
+  perf.n++;
+  if (perf.acc < 1) return;
+  const avg = perf.acc / perf.n;
+  perf.acc = 0;
+  perf.n = 0;
+  let r = perf.ratio;
+  if (avg > 0.021 && r > perf.min) r = Math.max(perf.min, r - 0.15);
+  else if (avg < 0.0135 && r < RATIO_CAP) r = Math.min(RATIO_CAP, r + 0.1);
+  if (Math.abs(r - perf.ratio) > 0.001) {
+    perf.ratio = r;
+    renderer.setPixelRatio(r);
+  }
+}
 
 // ------------------------------------------------------------------ run set-up
 
@@ -322,7 +348,7 @@ function updatePickups(dt) {
       if (p.kind === 'armor' && player.armor >= 100) continue;
       PICKUP_DEFS[p.kind].apply(player);
       hud.toast(PICKUP_DEFS[p.kind].toast);
-      audio.play('pickup');
+      audio.play('pickup', { x: p.x, z: p.z });
       effects.burst({ x: p.x, y: p.baseY, z: p.z }, PICKUP_DEFS[p.kind].color, 8, 2.4, 0.4, 4);
       scene.remove(p.mesh);
       p.mesh.geometry.dispose();
@@ -339,7 +365,7 @@ function updatePickups(dt) {
     if (Math.hypot(k.x - player.pos.x, k.z - player.pos.z) < 1.2) {
       game.hasKey = true;
       hud.toast('KEYCARD ACQUIRED', 2.2);
-      audio.play('key');
+      audio.play('key', { x: k.x, z: k.z });
       effects.burst({ x: k.x, y: k.baseY, z: k.z }, 0xffd24a, 14, 3, 0.5, 4);
       scene.remove(k.mesh);
       k.mesh.geometry.dispose();
@@ -651,6 +677,7 @@ function update(dt) {
   input.lookDy = 0;
 
   player.update(dt, input, level);
+  audio.setListener(player.pos.x, player.pos.z, player.yaw);
   weapons.update(dt, player);
 
   if (input.fire) weapons.tryFire(fireCtx());
@@ -702,6 +729,7 @@ function loop() {
   if (game.state === 'playing') {
     update(dt);
     if (effects) effects.applyShake(camera);
+    adaptResolution(dt);
   }
   render();
   updateDebug(dt);
@@ -759,7 +787,7 @@ loop();
 
 // exposed for console debugging and for the headless test harness
 window.HG = {
-  game, player, camera, hud, audio, input, settings,
+  game, player, camera, hud, audio, input, settings, perf,
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },
   get level() { return level; },

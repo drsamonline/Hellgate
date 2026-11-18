@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Nine Tier 0 items shipped in 1.0.0 — marked **✓ shipped** below.
+Eleven items shipped in 1.0.0 — marked **✓ shipped** below.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -35,7 +35,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 17. **Enemy navigation** — replace direct steering with a flow field over the grid (BFS from the player, recomputed every ~0.5 s, shared by all enemies). This is the single biggest gameplay fix: enemies currently stall on long walls. `level.js` + `enemies.js` · M · very high
 18. **Sound occlusion** — attenuate enemy sounds by line of sight, so a grunt behind a wall is muffled. `audio.js` · M · high
-19. **Directional audio** — a `PannerNode` per enemy, or at least a left/right gain based on the angle to the camera. `audio.js` · M · high
+19. **Directional audio** — a `PannerNode` per enemy, or at least a left/right gain based on the angle to the camera. `audio.js` · M · high — ✓ shipped
 20. **Hit-direction indicator on enemies** — a brief arc showing where damage came from, so you can find the imp shooting you from behind. `enemies.js` · M · high
 21. **A third enemy type** — a fast melee "hound" that dies in one shotgun blast. Forces weapon switching. `enemies.js` · M · high
 22. **Boss wave every 5th wave** — one large, slow, high-HP enemy with a telegraphed area attack. Gives a run a shape. `enemies.js` · M · high
@@ -75,7 +75,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 ## Tier 3 — Large (architectural)
 
 52. **Real-time shadows** — a single directional shadow map with tight bounds, or baked vertex AO. The current lighting is flat ambient, which is why rooms read as boxes. `main.js` · XL · high
-53. **Lightmap / baked lighting per sector** — a per-cell light value baked at generation and written into vertex colours; the cheapest way to get contrast and mood. `levelmesh.js` · L · high
+53. **Lightmap / baked lighting per sector** — a per-cell light value baked at generation and written into vertex colours; the cheapest way to get contrast and mood. `levelmesh.js` · L · high — ✓ shipped
 54. **Collision broadphase** — a uniform grid or BVH for enemies and projectiles instead of scanning the list. Only matters past ~50 enemies, but that is where this is headed. `enemies.js` · L · medium
 55. **Object pooling for enemies** — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
 56. **Deterministic replay** — record the input stream + seed, replay a run exactly. Turns bug reports into test cases and enables ghost runs. `main.js` · L · medium

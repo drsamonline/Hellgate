@@ -205,7 +205,7 @@ export class Enemy {
       this.die(ctx);
       return true;
     }
-    ctx.audio.play('pain');
+    ctx.audio.play('pain', this.chestPos());
     if (Math.random() < 0.55) this.setState(STATE.PAIN);
     return false;
   }
@@ -217,7 +217,7 @@ export class Enemy {
     this.deadT = 0;
     const c = this.chestPos();
     ctx.effects.gibs(c);
-    ctx.audio.play('enemyDie');
+    ctx.audio.play('enemyDie', this.chestPos());
     if (ctx.onKill) ctx.onKill(this);
   }
 
@@ -318,13 +318,13 @@ export class Enemy {
         damage: this.damage,
         owner: 'enemy',
       });
-      audio.play('fireball');
+      audio.play('fireball', this.chestPos());
       ctx.effects.flash(new THREE.Vector3(from.x, from.y, from.z), 0xff6622, 6, 0.12, 10);
     } else {
       const inMelee = dist < this.T.meleeRange;
       if (inMelee) {
         player.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
-        audio.play('enemyShoot');
+        audio.play('enemyShoot', this.chestPos());
         return;
       }
       if (!canSee) return;
@@ -342,7 +342,7 @@ export class Enemy {
           0xff5522
         );
       }
-      audio.play('enemyShoot');
+      audio.play('enemyShoot', this.chestPos());
     }
   }
 

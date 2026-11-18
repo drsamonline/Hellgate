@@ -114,6 +114,25 @@ title ──start(seed)──▶ playing ──Esc / pointer-lock lost / tab hid
 `window.HG` exposes the game object, player, level, enemies, weapons and `input` for the console, the
 screenshot tool and the test harness. It is the only debug surface and it is intentionally small.
 
+## Baked light
+
+There is no shadow map. Every face carries its light value in vertex colours, computed once in
+`levelmesh.js` when the level is built:
+
+| Surface | Shade |
+| --- | --- |
+| wall | `0.74 + 0.26 × max(0, N·sun)` on the face, times a floor-to-ceiling gradient (1.0 at the base, 0.84 at the top) |
+| floor | per-corner occlusion: `1 − 0.09 × (number of the two cells meeting at that corner that are solid)`, times a small per-cell jitter |
+| ceiling | the same corner occlusion at 0.88, then darkened overall |
+
+The sun is fixed at `(-0.45, 0.85, 0.35)`. The result is a room that reads as lit from one side and
+from below, with the wall bases sitting in their own shadow, for the cost of one `Float32BufferAttribute`
+per mesh and no runtime work at all. The door box has no colour attribute, so it uses a material
+without `vertexColors`.
+
+`tests/test-geometry.mjs` asserts the attribute exists on every merged mesh, stays inside 0..1, and
+varies by more than 0.25 across a level — a flat bake is a bug, not a style.
+
 ## No assets
 
 Nothing is fetched at runtime except the JS modules.

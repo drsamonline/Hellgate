@@ -27,6 +27,15 @@ First public release.
 - exit compass: a chevron points at the pad once the wave is cleared
 - weapons dip out of frame and rise back on a swap
 
+**Look and sound (transfers from castle-valley)**
+- light and shade baked once into vertex colours: a fixed sun on every wall face, a floor-to-ceiling
+  gradient, and corner AO where two walls meet. No shadow map, no extra draw call
+- ACES filmic tone mapping, so muzzle flashes and the exit pad compress instead of clipping
+- adaptive resolution: the pixel ratio drops toward 0.7 when frames exceed 21 ms and climbs back
+  under 13.5 ms, capped at 1.5
+- spatialised audio: `panGain()` computes stereo pan and distance gain per sound; enemy pain, death,
+  shots and fireballs are heard from where the enemy stands, and every play is detuned slightly
+
 **Engine work**
 - vendored Three.js r187 (up from r160), verified headlessly against the real library
 - anisotropic filtering, shared enemy geometry, per-run GPU disposal, raw pointer-lock request

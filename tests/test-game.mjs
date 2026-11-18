@@ -312,7 +312,25 @@ ok(HG.weapons.raise > 0.4, 'weapon dips after a swap');
 frames(70);
 ok(HG.weapons.raise < 0.1, 'weapon rises back into frame');
 
+console.log('\n== spatial audio (castle-valley transfer) ==');
+const { panGain } = await import('../play/src/audio.js');
+const L0 = { x: 0, z: 0, yaw: 0 };
+ok(panGain({ x: 0, z: 0 }, L0).gain === 1, 'sound at the listener is full gain');
+ok(Math.abs(panGain({ x: 0, z: 0 }, L0).pan) < 1e-9, 'sound at the listener is centred');
+ok(panGain({ x: 10, z: 0 }, L0).pan > 0.5, 'sound to the right pans right');
+ok(panGain({ x: -10, z: 0 }, L0).pan < -0.5, 'sound to the left pans left');
+ok(panGain({ x: 0, z: -10 }, L0).pan === 0, 'sound straight ahead stays centred');
+ok(panGain({ x: 0, z: 40 }, L0).gain === 0, 'sound beyond range is silent');
+ok(panGain({ x: 13, z: 0 }, L0).gain > 0 && panGain({ x: 13, z: 0 }, L0).gain < 0.6, 'gain falls with distance');
+
+console.log('\n== adaptive resolution (castle-valley transfer) ==');
+const r0 = HG.perf.ratio;
+for (let i = 0; i < 70; i++) frames(1); // 70 slow-ish frames at 1/60
+ok(HG.perf.ratio <= r0, 'ratio never exceeds the cap');
+ok(typeof HG.perf.ratio === 'number' && HG.perf.ratio >= 0.7, 'ratio stays above the floor: ' + HG.perf.ratio.toFixed(2));
+
 console.log('\n== no wasted pickups (roadmap 8) ==');
+HG.enemies.clear(); // isolate: a stray hit would drop health below 100 mid-test
 HG.player.health = 100;
 const before2 = HG.game.pickups.length;
 const cell = HG.level.openCells[0];

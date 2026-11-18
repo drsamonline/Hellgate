@@ -2,6 +2,21 @@
 // AUDIO — everything synthesised with WebAudio. No samples, no files.
 // ---------------------------------------------------------------------------
 
+// Pure so it can be tested without an AudioContext. Returns the stereo pan and
+// the distance gain for a sound at `at`, heard from `listener` (x, z, yaw).
+// Adopted from castle-valley's audio: a creature is heard from where it stands,
+// quieter with distance, to the left or the right.
+export function panGain(at, listener, range = 26) {
+  const dx = at.x - listener.x;
+  const dz = at.z - listener.z;
+  const dist = Math.hypot(dx, dz);
+  const gain = Math.max(0, 1 - dist / range);
+  const fx = -Math.sin(listener.yaw);
+  const fz = -Math.cos(listener.yaw);
+  const pan = Math.max(-1, Math.min(1, (fx * dz - fz * dx) / Math.max(4, dist)));
+  return { pan, gain, dist };
+}
+
 export class Sfx {
   constructor() {
     this.ctx = null;
@@ -9,6 +24,28 @@ export class Sfx {
     this.noiseBuf = null;
     this.muted = false;
     this.volume = 0.32;
+    this.listener = { x: 0, z: 0, yaw: 0 };
+    this._out = null;
+    this._pitch = 1;
+  }
+
+  setListener(x, z, yaw) {
+    this.listener.x = x;
+    this.listener.z = z;
+    this.listener.yaw = yaw;
+  }
+
+  // a panner + distance gain for one sound, or null when it is out of earshot
+  spatialOut(at) {
+    const { pan, gain } = panGain(at, this.listener);
+    if (gain <= 0.03) return null;
+    const p = this.ctx.createStereoPanner();
+    p.pan.value = pan;
+    const g = this.ctx.createGain();
+    g.gain.value = gain * gain; // squared: falls off faster than linearly
+    p.connect(g);
+    g.connect(this.master);
+    return p;
   }
 
   setVolume(v) {
@@ -55,13 +92,14 @@ export class Sfx {
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(gain, this.t);
     g.gain.exponentialRampToValueAtTime(0.0008, this.t + dur);
-    src.connect(filt).connect(g).connect(this.master);
+    src.connect(filt).connect(g).connect(this._out || this.master);
     src.start();
     src.stop(this.t + dur + 0.02);
   }
 
   tone(freq, dur, type, gain, freqTo, delay = 0) {
     if (!this.ctx) return;
+    freq *= this._pitch;
     const t0 = this.t + delay;
     const o = this.ctx.createOscillator();
     o.type = type || 'square';
@@ -71,13 +109,19 @@ export class Sfx {
     g.gain.setValueAtTime(0.0001, t0);
     g.gain.exponentialRampToValueAtTime(gain, t0 + 0.006);
     g.gain.exponentialRampToValueAtTime(0.0008, t0 + dur);
-    o.connect(g).connect(this.master);
+    o.connect(g).connect(this._out || this.master);
     o.start(t0);
     o.stop(t0 + dur + 0.02);
   }
 
-  play(name) {
+  play(name, at) {
     if (!this.ctx || this.muted) return;
+    this._pitch = 0.94 + Math.random() * 0.12; // no two plays are identical
+    if (at) {
+      const out = this.spatialOut(at);
+      if (!out) return;
+      this._out = out;
+    }
     switch (name) {
       case 'pistol':
         this.noise(0.09, 0.5, 'highpass', 900, 300);
@@ -147,5 +191,6 @@ export class Sfx {
         this.noise(1.1, 0.3, 'lowpass', 700, 60);
         break;
     }
+    this._out = null;
   }
 }
