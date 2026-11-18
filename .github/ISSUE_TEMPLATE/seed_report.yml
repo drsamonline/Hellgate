@@ -1,0 +1,39 @@
+name: Bad seed
+description: A seed that generates a map that cannot be finished, or is visibly wrong
+labels: [generator]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The generator has invariants (every room reachable, the exit pad sealed behind its doors, no
+        floor above the step height). `tests/test-level.mjs` checks them across 47 seeds. A seed that
+        breaks one is a real bug — paste the seed exactly.
+  - type: input
+    id: seed
+    attributes:
+      label: Seed
+      placeholder: x7f2
+    validations:
+      required: true
+  - type: dropdown
+    id: symptom
+    attributes:
+      label: Symptom
+      options:
+        - A room is unreachable
+        - The exit pad cannot be reached after the wave clears
+        - The player can leave the map
+        - Geometry is inverted or missing
+        - Enemies spawn inside a wall
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: What you saw
+  - type: input
+    id: map
+    attributes:
+      label: Map render
+      description: Optional. Run `node tools/map.mjs <seed> > assets/map.svg` and attach the result.

@@ -5,6 +5,8 @@
 //   node tools/shoot.mjs arena      # one shot by name
 //
 // Requires puppeteer-core + a Chromium binary. Nothing here ships to the game.
+// Writes PNG. Run tools/optimise_assets.py afterwards to produce the WebP files
+// the README and the landing page actually load.
 
 import http from 'node:http';
 import fs from 'node:fs';

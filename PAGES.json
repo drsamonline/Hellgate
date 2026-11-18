@@ -10,7 +10,8 @@
     "play/src/main.js",
     "assets/banner.svg",
     "assets/map.svg",
-    "assets/arena.png",
+    "assets/arena.webp",
+    "assets/og.jpg",
     ".nojekyll"
   ],
   "deleted": [],

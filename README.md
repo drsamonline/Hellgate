@@ -15,7 +15,7 @@ Sector maps generated from a seed string · three weapons · two enemy types · 
 [![Assets](https://img.shields.io/badge/external_assets-0-c0392b?style=flat-square)](documentation/architecture.md#no-assets)
 [![Bundle](https://img.shields.io/badge/build_step-none-8d7f6c?style=flat-square)](#no-build-step)
 
-<img src="assets/arena.png" alt="The arena: imps and a grunt closing in, pistol equipped" width="100%" />
+<img src="assets/arena.webp" alt="The arena: imps and a grunt closing in, pistol equipped" width="100%" />
 
 </div>
 
@@ -58,13 +58,14 @@ From wave 3 the exit is also keycard-locked.
 
 ## Screenshots
 
-Real frames — captured by `tools/shoot.mjs` running the actual game headless in Chromium with
-software WebGL. Nothing here is a mockup or a composited image.
+Real frames, captured by `tools/shoot.mjs` running the actual game headless in Chromium with
+software WebGL, then converted to WebP by `tools/optimise_assets.py` (2.2 MB of PNG becomes 207 KB).
+Nothing here is a mockup or a composited image.
 
 | | |
 | --- | --- |
-| <img src="assets/combat.png" alt="Shotgun blast, blood spray, tracers" /> **Shotgun** — 8 pellets, per-pellet damage falloff, blood decals | <img src="assets/rocket.png" alt="Rocket explosion lighting the room" /> **Rocket** — splash damage, pooled particles, a real point light, screen shake |
-| <img src="assets/exit.png" alt="Exit room with glowing pad" /> **Exit** — wave cleared, doors open, pad lit | <img src="assets/title.png" alt="Title screen" /> **Title** — seed entry, best run from localStorage |
+| <img src="assets/combat.webp" alt="Shotgun blast, blood spray, tracers" /> **Shotgun** — 8 pellets, per-pellet damage falloff, blood decals | <img src="assets/rocket.webp" alt="Rocket explosion lighting the room" /> **Rocket** — splash damage, pooled particles, a real point light, screen shake |
+| <img src="assets/exit.webp" alt="Exit room with glowing pad" /> **Exit** — wave cleared, doors open, pad lit | <img src="assets/title.webp" alt="Title screen" /> **Title** — seed entry, best run from localStorage |
 
 <img src="assets/map.svg" alt="Top-down view of a generated level" width="420" align="right" />
 
@@ -72,7 +73,7 @@ software WebGL. Nothing here is a mockup or a composited image.
 
 Rooms are carved as rectangles, joined by L-shaped corridors, then given random ceiling heights
 so corridor mouths read as doorways. The exit room is sealed behind its doors, one room gets a
-0.5 m raised ledge, and the whole static level is merged into **five meshes** — five draw calls
+0.5 m raised ledge, and the whole static level is merged into **five meshes**, five draw calls
 for the entire map.
 
 `hellgate` → 10 rooms, 3 doors, 1 exit. Type it again and you get the same map down to the brick.
@@ -118,7 +119,7 @@ documentation/        architecture, level gen, combat, tuning, testing
 ```
 
 `level.js` deliberately imports nothing from Three.js. That is what lets the generator be tested in
-Node — reachability, determinism, collision and raycasts — without a browser or a GPU.
+Node, so reachability, determinism, collision and raycasts are all testable without a browser or a GPU.
 
 ## Testing
 
@@ -129,7 +130,7 @@ bash tests/run.sh
 | Suite | What it proves |
 | --- | --- |
 | `test-level.mjs` | 47 seeds: determinism, every room reachable, spawn free, exit pad unreachable while doors are shut, a 400-step random walk never ends inside a wall, raycast sanity |
-| `test-geometry.mjs` | every merged triangle's winding matches its normal **and** its normal points into open space — catches inverted faces, which logic tests cannot see |
+| `test-geometry.mjs` | every merged triangle's winding matches its normal **and** its normal points into open space, which catches inverted faces that logic tests cannot see |
 | `test-game.mjs` | boots, walks, looks, fires all three weapons, kills, takes damage, clears a wave, opens the exit, advances, checks the keycard gate, dies, restarts, pauses, then 2000 frames of random input without a crash |
 
 Two gates sit on top of the suites:
@@ -141,7 +142,7 @@ Two gates sit on top of the suites:
 
 The suites run against a stub of the DOM and of Three.js so they need no browser and no network.
 They also pass unmodified against the real library (`three@0.187`, with only `WebGLRenderer` faked) —
-which is how the game was checked against the current release rather than against a mock.
+which is how the game was checked against the current release and not only against a mock.
 
 ## Documentation
 
@@ -157,7 +158,7 @@ which is how the game was checked against the current release rather than agains
 
 Five draw calls for the level, ~2.7k triangles, pooled effects, `devicePixelRatio` capped at 1.5,
 fog from 9 to 32 units, and frustum culling on enemies. Each enemy is ~12 small meshes, so a packed
-room of 24 is a few hundred calls — fine on a desktop GPU. Press `` ` `` in game to see the truth for
+room of 24 is a few hundred calls, fine on a desktop GPU. Press `` ` `` in game to see the truth for
 your machine.
 
 ## Support
@@ -172,7 +173,7 @@ your machine.
 | Email | [sohilmomin2000@gmail.com](mailto:sohilmomin2000@gmail.com) |
 
 Nothing is gated behind it: no accounts, no tracking, no network requests. HELLGATE is MIT-licensed
-and always will be — the support links pay for the hours that go into
+and always will be. The support links pay for the hours that go into
 [the roadmap](ENHANCEMENTS.md), not for access to anything.
 
 ## Security and privacy
@@ -182,19 +183,19 @@ reporting process and [PRIVACY.md](PRIVACY.md) for the one `localStorage` key th
 
 ## Contributing
 
-Issues and PRs are welcome — especially new enemy types, better enemy navigation (see
+Issues and PRs are welcome, especially new enemy types, better enemy navigation (see
 [roadmap #1](ENHANCEMENTS.md)), and seeds that break the generator. Run `bash tests/run.sh` before
 you open a PR; the geometry suite catches the mistakes that are invisible in a diff.
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits
 
-Built with [Three.js](https://threejs.org). Inspired by id Software's Doom (1993) — the sector
+Built with [Three.js](https://threejs.org). Inspired by id Software's Doom (1993): the sector
 model, the face in the HUD, and the idea that a game is more fun than a tech demo.
 
 Four techniques are borrowed from [remorses/castle-valley](https://github.com/remorses/castle-valley),
 a painterly Three.js game: light and shade baked once into the geometry instead of computed per
-frame, a renderer-level grade rather than a flat output, resolution that adapts to the frame budget,
+frame, a renderer-level grade in place of a flat output, resolution that adapts to the frame budget,
 and audio that is heard from where it stands. Credit to [@remorses](https://github.com/remorses).
 
 ## License

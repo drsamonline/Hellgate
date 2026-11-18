@@ -17,7 +17,7 @@ tests/
 
 The interesting logic — level generation, collision, raycasts, the FSM, wave flow — does not need a
 GPU. Stubbing Three.js and the DOM lets the *real* game modules run in Node, so the tests exercise the
-shipping code rather than a reimplementation of it.
+shipping code and not a reimplementation of it.
 
 The stub is deliberately thin: vectors with real maths, geometries that hold their buffers, materials
 that hold their colours, and a renderer that does nothing but count. It is not a Three.js emulator and
@@ -101,7 +101,7 @@ window.dispatch('keydown', { code: 'KeyW' });
 HG.player.pos.set(x, 0, z);                  // pose through the debug handle
 ```
 
-Keep assertions behavioural ("the exit opened") rather than incidental ("`doorMeshes[0].visible` is
+Keep assertions behavioural ("the exit opened") and not incidental ("`doorMeshes[0].visible` is
 false"), except where the incidental thing *is* the bug you are guarding against.
 
 ## The two gates above the suites
@@ -110,7 +110,7 @@ false"), except where the incidental thing *is* the bug you are guarding against
 goes stale silently. It counts the roadmap items in `ENHANCEMENTS.md`, the suites on disk, the modules
 in `play/src`, the lines of JS, and compares each against the README. It also checks the licence badge
 against `LICENSE`, `VERSION` against the newest `CHANGELOG` heading, and that the support table carries
-the real handles rather than invented tiers. Twelve assertions, no dependencies, runs in 200 ms.
+the real handles and no invented tiers. Twelve assertions, no dependencies, runs in 200 ms.
 
 **`tools/smoke.mjs`** — the suites stub the DOM and Three.js, so none of them proves that
 `index.html` or `play/index.html` actually work. This one launches headless Chromium with software
@@ -136,5 +136,5 @@ links to test them is far slower than a plain HTTP GET, which is what it does no
 ## Screenshots and the map
 
 `node tools/shoot.mjs` runs the game in headless Chromium (SwiftShader software WebGL), poses the
-camera through `window.HG`, and writes `assets/*.png`. `node tools/map.mjs <seed>` renders the live
+camera through `window.HG`, and writes `assets/*.png`, which `tools/optimise_assets.py` converts to WebP for the repo. `node tools/map.mjs <seed>` renders the live
 generator output to SVG. Both need `puppeteer-core` and a Chromium binary; neither ships in the game.

@@ -70,7 +70,7 @@ damage = base * min(2.20, 1 + 0.06 * (wave - 1))
 count  = min(24, 4 + 2 * wave)
 ```
 
-The `min()` caps are what stop wave 20 from being unplayable rather than merely hard.
+The `min()` caps stop wave 20 from turning unplayable and keep it merely hard.
 
 ## Effects
 

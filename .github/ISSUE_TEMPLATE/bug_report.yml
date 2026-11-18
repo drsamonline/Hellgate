@@ -1,0 +1,51 @@
+name: Bug report
+description: Something in the game or the site is broken
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing: run `bash tests/run.sh` and `node tools/smoke.mjs`. If either fails on a clean
+        clone, say so — that is a different bug from a broken run.
+  - type: input
+    id: seed
+    attributes:
+      label: Seed
+      description: The seed string from the title screen, or from the URL.
+      placeholder: hellgate
+    validations:
+      required: true
+  - type: input
+    id: wave
+    attributes:
+      label: Wave
+      description: Which wave you were on, if it matters.
+      placeholder: "3"
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start a run with seed `hellgate`
+        2. Walk into the exit room
+        3. ...
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Chrome 142, Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: Any error from the browser console. Press F12, then copy the red lines.
+      render: shell

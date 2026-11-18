@@ -16,7 +16,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 1. **Settings that persist** — mouse sensitivity, FOV (70–100) and a reduced-motion toggle in a small panel, saved to `localStorage` next to the best run. `main.js` · S · high — ✓ shipped
 2. **Reduced motion** — one checkbox that disables screen shake, weapon bob and the vignette pulse. The landing page already honours `prefers-reduced-motion`; the game should too. `effects.js` · S · high (accessibility) — ✓ shipped
-3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape/icon difference, not just a hue change. `hud.js` · S · high (accessibility)
+3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape or icon difference as well as a hue change. `hud.js` · S · high (accessibility)
 4. **Volume + mute** — `M` to mute, a gain slider, persisted. `audio.js` · S · medium — ✓ shipped
 5. **Weapon cycle on the wheel** — `wheel` already means nothing in a pointer-locked canvas. `main.js` · S · medium — ✓ shipped
 6. **Restart from the pause menu** — currently you must die or reload to reseed. `main.js` · S · medium — ✓ shipped

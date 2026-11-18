@@ -14,7 +14,7 @@ model.
 | Range | 70 | 45, falloff to 35 % | projectile, 26 u/s |
 | Feel | precise, always useful | close-range delete button | crowd control, self-shake |
 
-Switching weapons sets a fixed 0.18 s delay rather than inheriting the old weapon's cooldown — so
+Switching weapons sets a fixed 0.18 s delay instead of inheriting the old weapon's cooldown, so
 you cannot swap-cancel a shotgun blast, and you are not locked out for a second either.
 
 ### How a hitscan shot resolves
