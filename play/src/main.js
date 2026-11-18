@@ -783,6 +783,7 @@ function saveBest(b) {
 // Escape: the change event arrives a frame later, when the state may be back to
 // 'playing' again (reading a terminal does exactly that).
 let lockIntentional = false;
+let lockPendingAt = 0;
 
 function releaseLock() {
   lockIntentional = true;
@@ -792,6 +793,7 @@ function releaseLock() {
 function requestLock() {
   if (document.pointerLockElement === canvas) return;
   if (typeof canvas.requestPointerLock !== 'function') return;
+  lockPendingAt = performance.now();
   const plain = () => {
     try { canvas.requestPointerLock(); } catch (e) { /* no lock available */ }
   };
@@ -816,6 +818,9 @@ document.addEventListener('pointerlockchange', () => {
     lockIntentional = false;
     return;
   }
+  // a request that just failed (no gesture, or the browser refused) also fires
+  // this event; that is not the player pausing
+  if (performance.now() - lockPendingAt < 1500) return;
   if (game.state === 'playing') pauseGame();
 });
 

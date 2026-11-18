@@ -180,9 +180,10 @@ ok('the boss bar element exists', bossOk.bar);
 // a power fires and spends energy
 const cast = await page.evaluate(() => {
   const HG = window.HG;
+  const state = HG.game.state;
   const before = HG.powers.energy;
   HG.castPower(0);
-  return { before, after: HG.powers.energy, cd: HG.powers.cd[HG.powers.slots[0].id] };
+  return { state, before, after: HG.powers.energy, cd: HG.powers.cd[HG.powers.slots[0].id] };
 });
 ok('a power spends energy and starts its cooldown', cast.after < cast.before && cast.cd > 0, JSON.stringify(cast));
 
