@@ -72,6 +72,12 @@ count  = min(24, 4 + 2 * wave)
 
 The `min()` caps stop wave 20 from turning unplayable and keep it merely hard.
 
+Difficulty presets are `DIFF_MULT` in `main.js`: three multipliers for hp, damage and wave size. They
+are applied at spawn, so changing the preset mid-run only affects enemies that have not spawned yet.
+
+The hound is a third entry in `TYPES`: 22 hp, speed 4.4, melee only, 0.25 s telegraph. It exists to
+force weapon switching — one shotgun blast kills it, and the pistol cannot keep up with three of them.
+
 ## Effects
 
 `play/src/effects.js` — pool sizes at the top (`MAX_PARTICLES` 600, `MAX_TRACERS` 16, `MAX_DECALS` 40,

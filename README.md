@@ -87,13 +87,13 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 **Combat** — hitscan pistol · 8-pellet shotgun with falloff · rocket with splash, light and shake · muzzle flash lights · tracers · scorch and blood decals · per-enemy hit flash.
 
-**Enemies** — imps (telegraphed fireballs) and grunts (hitscan, melee at close range) on one FSM: `IDLE → CHASE → ATTACK → PAIN → DEATH` · **BFS flow-field navigation, one field shared by every enemy** · grid line-of-sight · wandering · gibs · shared geometry per type.
+**Enemies** — imps (telegraphed fireballs), grunts (hitscan, melee) and hounds (fast, melee-only, die to one shotgun blast) on one FSM: `IDLE → CHASE → ATTACK → PAIN → DEATH` · **BFS flow-field navigation, one field shared by every enemy** · grid line-of-sight · wandering · gibs · shared geometry per type.
 
 **Audio** — synthesised, spatialised: every enemy sound is panned by direction and attenuated by distance, and no two plays are identical.
 
 **Feel** — Doom-style face that degrades with health · damage direction arrows · red edge vignette · weapon sway and bob · pooled particles, tracers, decals and lights (nothing allocates per shot).
 
-**Meta** — seeded maps · wave difficulty curve · procedural pickups · keycard gate · title / pause / game-over screens · best run in `localStorage`.
+**Meta** — seeded maps · three difficulty presets · score with a per-wave time bonus · wave difficulty curve · procedural pickups · keycard gate · title / pause / game-over screens · best run in `localStorage`.
 
 ## Architecture
 

@@ -66,10 +66,21 @@ let weapons = null;
 
 const settings = clampSettings(loadSettings());
 
+// One multiplier table, three presets. Enemy hp and damage scale here; the wave
+// size scales in EnemyManager.spawnWave.
+const DIFF_MULT = {
+  easy: { hp: 0.8, dmg: 0.7, count: 0.75 },
+  normal: { hp: 1, dmg: 1, count: 1 },
+  hard: { hp: 1.3, dmg: 1.25, count: 1.3 },
+};
+
 const game = {
   state: 'title',       // title | playing | paused | dead
   wave: 0,
   kills: 0,
+  waveKills: 0,
+  score: 0,
+  waveStart: 0,
   hasKey: false,
   exitOpen: false,
   warnedKey: false,
@@ -148,6 +159,9 @@ function buildRun(seed) {
   game.seed = seed;
   game.wave = 0;
   game.kills = 0;
+  game.waveKills = 0;
+  game.score = 0;
+  game.waveStart = 0;
   game.hasKey = false;
   game.exitOpen = false;
   game.warnedKey = false;
@@ -168,7 +182,8 @@ function buildRun(seed) {
   projectiles = new Projectiles(scene, level, effects, audio);
   projectiles.onKill = () => { game.kills++; };
   enemies = new EnemyManager(scene, level, effects, audio);
-  enemies.onKill = () => { game.kills++; };
+  enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
+  enemies.onKill = () => { game.kills++; game.waveKills++; };
 
   player.reset(level, 0);
   // face the most open direction so the run never starts nose-to-wall
@@ -208,6 +223,8 @@ function buildRun(seed) {
 
 function startWave(n) {
   game.wave = n;
+  game.waveKills = 0;
+  game.waveStart = elapsed;
   game.hasKey = false;
   game.exitOpen = false;
   game.warnedKey = false;
@@ -231,6 +248,7 @@ function applySettings() {
   player.sensitivity = settings.sensitivity;
   player.reducedMotion = settings.reducedMotion;
   if (effects) effects.reducedMotion = settings.reducedMotion;
+  if (enemies) enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
   audio.setVolume(settings.volume);
   audio.setMuted(settings.muted);
   syncSettingsUI();
@@ -249,6 +267,8 @@ function syncSettingsUI() {
   if (m) m.checked = settings.reducedMotion;
   const mu = document.getElementById('setMute');
   if (mu) mu.checked = settings.muted;
+  const df = document.getElementById('setDiff');
+  if (df) df.value = settings.difficulty;
 }
 
 function changeSetting(key, value) {
@@ -378,13 +398,18 @@ function updatePickups(dt) {
 // ----------------------------------------------------------------- wave logic
 
 function openExit() {
+  // score: kills this wave, a bonus for the wave, and a shrinking time bonus
+  const secs = Math.max(0, elapsed - game.waveStart);
+  const timeBonus = Math.max(0, Math.round((45 - secs) * 10));
+  const gained = game.waveKills * 50 + game.wave * 100 + timeBonus;
+  game.score += gained;
   game.exitOpen = true;
   level.doorOpen = true;
   levelMeshes.doorMeshes.forEach((m) => { m.visible = false; });
   getMats()['pad'].color.setHex(0x39ff9a);
   audio.play('door');
   effects.addShake(0.3);
-  hud.toast('EXIT OPEN', 2.2);
+  hud.toast('EXIT OPEN  +' + gained, 2.2);
 }
 
 function checkWave() {
@@ -445,12 +470,14 @@ function gameOver() {
 
   const wavesSurvived = Math.max(0, game.wave - 1);
   const prev = game.best;
-  if (!prev || wavesSurvived > prev.waves || (wavesSurvived === prev.waves && game.kills > prev.kills)) {
-    game.best = { waves: wavesSurvived, kills: game.kills, seed: game.seed };
+  const prevScore = prev ? prev.score || 0 : -1;
+  if (!prev || game.score > prevScore || (game.score === prevScore && wavesSurvived > prev.waves)) {
+    game.best = { waves: wavesSurvived, kills: game.kills, score: game.score, seed: game.seed };
     saveBest(game.best);
   }
 
   document.getElementById('stats').innerHTML =
+    `SCORE <b>${game.score}</b><br />` +
     `WAVES SURVIVED <b>${wavesSurvived}</b><br />` +
     `KILLS <b>${game.kills}</b><br />` +
     `REACHED WAVE <b>${game.wave}</b><br />` +
@@ -621,6 +648,7 @@ document.getElementById('setFov').addEventListener('input', (e) => changeSetting
 document.getElementById('setVol').addEventListener('input', (e) => changeSetting('volume', Number(e.target.value) / 100));
 document.getElementById('setMotion').addEventListener('change', (e) => changeSetting('reducedMotion', e.target.checked));
 document.getElementById('setMute').addEventListener('change', (e) => changeSetting('muted', e.target.checked));
+document.getElementById('setDiff').addEventListener('change', (e) => changeSetting('difficulty', e.target.value));
 document.getElementById('retryBtn').addEventListener('click', () => startGame(game.seed));
 document.getElementById('menuBtn').addEventListener('click', toMenu);
 
@@ -697,6 +725,7 @@ function update(dt) {
     kills: game.kills,
     enemies: enemies.aliveCount,
     hasKey: game.hasKey,
+    score: game.score,
     exitOpen: game.exitOpen,
     exit: level.exit,
     camera,

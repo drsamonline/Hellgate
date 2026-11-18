@@ -11,7 +11,10 @@ export const DEFAULTS = {
   reducedMotion: false, // kills screen shake and weapon bob
   volume: 0.32,         // 0..1 master gain
   muted: false,
+  difficulty: 'normal', // easy | normal | hard
 };
+
+export const DIFFICULTIES = ['easy', 'normal', 'hard'];
 
 export function loadSettings() {
   try {
@@ -40,5 +43,6 @@ export function clampSettings(s) {
   s.volume = Math.min(1, Math.max(0, Number(s.volume) || 0));
   s.muted = !!s.muted;
   s.reducedMotion = !!s.reducedMotion;
+  if (!DIFFICULTIES.includes(s.difficulty)) s.difficulty = 'normal';
   return s;
 }

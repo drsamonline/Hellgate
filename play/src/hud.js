@@ -19,6 +19,7 @@ export class HUD {
     this.elWave = document.getElementById('wave');
     this.elKills = document.getElementById('kills');
     this.elEnemies = document.getElementById('enemies');
+    this.elScore = document.getElementById('score');
     this.elKey = document.getElementById('keycard');
     this.crosshair = document.getElementById('crosshair');
     this.hitEl = document.getElementById('hitmarker');
@@ -78,6 +79,7 @@ export class HUD {
       } else {
         this.compass.classList.remove('on');
       }
+      this.elScore.textContent = String(state.score || 0);
       this.elWave.textContent = String(state.wave);
       this.elKills.textContent = String(state.kills);
       this.elEnemies.textContent = String(state.enemies);

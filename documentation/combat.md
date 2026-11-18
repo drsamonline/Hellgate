@@ -69,15 +69,16 @@ One FSM, two parameter sets (`TYPES` in `enemies.js`).
                            └────────┘
 ```
 
-| | Imp | Grunt |
-| --- | --- | --- |
-| Health | 55 (scales +10 %/wave) | 40 |
-| Speed | 2.5 | 3.3 |
-| Attack | fireball, 15 dmg, 13 u/s | hitscan 8 dmg, melee 12 |
-| Range | 14 | 16 ranged, 2.4 melee |
-| Telegraph | 0.55 s, charging particles at the chest | 0.40 s |
-| Cooldown | 2.1 s | 1.4 s |
-| Sight | 22 | 24 |
+| | Imp | Grunt | Hound |
+| --- | --- | --- | --- |
+| Health | 55 (scales +10 %/wave) | 40 | 22 |
+| Speed | 2.5 | 3.3 | 4.4 |
+| Attack | fireball, 15 dmg, 13 u/s | hitscan 8 dmg, melee 12 | melee 11 |
+| Range | 14 | 16 ranged, 2.4 melee | 1.9 melee |
+| Telegraph | 0.55 s, charging particles at the chest | 0.40 s | 0.25 s |
+| Cooldown | 2.1 s | 1.4 s | 0.9 s |
+| Sight | 22 | 24 | 26 |
+| From wave | 1 | 2 | 4 |
 
 - **Telegraph.** During the windup an imp emits particles and pulses; a grunt raises its gun. Both are
   the player's cue to break line of sight. The shot fires once, at the end of the windup.
@@ -114,7 +115,30 @@ animation for the player — the game-over screen is the feedback.
 | 1 | 6 | imps |
 | 2 | 8 | imps, every 3rd is a grunt |
 | 3 | 10 | + keycard required |
-| n | min(24, 4 + 2n) | hp × (1 + 0.1(n−1)), speed × (1 + 0.03(n−1)), damage × (1 + 0.06(n−1)) |
+| n | min(30, 4 + 2n) × difficulty | hp × (1 + 0.1(n−1)), speed × (1 + 0.03(n−1)), damage × (1 + 0.06(n−1)) |
+
+## Difficulty
+
+Three presets, persisted with the rest of the settings, multiplying three numbers and nothing else:
+
+| Preset | Enemy hp | Enemy damage | Wave size |
+| --- | --- | --- | --- |
+| Easy | × 0.8 | × 0.7 | × 0.75 |
+| Normal | × 1 | × 1 | × 1 |
+| Hard | × 1.3 | × 1.25 | × 1.3 |
+
+## Score
+
+A wave pays out when its exit opens:
+
+```
+score += kills this wave × 50
+       + wave number × 100
+       + max(0, (45 − seconds spent) × 10)
+```
+
+The time bonus is the only part that rewards speed, and it is small enough that clearing carefully beats
+rushing. The best run in `localStorage` is the highest score, not the longest survival.
 
 Enemies spawn in room cells at least 9 units from the player, in a burst of red particles. Pickups are
 scattered at least 4 units away. The exit unlocks when `aliveCount === 0` and — from wave 3 — the

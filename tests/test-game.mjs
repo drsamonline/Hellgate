@@ -165,6 +165,54 @@ for (let i = 0; i < 180; i++) frames(1);
 const d1 = (() => { const f = bff(HG.level, HG.player.pos.x, HG.player.pos.z); return f[Math.round(far.pos.z / 2) * HG.level.W + Math.round(far.pos.x / 2)]; })();
 ok(d0 > 0 && d1 >= 0 && d1 < d0, `enemy closed along the field (${d0} -> ${d1} cells)`);
 
+console.log('\n== difficulty presets (roadmap 25) ==');
+HG.changeSetting('difficulty', 'normal');
+HG.enemies.clear();
+HG.enemies.spawnWave(3, HG.player.pos);
+const nCount = HG.enemies.list.length;
+const nHp = HG.enemies.list[0].maxHp;
+HG.changeSetting('difficulty', 'hard');
+ok(HG.enemies.diff.count > 1, 'hard raises the wave size multiplier');
+HG.enemies.clear();
+HG.enemies.spawnWave(3, HG.player.pos);
+const hCount = HG.enemies.list.length;
+const hHp = HG.enemies.list[0].maxHp;
+ok(hCount > nCount, `hard spawns more (${nCount} -> ${hCount})`);
+ok(hHp > nHp, `hard enemies are tougher (${nHp} -> ${hHp})`);
+HG.changeSetting('difficulty', 'easy');
+HG.enemies.clear();
+HG.enemies.spawnWave(3, HG.player.pos);
+ok(HG.enemies.list.length < nCount, `easy spawns fewer (${HG.enemies.list.length} < ${nCount})`);
+HG.changeSetting('difficulty', 'normal');
+ok(JSON.parse(localStorage.getItem('hellgate.settings')).difficulty === 'normal', 'difficulty persisted');
+
+console.log('\n== hound (roadmap 21) ==');
+HG.enemies.clear();
+HG.enemies.spawnWave(4, HG.player.pos);
+const hounds = HG.enemies.list.filter((e) => e.type === 'hound');
+ok(hounds.length > 0, `wave 4 brings hounds (${hounds.length} of ${HG.enemies.list.length})`);
+ok(hounds.every((h) => h.T.melee === true && h.T.attackRange <= 3), 'hounds are melee only');
+ok(hounds[0].speed > HG.enemies.list.find((e) => e.type === 'imp').speed, 'hounds are faster than imps');
+
+console.log('\n== score and timer (roadmap 26) ==');
+HG.enemies.clear();
+HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);
+HG.game.wave = 2;
+HG.game.exitOpen = false;
+HG.game.waveKills = 4;
+HG.game.score = 0;
+frames(4);
+ok(HG.game.score > 0, 'clearing a wave awards score: ' + HG.game.score);
+ok(HG.hud.elScore.textContent === String(HG.game.score), 'the HUD shows the score');
+HG.player.damage(999, { x: 0, y: 0, z: 0 });
+frames(3);
+const best = JSON.parse(localStorage.getItem('hellgate.best'));
+ok(best.score === HG.game.score, 'the best run records the score: ' + best.score);
+// the death above ended the run; later blocks need a live game
+HG.player.alive = true;
+HG.player.health = 100;
+HG.game.state = 'playing';
+
 console.log('\n== enemy AI damages the player ==');
 HG.game.wave = 1;
 HG.enemies.clear();

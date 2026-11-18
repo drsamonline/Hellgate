@@ -14,6 +14,11 @@ const TYPES = {
     attackRange: 14, attackCd: 2.1, telegraph: 0.55, damage: 15,
     melee: false, sight: 22, color: 0x8a3524, label: 'IMP',
   },
+  hound: {
+    hp: 22, speed: 4.4, radius: 0.36, height: 1.05, hitRadius: 0.45,
+    attackRange: 2.4, attackCd: 0.9, telegraph: 0.25, damage: 9,
+    melee: true, meleeRange: 1.9, meleeDamage: 11, sight: 26, color: 0x8a1f6a, label: 'HOUND',
+  },
   grunt: {
     hp: 40, speed: 3.3, radius: 0.42, height: 1.7, hitRadius: 0.55,
     attackRange: 16, attackCd: 1.4, telegraph: 0.4, damage: 8,
@@ -61,6 +66,9 @@ function mats() {
     gruntDark: body(0x2f3a24),
     gruntMetal: plain(0x6d7278),
     eye: plain(0xff5533, true),
+    houndBody: body(0x6d1a52),
+    houndDark: body(0x3d0f2e),
+    houndEye: plain(0xff4fd8, true),
   };
   return MATS;
 }
@@ -124,14 +132,34 @@ function makeGrunt() {
   return { group: g, parts: { armL, armR: gun, legL, legR } };
 }
 
+function makeHound() {
+  const M = mats();
+  const g = new THREE.Group();
+  // low, long, and fast: the silhouette has to read differently from an imp at a glance
+  g.add(box(0.5, 0.34, 0.95, M.houndBody, 0, 0.62, 0));
+  g.add(box(0.34, 0.3, 0.34, M.houndDark, 0, 0.66, 0.56));
+  g.add(box(0.1, 0.07, 0.05, M.houndEye, -0.09, 0.7, 0.73));
+  g.add(box(0.1, 0.07, 0.05, M.houndEye, 0.09, 0.7, 0.73));
+  // spines along the back
+  const spine = new THREE.Mesh(coneGeo(0.05, 0.22, 4), M.houndDark);
+  spine.position.set(0, 0.85, 0.1);
+  g.add(spine);
+  const legFL = limb(0.1, 0.5, 0.1, M.houndDark, -0.19, 0.5, 0.34, 0.25);
+  const legFR = limb(0.1, 0.5, 0.1, M.houndDark, 0.19, 0.5, 0.34, 0.25);
+  const legBL = limb(0.1, 0.5, 0.1, M.houndDark, -0.19, 0.5, -0.34, 0.25);
+  const legBR = limb(0.1, 0.5, 0.1, M.houndDark, 0.19, 0.5, -0.34, 0.25);
+  g.add(legFL, legFR, legBL, legBR);
+  return { group: g, parts: { legL: legFL, legR: legFR, legBL, legBR } };
+}
+
 export class Enemy {
-  constructor(typeName, worldPos, wave, scene) {
+  constructor(typeName, worldPos, wave, scene, opts = {}) {
     const T = TYPES[typeName];
     this.type = typeName;
     this.T = T;
     this.scene = scene;
 
-    const built = typeName === 'imp' ? makeImp() : makeGrunt();
+    const built = typeName === 'imp' ? makeImp() : typeName === 'hound' ? makeHound() : makeGrunt();
     this.mesh = built.group;
     this.parts = built.parts;
 
@@ -157,11 +185,12 @@ export class Enemy {
     this.mesh.position.copy(worldPos);
     scene.add(this.mesh);
 
-    const scale = 1 + 0.1 * (wave - 1);
-    this.maxHp = Math.round(T.hp * scale);
+    const diff = opts.diff || { hp: 1, dmg: 1, count: 1 };
+    const scale = (1 + 0.1 * (wave - 1)) * diff.hp;
+    this.maxHp = Math.max(1, Math.round(T.hp * scale));
     this.hp = this.maxHp;
     this.speed = T.speed * Math.min(1.45, 1 + 0.03 * (wave - 1));
-    this.damage = T.damage * Math.min(2.2, 1 + 0.06 * (wave - 1));
+    this.damage = T.damage * Math.min(2.2, 1 + 0.06 * (wave - 1)) * diff.dmg;
 
     this.pos = worldPos.clone();
     this.state = STATE.IDLE;
@@ -399,11 +428,13 @@ export class Enemy {
     const swing = Math.sin(this.walkPhase) * 0.5 * sp;
     if (this.parts.legL) this.parts.legL.rotation.x = swing;
     if (this.parts.legR) this.parts.legR.rotation.x = -swing;
+    if (this.parts.legBL) this.parts.legBL.rotation.x = -swing;
+    if (this.parts.legBR) this.parts.legBR.rotation.x = swing;
     if (this.type === 'imp') {
       this.parts.armL.rotation.x = -swing * 0.7;
       this.parts.armR.rotation.x = swing * 0.7;
       this.parts.armR.rotation.x -= this.state === STATE.ATTACK ? 1.6 : 0;
-    } else {
+    } else if (this.parts.armL) {
       this.parts.armL.rotation.x = -swing * 0.7;
       if (this.parts.armR) this.parts.armR.rotation.x = this.state === STATE.ATTACK ? -0.35 : 0;
     }
@@ -437,6 +468,7 @@ export class EnemyManager {
     this.onKill = null;
     this.field = null;
     this.fieldT = 0;
+    this.diff = { hp: 1, dmg: 1, count: 1 };
   }
 
   get aliveCount() {
@@ -449,7 +481,8 @@ export class EnemyManager {
   }
 
   spawnWave(wave, playerPos) {
-    const count = Math.min(24, 4 + wave * 2);
+    const diff = this.diff || { hp: 1, dmg: 1, count: 1 };
+    const count = Math.max(2, Math.min(30, Math.round((4 + wave * 2) * diff.count)));
     const cells = this.level.openCells.filter((c) => {
       if (c.room < 0) return false;
       if (c.x === this.level.exit.cx && c.z === this.level.exit.cz) return false;
@@ -460,9 +493,12 @@ export class EnemyManager {
 
     for (let i = 0; i < count; i++) {
       const c = pool[Math.floor(Math.random() * pool.length)];
-      const type = wave >= 2 && i % 3 === 2 ? 'grunt' : 'imp';
+      // wave 2 brings grunts, wave 4 brings hounds; after that it is a mix
+      let type = 'imp';
+      if (wave >= 4 && i % 4 === 3) type = 'hound';
+      else if (wave >= 2 && i % 3 === 2) type = 'grunt';
       const pos = new THREE.Vector3(c.wx + (Math.random() - 0.5) * 0.6, 0, c.wz + (Math.random() - 0.5) * 0.6);
-      const e = new Enemy(type, pos, wave, this.scene);
+      const e = new Enemy(type, pos, wave, this.scene, { diff });
       e.pos.y = floorHeightAt(this.level, pos.x, pos.z);
       e.mesh.position.y = e.pos.y;
       this.list.push(e);

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.2.0 — 2026-11-19
+
+**Gameplay**
+- hounds: a third enemy type from wave 4. Fast, melee only, 22 hp, so one shotgun blast kills it and
+  the pistol cannot keep up with a pack. Roadmap item 21.
+- difficulty presets: easy, normal and hard, multiplying enemy hp, damage and wave size. Persisted
+  with the other settings. Roadmap item 25.
+- score: kills, a wave bonus and a shrinking time bonus, shown in the HUD and recorded as the best
+  run. Roadmap item 26.
+
+**Tests**
+- 12 new assertions: wave size and enemy hp across the three presets, hound composition and speed,
+  score awarded on wave clear, HUD score, best-run score.
+
+
 ## 1.1.0 — 2026-11-19
 
 **Gameplay**

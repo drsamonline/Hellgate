@@ -113,6 +113,12 @@
     transition:background .15s,border-color .15s;
   }
   .setrow input[type=checkbox]:checked{background:#ffb454;border-color:#ffb454}
+  .setrow select{
+    font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+    background:#12100e;color:#ffb454;border:1px solid rgba(255,180,84,.45);
+    padding:7px 10px;border-radius:3px;outline:none;cursor:pointer;min-width:130px;
+  }
+  .setrow select:focus{border-color:#ffb454;box-shadow:0 0 0 3px rgba(255,180,84,.12)}
   .setrow input[type=checkbox]:checked::after{
     content:"";position:absolute;inset:4px;background:#1a1208;border-radius:1px;
   }
@@ -171,6 +177,7 @@
 
   <div id="hud">
     <div id="topbar">
+      <span>SCORE <b id="score">0</b></span>
       <span>WAVE <b id="wave">1</b></span>
       <span>KILLS <b id="kills">0</b></span>
       <span>LEFT <b id="enemies">0</b></span>
@@ -241,6 +248,14 @@
       <div class="setrow">
         <label for="setMotion">Reduced motion</label>
         <input id="setMotion" type="checkbox" />
+      </div>
+      <div class="setrow">
+        <label for="setDiff">Difficulty</label>
+        <select id="setDiff">
+          <option value="easy">Easy</option>
+          <option value="normal" selected>Normal</option>
+          <option value="hard">Hard</option>
+        </select>
       </div>
       <div class="setrow">
         <label for="setMute">Mute</label>

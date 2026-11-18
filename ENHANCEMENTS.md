@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Twelve items shipped — marked **✓ shipped** below.
+Fifteen items shipped — marked **✓ shipped** below.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -37,12 +37,12 @@ Cheap, low-risk, immediately noticeable. All `S`.
 18. **Sound occlusion** — attenuate enemy sounds by line of sight, so a grunt behind a wall is muffled. `audio.js` · M · high
 19. **Directional audio** — a `PannerNode` per enemy, or at least a left/right gain based on the angle to the camera. `audio.js` · M · high — ✓ shipped
 20. **Hit-direction indicator on enemies** — a brief arc showing where damage came from, so you can find the imp shooting you from behind. `enemies.js` · M · high
-21. **A third enemy type** — a fast melee "hound" that dies in one shotgun blast. Forces weapon switching. `enemies.js` · M · high
+21. **A third enemy type** — a fast melee "hound" that dies in one shotgun blast. Forces weapon switching. `enemies.js` · M · high — ✓ shipped
 22. **Boss wave every 5th wave** — one large, slow, high-HP enemy with a telegraphed area attack. Gives a run a shape. `enemies.js` · M · high
 23. **Weapon 4: chaingun** — sustained fire, wide spread, spin-up. Exercises the ammo/pickup path and rewards holding a lane. `weapons.js` · M · medium
 24. **Grenade / alt-fire** — a right-click with a bounce and a fuse. `projectiles.js` · M · medium
-25. **Difficulty presets** — Easy/Normal/Hard as multipliers on enemy hp, damage and count. One object, three numbers. `main.js` · S · high
-26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high
+25. **Difficulty presets** — Easy/Normal/Hard as multipliers on enemy hp, damage and count. One object, three numbers. `main.js` · S · high — ✓ shipped
+26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high — ✓ shipped
 27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium
 28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low
 29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low
