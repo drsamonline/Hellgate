@@ -5,6 +5,8 @@ export const NearestFilter = 1003;
 export const LinearMipmapLinearFilter = 1008;
 export const RepeatWrapping = 1000;
 export const SRGBColorSpace = 'srgb';
+export const StaticDrawUsage = 35044;
+export const DynamicDrawUsage = 35048;
 
 export class Vector3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -13,6 +15,16 @@ export class Vector3 {
   clone() { return new Vector3(this.x, this.y, this.z); }
   add(v) { this.x += v.x; this.y += v.y; this.z += v.z; return this; }
   addScaledVector(v, s) { this.x += v.x * s; this.y += v.y * s; this.z += v.z * s; return this; }
+  sub(v) { this.x -= v.x; this.y -= v.y; this.z -= v.z; return this; }
+  multiplyScalar(s) { this.x *= s; this.y *= s; this.z *= s; return this; }
+  lerp(v, a) {
+    this.x += (v.x - this.x) * a;
+    this.y += (v.y - this.y) * a;
+    this.z += (v.z - this.z) * a;
+    return this;
+  }
+  setScalar(s) { this.x = this.y = this.z = s; return this; }
+  lengthSq() { return this.x * this.x + this.y * this.y + this.z * this.z; }
   normalize() { const l = this.length() || 1; this.x /= l; this.y /= l; this.z /= l; return this; }
   length() { return Math.hypot(this.x, this.y, this.z); }
   distanceTo(v) { return Math.hypot(this.x - v.x, this.y - v.y, this.z - v.z); }
@@ -180,6 +192,8 @@ export class SphereGeometry extends Primitive {}
 export class CylinderGeometry extends Primitive {}
 export class ConeGeometry extends Primitive {}
 export class OctahedronGeometry extends Primitive {}
+export class TorusGeometry extends Primitive {}
+export class DodecahedronGeometry extends Primitive {}
 
 class Material {
   constructor(params = {}) {
@@ -211,6 +225,27 @@ export class LineBasicMaterial extends Material {}
 export class Mesh extends Object3D {
   constructor(geometry, material) { super(); this.geometry = geometry; this.material = material; this.isMesh = true; }
 }
+export class InstancedMesh extends Object3D {
+  constructor(geometry, material, count) {
+    super();
+    this.geometry = geometry;
+    this.material = material;
+    this.count = count;
+    this.isInstancedMesh = true;
+    this.instanceMatrix = {
+      array: new Float32Array(count * 16),
+      needsUpdate: false,
+      setUsage() {},
+    };
+  }
+  setMatrixAt(i, m) {
+    if (this.instanceMatrix.array.length >= (i + 1) * 16) {
+      for (let k = 0; k < 16; k++) this.instanceMatrix.array[i * 16 + k] = m ? m[k] || 0 : 0;
+    }
+  }
+  getMatrixAt(i, out) { return out; }
+}
+
 export class Points extends Object3D {
   constructor(geometry, material) { super(); this.geometry = geometry; this.material = material; }
 }

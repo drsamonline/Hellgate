@@ -36,6 +36,10 @@ export class Player {
     this.alive = true;
 
     this.sensitivity = 1;   // set from settings
+    this.speedMul = 1;      // set from the class
+    this.damageMul = 1;     // set from the class
+    this.invuln = 0;        // seconds of immunity, set by powers
+    this.guard = 0;         // seconds of half damage, set by powers
     this.reducedMotion = false;
 
     this.onDamage = null;   // (amount, sourcePos) => void
@@ -71,10 +75,15 @@ export class Player {
     // ---- wish direction (camera relative) --------------------------------
     let ix = 0;
     let iz = 0;
+    if (input.move && (input.move.x || input.move.y)) {
+      ix = input.move.x;
+      iz = input.move.y;
+    } else {
     if (keys['KeyW'] || keys['ArrowUp']) iz -= 1;
     if (keys['KeyS'] || keys['ArrowDown']) iz += 1;
     if (keys['KeyA'] || keys['ArrowLeft']) ix -= 1;
     if (keys['KeyD'] || keys['ArrowRight']) ix += 1;
+    }
     const len = Math.hypot(ix, iz) || 1;
     ix /= len;
     iz /= len;
@@ -85,7 +94,7 @@ export class Player {
     const wz = -ix * sinY + iz * cosY;
 
     const sprint = !!(keys['ShiftLeft'] || keys['ShiftRight']);
-    const speed = sprint ? SPRINT : WALK;
+    const speed = (sprint ? SPRINT : WALK) * this.speedMul;
     const k = 1 - Math.exp(-ACCEL * dt);
     this.vel.x += (wx * speed - this.vel.x) * k;
     this.vel.z += (wz * speed - this.vel.z) * k;
@@ -166,7 +175,8 @@ export class Player {
 
   damage(amount, sourcePos) {
     if (!this.alive) return 0;
-    let dmg = amount;
+    if (this.invuln > 0) return 0;
+    let dmg = this.guard > 0 ? amount * 0.5 : amount;
     if (this.armor > 0) {
       const absorbed = Math.min(this.armor, dmg * 0.5);
       this.armor -= absorbed;

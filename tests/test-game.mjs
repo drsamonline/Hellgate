@@ -66,11 +66,20 @@ console.log('\n== start ==');
 doc.getElementById('seedInput').value = 'testseed';
 doc.getElementById('startBtn').dispatch('click');
 frames(2);
-ok(HG.game.state === 'playing', 'state -> playing');
+ok(HG.game.state === 'intro', 'start plays the story intro');
 ok(HG.level.cells.length === 1600, 'level grid built');
 ok(HG.levelMeshes.group.children.length > 0, 'level meshes built (' + HG.levelMeshes.group.children.length + ')');
+
+doc.getElementById('storySkip').dispatch('click');
+frames(2);
+ok(HG.game.state === 'class', 'the intro hands over to class select');
+
+HG.chooseClass('marine');
+frames(2);
+ok(HG.game.state === 'playing', 'state -> playing after choosing a class');
+ok(HG.weapons.current === 1, 'the marine starts with the shotgun');
 ok(HG.enemies.list.length === 6, 'wave 1 spawned 6 enemies (got ' + HG.enemies.list.length + ')');
-ok(HG.weapons.current === 0, 'pistol equipped');
+ok(HG.powers.slots.length === 3, 'three power slots equipped');
 
 console.log('\n== movement ==');
 const p0 = { x: HG.player.pos.x, z: HG.player.pos.z };
@@ -285,7 +294,7 @@ doc.getElementById('retryBtn').dispatch('click');
 frames(3);
 ok(HG.game.state === 'playing', 'retry restarts');
 ok(HG.game.kills === 0 && HG.game.wave === 1, 'stats reset');
-ok(HG.player.health === 100 && HG.player.ammo.shells === 16, 'player reset');
+ok(HG.player.health === 110 && HG.player.armor === 25 && HG.player.ammo.shells === 16, 'player reset to the marine stats');
 ok(oldLevelMesh && oldLevelMesh.geometry.__disposed === true, 'previous run\'s level geometry was disposed');
 ok(oldLevelMesh && oldLevelMesh.material.userData.shared === true, 'shared cached materials survive a restart');
 ok(HG.levelMeshes.group.children.length > 0, 'new run built fresh meshes');

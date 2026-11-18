@@ -110,6 +110,54 @@ const SHOTS = [
     before: null,
   },
   {
+    // the cold open: typed panels over a flythrough of the level you will play
+    name: 'intro',
+    url: '/play/',
+    settle: 900,
+    before: null,
+    act: async (page) => {
+      await page.click('#startBtn');
+      await new Promise((r) => setTimeout(r, 4300));
+    },
+  },
+  {
+    name: 'class',
+    url: '/play/',
+    settle: 900,
+    act: async (page) => {
+      await page.click('#startBtn');
+      await page.waitForFunction('window.HG.game.state === "intro"', { timeout: 15000 });
+      await page.click('#storySkip');
+      await page.waitForFunction('window.HG.game.state === "class"', { timeout: 15000 });
+      await new Promise((r) => setTimeout(r, 400));
+    },
+  },
+  {
+    name: 'map',
+    url: '/play/?auto=1&seed=hellgate&wave=1',
+    settle: 1300,
+    before: () => { window.HG.showZoneMap(); },
+    settleAfter: 500,
+  },
+  {
+    // the grove zone: trees, grass and animals
+    name: 'grove',
+    url: '/play/?auto=1&zone=grove&wave=2',
+    settle: 1500,
+    before: `(() => { ${HELPERS}
+      const r = pickRoom(6, 6);
+      put(r.cx * 2, (r.z + r.h - 1.2) * 2, 0, -4);
+      park(0, -2.2, 6);
+      park(1, 2.4, 7.5);
+      hidePickupsNear(6);
+      HG.player.health = 96; HG.player.armor = 25;
+      HG.weapons.select(1, true);
+      HG.game.score = 1450;
+      HG.hud.toast('');
+    })()`,
+    settleAfter: 600,
+  },
+  {
     // wide room, wave closing in: the README hero
     name: 'arena',
     url: '/play/?auto=1&seed=hellgate&wave=3',

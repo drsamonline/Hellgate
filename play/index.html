@@ -123,6 +123,73 @@
     content:"";position:absolute;inset:4px;background:#1a1208;border-radius:1px;
   }
 
+  /* power bar: energy + three class slots */
+  #powerbar{
+    position:absolute;left:50%;bottom:104px;transform:translateX(-50%);
+    display:flex;align-items:center;gap:12px;padding:6px 10px;
+    background:rgba(10,9,8,.66);border:1px solid rgba(255,180,84,.18);border-radius:3px;
+  }
+  #energyWrap{width:150px;height:7px;background:#171310;border:1px solid rgba(255,180,84,.22);border-radius:2px;overflow:hidden}
+  #energy{height:100%;width:100%;background:linear-gradient(90deg,#2f7dff,#7fd6ff);transition:width .12s linear}
+  #powerSlots{display:flex;gap:8px}
+  .pslot{
+    position:relative;min-width:64px;padding:3px 7px;border:1px solid rgba(255,180,84,.28);
+    border-radius:2px;background:#12100e;text-align:center;overflow:hidden;
+  }
+  .pslot b{display:block;font-size:9px;letter-spacing:.18em;color:#ffb454}
+  .pslot span{display:block;font-size:9px;letter-spacing:.12em;color:#8d7f6c}
+  .pslot i{position:absolute;inset:auto 0 0 0;height:0%;background:rgba(255,59,48,.35)}
+  .pslot.cool b{color:#5a5049}
+  .pslot.ready{border-color:rgba(127,214,255,.5)}
+
+  #relics{position:absolute;top:40px;left:16px;font-size:11px;letter-spacing:.18em;color:#c77dff;text-shadow:0 2px 6px #000}
+
+  /* story: the level shows through */
+  .screen.cinema{background:linear-gradient(180deg,rgba(4,4,6,.15),rgba(4,4,6,.85));justify-content:flex-end;padding-bottom:12vh}
+  #storyText{
+    max-width:760px;min-height:3.6em;font-size:clamp(16px,2.4vw,22px);line-height:1.7;color:#f2e7d4;
+    text-shadow:0 2px 14px rgba(0,0,0,.95);letter-spacing:.02em;
+  }
+  #storyText::after{content:"▌";color:#ffb454;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* class cards */
+  #classCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;width:min(920px,92vw)}
+  .classcard{display:block;text-align:left;background:#0e0d11;border:1px solid rgba(255,180,84,.22);border-radius:3px;
+    padding:18px 16px;cursor:pointer;transition:.15s;font-family:var(--mono);color:inherit}
+  .classcard:hover{border-color:#ffb454;background:#151219;transform:translateY(-2px)}
+  .classcard .n{font-size:9px;letter-spacing:.2em;color:#ff3b30}
+  .classcard h3{font-family:"Helvetica Neue",Inter,system-ui,sans-serif;font-size:20px;letter-spacing:.08em;margin:8px 0 6px;color:#f2e7d4}
+  .classcard p{margin:0 0 10px;font-size:12px;color:#9d9081;line-height:1.55}
+  .classcard .pips{font-size:9px;letter-spacing:.18em;color:#7fd6ff}
+
+  /* world map */
+  #zoneList{display:flex;flex-direction:column;gap:8px;width:min(760px,92vw)}
+  .zonerow{display:grid;grid-template-columns:34px 150px 1fr auto;gap:12px;align-items:center;
+    text-align:left;padding:12px 14px;background:#0e0d11;border:1px solid rgba(255,180,84,.18);
+    border-radius:3px;color:#e8dcc8;font-family:var(--mono);font-size:12px;cursor:pointer;transition:.15s}
+  .zonerow:hover:not(.locked){border-color:#ffb454;background:#151219}
+  .zonerow.locked{opacity:.42;cursor:not-allowed}
+  .zonerow .zi{color:#ff3b30;letter-spacing:.1em}
+  .zonerow .zn{letter-spacing:.18em;color:#ffb454}
+  .zonerow .zb{color:#8d7f6c;font-size:11px}
+  .zonerow .zs{color:#39ff9a;font-size:10px;letter-spacing:.14em}
+
+  /* touch */
+  #touch{position:fixed;inset:0;z-index:14;display:none;pointer-events:none}
+  #touch.on{display:block}
+  #tStick{position:absolute;left:24px;bottom:24px;width:132px;height:132px;border-radius:50%;
+    border:1px solid rgba(255,180,84,.3);background:rgba(10,9,8,.42);pointer-events:auto;touch-action:none}
+  #tKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:0;border-radius:50%;
+    background:rgba(255,180,84,.35);border:1px solid rgba(255,180,84,.7);
+    transform:translate(-50%,-50%);opacity:.55;transition:opacity .15s;pointer-events:none}
+  #tLook{position:absolute;right:0;top:0;width:55%;height:100%;pointer-events:auto;touch-action:none}
+  #tBtns{position:absolute;right:20px;bottom:26px;display:flex;gap:10px;pointer-events:auto}
+  #tBtns button{width:56px;height:56px;border-radius:50%;background:rgba(18,16,14,.8);
+    border:1px solid rgba(255,180,84,.4);color:#ffd9a8;font-family:var(--mono);font-size:10px;
+    letter-spacing:.1em;pointer-events:auto;touch-action:none}
+  #tBtns button:active{background:rgba(255,180,84,.28)}
+
   #toast{
     position:absolute;left:50%;top:24%;transform:translate(-50%,-6px);
     font-size:15px;letter-spacing:.3em;color:var(--amber);opacity:0;transition:opacity .18s,transform .18s;
@@ -188,7 +255,12 @@
     <div id="hitmarker"></div>
     <div id="vignette"></div>
     <div id="dmgdir"></div>
+    <div id="relics"></div>
     <div id="toast"></div>
+    <div id="powerbar">
+      <div id="energyWrap"><div id="energy"></div></div>
+      <div id="powerSlots"></div>
+    </div>
     <div id="bottombar">
       <canvas id="face" width="72" height="72"></canvas>
       <div class="stat"><span class="label">HEALTH</span><span class="val" id="health">100</span></div>
@@ -215,6 +287,33 @@
         WASD move · SHIFT sprint · SPACE jump · MOUSE look · LMB fire<br />
         1 pistol · 2 shotgun · 3 rocket · ESC pause · ` shows fps
       </p>
+    </section>
+
+    <section id="intro" class="screen cinema">
+      <p id="storyText"></p>
+      <button id="storySkip" class="ghost" style="margin-top:22px">Skip</button>
+    </section>
+
+    <section id="class" class="screen">
+      <h2>CHOOSE</h2>
+      <p class="sub">your body, your starting weapon, your powers</p>
+      <div id="classCards"></div>
+    </section>
+
+    <section id="map" class="screen">
+      <h2>THE GATE</h2>
+      <p class="sub">five zones · clear one to open the next</p>
+      <div id="zoneList"></div>
+      <button id="mapBack" class="ghost" style="margin-top:18px">Back</button>
+    </section>
+
+    <section id="cleared" class="screen">
+      <h2>ZONE CLEARED</h2>
+      <div id="clearedStats"></div>
+      <div class="row">
+        <button id="clearedNext">Next zone</button>
+        <button id="mapFromCleared" class="ghost">World map</button>
+      </div>
     </section>
 
     <section id="pause" class="screen">
@@ -270,9 +369,23 @@
       <div id="stats"></div>
       <div class="row">
         <button id="retryBtn">Try again</button>
+        <button id="mapBtn" class="ghost">World map</button>
         <button id="menuBtn" class="ghost">Main menu</button>
       </div>
     </section>
+  </div>
+
+  <div id="touch">
+    <div id="tStick"><div id="tKnob"></div></div>
+    <div id="tLook"></div>
+    <div id="tBtns">
+      <button id="tP1">Q</button>
+      <button id="tP2">E</button>
+      <button id="tP3">R</button>
+      <button id="tWeap">GUN</button>
+      <button id="tJump">JMP</button>
+      <button id="tFire">FIRE</button>
+    </div>
   </div>
 
   <script type="importmap">

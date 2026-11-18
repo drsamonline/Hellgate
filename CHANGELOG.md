@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.3.0 — 2026-11-19
+
+The RPG pass: classes, powers, a companion, five zones, a cold open and touch controls.
+
+**Systems**
+- three classes (marine, ranger, warden) setting HP, armour, speed, damage, energy, starting weapon
+  and power set
+- five powers on an energy pool with cooldowns: dash, shockwave, ward, volley, bulwark. Bound to
+  Q, E and R, with an energy bar and per-slot cooldown fill in the HUD
+- companion drone: follows, engages what it can see for 7 damage every 0.85 s, goes dormant past 26 m
+- five zones with palettes, props and objectives; clearing one unlocks the next; progress and best
+  score per zone in localStorage
+- relic side objective in every zone: 150 each, 400 for the set
+- cold open: four typed panels over a camera flythrough of the level you are about to play
+- instanced trees, rocks and grass; animals that wander and bolt
+- mobile touch controls: virtual stick, look-and-tap-to-fire, buttons for jump, powers and weapon
+
+**Verification**
+- the smoke test now walks title -> intro -> class -> play in a real browser and asserts powers,
+  energy, props, instancing, the companion and the relics exist; a power spends energy and starts its
+  cooldown
+- 4 new screenshots: cold open, class select, world map, grove
+
+
 ## 1.2.0 — 2026-11-19
 
 **Gameplay**

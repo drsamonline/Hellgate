@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Fifteen items shipped — marked **✓ shipped** below.
+Sixteen items shipped — marked **✓ shipped** below.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -80,7 +80,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 55. **Object pooling for enemies** — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
 56. **Deterministic replay** — record the input stream + seed, replay a run exactly. Turns bug reports into test cases and enables ghost runs. `main.js` · L · medium
 57. **Split the game loop from the renderer** — fixed-timestep simulation with an interpolated render. Removes the dt-dependent behaviour that makes 30 fps and 144 fps feel different. `main.js` · L · medium
-58. **Mobile/touch controls** — a virtual stick and a look area. Pointer lock does not exist on touch, and the fallback path is already there. `main.js` · L · medium
+58. **Mobile/touch controls** — a virtual stick and a look area. Pointer lock does not exist on touch, and the fallback path is already there. `main.js` · L · medium — ✓ shipped
 
 ## Tier 4 — Research / stretch
 

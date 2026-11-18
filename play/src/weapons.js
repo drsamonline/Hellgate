@@ -180,7 +180,7 @@ export class Weapons {
 
       if (eh) {
         anyHit = true;
-        let dmg = w.damage;
+        let dmg = w.damage * (player.damageMul || 1);
         if (w.falloff) dmg *= Math.max(0.35, 1 - eh.dist / w.range);
         const killed = eh.enemy.hurt(dmg, {
           level, player, effects: this.effects, audio: this.audio, projectiles,

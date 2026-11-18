@@ -51,7 +51,7 @@ No `npm install`, no bundler, no build step. Three.js is vendored in `play/vendo
 | `Space` | jump | `LMB` | fire (hold for auto) |
 | Mouse | look (pointer lock, with a fallback) | `Esc` | pause |
 | `` ` `` or `F3` | fps · draw calls · triangles | `M` | mute |
-| `F` | fullscreen | | |
+| `F` | fullscreen | touch | on-screen sticks and buttons |
 
 Clear a wave and the exit unlocks; walk onto the glowing pad to spawn the next, harder one.
 From wave 3 the exit is also keycard-locked.
@@ -66,6 +66,8 @@ Nothing here is a mockup or a composited image.
 | --- | --- |
 | <img src="assets/combat.webp" alt="Shotgun blast, blood spray, tracers" /> **Shotgun** — 8 pellets, per-pellet damage falloff, blood decals | <img src="assets/rocket.webp" alt="Rocket explosion lighting the room" /> **Rocket** — splash damage, pooled particles, a real point light, screen shake |
 | <img src="assets/exit.webp" alt="Exit room with glowing pad" /> **Exit** — wave cleared, doors open, pad lit | <img src="assets/title.webp" alt="Title screen" /> **Title** — seed entry, best run from localStorage |
+| <img src="assets/intro.webp" alt="Story intro over a camera flythrough" /> **Cold open** — typed panels over the level you are about to play | <img src="assets/class.webp" alt="Class selection" /> **Class** — body, starting weapon, powers |
+| <img src="assets/map.webp" alt="World map with five zones" /> **World map** — five zones, clear one to open the next | <img src="assets/grove.webp" alt="Grove zone with trees, animals and enemies" /> **Grove** — trees, grass, animals, and the energy bar |
 
 <img src="assets/map.svg" alt="Top-down view of a generated level" width="420" align="right" />
 
@@ -93,6 +95,8 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 **Feel** — Doom-style face that degrades with health · damage direction arrows · red edge vignette · weapon sway and bob · pooled particles, tracers, decals and lights (nothing allocates per shot).
 
+**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · five zones with unlock progression · a relic side objective in every zone · a story cold open · mobile touch controls.
+
 **Meta** — seeded maps · three difficulty presets · score with a per-wave time bonus · wave difficulty curve · procedural pickups · keycard gate · title / pause / game-over screens · best run in `localStorage`.
 
 ## Architecture
@@ -111,7 +115,14 @@ play/src/projectiles.js  rockets and fireballs
 play/src/effects.js   tracers, decals, particles, lights, shake
 play/src/hud.js       face, counters, crosshair, damage arrows
 play/src/audio.js     WebAudio synth — no samples
-play/src/settings.js  sensitivity, FOV, reduced motion, volume — persisted
+play/src/classes.js   three classes: body, starting weapon, power set
+play/src/powers.js    energy pool, five powers, cooldowns
+play/src/world.js     five zones, unlock progression, best score per zone
+play/src/story.js     the cold open: typed panels over a camera flythrough
+play/src/props.js     instanced trees, rocks and grass; animals that bolt
+play/src/companion.js the drone that follows you and shoots
+play/src/touch.js     mobile sticks and buttons
+play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG
 tests/                three headless suites
 tools/                screenshot, map render, claim check, smoke, lighthouse, asset optimiser
@@ -149,6 +160,7 @@ which is how the game was checked against the current release and not only again
 - [Architecture](documentation/architecture.md) — modules, data flow, render loop
 - [Level generation](documentation/level-generation.md) — sectors, rooms, corridors, doors, sealing
 - [Combat](documentation/combat.md) — weapons, enemy FSM, damage model, projectiles
+- [RPG systems](documentation/rpg-systems.md) — classes, powers, companion, zones, story, touch
 - [HUD and feel](documentation/hud-and-feel.md) — feedback systems and why they exist
 - [Tuning](documentation/tuning.md) — every constant worth changing, and what it does
 - [Testing](documentation/testing.md) — how the harness works, how to add a suite

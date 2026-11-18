@@ -34,7 +34,14 @@ python3 -m http.server 8000  # local dev: / is the landing page, /play/ is the g
 | `play/src/levelmesh.js` | grid to merged geometry, including baked vertex shade |
 | `play/src/enemies.js` | imp and grunt, one FSM, line of sight, shared geometry |
 | `play/src/effects.js` | pooled particles, tracers, decals, lights, shake |
-| `play/src/settings.js` | the five persisted settings |
+| `play/src/classes.js` | three classes: body, weapon, powers |
+| `play/src/powers.js` | energy, cooldowns, five powers |
+| `play/src/world.js` | zones, unlock progress |
+| `play/src/story.js` | the cold open |
+| `play/src/props.js` | instanced decor and animals |
+| `play/src/companion.js` | the ally drone |
+| `play/src/touch.js` | mobile controls |
+| `play/src/settings.js` | the persisted settings |
 | `tests/` | three suites plus a DOM stub and a Three.js stub |
 | `tools/` | screenshot, map render, claim checker, smoke test, asset optimiser |
 

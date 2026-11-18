@@ -14,6 +14,13 @@ import { Effects } from './effects.js';
 import { HUD } from './hud.js';
 import { Sfx } from './audio.js';
 import { loadSettings, saveSettings, clampSettings } from './settings.js';
+import { CLASSES, getClass } from './classes.js';
+import { Powers } from './powers.js';
+import { Story } from './story.js';
+import { ZONES, zoneById, loadProgress, clearZone, isUnlocked } from './world.js';
+import { Props } from './props.js';
+import { Companion } from './companion.js';
+import { initTouch, isTouchDevice } from './touch.js';
 
 // ---------------------------------------------------------------- renderer --
 const canvas = document.getElementById('game');
@@ -39,12 +46,13 @@ weaponScene.add(new THREE.AmbientLight(0xffffff, 1.5));
   weaponScene.add(d);
 }
 
-function newScene() {
+function newScene(z) {
+  const fog = z ? z.fog : 0x07070a;
   const s = new THREE.Scene();
-  s.background = new THREE.Color(0x07070a);
-  s.fog = new THREE.Fog(0x07070a, 9, 32);
-  s.add(new THREE.AmbientLight(0xffffff, 0.55));
-  s.add(new THREE.HemisphereLight(0x9fb4c8, 0x6a5540, 0.95));
+  s.background = new THREE.Color(fog);
+  s.fog = new THREE.Fog(fog, 9, 32);
+  s.add(new THREE.AmbientLight(0xffffff, z ? z.ambient : 0.55));
+  s.add(new THREE.HemisphereLight(z ? z.sky : 0x9fb4c8, z ? z.ground : 0x6a5540, 0.95));
   const d = new THREE.DirectionalLight(0xffd9b0, 0.3);
   d.position.set(1, 2, 0.6);
   s.add(d);
@@ -65,6 +73,13 @@ const player = new Player(camera);
 let weapons = null;
 
 const settings = clampSettings(loadSettings());
+const progress = loadProgress();
+const powers = new Powers();
+const story = new Story();
+let props = null;
+let companion = null;
+let touchCleanup = null;
+let zone = ZONES[0];
 
 // One multiplier table, three presets. Enemy hp and damage scale here; the wave
 // size scales in EnemyManager.spawnWave.
@@ -75,7 +90,13 @@ const DIFF_MULT = {
 };
 
 const game = {
-  state: 'title',       // title | playing | paused | dead
+  state: 'title',       // title | intro | class | map | playing | paused | dead | cleared
+  zoneId: 'gate',
+  classId: settings.classId,
+  wavesTarget: 3,
+  relics: [],
+  relicsTotal: 0,
+  sideDone: false,
   wave: 0,
   kills: 0,
   waveKills: 0,
@@ -92,6 +113,7 @@ const game = {
 
 const input = {
   keys: Object.create(null),
+  move: { x: 0, y: 0 },
   lookDx: 0,
   lookDy: 0,
   fire: false,
@@ -154,8 +176,10 @@ function disposeRun() {
   });
 }
 
-function buildRun(seed) {
+function buildRun(seed, zoneDef) {
   disposeRun();
+  zone = zoneDef || zone;
+  game.zoneId = zone.id;
   game.seed = seed;
   game.wave = 0;
   game.kills = 0;
@@ -168,9 +192,15 @@ function buildRun(seed) {
   game.pickups = [];
   game.keycard = null;
 
-  scene = newScene();
+  scene = newScene(zone);
   level = generateLevel(seed);
   level.doorOpen = false;
+  // the zone decides the palette: same generator, different surface
+  for (const c of level.cells) {
+    if (c.solid) continue;
+    c.wall = zone.wall;
+    c.floorTex = zone.floor;
+  }
 
   const mats = getMats();
   mats['pad'].color.setHex(0x552222);
@@ -184,6 +214,9 @@ function buildRun(seed) {
   enemies = new EnemyManager(scene, level, effects, audio);
   enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
   enemies.onKill = () => { game.kills++; game.waveKills++; };
+
+  props = new Props(scene, level, zone);
+  companion = new Companion(scene, level, effects, audio);
 
   player.reset(level, 0);
   // face the most open direction so the run never starts nose-to-wall
@@ -214,11 +247,94 @@ function buildRun(seed) {
   if (!weapons) weapons = new Weapons(weaponScene, weaponCamera, camera, effects, audio);
   weapons.effects = effects;
   weapons.audio = audio;
-  weapons.select(0, true);
-  weapons.cd = 0;
 
+  game.wavesTarget = zone.boss ? 4 : 3;
+  spawnRelics(zone.relics || 0);
+  applyClass(game.classId);
   applySettings();
   startWave(1);
+}
+
+// ---- class ---------------------------------------------------------------
+function syncHud() {
+  hud.lastHealth = -1;
+  hud.lastArmor = -1;
+  hud.lastAmmo = -1;
+  hud.lastWeapon = '';
+  hud.slotSig = '';
+}
+
+function applyClass(classId) {
+  const def = getClass(classId);
+  game.classId = def.id;
+  settings.classId = def.id;
+  saveSettings(settings);
+  player.health = def.hp;
+  player.armor = def.armor;
+  player.speedMul = def.speed;
+  player.damageMul = def.damage;
+  weapons.select(def.weapon, true);
+  weapons.cd = 0;
+  powers.equip(def);
+  if (companion) companion.spawn(player);
+  syncHud();
+}
+
+// ---- relics: the side objective -----------------------------------------
+function spawnRelics(n) {
+  clearRelics();
+  game.relicsTotal = n;
+  game.sideDone = false;
+  if (!n) return;
+  const pool = level.openCells.filter(
+    (c) => c.room >= 0 && c.room !== level.exitRoom && Math.hypot(c.wx - level.spawn.x, c.wz - level.spawn.z) > 8
+  );
+  const use = pool.length ? pool : level.openCells;
+  for (let i = 0; i < n; i++) {
+    const c = use[Math.floor(Math.random() * use.length)];
+    const mesh = new THREE.Mesh(
+      new THREE.OctahedronGeometry(0.26, 0),
+      new THREE.MeshBasicMaterial({ color: 0xc77dff })
+    );
+    const baseY = (level.cells[level.idx(c.x, c.z)] || { floor: 0 }).floor + 0.7;
+    mesh.position.set(c.wx, baseY, c.wz);
+    scene.add(mesh);
+    game.relics.push({ mesh, x: c.wx, z: c.wz, baseY, t: Math.random() * 6 });
+  }
+}
+
+function clearRelics() {
+  for (const r of game.relics) {
+    scene.remove(r.mesh);
+    r.mesh.geometry.dispose();
+    r.mesh.material.dispose();
+  }
+  game.relics.length = 0;
+}
+
+function updateRelics(dt) {
+  for (let i = game.relics.length - 1; i >= 0; i--) {
+    const r = game.relics[i];
+    r.t += dt;
+    r.mesh.rotation.y += dt * 1.6;
+    r.mesh.position.y = r.baseY + Math.sin(r.t * 2.4) * 0.1;
+    if (Math.hypot(r.x - player.pos.x, r.z - player.pos.z) < 1.2) {
+      game.score += 150;
+      effects.burst({ x: r.x, y: r.baseY, z: r.z }, 0xc77dff, 14, 3, 0.5, 3);
+      audio.play('key', { x: r.x, z: r.z });
+      scene.remove(r.mesh);
+      r.mesh.geometry.dispose();
+      r.mesh.material.dispose();
+      game.relics.splice(i, 1);
+      if (!game.relics.length) {
+        game.sideDone = true;
+        game.score += 400;
+        hud.toast('SIDE OBJECTIVE COMPLETE  +400', 2.4);
+      } else {
+        hud.toast('RELIC  ' + (game.relicsTotal - game.relics.length) + '/' + game.relicsTotal);
+      }
+    }
+  }
 }
 
 function startWave(n) {
@@ -417,7 +533,8 @@ function checkWave() {
     const d = Math.hypot(player.pos.x - level.exit.x, player.pos.z - level.exit.z);
     if (d < 1.15) {
       audio.play('switch');
-      startWave(game.wave + 1);
+      if (game.wave >= game.wavesTarget) zoneCleared();
+      else startWave(game.wave + 1);
     }
     return;
   }
@@ -433,6 +550,91 @@ function checkWave() {
 }
 
 // ------------------------------------------------------------------ game flow
+
+function beginZone(zoneDef) {
+  audio.init();
+  zone = zoneDef || zone;
+  game.zoneId = zone.id;
+  try { history.replaceState(null, '', '?zone=' + encodeURIComponent(zone.id)); } catch (e) { /* no history */ }
+  buildRun(zone.seed, zone);
+  game.state = 'intro';
+  hud.setVisible(false);
+  showScreen('intro');
+  story.start(camera, level, () => showClassScreen());
+  clock.getDelta();
+}
+
+function showClassScreen() {
+  game.state = 'class';
+  renderClassCards();
+  showScreen('class');
+}
+
+function renderClassCards() {
+  const wrap = document.getElementById('classCards');
+  if (!wrap) return;
+  wrap.innerHTML = CLASSES.map((c) => `
+    <button class="card classcard" data-class="${c.id}">
+      <span class="n">${c.hp} HP · ${c.armor} ARMOUR</span>
+      <h3>${c.name}</h3>
+      <p>${c.blurb}</p>
+      <span class="pips">${c.powers.map((p) => p.toUpperCase()).join(' · ')}</span>
+    </button>`).join('');
+  wrap.querySelectorAll('[data-class]').forEach((el) => {
+    el.addEventListener('click', () => chooseClass(el.getAttribute('data-class')));
+  });
+}
+
+function chooseClass(id) {
+  applyClass(id);
+  game.state = 'playing';
+  hud.setVisible(true);
+  hideScreens();
+  requestLock();
+  hud.toast(getClass(id).name + '  ·  ' + zone.name, 2.4);
+  clock.getDelta();
+}
+
+function showZoneMap() {
+  game.state = 'map';
+  hud.setVisible(false);
+  const wrap = document.getElementById('zoneList');
+  if (wrap) {
+    wrap.innerHTML = ZONES.map((z, i) => {
+      const open = isUnlocked(progress, i);
+      const done = progress.cleared.includes(z.id);
+      const best = progress.best[z.id] || 0;
+      return `<button class="zonerow ${open ? '' : 'locked'}" data-zone="${z.id}" ${open ? '' : 'disabled'}>
+        <span class="zi">${String(i + 1).padStart(2, '0')}</span>
+        <span class="zn">${z.name}</span>
+        <span class="zb">${open ? z.blurb : 'Locked'}</span>
+        <span class="zs">${done ? 'CLEARED' : ''}${best ? ' · ' + best : ''}</span>
+      </button>`;
+    }).join('');
+    wrap.querySelectorAll('[data-zone]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const z = zoneById(el.getAttribute('data-zone'));
+        if (z) beginZone(z);
+      });
+    });
+  }
+  showScreen('map');
+}
+
+function zoneCleared() {
+  game.state = 'cleared';
+  if (document.pointerLockElement) document.exitPointerLock();
+  clearZone(progress, zone.id, game.score);
+  const el = document.getElementById('clearedStats');
+  if (el) {
+    el.innerHTML =
+      `ZONE <b>${zone.name}</b><br />SCORE <b>${game.score}</b><br />KILLS <b>${game.kills}</b><br />` +
+      `RELICS <b>${game.relicsTotal - game.relics.length}/${game.relicsTotal}</b>`;
+  }
+  hud.setVisible(false);
+  showScreen('cleared');
+  audio.play('wave');
+}
 
 function startGame(seed, opts = {}) {
   audio.init();
@@ -598,8 +800,10 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Digit1') weapons.select(0);
   if (e.code === 'Digit2') weapons.select(1);
   if (e.code === 'Digit3') weapons.select(2);
-  if (e.code === 'KeyQ') weapons.next(-1);
-  if (e.code === 'KeyE') weapons.next(1);
+  if (e.code === 'KeyQ') castPower(0);
+  if (e.code === 'KeyE') castPower(1);
+  if (e.code === 'KeyR') castPower(2);
+  if (e.code === 'KeyX') weapons.next(1);
   if (e.code === 'KeyF') toggleFullscreen();
   if (e.code === 'KeyM') {
     changeSetting('muted', !settings.muted);
@@ -612,8 +816,16 @@ window.addEventListener('keyup', (e) => {
 });
 
 document.getElementById('startBtn').addEventListener('click', () => {
-  const seed = document.getElementById('seedInput').value.trim() || 'hellgate';
-  startGame(seed);
+  const typed = document.getElementById('seedInput').value.trim();
+  const z = typed && typed !== zone.seed ? { ...zone, seed: typed } : zone;
+  beginZone(z);
+});
+document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
+document.getElementById('mapBtn')?.addEventListener('click', showZoneMap);
+document.getElementById('mapFromCleared')?.addEventListener('click', showZoneMap);
+document.getElementById('clearedNext')?.addEventListener('click', () => {
+  const i = ZONES.findIndex((z) => z.id === zone.id);
+  beginZone(ZONES[Math.min(ZONES.length - 1, i + 1)]);
 });
 document.getElementById('seedInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') document.getElementById('startBtn').click();
@@ -688,6 +900,18 @@ window.addEventListener('resize', () => {
 
 // ----------------------------------------------------------------- main loop
 
+function castCtx() {
+  return {
+    player, level, enemies, effects, audio, camera, projectiles, hud,
+    onKill: () => { game.kills++; game.waveKills++; },
+  };
+}
+
+function castPower(i) {
+  if (game.state !== 'playing') return;
+  powers.cast(i, castCtx());
+}
+
 function fireCtx() {
   return {
     player,
@@ -710,8 +934,15 @@ function update(dt) {
 
   if (input.fire) weapons.tryFire(fireCtx());
 
+  powers.update(dt, player);
+  player.invuln = powers.invuln;
+  player.guard = powers.guard;
+
   enemies.update(dt, player, projectiles);
   projectiles.update(dt, player, enemies);
+  if (companion) companion.update(dt, player, enemies);
+  if (props) props.update(dt, player);
+  updateRelics(dt);
   effects.update(dt);
   updatePickups(dt);
   checkWave();
@@ -726,6 +957,11 @@ function update(dt) {
     enemies: enemies.aliveCount,
     hasKey: game.hasKey,
     score: game.score,
+    powers,
+    zone,
+    relics: game.relicsTotal - game.relics.length,
+    relicsTotal: game.relicsTotal,
+    sideDone: game.sideDone,
     exitOpen: game.exitOpen,
     exit: level.exit,
     camera,
@@ -759,6 +995,8 @@ function loop() {
     update(dt);
     if (effects) effects.applyShake(camera);
     adaptResolution(dt);
+  } else if (game.state === 'intro') {
+    story.update(dt, level);
   }
   render();
   updateDebug(dt);
@@ -784,7 +1022,10 @@ function applyUrlOverrides() {
     return false;
   }
 
-  const seed = p.get('seed') || 'hellgate';
+  const z = p.has('zone') ? zoneById(p.get('zone')) : zone;
+  if (z) zone = z;
+  const seed = p.get('seed') || zone.seed;
+  game.zoneId = zone.id;
   startGame(seed, { auto: true });
 
   const wave = parseInt(p.get('wave') || '1', 10);
@@ -811,12 +1052,30 @@ function applyUrlOverrides() {
 refreshBest();
 document.getElementById('seedInput').value = 'hellgate';
 hud.setVisible(false);
+if (isTouchDevice()) {
+  touchCleanup = initTouch(input, {
+    jump: () => { input.jumpQueued = true; },
+    fire: () => {
+      if (game.state !== 'playing') return;
+      input.fire = true;
+      weapons.tryFire(fireCtx());
+      setTimeout(() => { input.fire = false; }, 120);
+    },
+    power: (i) => castPower(i),
+    weapon: () => weapons.next(1),
+  });
+}
 if (!applyUrlOverrides()) hud.setVisible(false);
 loop();
 
 // exposed for console debugging and for the headless test harness
 window.HG = {
   game, player, camera, hud, audio, input, settings, perf,
+  powers, story, progress, zones: ZONES,
+  get props() { return props; },
+  get companion() { return companion; },
+  get zone() { return zone; },
+  beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },
   get level() { return level; },

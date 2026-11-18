@@ -20,6 +20,11 @@ export class HUD {
     this.elKills = document.getElementById('kills');
     this.elEnemies = document.getElementById('enemies');
     this.elScore = document.getElementById('score');
+    this.elEnergy = document.getElementById('energy');
+    this.elSlots = document.getElementById('powerSlots');
+    this.elRelics = document.getElementById('relics');
+    this.slotSig = '';
+    this.slotEls = [];
     this.elKey = document.getElementById('keycard');
     this.crosshair = document.getElementById('crosshair');
     this.hitEl = document.getElementById('hitmarker');
@@ -66,6 +71,39 @@ export class HUD {
       this.elWeapon.textContent = wname;
       this.lastWeapon = wname;
     }
+    // ---- powers: energy bar and three slots ------------------------------
+    if (state && state.powers) {
+      const pw = state.powers;
+      if (this.elEnergy) this.elEnergy.style.width = ((pw.energy / pw.maxEnergy) * 100).toFixed(1) + '%';
+
+      const sig = pw.slots.map((p) => p.id).join(',');
+      if (sig !== this.slotSig && this.elSlots) {
+        this.slotSig = sig;
+        this.elSlots.innerHTML = pw.slots
+          .map((p, i) => `<div class="pslot" data-i="${i}"><b>${p.key}</b><span>${p.name}</span><i></i></div>`)
+          .join('');
+        this.slotEls = Array.from(this.elSlots.querySelectorAll('.pslot'));
+      }
+      for (let i = 0; i < this.slotEls.length; i++) {
+        const p = pw.slots[i];
+        const el = this.slotEls[i];
+        if (!p) continue;
+        const cd = pw.cd[p.id] || 0;
+        const frac = cd > 0 ? cd / p.cd : 0;
+        el.querySelector('i').style.height = (frac * 100).toFixed(0) + '%';
+        el.classList.toggle('cool', cd > 0 || pw.energy < p.cost);
+        el.classList.toggle('ready', cd <= 0 && pw.energy >= p.cost);
+      }
+
+      if (this.elRelics) {
+        const parts = [];
+        if (state.zone) parts.push(state.zone.name);
+        if (state.relicsTotal > 0) parts.push('RELICS ' + state.relics + '/' + state.relicsTotal);
+        if (state.sideDone) parts.push('SIDE CLEAR');
+        this.elRelics.textContent = parts.join('  ·  ');
+      }
+    }
+
     if (state) {
       // exit compass: a chevron pointing at the pad once the wave is cleared
       if (state.exitOpen && state.exit && state.camera) {

@@ -110,12 +110,48 @@ ok('boots to the title screen', (await page.evaluate(() => window.HG.game.state)
 const canvases = await page.evaluate(() => document.querySelectorAll('canvas').length);
 ok('canvas present', canvases >= 1, canvases + ' canvases');
 
-// start a run through the real button, then through the URL hook
+// start a run through the real buttons: title -> intro -> class -> play
 await page.click('#startBtn');
-await new Promise((r) => setTimeout(r, 700));
-ok('starts a run', (await page.evaluate(() => window.HG.game.state)) === 'playing');
+await page.waitForFunction('window.HG.game.state === "intro"', { timeout: 15000 });
+ok('start plays the story intro', true);
+await page.click('#storySkip');
+await page.waitForFunction('window.HG.game.state === "class"', { timeout: 15000 });
+const cards = await page.evaluate(() => document.querySelectorAll('[data-class]').length);
+ok('class select renders three classes', cards === 3, cards + ' cards');
+await page.click('[data-class="marine"]');
+await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 15000 });
+ok('choosing a class starts the run', true);
 ok('wave 1 spawned enemies', (await page.evaluate(() => window.HG.enemies.list.length)) > 0);
 ok('level built', (await page.evaluate(() => window.HG.level.cells.length)) === 1600);
+
+const sys = await page.evaluate(() => {
+  const HG = window.HG;
+  return {
+    powers: HG.powers.slots.length,
+    energy: HG.powers.maxEnergy,
+    props: !!HG.props,
+    instanced: HG.props ? HG.props.meshes.length : 0,
+    animals: HG.props ? HG.props.animals.length : 0,
+    companion: !!(HG.companion && HG.companion.active),
+    relics: HG.game.relicsTotal,
+    zone: HG.zone.id,
+  };
+});
+ok('three power slots equipped', sys.powers === 3, String(sys.powers));
+ok('energy pool set by the class', sys.energy > 0, String(sys.energy));
+ok('props built with instanced meshes', sys.props && sys.instanced > 0, String(sys.instanced));
+ok('animals present', sys.animals >= 0, String(sys.animals));
+ok('companion is active', sys.companion);
+ok('zone relics placed', sys.relics > 0, String(sys.relics));
+
+// a power fires and spends energy
+const cast = await page.evaluate(() => {
+  const HG = window.HG;
+  const before = HG.powers.energy;
+  HG.castPower(0);
+  return { before, after: HG.powers.energy, cd: HG.powers.cd[HG.powers.slots[0].id] };
+});
+ok('a power spends energy and starts its cooldown', cast.after < cast.before && cast.cd > 0, JSON.stringify(cast));
 
 await page.goto(`http://127.0.0.1:${PORT}/play/?auto=1&seed=smoke&wave=3&cam=10,12,45,-5`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 await page.waitForFunction('window.HG && window.HG.game.state === "playing"', { timeout: 20000 });

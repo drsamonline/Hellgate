@@ -12,6 +12,7 @@ export const DEFAULTS = {
   volume: 0.32,         // 0..1 master gain
   muted: false,
   difficulty: 'normal', // easy | normal | hard
+  classId: 'marine',    // marine | ranger | warden
 };
 
 export const DIFFICULTIES = ['easy', 'normal', 'hard'];
