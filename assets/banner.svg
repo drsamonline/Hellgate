@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="420" viewBox="0 0 1600 420" role="img" aria-label="HELLGATE — a procedural arena FPS">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="46%" r="58%">
+      <stop offset="0%" stop-color="#ff5a2a" stop-opacity="0.30"/>
+      <stop offset="45%" stop-color="#a01f10" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0a0a0c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="beam" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd9a8" stop-opacity="0"/>
+      <stop offset="35%" stop-color="#ffcf8a" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#ff6a2a" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="titleFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff3dc"/>
+      <stop offset="100%" stop-color="#e6cba4"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a0a0c" stop-opacity="1"/>
+      <stop offset="18%" stop-color="#0a0a0c" stop-opacity="0"/>
+      <stop offset="82%" stop-color="#0a0a0c" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#0a0a0c" stop-opacity="1"/>
+    </linearGradient>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#ffffff" opacity="0.022"/>
+    </pattern>
+  </defs>
+
+  <rect width="1600" height="420" fill="#0a0a0c"/>
+  <rect width="1600" height="420" fill="url(#glow)"/>
+  <rect width="1600" height="420" fill="url(#scan)"/>
+
+  <!-- the gate: two pillars and a light slit -->
+  <g opacity="0.9">
+    <rect x="118" y="60" width="150" height="300" fill="#141117"/>
+    <rect x="118" y="60" width="150" height="300" fill="none" stroke="#2a2028" stroke-width="2"/>
+    <rect x="1332" y="60" width="150" height="300" fill="#141117"/>
+    <rect x="1332" y="60" width="150" height="300" fill="none" stroke="#2a2028" stroke-width="2"/>
+    <rect x="268" y="60" width="14" height="300" fill="url(#beam)" opacity="0.55"/>
+    <rect x="1318" y="60" width="14" height="300" fill="url(#beam)" opacity="0.55"/>
+  </g>
+
+  <!-- hazard ticks -->
+  <g fill="#ffb454" opacity="0.5">
+    <rect x="118" y="76" width="150" height="6"/>
+    <rect x="118" y="338" width="150" height="6"/>
+    <rect x="1332" y="76" width="150" height="6"/>
+    <rect x="1332" y="338" width="150" height="6"/>
+  </g>
+
+  <g text-anchor="middle" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace">
+    <text x="800" y="196" font-size="104" font-weight="700" letter-spacing="16" fill="url(#titleFill)">HELL<tspan fill="#ff3b30">GATE</tspan></text>
+    <text x="800" y="238" font-size="17" letter-spacing="7" fill="#8d7f6c">PROCEDURAL ARENA FPS</text>
+    <line x1="560" y1="262" x2="1040" y2="262" stroke="#3a2a1e" stroke-width="1"/>
+    <text x="800" y="294" font-size="14" letter-spacing="4" fill="#6f6455">THREE.JS · SECTOR MAPS · ZERO ASSETS</text>
+    <text x="800" y="330" font-size="12" letter-spacing="3" fill="#4a4038">CANVAS TEXTURES · BOX ENEMIES · WEBAUDIO</text>
+  </g>
+
+  <rect width="1600" height="420" fill="url(#fade)" opacity="0.55"/>
+</svg>
