@@ -1,0 +1,27 @@
+name: pages
+
+# Pages publishes from the gh-pages branch (the site was enabled by pushing it
+# once by hand). This keeps that branch identical to main without a second
+# manual push every time.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pages-mirror
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # was @v4
+        with:
+          fetch-depth: 0
+      - name: Mirror main to gh-pages
+        run: git push origin HEAD:gh-pages --force

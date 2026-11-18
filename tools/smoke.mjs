@@ -80,8 +80,11 @@ await page.setViewport({ width: 1280, height: 720 });
 const problems = [];
 page.on('pageerror', (e) => problems.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') problems.push('console: ' + m.text()); });
-page.on('requestfailed', (r) => problems.push('request failed: ' + r.url()));
-page.on('response', (r) => { if (r.status() >= 400) problems.push(r.status() + ' ' + r.url()); });
+// browsers probe /favicon.ico whether or not the page declares an icon; that
+// one 404 is not a defect in the page
+const ignorable = (url) => /\/favicon\.ico$/.test(url);
+page.on('requestfailed', (r) => { if (!ignorable(r.url())) problems.push('request failed: ' + r.url()); });
+page.on('response', (r) => { if (r.status() >= 400 && !ignorable(r.url())) problems.push(r.status() + ' ' + r.url()); });
 
 // --- landing page -----------------------------------------------------------
 console.log('\nlanding page');
