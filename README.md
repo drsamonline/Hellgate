@@ -114,7 +114,7 @@ play/src/audio.js     WebAudio synth — no samples
 play/src/settings.js  sensitivity, FOV, reduced motion, volume — persisted
 play/src/rng.js       seeded PRNG
 tests/                three headless suites
-tools/                screenshot + map-render tools
+tools/                screenshot, map render, claim check, smoke, lighthouse, asset optimiser
 documentation/        architecture, level gen, combat, tuning, testing
 ```
 
@@ -156,10 +156,26 @@ which is how the game was checked against the current release and not only again
 
 ## Performance
 
-Five draw calls for the level, ~2.7k triangles, pooled effects, `devicePixelRatio` capped at 1.5,
-fog from 9 to 32 units, and frustum culling on enemies. Each enemy is ~12 small meshes, so a packed
-room of 24 is a few hundred calls, fine on a desktop GPU. Press `` ` `` in game to see the truth for
-your machine.
+Five draw calls for the level, ~2.7k triangles, pooled effects, `devicePixelRatio` capped at 1.5 and
+adapting downward under load, fog from 9 to 32 units, frustum culling on enemies. Each enemy is ~12
+small meshes, so a packed room of 24 is a few hundred calls, fine on a desktop GPU. Press `` ` `` in
+game to see the truth for your machine.
+
+Landing page, measured with `node tools/lighthouse.mjs`:
+
+| | Performance | Accessibility | Best practices | SEO | LCP | CLS | TBT |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Mobile | 75 | 100 | 100 | 100 | 1.2 s | 0 | 1.4 s |
+| Desktop | 62 | 100 | 100 | 100 | 1.3 s | 0 | 0.85 s |
+
+These are headless Chromium on a **software rasteriser**, so paint and blocking time read several
+times worse than on real hardware. Compare runs against each other, not against a scoreboard. The
+game page scores 100 on accessibility and best practices; its performance score is not reported,
+because a WebGL scene on SwiftShader measures the rasteriser, not the game.
+
+Three fixes came out of this measurement: the map SVG went from 1,600 `<rect>` elements to 8 paths
+(96 KB to 6.4 KB), a full-viewport `mix-blend-mode` grain layer became a body background, and two
+text colours moved from 2.56:1 to above 4.5:1.
 
 ## Support
 

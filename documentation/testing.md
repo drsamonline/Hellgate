@@ -133,6 +133,14 @@ links to test them is far slower than a plain HTTP GET, which is what it does no
 - **Browsers.** Chromium is where the screenshots and these tests run. Safari and Firefox are
   untested; pointer lock and `unadjustedMovement` in particular differ.
 
+## Lighthouse
+
+`node tools/lighthouse.mjs` runs Lighthouse against the local site in mobile and desktop form
+factors and prints the four category scores plus LCP, CLS and TBT. It needs
+`npm install --no-save lighthouse`. The numbers are pessimistic: headless Chromium on a software
+rasteriser, so paint and blocking time read several times worse than on a GPU. Treat them as a
+regression baseline, not a verdict.
+
 ## Screenshots and the map
 
 `node tools/shoot.mjs` runs the game in headless Chromium (SwiftShader software WebGL), poses the

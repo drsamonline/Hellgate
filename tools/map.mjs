@@ -22,12 +22,23 @@ const col = (c) => {
   return '#241f1a';
 };
 
-let rects = '';
+// One path per colour, built from horizontal runs. 1600 <rect> elements cost the
+// browser real parse and paint time; eight paths cost almost nothing.
+const runs = new Map();
 for (let z = 0; z < L.H; z++) {
-  for (let x = 0; x < L.W; x++) {
-    const c = L.cells[z * L.W + x];
-    rects += `<rect x="${PAD + x * S}" y="${PAD + z * S}" width="${S}" height="${S}" fill="${col(c)}"/>`;
+  let x = 0;
+  while (x < L.W) {
+    const c = col(L.cells[z * L.W + x]);
+    let w = 1;
+    while (x + w < L.W && col(L.cells[z * L.W + x + w]) === c) w++;
+    if (!runs.has(c)) runs.set(c, []);
+    runs.get(c).push(`M${PAD + x * S},${PAD + z * S}h${w * S}v${S}h-${w * S}z`);
+    x += w;
   }
+}
+let rects = '';
+for (const [fill, segs] of runs) {
+  rects += `<path fill="${fill}" d="${segs.join('')}"/>\n`;
 }
 
 // room outlines
