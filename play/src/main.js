@@ -7,7 +7,7 @@ import { generateLevel, raycastWalls, floorHeightAt, CELL } from './level.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
 import { Player } from './player.js';
-import { Weapons } from './weapons.js';
+import { Weapons, WEAPONS } from './weapons.js';
 import { EnemyManager } from './enemies.js';
 import { Projectiles } from './projectiles.js';
 import { Effects } from './effects.js';
@@ -75,6 +75,38 @@ let weapons = null;
 
 const settings = clampSettings(loadSettings());
 const progress = loadProgress();
+
+// A run in progress: written at the start of every wave, cleared on death or on
+// clearing a zone, offered as Continue on the title screen.
+const SAVE_KEY = 'hellgate.save';
+
+function saveRun() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({
+      zoneId: zone.id,
+      seed: game.seed,
+      wave: game.wave,
+      score: game.score,
+      kills: game.kills,
+      classId: game.classId,
+      hp: Math.round(player.health),
+      armor: Math.round(player.armor),
+      ammo: { ...player.ammo },
+      ts: Date.now(),
+    }));
+  } catch (e) { /* private mode */ }
+}
+
+function loadRun() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+
+function clearRun() {
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* ignore */ }
+}
 const TOUCH = isTouchDevice();
 const powers = new Powers();
 const story = new Story();
@@ -263,6 +295,26 @@ function buildRun(seed, zoneDef) {
   startWave(1);
 }
 
+function resumeRun(save) {
+  audio.init();
+  zone = zoneById(save.zoneId);
+  game.zoneId = zone.id;
+  buildRun(save.seed, zone);
+  applyClass(save.classId);
+  game.score = save.score || 0;
+  game.kills = save.kills || 0;
+  player.health = Math.min(getClass(save.classId).hp, save.hp || getClass(save.classId).hp);
+  player.armor = save.armor || 0;
+  if (save.ammo) Object.assign(player.ammo, save.ammo);
+  startWave(Math.max(1, save.wave || 1));
+  game.state = 'playing';
+  hud.setVisible(true);
+  hideScreens();
+  requestLock();
+  hud.toast('RESUMED  ·  ' + zone.name + '  ·  WAVE ' + game.wave, 2.4);
+  clock.getDelta();
+}
+
 // ---- class ---------------------------------------------------------------
 function syncHud() {
   hud.lastHealth = -1;
@@ -363,6 +415,7 @@ function startWave(n) {
   enemies.spawnWave(n, player.pos, { boss: !!zone.boss, waves: game.wavesTarget });
   spawnPickups(n);
   if (n >= 3) spawnKeycard();
+  saveRun();
 
   hud.toast('WAVE ' + n, 2);
   audio.play('wave');
@@ -668,10 +721,63 @@ function closeLore() {
   clock.getDelta();
 }
 
+function toggleInventory() {
+  if (game.state === 'inventory') {
+    game.state = 'playing';
+    hideScreens();
+    requestLock();
+    clock.getDelta();
+    return;
+  }
+  if (game.state !== 'playing') return;
+  game.state = 'inventory';
+  renderInventory();
+  showScreen('inventory');
+  releaseLock();
+}
+
+function renderInventory() {
+  const el = document.getElementById('invBody');
+  if (!el) return;
+  const def = getClass(game.classId);
+  const w = WEAPONS.map((wep, i) => {
+    const on = i === weapons.current;
+    return `<li class="${on ? 'on' : ''}"><b>${wep.name}</b><span>${player.ammo[wep.ammo] ?? 0} ${wep.ammo}</span>${on ? '<i>equipped</i>' : ''}</li>`;
+  }).join('');
+  const pw = powers.slots.map((p) => {
+    const cd = powers.cd[p.id] || 0;
+    return `<li class="${cd > 0 ? 'cool' : ''}"><b>${p.name}</b><span>${p.key} · ${p.cost} energy</span><i>${cd > 0 ? Math.ceil(cd) + 's' : 'ready'}</i></li>`;
+  }).join('');
+  const buffs = Object.entries(game.buffs).filter(([, v]) => v > 0)
+    .map(([k, v]) => `<li><b>${k.toUpperCase()}</b><span>${Math.ceil(v)}s</span></li>`).join('') || '<li class="dim"><b>none</b></li>';
+  el.innerHTML = `
+    <div class="invcol">
+      <h4>${def.name}</h4>
+      <ul><li><b>HEALTH</b><span>${Math.round(player.health)}/${def.hp}</span></li>
+      <li><b>ARMOUR</b><span>${Math.round(player.armor)}</span></li>
+      <li><b>ENERGY</b><span>${Math.round(powers.energy)}/${powers.maxEnergy}</span></li></ul>
+      <h4>WEAPONS</h4><ul>${w}</ul>
+    </div>
+    <div class="invcol">
+      <h4>POWERS</h4><ul>${pw}</ul>
+      <h4>BUFFS</h4><ul>${buffs}</ul>
+    </div>
+    <div class="invcol">
+      <h4>${zone.name}</h4>
+      <ul>
+        <li><b>WAVE</b><span>${game.wave}/${game.wavesTarget}</span></li>
+        <li><b>SCORE</b><span>${game.score}</span></li>
+        <li><b>KILLS</b><span>${game.kills}</span></li>
+        <li><b>RELICS</b><span>${game.relicsTotal - game.relics.length}/${game.relicsTotal}</span></li>
+      </ul>
+    </div>`;
+}
+
 function zoneCleared() {
   game.state = 'cleared';
   releaseLock();
   clearZone(progress, zone.id, game.score);
+  clearRun();
   const el = document.getElementById('clearedStats');
   if (el) {
     el.innerHTML =
@@ -713,6 +819,7 @@ function resumeGame() {
 function gameOver() {
   if (game.state !== 'playing') return;
   game.state = 'dead';
+  clearRun();
   input.fire = false;
   audio.play('dead');
   if (document.pointerLockElement) document.exitPointerLock();
@@ -859,6 +966,11 @@ window.addEventListener('mouseup', () => { input.fire = false; });
 window.addEventListener('blur', () => { input.fire = false; input.keys = Object.create(null); });
 
 window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && game.state === 'inventory') {
+    toggleInventory();
+    e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape' && game.state === 'lore') {
     closeLore();
     e.preventDefault();
@@ -879,6 +991,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyR') castPower(2);
   if (e.code === 'KeyX') weapons.next(1);
   if (e.code === 'KeyV') openLore();
+  if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
   if (e.code === 'KeyF') toggleFullscreen();
   if (e.code === 'KeyM') {
     changeSetting('muted', !settings.muted);
@@ -1141,6 +1254,16 @@ function applyUrlOverrides() {
 
 refreshBest();
 document.getElementById('seedInput').value = 'hellgate';
+{
+  const save = loadRun();
+  const btn = document.getElementById('continueBtn');
+  if (btn && save) {
+    const z = zoneById(save.zoneId);
+    btn.style.display = '';
+    btn.textContent = 'Continue — ' + z.name + ' · wave ' + save.wave + ' · ' + (save.score || 0);
+    btn.addEventListener('click', () => resumeRun(save));
+  }
+}
 hud.setVisible(false);
 if (TOUCH) {
   document.body.classList.add('has-touch');
@@ -1167,6 +1290,7 @@ window.HG = {
   get companion() { return companion; },
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
+  resumeRun, saveRun, loadRun, clearRun, toggleInventory,
   openLore, closeLore, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },

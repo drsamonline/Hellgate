@@ -158,6 +158,19 @@ const SHOTS = [
     settleAfter: 600,
   },
   {
+    name: 'status',
+    url: '/play/?auto=1&zone=grove&wave=2',
+    settle: 1400,
+    before: `(() => { ${HELPERS}
+      HG.game.score = 2180; HG.game.kills = 14;
+      HG.player.health = 74; HG.player.armor = 25;
+      HG.game.buffs.damage = 12; HG.game.buffs.speed = 5;
+      HG.weapons.select(1, true);
+      HG.toggleInventory();
+    })()`,
+    settleAfter: 400,
+  },
+  {
     // the warden, last wave of the last zone
     name: 'boss',
     url: '/play/?auto=1&zone=throne&wave=4',

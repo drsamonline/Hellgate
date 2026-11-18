@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.6.0 — 2026-11-19
+
+**Status panel**
+- `Tab` freezes the game and shows class, health, armour, energy, the three weapons with ammo and
+  which is equipped, the three powers with cost and cooldown, live buff timers, and the zone's wave,
+  score, kills and relics. Reads from the same objects the HUD does.
+
+**Continue**
+- a run is written to `localStorage` at the start of every wave: zone, seed, wave, score, kills,
+  class, health, armour, ammo. The title screen offers it as Continue, labelled with the zone, wave
+  and score. Cleared on death and on clearing a zone.
+
+**Tests**
+- 10 new assertions: the save exists and carries zone, wave and score; resuming restores state and
+  wave; the panel opens with content and closes; the save clears. Smoke covers the panel and the save
+  in a real browser.
+
+
 ## 1.5.1 — 2026-11-19
 
 Touch controls, fixed. They were present but effectively unusable on a phone.

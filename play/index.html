@@ -174,6 +174,20 @@
   @keyframes blink{50%{opacity:0}}
 
   /* class cards */
+  .invgrid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:26px;
+    width:min(760px,92vw);text-align:left;
+  }
+  .invcol h4{font-size:9px;letter-spacing:.26em;color:#ff3b30;margin:0 0 8px;font-weight:400}
+  .invcol ul{list-style:none;margin:0 0 20px;padding:0;display:flex;flex-direction:column;gap:5px}
+  .invcol li{display:flex;justify-content:space-between;gap:10px;font-size:11px;
+    letter-spacing:.1em;color:#cbbda8;padding:5px 8px;border:1px solid rgba(255,180,84,.14);border-radius:2px}
+  .invcol li b{color:#8d7f6c;font-weight:400}
+  .invcol li.on{border-color:rgba(255,180,84,.5);color:#ffd9a8}
+  .invcol li.cool{opacity:.6}
+  .invcol li i{font-style:normal;color:#ff3b30;font-size:10px}
+  .invcol li.dim{opacity:.5}
+
   .lorebody{
     max-width:min(640px,90vw);white-space:pre-wrap;font-size:14px;line-height:1.9;color:#cbbda8;
     border-left:2px solid rgba(57,255,154,.45);padding-left:18px;margin:0 0 22px;
@@ -354,6 +368,7 @@
       <label class="seed">SEED <input id="seedInput" value="hellgate" maxlength="24" spellcheck="false" autocomplete="off" /></label>
       <div class="row">
         <button id="startBtn">Enter the gate</button>
+      <button id="continueBtn" class="ghost" style="display:none"></button>
         <button id="settingsBtnTitle" class="ghost">Settings</button>
       </div>
       <div id="best"></div>
@@ -366,6 +381,12 @@
     <section id="intro" class="screen cinema">
       <p id="storyText"></p>
       <button id="storySkip" class="ghost" style="margin-top:22px">Skip</button>
+    </section>
+
+    <section id="inventory" class="screen">
+      <h2>STATUS</h2>
+      <p class="sub">tab or esc to close</p>
+      <div id="invBody" class="invgrid"></div>
     </section>
 
     <section id="lore" class="screen">

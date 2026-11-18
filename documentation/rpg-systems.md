@@ -108,10 +108,25 @@ Two more pickup kinds, both on a 20-second clock and shown as chips in the HUD:
 The multipliers are recomputed every frame from the class base, so they stack with a class bonus and
 expire cleanly rather than leaving a multiplied value behind.
 
+## Status panel
+
+`Tab` freezes the game and shows what you have: class, health, armour, energy, the three weapons with
+their ammo and which is equipped, the three powers with cost and cooldown, live buff timers, and the
+zone's wave, score, kills and relics. `Tab` or `Esc` closes it. It reads from the same objects the HUD
+does, so it cannot go stale.
+
+## Saving
+
+A run is written to `localStorage` under `hellgate.save` at the start of every wave: zone, seed, wave,
+score, kills, class, health, armour and ammo. The title screen offers it as **Continue** with the zone,
+wave and score on the button. It is cleared on death and on clearing a zone, so it only ever resumes
+something you could still be playing.
+
 ## What this is not
 
 - No dialogue and no branching. Terminals are monologues; nothing replies.
 - One boss, two attacks, no phases. It is a fight, not an encounter design.
 - No inventory: powers are fixed per class, pickups are ammo and health only.
-- No saving mid-run. Progress is per zone, not per step.
+- No saving mid-wave. The save is a wave boundary, not a quicksave: dying rewinds to the start of the
+  wave you died on, with the score you had when it began.
 - The zones are separate arenas, not one continuous world. "Open" means unlocked, not seamless.

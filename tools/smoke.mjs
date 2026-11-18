@@ -144,6 +144,19 @@ ok('animals present', sys.animals >= 0, String(sys.animals));
 ok('companion is active', sys.companion);
 ok('zone relics placed', sys.relics > 0, String(sys.relics));
 
+// the status panel and the mid-run save
+const inv = await page.evaluate(() => {
+  const HG = window.HG;
+  HG.toggleInventory();
+  const state = HG.game.state;
+  const len = document.getElementById('invBody').innerHTML.length;
+  HG.toggleInventory();
+  return { state, len, after: HG.game.state, save: !!HG.loadRun() };
+});
+ok('tab opens the status panel', inv.state === 'inventory' && inv.len > 100, JSON.stringify(inv));
+ok('tab closes it again', inv.after === 'playing');
+ok('a run in progress is saved', inv.save === true);
+
 // lore terminals and the timed buff pickups
 const loreOk = await page.evaluate(() => {
   const HG = window.HG;

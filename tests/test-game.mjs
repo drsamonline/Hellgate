@@ -259,6 +259,28 @@ HG.game.buffs.damage = 0.02;
 frames(4);
 ok(Math.abs(HG.player.damageMul - baseDmg) < 1e-9, 'the buff expires and the multiplier returns');
 
+console.log('\n== save, continue and status ==');
+ok(!!HG.loadRun(), 'a run is saved when a wave starts');
+const sv0 = HG.loadRun();
+ok(sv0.wave >= 1 && !!sv0.zoneId, 'the save carries zone and wave');
+HG.game.score = 1234;
+HG.game.wave = 2;
+HG.saveRun();
+const sv1 = HG.loadRun();
+ok(sv1.score === 1234 && sv1.wave === 2, 'the save captures score and wave');
+HG.resumeRun(sv1);
+frames(2);
+ok(HG.game.state === 'playing', 'resuming returns to play');
+ok(HG.game.score === 1234, 'resuming restores the score');
+ok(HG.game.wave === 2, 'resuming restores the wave');
+HG.toggleInventory();
+ok(HG.game.state === 'inventory', 'tab opens the status panel');
+ok(document.getElementById('invBody').innerHTML.length > 100, 'the panel has content');
+HG.toggleInventory();
+ok(HG.game.state === 'playing', 'tab closes it again');
+HG.clearRun();
+ok(HG.loadRun() === null, 'the save can be cleared');
+
 console.log('\n== score and timer (roadmap 26) ==');
 HG.enemies.clear();
 HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);
