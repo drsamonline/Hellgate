@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.0 — 2026-11-19
+
+**Terminals**
+- three readable terminals per zone, on a post with a green screen. Walk within 2.2 m, press V, get a
+  two-paragraph note from whoever was here before. First read pays 75.
+- a prompt appears when one is in reach; the screen dims once read
+
+**Timed pickups**
+- damage (x1.5) and haste (x1.25) pickups, 20 seconds each, shown as HUD chips. Multipliers are
+  recomputed from the class base every frame, so they stack and expire cleanly.
+
+**Fix**
+- releasing the pointer lock on purpose (reading a terminal, clearing a zone) could pause the game a
+  frame later, because the pointerlockchange event arrives after the state has already returned to
+  playing. A lock-intent flag now distinguishes an intentional release from the player pressing Escape.
+  Found by the browser smoke test, which failed to cast a power immediately after closing a terminal.
+
+
 ## 1.4.0 — 2026-11-19
 
 **The warden**

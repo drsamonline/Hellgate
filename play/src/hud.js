@@ -26,6 +26,9 @@ export class HUD {
     this.elBoss = document.getElementById('bossbar');
     this.elBossFill = document.getElementById('bossfill');
     this.elBossName = document.getElementById('bossname');
+    this.elPrompt = document.getElementById('prompt');
+    this.elBuffs = document.getElementById('buffs');
+    this.promptText = '';
     this.slotSig = '';
     this.slotEls = [];
     this.elKey = document.getElementById('keycard');
@@ -45,6 +48,14 @@ export class HUD {
     this.hitT = 0;
     this.toastT = 0;
     this.drawFace(100);
+  }
+
+  setPrompt(text) {
+    if (!this.elPrompt) return;
+    if (text === this.promptText) return;
+    this.promptText = text;
+    this.elPrompt.textContent = text;
+    this.elPrompt.classList.toggle('on', !!text);
   }
 
   setVisible(on) {
@@ -74,6 +85,14 @@ export class HUD {
       this.elWeapon.textContent = wname;
       this.lastWeapon = wname;
     }
+    // ---- timed buffs -----------------------------------------------------
+    if (this.elBuffs && state && state.buffs) {
+      const parts = [];
+      if (state.buffs.damage > 0) parts.push(`<span class="buff dmg">DMG ${Math.ceil(state.buffs.damage)}s</span>`);
+      if (state.buffs.speed > 0) parts.push(`<span class="buff spd">SPD ${Math.ceil(state.buffs.speed)}s</span>`);
+      this.elBuffs.innerHTML = parts.join('');
+    }
+
     // ---- boss bar --------------------------------------------------------
     if (this.elBoss) {
       const boss = state && state.boss;

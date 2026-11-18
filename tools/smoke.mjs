@@ -144,6 +144,28 @@ ok('animals present', sys.animals >= 0, String(sys.animals));
 ok('companion is active', sys.companion);
 ok('zone relics placed', sys.relics > 0, String(sys.relics));
 
+// lore terminals and the timed buff pickups
+const loreOk = await page.evaluate(() => {
+  const HG = window.HG;
+  const t = HG.lore.entries[0];
+  HG.player.pos.set(t.x + 0.4, t.y, t.z);
+  HG.lore.update(HG.player); // deterministic: do not depend on frame timing
+  return { count: HG.lore.entries.length, near: !!HG.lore.near };
+});
+ok('lore terminals exist in the level', loreOk.count === 3, String(loreOk.count));
+ok('the player is in reach of one', loreOk.near, JSON.stringify(loreOk));
+
+const opened = await page.evaluate(() => {
+  const HG = window.HG;
+  const before = HG.game.score;
+  HG.openLore();
+  const state = HG.game.state;
+  const title = document.getElementById('loreTitle').textContent;
+  HG.closeLore();
+  return { state, title, gained: HG.game.score - before };
+});
+ok('a terminal opens and pays out', opened.state === 'lore' && opened.gained === 75, JSON.stringify(opened));
+
 // the boss wave: one warden, a health bar, and a bigger silhouette
 const bossOk = await page.evaluate(() => {
   const HG = window.HG;

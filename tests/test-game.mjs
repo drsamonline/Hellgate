@@ -228,6 +228,37 @@ ok(HG.props.grassMesh.visible === false, 'low quality hides the grass');
 HG.props.setQuality(1);
 ok(HG.props.grassMesh.visible === true, 'high quality restores it');
 
+console.log('\n== lore terminals ==');
+ok(HG.lore && HG.lore.entries.length === 3, 'three terminals placed (' + (HG.lore ? HG.lore.entries.length : 0) + ')');
+const t0 = HG.lore.entries[0];
+HG.player.pos.set(t0.x + 0.5, t0.y, t0.z);
+frames(2);
+ok(HG.lore.near === t0, 'the nearest terminal is detected');
+const s0 = HG.game.score;
+HG.openLore();
+frames(1);
+ok(HG.game.state === 'lore', 'reading opens the terminal');
+ok(HG.game.score === s0 + 75, 'the first read pays 75 (' + s0 + ' -> ' + HG.game.score + ')');
+HG.closeLore();
+frames(1);
+ok(HG.game.state === 'playing', 'closing returns to play');
+const s1 = HG.game.score;
+HG.openLore();
+frames(1);
+ok(HG.game.score === s1, 're-reading pays nothing');
+HG.closeLore();
+
+console.log('\n== timed buffs ==');
+HG.game.buffs.damage = 0;
+frames(2);
+const baseDmg = HG.player.damageMul;
+HG.game.buffs.damage = 20;
+frames(2);
+ok(HG.player.damageMul > baseDmg, 'the damage buff raises the multiplier');
+HG.game.buffs.damage = 0.02;
+frames(4);
+ok(Math.abs(HG.player.damageMul - baseDmg) < 1e-9, 'the buff expires and the multiplier returns');
+
 console.log('\n== score and timer (roadmap 26) ==');
 HG.enemies.clear();
 HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);

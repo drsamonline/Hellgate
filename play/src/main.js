@@ -21,6 +21,7 @@ import { ZONES, zoneById, loadProgress, clearZone, isUnlocked } from './world.js
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
+import { Lore } from './lore.js';
 
 // ---------------------------------------------------------------- renderer --
 const canvas = document.getElementById('game');
@@ -78,6 +79,7 @@ const powers = new Powers();
 const story = new Story();
 let props = null;
 let companion = null;
+let lore = null;
 let touchCleanup = null;
 let zone = ZONES[0];
 
@@ -97,6 +99,7 @@ const game = {
   relics: [],
   relicsTotal: 0,
   sideDone: false,
+  buffs: { damage: 0, speed: 0, shield: 0 },
   wave: 0,
   kills: 0,
   waveKills: 0,
@@ -219,6 +222,7 @@ function buildRun(seed, zoneDef) {
   enemies.onKill = () => { game.kills++; game.waveKills++; };
 
   props = new Props(scene, level, zone);
+  lore = new Lore(scene, level, zone);
   companion = new Companion(scene, level, effects, audio);
 
   player.reset(level, 0);
@@ -276,6 +280,8 @@ function applyClass(classId) {
   player.armor = def.armor;
   player.speedMul = def.speed;
   player.damageMul = def.damage;
+  player.baseSpeed = def.speed;
+  player.baseDamage = def.damage;
   weapons.select(def.weapon, true);
   weapons.cd = 0;
   powers.equip(def);
@@ -400,6 +406,18 @@ function changeSetting(key, value) {
 // -------------------------------------------------------------------- pickups
 
 const PICKUP_DEFS = {
+  damage: {
+    color: 0xff8a3d,
+    geo: () => new THREE.BoxGeometry(0.3, 0.3, 0.3),
+    label: 'DAMAGE x1.5',
+    apply: () => { game.buffs.damage = 20; audio.play('key'); },
+  },
+  speed: {
+    color: 0x7fd6ff,
+    geo: () => new THREE.OctahedronGeometry(0.2, 0),
+    label: 'HASTE x1.25',
+    apply: () => { game.buffs.speed = 20; audio.play('key'); },
+  },
   health: { color: 0xff2f55, geo: () => new THREE.OctahedronGeometry(0.22), toast: 'HEALTH +25', apply: (p) => p.heal(25) },
   armor: { color: 0x3fa9ff, geo: () => new THREE.BoxGeometry(0.3, 0.3, 0.3), toast: 'ARMOR +25', apply: (p) => p.addArmor(25) },
   bullets: { color: 0xffd24a, geo: () => new THREE.BoxGeometry(0.3, 0.16, 0.18), toast: '+20 BULLETS', apply: (p) => { p.ammo.bullets += 20; } },
@@ -624,9 +642,34 @@ function showZoneMap() {
   showScreen('map');
 }
 
+function openLore() {
+  if (game.state !== 'playing' || !lore) return;
+  const r = lore.readNear();
+  if (!r) return;
+  game.state = 'lore';
+  const t = document.getElementById('loreTitle');
+  const b = document.getElementById('loreBody');
+  if (t) t.textContent = r.entry.title;
+  if (b) b.textContent = r.entry.lines.join('\n\n');
+  if (r.fresh) {
+    game.score += 75;
+    hud.toast('TERMINAL READ  +75', 1.8);
+  }
+  showScreen('lore');
+  releaseLock();
+}
+
+function closeLore() {
+  if (game.state !== 'lore') return;
+  game.state = 'playing';
+  hideScreens();
+  requestLock();
+  clock.getDelta();
+}
+
 function zoneCleared() {
   game.state = 'cleared';
-  if (document.pointerLockElement) document.exitPointerLock();
+  releaseLock();
   clearZone(progress, zone.id, game.score);
   const el = document.getElementById('clearedStats');
   if (el) {
@@ -736,6 +779,16 @@ function saveBest(b) {
 
 // --------------------------------------------------------------------- input
 
+// Releasing the pointer on purpose must not be mistaken for the player pressing
+// Escape: the change event arrives a frame later, when the state may be back to
+// 'playing' again (reading a terminal does exactly that).
+let lockIntentional = false;
+
+function releaseLock() {
+  lockIntentional = true;
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+
 function requestLock() {
   if (document.pointerLockElement === canvas) return;
   if (typeof canvas.requestPointerLock !== 'function') return;
@@ -758,7 +811,12 @@ document.addEventListener('visibilitychange', () => {
 
 document.addEventListener('pointerlockchange', () => {
   input.locked = document.pointerLockElement === canvas;
-  if (!input.locked && game.state === 'playing') pauseGame();
+  if (input.locked) return;
+  if (lockIntentional) {
+    lockIntentional = false;
+    return;
+  }
+  if (game.state === 'playing') pauseGame();
 });
 
 window.addEventListener('mousemove', (e) => {
@@ -793,6 +851,11 @@ window.addEventListener('mouseup', () => { input.fire = false; });
 window.addEventListener('blur', () => { input.fire = false; input.keys = Object.create(null); });
 
 window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && game.state === 'lore') {
+    closeLore();
+    e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape') {
     if (game.state === 'playing') { pauseGame(); return; }
     if (game.state === 'paused') { resumeGame(); return; }
@@ -807,6 +870,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyE') castPower(1);
   if (e.code === 'KeyR') castPower(2);
   if (e.code === 'KeyX') weapons.next(1);
+  if (e.code === 'KeyV') openLore();
   if (e.code === 'KeyF') toggleFullscreen();
   if (e.code === 'KeyM') {
     changeSetting('muted', !settings.muted);
@@ -824,6 +888,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
   beginZone(z);
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
+document.getElementById('loreClose')?.addEventListener('click', closeLore);
 document.getElementById('mapBtn')?.addEventListener('click', showZoneMap);
 document.getElementById('mapFromCleared')?.addEventListener('click', showZoneMap);
 document.getElementById('clearedNext')?.addEventListener('click', () => {
@@ -941,6 +1006,16 @@ function update(dt) {
   player.invuln = powers.invuln;
   player.guard = powers.guard;
 
+  // timed pickups: multipliers are recomputed from the class base every frame
+  for (const k of Object.keys(game.buffs)) {
+    if (game.buffs[k] > 0) game.buffs[k] = Math.max(0, game.buffs[k] - dt);
+  }
+  player.damageMul = (player.baseDamage || 1) * (game.buffs.damage > 0 ? 1.5 : 1);
+  player.speedMul = (player.baseSpeed || 1) * (game.buffs.speed > 0 ? 1.25 : 1);
+
+  const near = lore ? lore.update(player) : null;
+  hud.setPrompt(near ? 'V  READ' : '');
+
   enemies.update(dt, player, projectiles);
   projectiles.update(dt, player, enemies);
   if (companion) companion.update(dt, player, enemies);
@@ -966,6 +1041,8 @@ function update(dt) {
     relicsTotal: game.relicsTotal,
     sideDone: game.sideDone,
     boss: enemies.boss,
+    buffs: game.buffs,
+    near: !!(lore && lore.near),
     exitOpen: game.exitOpen,
     exit: level.exit,
     camera,
@@ -1080,6 +1157,7 @@ window.HG = {
   get companion() { return companion; },
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
+  openLore, closeLore, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },
   get level() { return level; },

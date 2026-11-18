@@ -79,9 +79,28 @@ on drag and fires on a tap under 260 ms and 14 px of movement. Buttons for jump,
 weapon and fire sit bottom-right. The stick writes into the same `input.move` vector the keyboard
 uses, so nothing downstream knows the difference.
 
+## Terminals — `play/src/lore.js`
+
+Three per zone, stuck to a floor post with a green screen, readable once with `V` when you are within
+2.2 m. The nearest one lights up and a prompt appears. A first read pays 75 and dims the screen; a
+second read shows the same text and pays nothing. It is the closest thing here to an NPC: somebody was
+in this room before you and left a note.
+
+## Timed pickups
+
+Two more pickup kinds, both on a 20-second clock and shown as chips in the HUD:
+
+| Pickup | Effect | Duration |
+| --- | --- | --- |
+| Damage | ×1.5 on every weapon | 20 s |
+| Haste | ×1.25 movement speed | 20 s |
+
+The multipliers are recomputed every frame from the class base, so they stack with a class bonus and
+expire cleanly rather than leaving a multiplied value behind.
+
 ## What this is not
 
-- No dialogue, no NPCs to talk to, no branching.
+- No dialogue and no branching. Terminals are monologues; nothing replies.
 - One boss, two attacks, no phases. It is a fight, not an encounter design.
 - No inventory: powers are fixed per class, pickups are ammo and health only.
 - No saving mid-run. Progress is per zone, not per step.
