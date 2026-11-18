@@ -15,7 +15,15 @@ export function isTouchDevice() {
 export function initTouch(input, handlers) {
   const root = document.getElementById('touch');
   if (!root) return () => {};
-  root.classList.add('on');
+  // The overlay is shown only while playing: on the title, intro, class and map
+  // screens it is either hidden behind them or in the way of their buttons.
+  let shown = false;
+  const setVisible = (on) => {
+    if (on === shown) return;
+    shown = on;
+    root.classList.toggle('on', on);
+  };
+  setVisible(false);
 
   const stick = document.getElementById('tStick');
   const knob = document.getElementById('tKnob');
@@ -123,5 +131,7 @@ export function initTouch(input, handlers) {
   bind('tP3', () => handlers.power(2));
   bind('tWeap', handlers.weapon);
 
-  return () => root.classList.remove('on');
+  const cleanup = () => root.classList.remove('on');
+  cleanup.setVisible = setVisible;
+  return cleanup;
 }

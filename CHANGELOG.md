@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.5.1 — 2026-11-19
+
+Touch controls, fixed. They were present but effectively unusable on a phone.
+
+- the overlay is now shown only while playing; on the title, intro, class and map screens it was
+  either hidden behind them or in the way of their buttons
+- the layout fits a phone: below 620 px the HUD bar shrinks to the viewport width, the power bar
+  lifts above it, and the six buttons become two rows of three. Below 420 px of height everything
+  scales to the corners. Both use `env(safe-area-inset-bottom)`.
+- pointer lock is never requested on a touch device, and losing a lock no longer pauses the run —
+  rotating the phone was dropping the lock and freezing the game
+- the companion drone was the size of the player's head at 1.2 m; it is smaller and sits behind the
+  shoulder, and hides if it would sit on the camera
+
+Verified by driving the real pages at 390x844 and 844x390 in Chromium with touch emulation: the
+overlay appears, every control is inside the viewport, and dragging the stick moves the player.
+
+
 ## 1.5.0 — 2026-11-19
 
 **Terminals**

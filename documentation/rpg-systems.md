@@ -75,9 +75,19 @@ reads as a tech demo.
 ## Touch — `play/src/touch.js`
 
 Enabled on a touch device or with `?touch=1`. The left third is a virtual stick; the right half looks
-on drag and fires on a tap under 260 ms and 14 px of movement. Buttons for jump, the three powers, the
-weapon and fire sit bottom-right. The stick writes into the same `input.move` vector the keyboard
-uses, so nothing downstream knows the difference.
+on drag and fires on a tap under 260 ms and 14 px of movement. Six buttons for the three powers, the
+weapon, jump and fire sit bottom-right. The stick writes into the same `input.move` vector the
+keyboard uses, so nothing downstream knows the difference.
+
+The overlay is shown **only while playing**. On the title, intro, class and map screens it is hidden,
+because it is either behind those screens or in the way of their buttons.
+
+Two layouts, switched by media query: below 620 px the HUD bar shrinks to the viewport width, the
+power bar lifts above it and the buttons go two rows of three; below 420 px of height (a landscape
+phone) the HUD scales to 0.86 and the stick and buttons tighten to the corners. Both use
+`env(safe-area-inset-bottom)` so a home indicator does not sit on the fire button.
+
+Pointer lock is never requested on a touch device, and losing a lock never pauses the game there.
 
 ## Terminals — `play/src/lore.js`
 

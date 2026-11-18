@@ -201,19 +201,62 @@
   .zonerow .zs{color:#39ff9a;font-size:10px;letter-spacing:.14em}
 
   /* touch */
-  #touch{position:fixed;inset:0;z-index:14;display:none;pointer-events:none}
+  #touch{position:fixed;inset:0;z-index:14;display:none;pointer-events:none;
+    padding:0 0 env(safe-area-inset-bottom) 0}
   #touch.on{display:block}
-  #tStick{position:absolute;left:24px;bottom:24px;width:132px;height:132px;border-radius:50%;
-    border:1px solid rgba(255,180,84,.3);background:rgba(10,9,8,.42);pointer-events:auto;touch-action:none}
-  #tKnob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:0;border-radius:50%;
-    background:rgba(255,180,84,.35);border:1px solid rgba(255,180,84,.7);
-    transform:translate(-50%,-50%);opacity:.55;transition:opacity .15s;pointer-events:none}
-  #tLook{position:absolute;right:0;top:0;width:55%;height:100%;pointer-events:auto;touch-action:none}
-  #tBtns{position:absolute;right:20px;bottom:26px;display:flex;gap:10px;pointer-events:auto}
-  #tBtns button{width:56px;height:56px;border-radius:50%;background:rgba(18,16,14,.8);
-    border:1px solid rgba(255,180,84,.4);color:#ffd9a8;font-family:var(--mono);font-size:10px;
-    letter-spacing:.1em;pointer-events:auto;touch-action:none}
-  #tBtns button:active{background:rgba(255,180,84,.28)}
+  #tStick{
+    position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom));
+    width:112px;height:112px;border-radius:50%;
+    border:1px solid rgba(255,180,84,.3);background:rgba(10,9,8,.4);
+    pointer-events:auto;touch-action:none;
+  }
+  #tKnob{
+    position:absolute;left:50%;top:50%;width:46px;height:46px;border-radius:50%;
+    background:rgba(255,180,84,.32);border:1px solid rgba(255,180,84,.7);
+    transform:translate(-50%,-50%);opacity:.55;transition:opacity .15s;pointer-events:none;
+  }
+  #tLook{position:absolute;right:0;top:0;width:52%;height:100%;pointer-events:auto;touch-action:none}
+  #tBtns{
+    position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
+    display:grid;grid-template-columns:repeat(3,44px);gap:8px;pointer-events:auto;
+  }
+  #tBtns button{
+    width:44px;height:44px;border-radius:50%;background:rgba(18,16,14,.78);
+    border:1px solid rgba(255,180,84,.4);color:#ffd9a8;font-family:var(--mono);
+    font-size:9px;letter-spacing:.06em;pointer-events:auto;touch-action:none;padding:0;
+  }
+  #tBtns button:active{background:rgba(255,180,84,.3)}
+  #tFire{grid-column:3;grid-row:1}
+  #tWeap{grid-column:3;grid-row:2}
+
+  /* phones: the HUD and the touch furniture have to share one screen */
+  @media (max-width:620px){
+    #bottombar{gap:6px;padding:6px 8px;bottom:calc(122px + env(safe-area-inset-bottom));
+      border-radius:3px;width:calc(100vw - 24px);max-width:none;justify-content:space-between}
+    #bottombar .face{width:40px;height:40px;flex:0 0 auto}
+    #bottombar .stat{min-width:0;flex:1 1 auto;text-align:center}
+    #bottombar .stat .label{font-size:7px;letter-spacing:.1em}
+    #bottombar .stat b{font-size:14px;letter-spacing:.04em}
+    #bottombar .stat:last-child b{font-size:11px}
+    #bottombar .stat:last-child .label{display:none}
+    #powerbar{bottom:calc(180px + env(safe-area-inset-bottom));gap:6px;padding:4px 6px}
+    #energyWrap{width:86px}
+    .pslot{min-width:48px;padding:2px 4px}
+    .pslot b{font-size:8px}
+    .pslot span{font-size:7px}
+    #topbar{font-size:9px;gap:8px;padding:5px 8px;flex-wrap:wrap}
+    #relics{font-size:9px}
+    #prompt{bottom:calc(240px + env(safe-area-inset-bottom))}
+    #bossbar{top:44px;width:86vw}
+  }
+  @media (max-height:420px){
+    /* landscape phone: everything tightens to the edges */
+    #bottombar{bottom:8px;transform:translateX(-50%) scale(.86);transform-origin:bottom center}
+    #powerbar{bottom:86px;transform:translateX(-50%) scale(.9);transform-origin:bottom center}
+    #tStick{width:96px;height:96px;bottom:10px;left:10px}
+    #tBtns{grid-template-columns:repeat(3,40px);gap:6px;right:8px;bottom:8px}
+    #tBtns button{width:40px;height:40px;font-size:8px}
+  }
 
   #toast{
     position:absolute;left:50%;top:24%;transform:translate(-50%,-6px);

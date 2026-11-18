@@ -75,6 +75,7 @@ let weapons = null;
 
 const settings = clampSettings(loadSettings());
 const progress = loadProgress();
+const TOUCH = isTouchDevice();
 const powers = new Powers();
 const story = new Story();
 let props = null;
@@ -791,6 +792,7 @@ function releaseLock() {
 }
 
 function requestLock() {
+  if (TOUCH) return; // there is no pointer lock on a touch device, and asking for one fails
   if (document.pointerLockElement === canvas) return;
   if (typeof canvas.requestPointerLock !== 'function') return;
   lockPendingAt = performance.now();
@@ -813,6 +815,7 @@ document.addEventListener('visibilitychange', () => {
 
 document.addEventListener('pointerlockchange', () => {
   input.locked = document.pointerLockElement === canvas;
+  if (TOUCH) return; // losing a lock that touch never took must not pause the run
   if (input.locked) return;
   if (lockIntentional) {
     lockIntentional = false;
@@ -1084,6 +1087,7 @@ function loop() {
   } else if (game.state === 'intro') {
     story.update(dt, level);
   }
+  if (touchCleanup && touchCleanup.setVisible) touchCleanup.setVisible(game.state === 'playing');
   render();
   updateDebug(dt);
 }
@@ -1138,7 +1142,8 @@ function applyUrlOverrides() {
 refreshBest();
 document.getElementById('seedInput').value = 'hellgate';
 hud.setVisible(false);
-if (isTouchDevice()) {
+if (TOUCH) {
+  document.body.classList.add('has-touch');
   touchCleanup = initTouch(input, {
     jump: () => { input.jumpQueued = true; },
     fire: () => {

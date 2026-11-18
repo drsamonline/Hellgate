@@ -233,6 +233,46 @@ const a1 = await page.evaluate(() => {
 ok('mute drops the master gain to zero', a1.muted === 0, String(a1.muted));
 ok('unmute restores it', a1.restored > 0, String(a1.restored));
 
+// --- touch ----------------------------------------------------------------
+// Emulated phone: the overlay must appear only while playing, and every control
+// must be inside the viewport.
+console.log('\ntouch');
+const mp = await browser.newPage();
+await mp.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+await mp.goto(`http://127.0.0.1:${PORT}/play/?touch=1`, { waitUntil: 'domcontentloaded' });
+await mp.waitForFunction('typeof window.HG === "object"', { timeout: 20000 });
+const hiddenOnTitle = await mp.evaluate(() => document.getElementById('touch').classList.contains('on'));
+ok('the overlay is hidden on the title screen', hiddenOnTitle === false);
+
+await mp.tap('#startBtn');
+await mp.waitForFunction('window.HG.game.state === "intro"', { timeout: 20000 });
+await mp.tap('#storySkip');
+await mp.waitForFunction('window.HG.game.state === "class"', { timeout: 20000 });
+await mp.tap('[data-class="marine"]');
+await mp.waitForFunction('window.HG.game.state === "playing"', { timeout: 20000 });
+await new Promise((r) => setTimeout(r, 500));
+
+const touch = await mp.evaluate(() => {
+  const box = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
+  };
+  return {
+    on: document.getElementById('touch').classList.contains('on'),
+    stick: box('tStick'),
+    btns: box('tBtns'),
+    vw: innerWidth,
+    vh: innerHeight,
+  };
+});
+ok('the overlay shows while playing', touch.on === true);
+const inside = (b) => b && b.x >= 0 && b.y >= 0 && b.x + b.w <= touch.vw + 1 && b.y + b.h <= touch.vh + 1;
+ok('the stick is inside the viewport', inside(touch.stick), JSON.stringify(touch.stick));
+ok('the buttons are inside the viewport', inside(touch.btns), JSON.stringify(touch.btns));
+await mp.close();
+
 // --- results ----------------------------------------------------------------
 ok('no console errors or failed requests', problems.length === 0, problems.slice(0, 4).join(' | '));
 

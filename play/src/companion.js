@@ -23,16 +23,16 @@ export class Companion {
 
     this.group = new THREE.Group();
     const shell = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.28, 0),
+      new THREE.OctahedronGeometry(0.17, 0),
       new THREE.MeshLambertMaterial({ color: 0x3fa9ff })
     );
     this.core = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.12, 0),
+      new THREE.OctahedronGeometry(0.07, 0),
       new THREE.MeshBasicMaterial({ color: 0xbdeaff })
     );
     this.group.add(shell, this.core);
     const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.34, 0.02, 4, 16),
+      new THREE.TorusGeometry(0.22, 0.014, 4, 16),
       new THREE.MeshBasicMaterial({ color: 0x66ccff, transparent: true, opacity: 0.7 })
     );
     ring.rotation.x = Math.PI / 2;
@@ -55,6 +55,8 @@ export class Companion {
     this.dormant = false;
     this.pos.set(player.pos.x - 1.4, player.pos.y + 1.9, player.pos.z - 1.4);
     this.group.position.copy(this.pos);
+    // never let it sit on top of the camera
+    this.group.visible = this.pos.distanceTo(player.pos) > 1.1;
     this.group.visible = true;
   }
 
@@ -72,10 +74,11 @@ export class Companion {
     this.fireT -= dt;
 
     // hover toward a point behind and above the player
+    // sits behind and above the shoulder, far enough not to fill the screen
     const target = new THREE.Vector3(
-      player.pos.x - Math.sin(player.yaw) * -1.2,
-      player.pos.y + 1.85,
-      player.pos.z - Math.cos(player.yaw) * -1.2
+      player.pos.x + Math.sin(player.yaw) * 2.1,
+      player.pos.y + 2.05,
+      player.pos.z + Math.cos(player.yaw) * 2.1
     );
     const d = this.pos.distanceTo(target);
     this.dormant = d > 26;
@@ -89,6 +92,8 @@ export class Companion {
     this.pos.addScaledVector(this.vel, dt);
     this.pos.y += Math.sin(this.t * 2.2) * 0.004;
     this.group.position.copy(this.pos);
+    // never let it sit on top of the camera
+    this.group.visible = this.pos.distanceTo(player.pos) > 1.1;
     this.core.rotation.y += dt * 3;
     this.ring.rotation.z += dt * 1.4;
 
