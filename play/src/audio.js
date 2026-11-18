@@ -6,6 +6,9 @@
 // the distance gain for a sound at `at`, heard from `listener` (x, z, yaw).
 // Adopted from castle-valley's audio: a creature is heard from where it stands,
 // quieter with distance, to the left or the right.
+/**
+ * Stereo pan and distance gain for a sound at `at`, heard from `listener`. Pure, so it can be tested without an AudioContext.
+ */
 export function panGain(at, listener, range = 26) {
   const dx = at.x - listener.x;
   const dz = at.z - listener.z;
@@ -17,6 +20,9 @@ export function panGain(at, listener, range = 26) {
   return { pan, gain, dist };
 }
 
+/**
+ * The synthesiser. Every sound in the game is built here from oscillators and noise buffers.
+ */
 export class Sfx {
   constructor() {
     this.ctx = null;

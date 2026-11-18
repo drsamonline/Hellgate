@@ -5,6 +5,9 @@
 import * as THREE from 'three';
 import { circleBlocked, floorHeightAt, MAX_STEP } from './level.js';
 
+/**
+ * Collision radius of the player.
+ */
 export const PLAYER_RADIUS = 0.42;
 const EYE = 1.62;
 const WALK = 5.4;
@@ -17,6 +20,9 @@ const PITCH_LIMIT = 1.45;
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
+/**
+ * The player: movement, look, collision, health, armour, ammo and the class multipliers.
+ */
 export class Player {
   constructor(camera) {
     this.camera = camera;

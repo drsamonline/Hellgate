@@ -165,6 +165,7 @@ which is how the game was checked against the current release and not only again
 - [HUD and feel](documentation/hud-and-feel.md) — feedback systems and why they exist
 - [Tuning](documentation/tuning.md) — every constant worth changing, and what it does
 - [Testing](documentation/testing.md) — how the harness works, how to add a suite
+- [API](documentation/api.md) — every exported symbol, one line each
 - [Enhancement roadmap](ENHANCEMENTS.md) — 63 ideas, quick wins first
 
 ## Performance

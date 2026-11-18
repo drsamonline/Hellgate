@@ -7,6 +7,9 @@ import * as THREE from 'three';
 
 const _fwd = new THREE.Vector3();
 
+/**
+ * The DOM overlay: counters, face, crosshair, compass, energy and power slots, boss bar, prompts, toasts.
+ */
 export class HUD {
   constructor() {
     this.root = document.getElementById('hud');

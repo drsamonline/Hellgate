@@ -3,6 +3,9 @@
 // "open world" is a set of arenas you unlock rather than one continuous map.
 // ---------------------------------------------------------------------------
 
+/**
+ * The five zones: seed, palette, props, objective.
+ */
 export const ZONES = [
   {
     id: 'gate',
@@ -84,6 +87,9 @@ export const ZONES = [
 
 const KEY = 'hellgate.progress';
 
+/**
+ * Read zone progress from localStorage, or a fresh record.
+ */
 export function loadProgress() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -93,20 +99,32 @@ export function loadProgress() {
   return { unlocked: 1, cleared: [], best: {} };
 }
 
+/**
+ * Persist zone progress.
+ */
 export function saveProgress(p) {
   try {
     localStorage.setItem(KEY, JSON.stringify(p));
   } catch (e) { /* private mode */ }
 }
 
+/**
+ * Look a zone up by id, falling back to the first.
+ */
 export function zoneById(id) {
   return ZONES.find((z) => z.id === id) || ZONES[0];
 }
 
+/**
+ * True when the zone at this index has been unlocked.
+ */
 export function isUnlocked(progress, index) {
   return index < progress.unlocked;
 }
 
+/**
+ * Record a zone as cleared, unlock the next and keep the best score.
+ */
 export function clearZone(progress, zoneId, score) {
   const i = ZONES.findIndex((z) => z.id === zoneId);
   if (!progress.cleared.includes(zoneId)) progress.cleared.push(zoneId);

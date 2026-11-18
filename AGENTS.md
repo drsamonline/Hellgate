@@ -13,6 +13,7 @@ the only file with real logic that does not need a browser.
 ```bash
 bash tests/run.sh            # 3 suites, ~4 s, no install, no network
 node tools/check-claims.js   # README numbers vs the code, ~200 ms
+node tools/check-docs.mjs    # every export has a JSDoc block
 node tools/smoke.mjs         # both pages in headless Chromium (needs puppeteer-core + a browser)
 node tools/shoot.mjs         # re-capture the screenshots into assets/*.png
 python3 tools/optimise_assets.py   # assets/*.png -> assets/*.webp (what the pages load)

@@ -14,6 +14,9 @@ const ENGAGE_RANGE = 15;
 const FIRE_CD = 0.85;
 const DAMAGE = 7;
 
+/**
+ * The ally drone: floats behind the player, shoots what it can see, cannot die.
+ */
 export class Companion {
   constructor(scene, level, effects, audio) {
     this.scene = scene;

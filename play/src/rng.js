@@ -2,6 +2,9 @@
 // Seeded PRNG: same seed string always rebuilds the same map.
 // ---------------------------------------------------------------------------
 
+/**
+ * FNV-1a hash of a seed string.
+ */
 export function hashString(str) {
   let h = 2166136261 >>> 0;
   const s = String(str);
@@ -12,6 +15,9 @@ export function hashString(str) {
   return h >>> 0;
 }
 
+/**
+ * A 32-bit seeded PRNG. Same seed, same sequence, forever.
+ */
 export function mulberry32(a) {
   return function () {
     a |= 0;
@@ -22,6 +28,9 @@ export function mulberry32(a) {
   };
 }
 
+/**
+ * A small RNG facade: next, range, int, pick, chance.
+ */
 export function makeRng(seed) {
   const next = mulberry32(hashString(seed));
   return {

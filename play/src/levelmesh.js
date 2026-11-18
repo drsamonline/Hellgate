@@ -10,6 +10,9 @@ import { CELL } from './level.js';
 const WALL_KEY = ['wall_brick', 'wall_tech'];
 const FLOOR_KEY = ['floor_tile', 'floor_plate'];
 
+/**
+ * Turn the sector grid into merged geometry with baked vertex shade, plus the door boxes and the exit pad.
+ */
 export function buildLevelMeshes(level, mats) {
   const buckets = {};
   const bucket = (k) => (buckets[k] || (buckets[k] = { p: [], n: [], u: [], i: [], c: [] }));

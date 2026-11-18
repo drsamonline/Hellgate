@@ -6,6 +6,9 @@
 import * as THREE from 'three';
 import { raycastWalls } from './level.js';
 
+/**
+ * Every power: cost, cooldown, key and effect.
+ */
 export const POWERS = {
   dash: {
     id: 'dash',
@@ -51,6 +54,9 @@ export const POWERS = {
 
 const REGEN = 11; // energy per second
 
+/**
+ * The energy pool, the three equipped slots and their cooldowns.
+ */
 export class Powers {
   constructor() {
     this.slots = [];

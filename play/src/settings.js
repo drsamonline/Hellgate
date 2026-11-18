@@ -5,6 +5,9 @@
 
 const KEY = 'hellgate.settings';
 
+/**
+ * Default settings, and the shape every stored setting is validated against.
+ */
 export const DEFAULTS = {
   sensitivity: 1.0,     // multiplier on the base look speed
   fov: 76,              // degrees
@@ -15,8 +18,14 @@ export const DEFAULTS = {
   classId: 'marine',    // marine | ranger | warden
 };
 
+/**
+ * The three difficulty presets.
+ */
 export const DIFFICULTIES = ['easy', 'normal', 'hard'];
 
+/**
+ * Read settings from localStorage, falling back to the default for any key that is missing or the wrong type.
+ */
 export function loadSettings() {
   try {
     const raw = localStorage.getItem(KEY);
@@ -32,12 +41,18 @@ export function loadSettings() {
   }
 }
 
+/**
+ * Persist settings. Silently does nothing in private mode.
+ */
 export function saveSettings(s) {
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
   } catch (e) { /* private mode: settings just do not persist */ }
 }
 
+/**
+ * Clamp every setting into its legal range. Called on read and on write.
+ */
 export function clampSettings(s) {
   s.sensitivity = Math.min(3, Math.max(0.2, Number(s.sensitivity) || DEFAULTS.sensitivity));
   s.fov = Math.min(100, Math.max(65, Number(s.fov) || DEFAULTS.fov));

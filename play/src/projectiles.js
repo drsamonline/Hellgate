@@ -8,6 +8,9 @@ import { raycastWalls } from './level.js';
 const ROCKET = { speed: 26, radius: 0.18, splash: 4.5, damage: 95, life: 5 };
 const FIREBALL = { speed: 13, radius: 0.22, splash: 1.4, damage: 15, life: 6 };
 
+/**
+ * Rockets and fireballs: spawn, travel, explode, and what they hit on the way.
+ */
 export class Projectiles {
   constructor(scene, level, effects, audio) {
     this.scene = scene;

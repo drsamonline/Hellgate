@@ -8,6 +8,9 @@ import * as THREE from 'three';
 import { makeRng } from './rng.js';
 import { CELL, floorHeightAt } from './level.js';
 
+/**
+ * The notes left on the wall terminals.
+ */
 export const TERMINALS = [
   {
     title: 'MAINTENANCE 04',
@@ -53,6 +56,9 @@ export const TERMINALS = [
   },
 ];
 
+/**
+ * Places the readable terminals in a level and answers what is in reach.
+ */
 export class Lore {
   constructor(scene, level, zone) {
     this.scene = scene;

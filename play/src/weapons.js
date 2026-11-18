@@ -6,6 +6,9 @@
 import * as THREE from 'three';
 import { raycastWalls } from './level.js';
 
+/**
+ * The three weapons: ammo, damage, cooldown, spread, range.
+ */
 export const WEAPONS = [
   {
     key: 'pistol', name: 'PISTOL', ammo: 'bullets',
@@ -26,6 +29,9 @@ export const WEAPONS = [
 
 const REST = new THREE.Vector3(0.26, -0.26, -0.55);
 
+/**
+ * View models, firing, recoil and weapon switching.
+ */
 export class Weapons {
   constructor(weaponScene, weaponCamera, camera, effects, audio) {
     this.scene = weaponScene;

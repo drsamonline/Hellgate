@@ -29,6 +29,9 @@ const MAX_TRACERS = 16;
 const MAX_DECALS = 40;
 const MAX_LIGHTS = 4;
 
+/**
+ * Pooled tracers, decals, particles, lights and screen shake. Nothing allocates per shot.
+ */
 export class Effects {
   constructor(scene, decalTextures) {
     this.scene = scene;

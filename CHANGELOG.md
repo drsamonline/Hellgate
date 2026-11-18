@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.6.1 — 2026-11-19
+
+**Documentation**
+- every one of the 52 module-level exports now carries a JSDoc block: 0% to 100%
+- `documentation/api.md`, one line per export, generated from those blocks
+- `tools/check-docs.mjs` fails the build when an export loses its doc block, wired into CI next to
+  the claim checker
+
+The checker had a bug worth recording: its own header comment contained a closing delimiter, which
+ended the comment early and made the file unparseable. The tool that enforces comments was broken by a
+comment.
+
+
 ## 1.6.0 — 2026-11-19
 
 **Status panel**

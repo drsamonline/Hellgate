@@ -3,6 +3,9 @@
 // A class sets your body, your starting weapon and which powers you can cast.
 // ---------------------------------------------------------------------------
 
+/**
+ * The three playable classes. Each sets a body, a starting weapon and a power set.
+ */
 export const CLASSES = [
   {
     id: 'marine',
@@ -42,6 +45,9 @@ export const CLASSES = [
   },
 ];
 
+/**
+ * Look a class up by id, falling back to the first.
+ */
 export function getClass(id) {
   return CLASSES.find((c) => c.id === id) || CLASSES[0];
 }

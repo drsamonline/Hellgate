@@ -7,8 +7,14 @@
 
 import { makeRng } from './rng.js';
 
-export const CELL = 2.0;      // world units per grid cell
-export const MAX_STEP = 0.5;  // highest ledge the player can walk up
+/**
+ * World units per grid cell.
+ */
+export const CELL = 2.0;
+/**
+ * Tallest ledge the player and the enemies can walk up.
+ */
+export const MAX_STEP = 0.5;
 
 const W = 40;
 const H = 40;
@@ -16,6 +22,9 @@ const H = 40;
 const WALL_TEX = ['brick', 'tech'];
 const FLOOR_TEX = ['tile', 'plate'];
 
+/**
+ * Build a whole level from a seed string. Pure data: no Three.js, no DOM, no clock.
+ */
 export function generateLevel(seed) {
   const rng = makeRng(seed);
   const idx = (x, z) => z * W + x;
@@ -243,6 +252,9 @@ function allRoomsReachable(cells, W, H, start, roomCount, exitCell) {
 // Collision queries
 // ---------------------------------------------------------------------------
 
+/**
+ * The cell containing a world position, or null outside the map.
+ */
 export function cellAt(level, x, z) {
   const cx = Math.round(x / CELL);
   const cz = Math.round(z / CELL);
@@ -250,6 +262,9 @@ export function cellAt(level, x, z) {
   return level.cells[cz * level.W + cx];
 }
 
+/**
+ * True when a world position is solid rock, out of bounds, or a closed door.
+ */
 export function isBlocked(level, x, z) {
   const c = cellAt(level, x, z);
   if (!c) return true;
@@ -258,17 +273,26 @@ export function isBlocked(level, x, z) {
   return false;
 }
 
+/**
+ * Floor height at a world position.
+ */
 export function floorHeightAt(level, x, z) {
   const c = cellAt(level, x, z);
   return c ? c.floor : 0;
 }
 
+/**
+ * Ceiling height at a world position.
+ */
 export function ceilHeightAt(level, x, z) {
   const c = cellAt(level, x, z);
   return c ? c.ceil : 3;
 }
 
 // circle vs. axis-aligned blocked cells
+/**
+ * True when a circle of radius r at (x, z) overlaps anything solid.
+ */
 export function circleBlocked(level, x, z, r) {
   const c0 = Math.floor((x - r) / CELL) - 1;
   const c1 = Math.ceil((x + r) / CELL) + 1;
@@ -299,6 +323,9 @@ export function circleBlocked(level, x, z, r) {
 // Ray vs. sector walls (grid march). Returns the first blocking hit.
 // ---------------------------------------------------------------------------
 
+/**
+ * March a ray through the grid and return the first wall hit with its normal, or null.
+ */
 export function raycastWalls(level, origin, dir, maxDist, step = 0.09) {
   let t = 0.02;
   let prevCx = Math.round(origin.x / CELL);
@@ -345,6 +372,9 @@ function axisNormal(x, z, prevCx, prevCz) {
 // side of a wall: it walks toward the next cell on the path, not at the player.
 // ---------------------------------------------------------------------------
 
+/**
+ * Breadth-first search from a world position over every reachable cell. -1 where unreachable.
+ */
 export function buildFlowField(level, tx, tz) {
   const W = level.W;
   const H = level.H;
@@ -405,6 +435,9 @@ export function buildFlowField(level, tx, tz) {
 
 // The unit direction to the neighbouring cell one step closer to the target.
 // Returns null when there is no path (or the enemy is already in the target cell).
+/**
+ * The neighbouring cell one step closer to the flow field's target, or null.
+ */
 export function flowStep(level, field, x, z) {
   if (!field) return null;
   const W = level.W;
@@ -433,6 +466,9 @@ export function flowStep(level, field, x, z) {
   return { x: bx, z: bz };
 }
 
+/**
+ * True when nothing solid stands between two world points.
+ */
 export function hasLineOfSight(level, a, b) {
   const dx = b.x - a.x;
   const dy = b.y - a.y;

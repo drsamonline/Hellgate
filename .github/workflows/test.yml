@@ -45,6 +45,9 @@ jobs:
       - name: Check the README's claims
         run: node tools/check-claims.js
 
+      - name: Exported symbols are documented
+        run: node tools/check-docs.mjs
+
       - name: Install a browser
         uses: browser-actions/setup-chrome@v1
         with:

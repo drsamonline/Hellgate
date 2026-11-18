@@ -225,6 +225,9 @@ function scorch() {
   return t;
 }
 
+/**
+ * Build every surface material once, with canvas textures and anisotropic filtering.
+ */
 export function makeMaterials(maxAnisotropy = 1) {
   const aniso = Math.max(1, Math.min(8, maxAnisotropy || 1));
   const L = (map) => {
@@ -251,6 +254,9 @@ export function makeMaterials(maxAnisotropy = 1) {
   return mats;
 }
 
+/**
+ * The two impact decal textures: scorch and blood.
+ */
 export function makeDecalTextures() {
   return { blood: splat(), scorch: scorch() };
 }

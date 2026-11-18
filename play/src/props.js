@@ -10,6 +10,9 @@ import { CELL, circleBlocked, floorHeightAt } from './level.js';
 
 const dummy = new THREE.Object3D();
 
+/**
+ * Instanced trees, rocks and grass, plus animals that wander and bolt.
+ */
 export class Props {
   constructor(scene, level, zone) {
     this.scene = scene;

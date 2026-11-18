@@ -183,6 +183,9 @@ function makeHound() {
   return { group: g, parts: { legL: legFL, legR: legFR, legBL, legBR } };
 }
 
+/**
+ * One enemy: mesh, state machine, health. Geometry is shared per type; body materials are cloned for the hit flash.
+ */
 export class Enemy {
   constructor(typeName, worldPos, wave, scene, opts = {}) {
     const T = TYPES[typeName];
@@ -521,6 +524,9 @@ export class Enemy {
 
 // ---------------------------------------------------------------------------
 
+/**
+ * Owns the enemies, the shared flow field, wave composition and difficulty multipliers.
+ */
 export class EnemyManager {
   constructor(scene, level, effects, audio) {
     this.scene = scene;

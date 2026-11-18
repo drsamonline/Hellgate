@@ -16,6 +16,9 @@ const PANELS = [
 
 const TYPE_CPS = 34; // characters per second
 
+/**
+ * The cold open: typed panels over a camera flythrough of the generated level.
+ */
 export class Story {
   constructor() {
     this.el = document.getElementById('storyText');
@@ -113,4 +116,7 @@ export class Story {
   }
 }
 
+/**
+ * The four panels, in order.
+ */
 export const STORY_PANELS = PANELS;

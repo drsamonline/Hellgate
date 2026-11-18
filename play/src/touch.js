@@ -4,6 +4,9 @@
 // Enabled on a touch device, or with ?touch=1.
 // ---------------------------------------------------------------------------
 
+/**
+ * True on a touch device, or when ?touch=1 is in the URL.
+ */
 export function isTouchDevice() {
   return (
     (typeof window !== 'undefined' && 'ontouchstart' in window) ||
@@ -12,6 +15,9 @@ export function isTouchDevice() {
   );
 }
 
+/**
+ * Bind the touch overlay to the shared input object. Returns a cleanup carrying setVisible().
+ */
 export function initTouch(input, handlers) {
   const root = document.getElementById('touch');
   if (!root) return () => {};
