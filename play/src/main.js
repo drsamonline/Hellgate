@@ -13,6 +13,7 @@ import { Projectiles } from './projectiles.js';
 import { Effects } from './effects.js';
 import { HUD } from './hud.js';
 import { Sfx } from './audio.js';
+import { loadSettings, saveSettings, clampSettings } from './settings.js';
 
 // ---------------------------------------------------------------- renderer --
 const canvas = document.getElementById('game');
@@ -57,6 +58,8 @@ const audio = new Sfx();
 const hud = new HUD();
 const player = new Player(camera);
 let weapons = null;
+
+const settings = clampSettings(loadSettings());
 
 const game = {
   state: 'title',       // title | playing | paused | dead
@@ -173,6 +176,7 @@ function buildRun(seed) {
   weapons.select(0, true);
   weapons.cd = 0;
 
+  applySettings();
   startWave(1);
 }
 
@@ -193,6 +197,39 @@ function startWave(n) {
 
   hud.toast('WAVE ' + n, 2);
   audio.play('wave');
+}
+
+function applySettings() {
+  camera.fov = settings.fov;
+  camera.updateProjectionMatrix();
+  player.sensitivity = settings.sensitivity;
+  player.reducedMotion = settings.reducedMotion;
+  if (effects) effects.reducedMotion = settings.reducedMotion;
+  audio.setVolume(settings.volume);
+  audio.setMuted(settings.muted);
+  syncSettingsUI();
+}
+
+function syncSettingsUI() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.value = String(val); };
+  const text = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('setSens', settings.sensitivity);
+  set('setFov', settings.fov);
+  set('setVol', Math.round(settings.volume * 100));
+  text('setSensVal', settings.sensitivity.toFixed(2) + '×');
+  text('setFovVal', settings.fov + '°');
+  text('setVolVal', Math.round(settings.volume * 100) + '%');
+  const m = document.getElementById('setMotion');
+  if (m) m.checked = settings.reducedMotion;
+  const mu = document.getElementById('setMute');
+  if (mu) mu.checked = settings.muted;
+}
+
+function changeSetting(key, value) {
+  settings[key] = value;
+  clampSettings(settings);
+  saveSettings(settings);
+  applySettings();
 }
 
 // -------------------------------------------------------------------- pickups
@@ -280,6 +317,9 @@ function updatePickups(dt) {
     p.mesh.position.y = p.baseY + Math.sin(p.t * 2.6) * 0.09;
     const d = Math.hypot(p.x - player.pos.x, p.z - player.pos.z);
     if (d < 1.1) {
+      // refuse a pickup that would be wasted rather than consuming it
+      if (p.kind === 'health' && player.health >= 100) continue;
+      if (p.kind === 'armor' && player.armor >= 100) continue;
       PICKUP_DEFS[p.kind].apply(player);
       hud.toast(PICKUP_DEFS[p.kind].toast);
       audio.play('pickup');
@@ -345,6 +385,7 @@ function checkWave() {
 
 function startGame(seed, opts = {}) {
   audio.init();
+  try { history.replaceState(null, '', '?seed=' + encodeURIComponent(seed)); } catch (e) { /* no history */ }
   buildRun(seed);
   game.state = 'playing';
   hud.setVisible(true);
@@ -393,6 +434,7 @@ function gameOver() {
 }
 
 function toMenu() {
+  try { history.replaceState(null, '', location.pathname); } catch (e) { /* no history */ }
   game.state = 'title';
   hud.setVisible(false);
   showScreen('title');
@@ -469,6 +511,19 @@ window.addEventListener('mousemove', (e) => {
   input.lookDy += e.movementY || 0;
 });
 
+canvas.addEventListener('wheel', (e) => {
+  if (game.state !== 'playing') return;
+  e.preventDefault();
+  weapons.next(e.deltaY > 0 ? 1 : -1);
+}, { passive: false });
+
+function toggleFullscreen() {
+  try {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen();
+  } catch (e) { /* blocked in an iframe */ }
+}
+
 canvas.addEventListener('mousedown', (e) => {
   if (e.button !== 0) return;
   if (game.state === 'playing') {
@@ -492,6 +547,11 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Digit3') weapons.select(2);
   if (e.code === 'KeyQ') weapons.next(-1);
   if (e.code === 'KeyE') weapons.next(1);
+  if (e.code === 'KeyF') toggleFullscreen();
+  if (e.code === 'KeyM') {
+    changeSetting('muted', !settings.muted);
+    hud.toast(settings.muted ? 'MUTED' : 'SOUND ON');
+  }
 });
 
 window.addEventListener('keyup', (e) => {
@@ -506,6 +566,35 @@ document.getElementById('seedInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') document.getElementById('startBtn').click();
 });
 document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+
+// ---- settings screen ------------------------------------------------------
+let settingsReturn = 'title';
+
+function openSettings(from) {
+  settingsReturn = from;
+  syncSettingsUI();
+  if (game.state === 'playing') pauseGame();
+  showScreen('settings');
+}
+
+function closeSettings() {
+  showScreen(settingsReturn);
+  if (settingsReturn === 'pause' && game.state === 'paused') return;
+}
+
+document.getElementById('settingsBtnTitle').addEventListener('click', () => openSettings('title'));
+document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
+document.getElementById('settingsBack').addEventListener('click', closeSettings);
+document.getElementById('restartBtn').addEventListener('click', () => {
+  hideScreens();
+  startGame(game.seed);
+});
+
+document.getElementById('setSens').addEventListener('input', (e) => changeSetting('sensitivity', Number(e.target.value)));
+document.getElementById('setFov').addEventListener('input', (e) => changeSetting('fov', Number(e.target.value)));
+document.getElementById('setVol').addEventListener('input', (e) => changeSetting('volume', Number(e.target.value) / 100));
+document.getElementById('setMotion').addEventListener('change', (e) => changeSetting('reducedMotion', e.target.checked));
+document.getElementById('setMute').addEventListener('change', (e) => changeSetting('muted', e.target.checked));
 document.getElementById('retryBtn').addEventListener('click', () => startGame(game.seed));
 document.getElementById('menuBtn').addEventListener('click', toMenu);
 
@@ -581,6 +670,9 @@ function update(dt) {
     kills: game.kills,
     enemies: enemies.aliveCount,
     hasKey: game.hasKey,
+    exitOpen: game.exitOpen,
+    exit: level.exit,
+    camera,
   });
 
   if (!player.alive) gameOver();
@@ -667,7 +759,8 @@ loop();
 
 // exposed for console debugging and for the headless test harness
 window.HG = {
-  game, player, camera, hud, audio, input,
+  game, player, camera, hud, audio, input, settings,
+  applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },
   get level() { return level; },
   get enemies() { return enemies; },

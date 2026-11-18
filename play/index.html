@@ -91,6 +91,31 @@
   }
   #debug.on{opacity:1}
 
+  #compass{
+    position:absolute;left:50%;top:62px;width:0;height:0;margin-left:-11px;
+    border-left:11px solid transparent;border-right:11px solid transparent;
+    border-bottom:16px solid #39ff9a;opacity:0;transition:opacity .2s;
+    filter:drop-shadow(0 0 8px rgba(57,255,154,.55));
+  }
+  #compass.on{opacity:.95}
+
+  .setrow{
+    display:flex;align-items:center;gap:16px;width:min(460px,88vw);justify-content:space-between;
+    padding:6px 0;
+  }
+  .setrow label{font-size:11px;letter-spacing:.2em;color:#8d7f6c;text-transform:uppercase;white-space:nowrap}
+  .setrow input[type=range]{flex:1;min-width:120px;accent-color:#ffb454;background:transparent;cursor:pointer}
+  .setrow .val{width:58px;text-align:right;color:#ffb454;font-size:12px;font-variant-numeric:tabular-nums}
+  .setrow input[type=checkbox]{
+    appearance:none;-webkit-appearance:none;width:18px;height:18px;margin:0;cursor:pointer;
+    border:1px solid rgba(255,180,84,.45);background:#12100e;border-radius:2px;position:relative;
+    transition:background .15s,border-color .15s;
+  }
+  .setrow input[type=checkbox]:checked{background:#ffb454;border-color:#ffb454}
+  .setrow input[type=checkbox]:checked::after{
+    content:"";position:absolute;inset:4px;background:#1a1208;border-radius:1px;
+  }
+
   #toast{
     position:absolute;left:50%;top:24%;transform:translate(-50%,-6px);
     font-size:15px;letter-spacing:.3em;color:var(--amber);opacity:0;transition:opacity .18s,transform .18s;
@@ -150,6 +175,7 @@
       <span>LEFT <b id="enemies">0</b></span>
     </div>
     <div id="keycard">KEYCARD</div>
+    <div id="compass"></div>
     <div id="crosshair"><span></span><span></span><span></span><span></span></div>
     <div id="hitmarker"></div>
     <div id="vignette"></div>
@@ -172,7 +198,10 @@
       <h1>HELL<span>GATE</span></h1>
       <p class="sub">procedural arena · no assets · all synth</p>
       <label class="seed">SEED <input id="seedInput" value="hellgate" maxlength="24" spellcheck="false" autocomplete="off" /></label>
-      <button id="startBtn">Enter the gate</button>
+      <div class="row">
+        <button id="startBtn">Enter the gate</button>
+        <button id="settingsBtnTitle" class="ghost">Settings</button>
+      </div>
       <div id="best"></div>
       <p class="keys">
         WASD move · SHIFT sprint · SPACE jump · MOUSE look · LMB fire<br />
@@ -183,8 +212,41 @@
     <section id="pause" class="screen">
       <h2>PAUSED</h2>
       <p class="sub">the gate waits</p>
-      <button id="resumeBtn">Resume</button>
+      <div class="row">
+        <button id="resumeBtn">Resume</button>
+        <button id="settingsBtnPause" class="ghost">Settings</button>
+        <button id="restartBtn" class="ghost">Restart</button>
+      </div>
       <p class="keys">ESC toggles pause · your run is kept</p>
+    </section>
+
+    <section id="settings" class="screen">
+      <h2>SETTINGS</h2>
+      <div class="setrow">
+        <label for="setSens">Mouse</label>
+        <input id="setSens" type="range" min="0.2" max="3" step="0.05" value="1" />
+        <span class="val" id="setSensVal">1.00×</span>
+      </div>
+      <div class="setrow">
+        <label for="setFov">Field of view</label>
+        <input id="setFov" type="range" min="65" max="100" step="1" value="76" />
+        <span class="val" id="setFovVal">76°</span>
+      </div>
+      <div class="setrow">
+        <label for="setVol">Volume</label>
+        <input id="setVol" type="range" min="0" max="100" step="1" value="32" />
+        <span class="val" id="setVolVal">32%</span>
+      </div>
+      <div class="setrow">
+        <label for="setMotion">Reduced motion</label>
+        <input id="setMotion" type="checkbox" />
+      </div>
+      <div class="setrow">
+        <label for="setMute">Mute</label>
+        <input id="setMute" type="checkbox" />
+      </div>
+      <button id="settingsBack">Back</button>
+      <p class="keys">M mutes in game · F toggles fullscreen · ` shows fps</p>
     </section>
 
     <section id="gameover" class="screen">

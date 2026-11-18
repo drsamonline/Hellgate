@@ -35,6 +35,7 @@ export class Weapons {
     this.current = 0;
     this.cd = 0;
     this.kick = 0;
+    this.raise = 0;   // 1 = fully lowered, decays to 0 after a swap
     this.bob = 0;
     this.models = [];
     this.muzzleTimer = 0;
@@ -114,6 +115,7 @@ export class Weapons {
     this.current = index;
     this.models.forEach((m, i) => { m.visible = i === index; });
     this.cd = 0.18; // fixed swap delay, not the old weapon's cooldown
+    this.raise = 1; // dip the model out of frame and back
     if (!silent) this.audio.play('switch');
   }
 
@@ -210,6 +212,7 @@ export class Weapons {
   update(dt, player) {
     this.cd = Math.max(0, this.cd - dt);
     this.kick += (0 - this.kick) * (1 - Math.exp(-16 * dt));
+    this.raise += (0 - this.raise) * (1 - Math.exp(-11 * dt));
     this.bob += dt * Math.hypot(player.vel.x, player.vel.z) * 1.7;
 
     if (this.muzzleTimer > 0) {
@@ -222,7 +225,7 @@ export class Weapons {
     const sway = Math.min(1, Math.hypot(player.vel.x, player.vel.z) / 5.4);
     m.position.set(
       REST.x + Math.sin(this.bob) * 0.012 * sway,
-      REST.y + Math.cos(this.bob * 2) * 0.01 * sway - this.kick * 0.2,
+      REST.y + Math.cos(this.bob * 2) * 0.01 * sway - this.kick * 0.2 - this.raise * 0.42,
       REST.z + this.kick
     );
     m.rotation.x = this.kick * 1.6;

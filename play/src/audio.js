@@ -8,6 +8,17 @@ export class Sfx {
     this.master = null;
     this.noiseBuf = null;
     this.muted = false;
+    this.volume = 0.32;
+  }
+
+  setVolume(v) {
+    this.volume = Math.min(1, Math.max(0, v));
+    if (this.master) this.master.gain.value = this.muted ? 0 : this.volume;
+  }
+
+  setMuted(m) {
+    this.muted = !!m;
+    if (this.master) this.master.gain.value = this.muted ? 0 : this.volume;
   }
 
   init() {
@@ -19,7 +30,7 @@ export class Sfx {
     if (!AC) return;
     this.ctx = new AC();
     this.master = this.ctx.createGain();
-    this.master.gain.value = 0.32;
+    this.master.gain.value = this.muted ? 0 : this.volume;
     this.master.connect(this.ctx.destination);
 
     const len = Math.floor(this.ctx.sampleRate * 0.6);

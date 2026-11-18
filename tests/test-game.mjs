@@ -273,5 +273,88 @@ ok(Math.abs(HG.player.yaw - (45 * Math.PI) / 180) < 0.001, 'camera yaw applied')
 ok(HG.game.seed === 'demolink', 'seed override applied');
 ok(HG.enemies.aliveCount > 0 && HG.enemies.list.length === HG.enemies.aliveCount, 'wave started from an empty arena (no stacking)');
 
+console.log('\n== settings (roadmap 1) ==');
+HG.changeSetting('sensitivity', 2);
+ok(HG.player.sensitivity === 2, 'sensitivity applies to the player');
+ok(HG.camera.fov === 76, 'fov untouched before it is changed');
+HG.changeSetting('fov', 95);
+ok(Math.round(HG.camera.fov) === 95, 'fov applies to the camera');
+const stored = JSON.parse(localStorage.getItem('hellgate.settings') || '{}');
+ok(stored.sensitivity === 2 && stored.fov === 95, 'settings persisted to localStorage');
+HG.changeSetting('fov', 500);
+ok(HG.camera.fov === 100, 'out-of-range fov is clamped');
+HG.changeSetting('fov', 76);
+
+console.log('\n== reduced motion (roadmap 2) ==');
+HG.changeSetting('reducedMotion', true);
+ok(HG.player.reducedMotion === true, 'player bob disabled');
+ok(HG.effects.reducedMotion === true, 'effects shake disabled');
+HG.effects.addShake(1);
+ok(HG.effects.shake === 0, 'addShake is a no-op under reduced motion');
+HG.changeSetting('reducedMotion', false);
+HG.effects.addShake(0.5);
+ok(HG.effects.shake > 0, 'shake returns when reduced motion is off');
+HG.effects.shake = 0;
+
+console.log('\n== mute (roadmap 4) ==');
+HG.changeSetting('muted', true);
+ok(HG.audio.muted === true, 'audio muted');
+ok(JSON.parse(localStorage.getItem('hellgate.settings')).muted === true, 'mute persisted');
+HG.changeSetting('muted', false);
+ok(HG.audio.muted === false, 'unmuted');
+
+console.log('\n== weapon wheel + raise (roadmap 5, 14) ==');
+const w0 = HG.weapons.current;
+doc.getElementById('game').dispatch('wheel', { deltaY: 120, preventDefault() {} });
+frames(2);
+ok(HG.weapons.current !== w0, 'wheel cycles weapons (' + w0 + ' -> ' + HG.weapons.current + ')');
+ok(HG.weapons.raise > 0.4, 'weapon dips after a swap');
+frames(70);
+ok(HG.weapons.raise < 0.1, 'weapon rises back into frame');
+
+console.log('\n== no wasted pickups (roadmap 8) ==');
+HG.player.health = 100;
+const before2 = HG.game.pickups.length;
+const cell = HG.level.openCells[0];
+HG.player.pos.set(cell.wx, 0, cell.wz);
+const fakeMesh = {
+  visible: true, rotation: { y: 0 }, position: { y: 0 },
+  geometry: { dispose() {} }, material: { dispose() {} },
+};
+HG.game.pickups.push({ kind: 'health', mesh: fakeMesh, x: cell.wx, z: cell.wz, baseY: 1, t: 0 });
+frames(3);
+ok(HG.game.pickups.length === before2 + 1, 'full-health pickup is left on the floor');
+HG.player.health = 40;
+frames(3);
+ok(HG.game.pickups.length === before2, 'damaged player picks it up');
+
+console.log('\n== seed in the URL (roadmap 9) ==');
+HG.startGame('urltest');
+frames(2);
+ok(location.search.includes('seed=urltest'), 'seed written to the URL: ' + location.search);
+
+console.log('\n== exit compass (roadmap 13) ==');
+HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);
+HG.game.exitOpen = false;
+frames(2);
+ok(!HG.hud.compass.classList.contains('on'), 'compass hidden while the exit is shut');
+HG.game.exitOpen = true;
+frames(2);
+ok(HG.hud.compass.classList.contains('on'), 'compass shown when the exit opens');
+HG.game.exitOpen = false;
+
+console.log('\n== settings screen + restart (roadmap 6) ==');
+HG.openSettings('title');
+ok(doc.getElementById('settings').classList.contains('on'), 'settings screen opens');
+HG.closeSettings();
+ok(doc.getElementById('title').classList.contains('on'), 'settings closes back to where it came from');
+HG.game.state = 'playing';
+window.dispatch('keydown', { code: 'Escape' });
+frames(2);
+ok(HG.game.state === 'paused', 'paused before restart');
+doc.getElementById('restartBtn').dispatch('click');
+frames(2);
+ok(HG.game.state === 'playing' && HG.game.wave === 1, 'restart from pause starts wave 1');
+
 console.log('\n' + (fails.length ? fails.length + ' FAILURES' : 'ALL GAMEPLAY TESTS PASSED'));
 process.exit(fails.length ? 1 : 0);

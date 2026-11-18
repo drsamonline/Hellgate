@@ -3,6 +3,8 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
+Nine Tier 0 items shipped in 1.0.0 — marked **✓ shipped** below.
+
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
 
@@ -12,20 +14,20 @@ Impact is judged against *how much better the game feels to play*, not how cleve
 
 Cheap, low-risk, immediately noticeable. All `S`.
 
-1. **Settings that persist** — mouse sensitivity, FOV (70–100) and a reduced-motion toggle in a small panel, saved to `localStorage` next to the best run. `main.js` · S · high
-2. **Reduced motion** — one checkbox that disables screen shake, weapon bob and the vignette pulse. The landing page already honours `prefers-reduced-motion`; the game should too. `effects.js` · S · high (accessibility)
+1. **Settings that persist** — mouse sensitivity, FOV (70–100) and a reduced-motion toggle in a small panel, saved to `localStorage` next to the best run. `main.js` · S · high — ✓ shipped
+2. **Reduced motion** — one checkbox that disables screen shake, weapon bob and the vignette pulse. The landing page already honours `prefers-reduced-motion`; the game should too. `effects.js` · S · high (accessibility) — ✓ shipped
 3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape/icon difference, not just a hue change. `hud.js` · S · high (accessibility)
-4. **Volume + mute** — `M` to mute, a gain slider, persisted. `audio.js` · S · medium
-5. **Weapon cycle on the wheel** — `wheel` already means nothing in a pointer-locked canvas. `main.js` · S · medium
-6. **Restart from the pause menu** — currently you must die or reload to reseed. `main.js` · S · medium
+4. **Volume + mute** — `M` to mute, a gain slider, persisted. `audio.js` · S · medium — ✓ shipped
+5. **Weapon cycle on the wheel** — `wheel` already means nothing in a pointer-locked canvas. `main.js` · S · medium — ✓ shipped
+6. **Restart from the pause menu** — currently you must die or reload to reseed. `main.js` · S · medium — ✓ shipped
 7. **Fullscreen toggle** — `F` calls `requestFullscreen`; pointer lock works better fullscreen anyway. `main.js` · S · medium
-8. **No wasted pickups** — health and armour are consumed even at 100; refuse the pickup (with a click) instead of eating it. `main.js` · S · medium
-9. **Seed in the URL** — `history.replaceState` on start so a run is linkable and reload-safe; the game already reads `?seed=`. `main.js` · S · medium
+8. **No wasted pickups** — health and armour are consumed even at 100; refuse the pickup (with a click) instead of eating it. `main.js` · S · medium — ✓ shipped
+9. **Seed in the URL** — `history.replaceState` on start so a run is linkable and reload-safe; the game already reads `?seed=`. `main.js` · S · medium — ✓ shipped
 10. **Copy-seed button on the game-over screen** — "you died on this seed, try again / share it". `index.html` + `main.js` · S · medium
 11. **Top-5 best runs** — one best run is a weak hook; keep a small table of waves/kills/seed/date. `main.js` · S · medium
 12. **Footsteps** — a filtered noise burst on each bob cycle, quieter when walking. Big cheap presence win. `player.js` + `audio.js` · S · high
-13. **Exit compass** — when the exit opens, a small HUD arrow points at it; finding the pad in a 10-room arena is currently the least fun part of a wave. `hud.js` · S · high
-14. **Weapon raise/lower on switch** — a 120 ms dip sells the swap. `weapons.js` · S · medium
+13. **Exit compass** — when the exit opens, a small HUD arrow points at it; finding the pad in a 10-room arena is currently the least fun part of a wave. `hud.js` · S · high — ✓ shipped
+14. **Weapon raise/lower on switch** — a 120 ms dip sells the swap. `weapons.js` · S · medium — ✓ shipped
 15. **Pause on window blur** — `visibilitychange` covers tab switches, not alt-tab to another window. `main.js` · S · low
 16. **`Esc` closes the settings panel before it pauses** — small correctness fix once settings exist. `main.js` · S · low
 

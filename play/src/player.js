@@ -35,6 +35,9 @@ export class Player {
     this.ammo = { bullets: 60, shells: 16, rockets: 3 };
     this.alive = true;
 
+    this.sensitivity = 1;   // set from settings
+    this.reducedMotion = false;
+
     this.onDamage = null;   // (amount, sourcePos) => void
     this.onDeath = null;
   }
@@ -57,8 +60,9 @@ export class Player {
   }
 
   look(dx, dy) {
-    this.yaw -= dx * LOOK_SENS;
-    this.pitch = clamp(this.pitch - dy * LOOK_SENS, -PITCH_LIMIT, PITCH_LIMIT);
+    const k = LOOK_SENS * this.sensitivity;
+    this.yaw -= dx * k;
+    this.pitch = clamp(this.pitch - dy * k, -PITCH_LIMIT, PITCH_LIMIT);
   }
 
   update(dt, input, level) {
@@ -127,9 +131,9 @@ export class Player {
     // ---- camera smoothing + head bob ------------------------------------
     const sp = Math.hypot(this.vel.x, this.vel.z);
     this.bob += dt * sp * 1.7;
-    const bobAmt = Math.min(1, sp / WALK);
+    const bobAmt = this.reducedMotion ? 0 : Math.min(1, sp / WALK);
     const bobY = Math.sin(this.bob * 2) * 0.035 * bobAmt;
-    const bobRoll = Math.cos(this.bob) * 0.012 * bobAmt;
+    const bobRoll = this.reducedMotion ? 0 : Math.cos(this.bob) * 0.012 * bobAmt;
 
     this.eyeY += (this.pos.y + EYE - this.eyeY) * (1 - Math.exp(-16 * dt));
     this.roll += (bobRoll - this.roll) * (1 - Math.exp(-12 * dt));

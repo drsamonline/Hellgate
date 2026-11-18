@@ -50,7 +50,8 @@ No `npm install`, no bundler, no build step. Three.js is vendored in `play/vendo
 | `Shift` | sprint | `Q` `E` | cycle weapons |
 | `Space` | jump | `LMB` | fire (hold for auto) |
 | Mouse | look (pointer lock, with a fallback) | `Esc` | pause |
-| `` ` `` or `F3` | fps · draw calls · triangles | | |
+| `` ` `` or `F3` | fps · draw calls · triangles | `M` | mute |
+| `F` | fullscreen | | |
 
 Clear a wave and the exit unlocks; walk onto the glowing pad to spawn the next, harder one.
 From wave 3 the exit is also keycard-locked.
@@ -107,6 +108,7 @@ play/src/projectiles.js  rockets and fireballs
 play/src/effects.js   tracers, decals, particles, lights, shake
 play/src/hud.js       face, counters, crosshair, damage arrows
 play/src/audio.js     WebAudio synth — no samples
+play/src/settings.js  sensitivity, FOV, reduced motion, volume — persisted
 play/src/rng.js       seeded PRNG
 tests/                three headless suites
 tools/                screenshot + map-render tools

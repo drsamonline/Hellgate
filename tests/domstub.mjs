@@ -18,6 +18,7 @@ function makeEl(id='',tag='div'){
     remove(){}, animate(){return {onfinish:null,cancel(){}};}, focus(){},
     getBoundingClientRect(){return {left:0,top:0,width:1280,height:720};},
     requestPointerLock(){ document.pointerLockElement = this; },
+    requestFullscreen(){ document.fullscreenElement = this; },
     getContext(){ return (this._ctx || (this._ctx = makeCtx(this))); } };
 }
 const els = new Map();
@@ -25,19 +26,32 @@ const document = {
   pointerLockElement: null, _listeners: {},
   getElementById(id){ if(!els.has(id)) els.set(id, makeEl(id, (id==='game'||id==='face')?'canvas':'div')); return els.get(id); },
   createElement(tag){ return makeEl('', tag); },
-  querySelectorAll(sel){ if(sel==='.screen') return ['title','pause','gameover'].map(i=>this.getElementById(i)); return []; },
+  querySelectorAll(sel){ if(sel==='.screen') return ['title','pause','gameover','settings'].map(i=>this.getElementById(i)); return []; },
   addEventListener(t,fn){(this._listeners[t]||(this._listeners[t]=[])).push(fn);},
   dispatch(t,ev={}){ for(const fn of this._listeners[t]||[]) fn(ev); },
   exitPointerLock(){ this.pointerLockElement = null; },
   body: makeEl('body'),
+  fullscreenElement: null,
+  exitFullscreen() { document.fullscreenElement = null; },
 };
+document.documentElement = makeEl('html');
 const store = new Map();
 const window = { innerWidth:1280, innerHeight:720, devicePixelRatio:2, _listeners:{},
   addEventListener(t,fn){(this._listeners[t]||(this._listeners[t]=[])).push(fn);},
   dispatch(t,ev={}){ for(const fn of this._listeners[t]||[]) fn(ev); } };
 globalThis.window = window;
 globalThis.document = document;
-globalThis.location = window.location = { search: '', href: 'http://localhost/play/' };
+globalThis.location = window.location = {
+  search: '', href: 'http://localhost/play/', pathname: '/play/',
+};
+globalThis.history = window.history = {
+  replaceState(_state, _title, url) {
+    if (url == null) return;
+    globalThis.location.search = url.startsWith('?') ? url : '';
+    globalThis.location.href = 'http://localhost' + globalThis.location.pathname + (url.startsWith('?') ? url : '');
+  },
+  pushState() {},
+};
 globalThis.localStorage = { getItem:k=>store.has(k)?store.get(k):null, setItem:(k,v)=>store.set(k,String(v)), removeItem:k=>store.delete(k) };
 globalThis.__RAF = [];
 globalThis.requestAnimationFrame = fn => { globalThis.__RAF.push(fn); return 1; };

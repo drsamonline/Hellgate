@@ -17,6 +17,16 @@ First public release.
 - HUD: Doom-style face, damage-direction arrows, vignette, crosshair hit marker, weapon sway
 - title / pause / game-over screens, best run in `localStorage`, `?auto=&seed=&wave=&cam=` URL hooks
 
+**Player settings (roadmap Tier 0)**
+- settings screen: mouse sensitivity, FOV, volume, mute, reduced motion — persisted in `localStorage`
+- reduced motion disables screen shake and weapon bob
+- `M` mutes, `F` toggles fullscreen, the mouse wheel cycles weapons
+- restart from the pause menu
+- pickups are refused when they would be wasted (full health or armour)
+- the seed is written into the URL so a run is linkable and reload-safe
+- exit compass: a chevron points at the pad once the wave is cleared
+- weapons dip out of frame and rise back on a swap
+
 **Engine work**
 - vendored Three.js r187 (up from r160), verified headlessly against the real library
 - anisotropic filtering, shared enemy geometry, per-run GPU disposal, raw pointer-lock request

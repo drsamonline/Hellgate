@@ -33,6 +33,7 @@ export class Effects {
   constructor(scene, decalTextures) {
     this.scene = scene;
     this.shake = 0;
+    this.reducedMotion = false;
     this.decalTex = decalTextures;
 
     // ---- particles -------------------------------------------------------
@@ -198,6 +199,7 @@ export class Effects {
   }
 
   addShake(amount) {
+    if (this.reducedMotion) return;
     this.shake = Math.min(1.4, this.shake + amount);
   }
 

@@ -25,6 +25,7 @@ export class HUD {
     this.vignette = document.getElementById('vignette');
     this.dmgLayer = document.getElementById('dmgdir');
     this.toastEl = document.getElementById('toast');
+    this.compass = document.getElementById('compass');
 
     this.lastFaceHp = -1;
     this.lastHealth = -1;
@@ -65,6 +66,18 @@ export class HUD {
       this.lastWeapon = wname;
     }
     if (state) {
+      // exit compass: a chevron pointing at the pad once the wave is cleared
+      if (state.exitOpen && state.exit && state.camera) {
+        const cam = state.camera;
+        const dir = cam.getWorldDirection(_fwd);
+        const dx = state.exit.x - cam.position.x;
+        const dz = state.exit.z - cam.position.z;
+        const ang = Math.atan2(dir.x * dz - dir.z * dx, dir.x * dx + dir.z * dz);
+        this.compass.style.transform = `rotate(${(-ang * 180) / Math.PI}deg)`;
+        this.compass.classList.add('on');
+      } else {
+        this.compass.classList.remove('on');
+      }
       this.elWave.textContent = String(state.wave);
       this.elKills.textContent = String(state.kills);
       this.elEnemies.textContent = String(state.enemies);
