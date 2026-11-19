@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.22.1 — 2026-11-19
+
+**Chunked level meshes: measured, then rejected** (roadmap 46)
+
+The plan was to split the merged geometry into 4×4-cell chunks so the renderer could cull most of the
+level each frame. Measured on the arena at 1280×720, with the same camera and seed:
+
+| Geometry | Level meshes | Draw calls | Triangles |
+| --- | --- | --- | --- |
+| One mesh per texture | 11 | **117** | 3642 |
+| 4×4-cell chunks | 158 | **255** | 3610 |
+
+Chunking more than doubled the draw calls and removed 32 triangles. The arena is 32×32 cells; from the
+spawn you can see most of it, so almost every chunk is in the frustum and the split only adds per-mesh
+overhead.
+
+The code keeps the chunk mechanism behind a `CHUNK` constant set to a single chunk, with the numbers in
+the comment, and the roadmap records the rejection. The real cost is enemies — 117 calls for a level
+that is 11 of them means the other ~106 are bodies and effects, so instancing (roadmap 45) is the
+change worth making, not chunking.
+
+**Guard** — the smoke test now asserts the arena stays under 160 draw calls, so this cannot be
+re-introduced without the number moving.
+
+
 ## 1.22.0 — 2026-11-19
 
 Tier A of the audit replan: seven quick wins, one of them a legal obligation.

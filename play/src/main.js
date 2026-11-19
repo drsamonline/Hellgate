@@ -1533,7 +1533,7 @@ function updateDebug(dt) {
   const fps = Math.round(dbg.frames / dbg.acc);
   const st = lastRenderStats;
   dbg.el.textContent =
-    `${fps} fps · ${st.calls} calls · ${(st.tris / 1000).toFixed(1)}k tris · seed ${game.seed}`;
+    `${fps} fps · ${st.calls} calls · ${(st.tris / 1000).toFixed(1)}k tris · ${st.chunks} chunks · seed ${game.seed}`;
   dbg.acc = 0;
   dbg.frames = 0;
 }
@@ -1651,6 +1651,7 @@ function render() {
   renderer.render(weaponScene, weaponCamera);
   lastRenderStats.calls = levelCalls + info.calls;
   lastRenderStats.tris = levelTris + info.triangles;
+  lastRenderStats.chunks = levelMeshes && levelMeshes.group ? levelMeshes.group.children.length : 0;
 }
 
 // Fixed timestep, taken from game-kit: the simulation advances in 1/60 s steps
@@ -1772,6 +1773,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
+  get renderStats() { return lastRenderStats; },
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
   runStats, topRuns, recordRun, gameOver,

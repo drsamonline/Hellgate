@@ -14,8 +14,19 @@ const FLOOR_KEY = ['floor_tile', 'floor_plate'];
  * Turn the sector grid into merged geometry with baked vertex shade, plus the door boxes and the exit pad.
  */
 export function buildLevelMeshes(level, mats) {
+  // Geometry is bucketed by (chunk, texture) so a chunk can be culled. Measured
+  // on this arena at 1280x720: 4x4-cell chunks cost 255 draw calls against 117
+  // for one mesh per texture, because the level is small enough that almost
+  // every chunk is in the frustum. Chunking is off by default and the number is
+  // in the changelog; a bigger level should re-measure before flipping it.
+  const CHUNK = 999;
   const buckets = {};
-  const bucket = (k) => (buckets[k] || (buckets[k] = { p: [], n: [], u: [], i: [], c: [] }));
+  let chunkX = 0;
+  let chunkZ = 0;
+  const bucket = (k) => {
+    const key = k + '@' + chunkX + ',' + chunkZ;
+    return (buckets[key] || (buckets[key] = { key: k, p: [], n: [], u: [], i: [], c: [] }));
+  };
 
   // Baked shade, in the manner of castle-valley's "sun and shade drawn once":
   // every face gets a light value at build time from a fixed sun plus a cheap
@@ -58,7 +69,9 @@ export function buildLevelMeshes(level, mats) {
   const doorMeshes = [];
 
   for (let z = 0; z < level.H; z++) {
+    chunkZ = Math.floor(z / CHUNK);
     for (let x = 0; x < level.W; x++) {
+      chunkX = Math.floor(x / CHUNK);
       const c = level.cells[z * level.W + x];
       if (c.solid) continue;
 
@@ -165,11 +178,12 @@ export function buildLevelMeshes(level, mats) {
     g.setAttribute('color', new THREE.Float32BufferAttribute(bk.c, 3));
     g.setIndex(bk.i);
     g.computeBoundingSphere();
-    const mesh = new THREE.Mesh(g, mats[key]);
+    const mesh = new THREE.Mesh(g, mats[bk.key]);
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
     mesh.userData.merged = true;
-    mesh.userData.bucket = key;
+    mesh.userData.bucket = bk.key;
+    mesh.userData.chunk = key.split('@')[1];
     group.add(mesh);
   }
 

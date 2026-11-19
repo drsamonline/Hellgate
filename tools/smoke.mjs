@@ -194,6 +194,12 @@ ok('tab opens the status panel', inv.state === 'inventory' && inv.len > 100, JSO
 ok('tab closes it again', inv.after === 'playing');
 ok('a run in progress is saved', inv.save === true);
 
+// draw-call budget: the arena view has been 117-125 calls since the level moved
+// to one mesh per texture. Chunking measured 255 and was rejected; this keeps
+// anyone from re-introducing it by accident.
+const budget = await page.evaluate(() => window.HG.renderStats);
+ok('draw calls stay under 160', budget.calls > 0 && budget.calls < 160, JSON.stringify(budget));
+
 // the game itself must wire the footstep callback, not just the player class
 const wired = await page.evaluate(() => ({
   step: typeof window.HG.player.onStep === 'function',

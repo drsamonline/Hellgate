@@ -65,7 +65,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each ene — ✓ shippedmy; makes them feel grounded without a shadow map. `enemies.js` · M · high
 44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high
 45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high
-46. **Chunked level meshes** — split the merged geometry into 4×4-cell chunks so frustum culling actually removes geometry. Trades 5 draw calls for ~25. `levelmesh.js` · M · medium
+46. **Chunked level meshes** — split the merged geometry into 4×4-cell chunks so frustum cul — measured and rejected: 4×4 chunks cost 255 draw calls against 117 for one mesh per texture at 1280×720, because this arena is small enough that nearly every chunk is in the frustum. The code keeps a `CHUNK` constant, set to one chunk. A bigger level should re-measureling actually removes geometry. Trades 5 draw calls for ~25. `levelmesh.js` · M · medium
 47. **Texture atlas** — one 256×256 atlas for all surfaces, so the level is one draw call instead of five. `textures.js` · M · medium
 48. **Weapon sprites instead of meshes** — a 2D canvas sprite per weapon, Doom-style, with frames for idle/fire. Cheaper and more authentic than boxes. `weapons.js` · M · medium
 49. **Better enemy models** — same box budget, more silhouette: hunched imps, a grunt with a visible backpack and muzzle. Cheap art direction. `enemies.js` · M · medium
