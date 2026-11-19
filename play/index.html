@@ -163,6 +163,10 @@
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
 
+  #exitstate{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);
+    font-size:9px;letter-spacing:.26em;color:#8d7f6c;pointer-events:none;transition:color .2s}
+  #exitstate.open{color:#39ff9a}
+
   #grenades{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);
     font-size:9px;letter-spacing:.3em;color:#9fd67f;opacity:.85;pointer-events:none}
   #grenades.empty{opacity:.25}
@@ -290,7 +294,7 @@
   #tLook{position:absolute;right:0;top:0;width:52%;height:100%;pointer-events:auto;touch-action:none}
   #tBtns{
     position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
-    display:grid;grid-template-columns:repeat(3,44px);gap:8px;pointer-events:auto;
+    display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:8px;pointer-events:auto;
   }
   #tBtns button{
     width:44px;height:44px;border-radius:50%;background:rgba(18,16,14,.78);
@@ -300,6 +304,7 @@
   #tBtns button:active{background:rgba(255,180,84,.3)}
   #tFire{grid-column:3;grid-row:1}
   #tWeap{grid-column:3;grid-row:2}
+  #tNade{grid-column:2;grid-row:3}
 
   /* phones: the HUD and the touch furniture have to share one screen */
   @media (max-width:620px){
@@ -329,6 +334,10 @@
     20%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
+
+  #exitstate{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);
+    font-size:9px;letter-spacing:.26em;color:#8d7f6c;pointer-events:none;transition:color .2s}
+  #exitstate.open{color:#39ff9a}
 
   #grenades{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);
     font-size:9px;letter-spacing:.3em;color:#9fd67f;opacity:.85;pointer-events:none}
@@ -431,6 +440,7 @@
       <span id="bossname">WARDEN</span>
       <div id="bosswrap"><div id="bossfill"></div></div>
     </div>
+    <div id="exitstate">EXIT SHUT ▪</div>
     <div id="grenades"></div>
     <div id="stamina"><i></i></div>
     <div id="killfeed"></div>
@@ -579,6 +589,7 @@
       <button id="tP2">E</button>
       <button id="tP3">R</button>
       <button id="tWeap">GUN</button>
+      <button id="tNade">NADE</button>
       <button id="tJump">JMP</button>
       <button id="tFire">FIRE</button>
     </div>

@@ -16,7 +16,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 1. **Settings that persist** — mouse sensitivity, FOV (70–100) and a reduced-motion toggle in a small panel, saved to `localStorage` next to the best run. `main.js` · S · high — ✓ shipped
 2. **Reduced motion** — one checkbox that disables screen shake, weapon bob and the vignette pulse. The landing page already honours `prefers-reduced-motion`; the game should too. `effects.js` · S · high (accessibility) — ✓ shipped
-3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape or icon difference as well as a hue change. `hud.js` · S · high (accessibility) — ◑ keycard chip reads ◇/◆ now; the exit compass and damage arrow are already directional
+3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape or icon difference as well as a hue change. `hud.js` · S · high (accessibility) — ✓ shipped (keycard ◇/◆, exit reads "EXIT OPEN ▸"/"EXIT SHUT ▪", damage arrow is a triangle)
 4. **Volume + mute** — `M` to mute, a gain slider, persisted. `audio.js` · S · medium — ✓ shipped
 5. **Weapon cycle on the wheel** — `wheel` already means nothing in a pointer-locked canvas. `main.js` · S · medium — ✓ shipped
 6. **Restart from the pause menu** — currently you must die or reload to reseed. `main.js` · S · medium — ✓ shipped
@@ -58,11 +58,11 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 37. **Sector portals / real 2.5D** — the current model is one floor and one ceiling per cell. Storing per-cell floor *and* ceiling polygons with portal edges would allow true multi-level rooms, stairs and catwalks. This is the big one. `level.js` + `levelmesh.js` · XL · very high
 38. **Stairs and ramps** — a stair cell type with 2–3 sub-steps, so height changes stop being a hard 0.5 m cliff. `level.js` · L · high — ✓ shipped (raised platforms with a three-step band)
-39. **Door animation** — doors currently pop out of existence. Slide them up over 400 ms with a sound. `levelmesh.js` · M · high
-40. **Enemy corpses persist** — leave the last N bodies instead of sinking them all. Needs per-enemy material cloning for a fade (already half-done for the hit flash). `enemies.js` · M · medium
-41. **Blood pools on the floor** — a decal at the death position, oriented to the floor normal. `effects.js` · S · medium
+39. **Door animation** — doors currently pop out of existence. Slide them up over 400 ms with — ✓ shipped a sound. `levelmesh.js` · M · high
+40. **Enemy corpses persist** — leave the last N bodies instead of sinking them all. Needs pe — ✓ shipped (12 kept, oldest cleared)r-enemy material cloning for a fade (already half-done for the hit flash). `enemies.js` · M · medium
+41. **Blood pools on the floor** — a decal at the death position, oriented to the floor norma — ✓ shippedl. `effects.js` · S · medium
 42. **Bullet-hole decals with correct orientation on every surface** — already works on walls; verify floors and ceilings and cap by surface type. `effects.js` · S · medium
-43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each enemy; makes them feel grounded without a shadow map. `enemies.js` · M · high
+43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each ene — ✓ shippedmy; makes them feel grounded without a shadow map. `enemies.js` · M · high
 44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high
 45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high
 46. **Chunked level meshes** — split the merged geometry into 4×4-cell chunks so frustum culling actually removes geometry. Trades 5 draw calls for ~25. `levelmesh.js` · M · medium

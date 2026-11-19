@@ -275,6 +275,34 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== corpses, shadows, doors, touch ==');
+HG.game.state = 'playing';
+HG.enemies.clear();
+for (let i = 0; i < 4; i++) HG.enemies.spawnAt('imp', HG.player.pos.x + 5 + i, HG.player.pos.z + 2, 1);
+frames(2);
+const first = HG.enemies.list[0];
+first.hurt(9999, { level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, onKill: null }, { x: 0, y: 0, z: 1 });
+frames(200);
+ok(first.removed !== true, 'a dead body stays in the world');
+ok(HG.enemies.list.includes(first), 'and it stays in the list');
+ok(first.shadow !== null && first.shadow !== undefined, 'an enemy carries a contact shadow');
+ok(HG.levelMeshes.doorMeshes.length >= 0, 'door meshes exist to animate');
+HG.level.doorOpen = true;
+for (const m of HG.levelMeshes.doorMeshes) { m.userData.opening = true; m.userData.slide = 0; }
+frames(40);
+const opened = HG.levelMeshes.doorMeshes.every((m) => !m.userData.opening || m.userData.slide > 0);
+ok(opened, 'doors animate instead of popping');
+const nadeBtn = document.getElementById('tNade');
+ok(!!nadeBtn, 'the touch layout has a grenade button');
+// leave a live, healthy player for the blocks that follow
+HG.enemies.clear();
+HG.player.alive = true;
+HG.player.health = HG.player.maxHp;
+HG.player.crouch = 0;
+HG.input.keys = Object.create(null);
+HG.input.move.y = 0;
+frames(2);
+
 console.log('\n== grenades ==');
 HG.game.state = 'playing';
 HG.player.grenades = 3;

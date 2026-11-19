@@ -33,6 +33,7 @@ export class HUD {
     this.elFeed = document.getElementById('killfeed');
     this.elStamina = document.getElementById('stamina');
     this.elGrenades = document.getElementById('grenades');
+    this.elExitState = document.getElementById('exitstate');
     this.staminaBar = this.elStamina ? this.elStamina.firstElementChild : null;
     this.damageNumbers = true;
     this.elBuffs = document.getElementById('buffs');
@@ -203,6 +204,14 @@ export class HUD {
     }
 
     if (state) {
+      // exit compass: a chevron pointing at the pad once the wave is cleared.
+      // The chevron carries the direction; the label carries the state, so the
+      // cue survives a colour-blind player and a greyscale screenshot.
+      if (this.elExitState) {
+        this.elExitState.textContent = state.exitOpen ? 'EXIT OPEN \u25b8' : 'EXIT SHUT \u25aa';
+        this.elExitState.classList.toggle('open', !!state.exitOpen);
+      }
+
       // exit compass: a chevron pointing at the pad once the wave is cleared
       if (state.exitOpen && state.exit && state.camera) {
         const cam = state.camera;

@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.22.0 — 2026-11-19
+
+Tier A of the audit replan: seven quick wins, one of them a legal obligation.
+
+**`NOTICE.md`** — Three.js is vendored under MIT. The file keeps its SPDX header but the full
+permission text was not shipped; `NOTICE.md` now carries it, the version, the file paths and a
+statement that every other asset is generated at runtime.
+
+**Grenade on touch** — a seventh button in the touch grid. The feature shipped in 1.21.0 was
+unreachable on a phone.
+
+**Colour-blind cues finished** (roadmap 3) — the exit reads `EXIT OPEN ▸` or `EXIT SHUT ▪` in words as
+well as colour, the keycard chip is ◇ or ◆, and the damage indicator is a triangle, not a hue.
+
+**Doors animate** (roadmap 39) — they slide up over 400 ms instead of vanishing.
+
+**Corpses persist** (roadmap 40) — bodies settle on the floor and stay; the last twelve are kept and
+the oldest is cleared, so a wave leaves a room that looks like a fight happened in it.
+
+**Blood pools** (roadmap 41) and **contact shadows** (roadmap 43) — a decal at the death position and a
+soft quad under every enemy.
+
+**Tests** — 6 new assertions: a body stays and stays listed, an enemy carries a shadow, doors animate,
+the touch layout has a grenade button.
+
+
 ## 1.21.0 — 2026-11-19
 
 **Grenades** (roadmap 24)

@@ -183,6 +183,9 @@ function makeHound() {
   return { group: g, parts: { legL: legFL, legR: legFR, legBL, legBR } };
 }
 
+/** How many bodies stay in the world before the oldest is cleared. */
+const MAX_CORPSES = 12;
+
 /**
  * One enemy: mesh, state machine, health. Geometry is shared per type; body materials are cloned for the hit flash.
  */
@@ -277,6 +280,10 @@ export class Enemy {
   }
 
   die(ctx) {
+    if (ctx && ctx.effects) {
+      const f = floorHeightAt(ctx.level, this.pos.x, this.pos.z);
+      ctx.effects.decal({ x: this.pos.x, y: f + 0.012, z: this.pos.z }, { x: 0, y: 1, z: 0 }, 'blood', 1.5);
+    }
     this.dead = true;
     this.state = STATE.DEATH;
     this.stateT = 0;
@@ -298,12 +305,25 @@ export class Enemy {
     this.mesh.position.z = this.pos.z;
     this.mesh.position.y = f;
 
+    // contact shadow: cheap, one quad, follows the body and fades when it dies
+    if (!this.shadow && ctx && ctx.effects && ctx.effects.groundShadow) {
+      this.shadow = ctx.effects.groundShadow(this.hitRadius * 2.2);
+    }
+    if (this.shadow) {
+      this.shadow.position.set(this.pos.x, f + 0.02, this.pos.z);
+      this.shadow.material.opacity = this.state === STATE.DEATH ? 0.18 : 0.34;
+    }
+
     if (this.state === STATE.DEATH) {
       this.deadT += dt;
       const t = Math.min(1, this.deadT / 0.45);
       this.mesh.rotation.x = (Math.PI / 2) * t * 0.92;
-      if (this.deadT > 1.4) this.mesh.position.y = f - (this.deadT - 1.4) * 0.55;
-      if (this.deadT > 2.6) this.remove();
+      // the body stays on the floor: a wave that clears leaves a room that
+      // looks like a fight happened in it
+      if (this.deadT > 1.4) {
+        const sink = Math.min(1, (this.deadT - 1.4) / 1.2);
+        this.mesh.position.y = f - 0.12 * sink;   // settles, does not sink away
+      }
       return;
     }
 
@@ -551,6 +571,12 @@ export class Enemy {
 
   remove() {
     this.scene.remove(this.mesh);
+    if (this.shadow) {
+      this.scene.remove(this.shadow);
+      this.shadow.geometry.dispose();
+      this.shadow.material.dispose();
+      this.shadow = null;
+    }
     for (const m of this.flashMats) m.dispose();
     this.flashMats.length = 0;
     this.removed = true;
@@ -672,6 +698,13 @@ export class EnemyManager {
       },
     };
     for (const e of this.list) e.update(dt, ctx);
+
+    // corpses stay, but not forever: the last MAX_CORPSES bodies, oldest first
+    const dead = this.list.filter((e) => e.state === STATE.DEATH || !e.alive);
+    if (dead.length > MAX_CORPSES) {
+      for (const e of dead.slice(0, dead.length - MAX_CORPSES)) e.remove();
+      this.list = this.list.filter((e) => !e.removed);
+    }
 
     // soft separation so they do not stack into one blob
     const n = this.list.length;

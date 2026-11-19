@@ -440,6 +440,23 @@ function clearRelics() {
   game.relics.length = 0;
 }
 
+// Doors rise out of the floor over 400 ms rather than popping out of existence.
+function updateDoors(dt) {
+  if (!levelMeshes || !levelMeshes.doorMeshes) return;
+  for (const m of levelMeshes.doorMeshes) {
+    if (!m.userData.opening) continue;
+    if (m.userData.baseY == null) m.userData.baseY = m.position.y;
+    m.userData.slide = Math.min(1, m.userData.slide + dt / 0.4);
+    const k = m.userData.slide;
+    m.position.y = m.userData.baseY + k * 3.2;      // a little over the ceiling
+    m.scale.y = Math.max(0.02, 1 - k);
+    if (k >= 1) {
+      m.visible = false;
+      m.userData.opening = false;
+    }
+  }
+}
+
 function dropTrinket(id, pos) {
   const t = trinketById(id);
   if (!t) return;
@@ -520,7 +537,12 @@ function startWave(n) {
   game.exitOpen = false;
   game.warnedKey = false;
   level.doorOpen = false;
-  levelMeshes.doorMeshes.forEach((m) => { m.visible = true; });
+  levelMeshes.doorMeshes.forEach((m) => {
+    m.visible = true;
+    m.userData.slide = 0;
+    m.userData.opening = false;
+    m.position.y = m.userData.baseY != null ? m.userData.baseY : m.position.y;
+  });
   getMats()['pad'].color.setHex(0x552222);
 
   clearPickups();
@@ -828,7 +850,11 @@ function openExit() {
   game.score += gained;
   game.exitOpen = true;
   level.doorOpen = true;
-  levelMeshes.doorMeshes.forEach((m) => { m.visible = false; });
+  // doors slide up instead of vanishing: the mesh stays, the animation sells it
+  for (const m of levelMeshes.doorMeshes) {
+    m.userData.slide = 0;
+    m.userData.opening = true;
+  }
   getMats()['pad'].color.setHex(0x39ff9a);
   audio.play('door');
   effects.addShake(0.3);
@@ -1579,6 +1605,7 @@ function update(dt) {
   if (props) props.update(dt, player);
   updateRelics(dt);
   updateDrops(dt);
+  updateDoors(dt);
   effects.update(dt);
   updatePickups(dt);
   checkWave();
@@ -1721,6 +1748,7 @@ hud.setVisible(false);
 if (TOUCH) {
   document.body.classList.add('has-touch');
   touchCleanup = initTouch(input, {
+    grenade: () => throwGrenade(),
     jump: () => { input.jumpQueued = true; },
     fire: () => {
       if (game.state !== 'playing') return;

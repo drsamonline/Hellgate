@@ -193,6 +193,20 @@ export class Effects {
     t.life = t.max;
   }
 
+  /**
+   * A soft dark quad on the floor, parented to nothing: the caller moves it.
+   * Used as a contact shadow under each enemy.
+   */
+  groundShadow(size = 1) {
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x000000, transparent: true, opacity: 0.34, depthWrite: false,
+    });
+    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(size, size), mat);
+    mesh.rotation.x = -Math.PI / 2;
+    this.scene.add(mesh);
+    return mesh;
+  }
+
   decal(point, normal, kind = 'blood', size = 0.55) {
     const d = this.decals[this.dCursor];
     this.dCursor = (this.dCursor + 1) % MAX_DECALS;
