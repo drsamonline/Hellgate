@@ -288,6 +288,7 @@ function buildRun(seed, zoneDef) {
     if (id && e) dropTrinket(id, e.pos);
   };
 
+  game.secretMeshes = (levelMeshes && levelMeshes.secretMeshes) || [];
   game.barrels = [];
   spawnBarrels();
   props = new Props(scene, level, zone);
@@ -648,6 +649,31 @@ function explodeBarrel(b) {
 
 // Point-to-ray distance on the ground plane: a barrel is hit when the shot
 // passes through it, wherever it is along the ray.
+// A shot that lands on a secret wall chips it; at zero the wall goes and the
+// alcove behind it is a room you can walk into.
+function damageSecret(cell, amount) {
+  if (!cell || !cell.secretWall) return false;
+  const sec = (level.secrets || []).find((s) => s.idx === level.idx(cell.x, cell.z));
+  if (!sec || sec.broken) return false;
+  sec.hp -= amount;
+  if (sec.hp > 0) return true;
+
+  sec.broken = true;
+  level.broken.add(sec.idx);
+  const hit = (game.secretMeshes || []).find((m) => m.secret === sec);
+  if (hit) {
+    scene.remove(hit.mesh);
+    hit.mesh.geometry.dispose();
+    hit.mesh.material.dispose();
+  }
+  effects.burst({ x: sec.wx, y: 1.2, z: sec.wz }, 0x8a7a66, 30, 5, 0.8, 2);
+  effects.addShake(0.35);
+  audio.play('door', { x: sec.wx, y: 1, z: sec.wz });
+  hud.toast('SECRET', 2);
+  game.score += 250;
+  return true;
+}
+
 function damageBarrels(origin, dir, maxDist, amount) {
   let best = null;
   let bestT = Infinity;
@@ -1675,7 +1701,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
-  explodeBarrel, damageBarrels, spawnBarrels,
+  explodeBarrel, damageBarrels, spawnBarrels, damageSecret,
   runStats, topRuns, recordRun, gameOver,
   openLore, closeLore, resolveChoice, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,

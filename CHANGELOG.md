@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.18.0 — 2026-11-19
+
+**Secret rooms** (roadmap 32)
+- one per level: a wall cell on the edge of a room with a one-cell alcove carved behind it, sealed
+  until you break it. It renders a shade off the surrounding rock, so it can be spotted up close and is
+  invisible from across the room.
+- 90 health, any weapon chips it, breaking it pays 250 and toasts `SECRET`. The alcove is open floor
+  from then on, and `isBlocked` treats a broken secret as a doorway.
+
+**Test invariants changed with it**
+- the level suite asserts every open cell is reachable from the spawn. A sealed alcove breaks that by
+  design, so secret cells are excluded — and a new assertion checks the secret is solid before and
+  passable after, rather than quietly dropping the coverage.
+- `raycastWalls` now returns the cell it hit, so a caller can tell what it shot.
+
+
 ## 1.17.0 — 2026-11-19
 
 **Exploding barrels** (roadmap 33, partial)

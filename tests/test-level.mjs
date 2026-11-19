@@ -128,10 +128,21 @@ for (const seed of seeds) {
   for (let i = 0; i < L.cells.length; i++) {
     const c = L.cells[i];
     if (c.solid || c.door) continue;
+    if (c.secret) continue; // the alcove behind a secret wall is sealed on purpose
     openCells++;
     if (field[i] < 0) unreached++;
   }
   if (unreached > 0) bad(seed, unreached + ' open cells have no path from the spawn');
+
+  // and the secret really is sealed until broken, then reachable
+  for (const sec of L.secrets) {
+    const cell = L.cells[sec.idx];
+    if (!cell.secretWall) bad(seed, 'secret entrance is not a wall');
+    if (!isBlocked(L, sec.wx, sec.wz)) bad(seed, 'secret wall is walkable before it is broken');
+    L.broken.add(sec.idx);
+    if (isBlocked(L, sec.wx, sec.wz)) bad(seed, 'secret wall is still solid after breaking');
+    L.broken.delete(sec.idx);
+  }
 
   for (let t = 0; t < 12; t++) {
     const c = L.openCells[Math.floor((t / 12) * L.openCells.length)];

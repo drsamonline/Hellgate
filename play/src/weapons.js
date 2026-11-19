@@ -224,6 +224,8 @@ export class Weapons {
         if (killed) this.audio.play('hit');
       } else if (ctx.damageBarrels && ctx.damageBarrels(origin, dir, maxD, w.damage)) {
         // the barrel took it; its own explosion does the rest
+      } else if (wallHit && ctx.damageSecret && ctx.damageSecret(wallHit.cell, w.damage)) {
+        // the wall took it; enough of them and it opens
       } else if (wallHit) {
         this.effects.tracer(muzzle, new THREE.Vector3(wallHit.point.x, wallHit.point.y, wallHit.point.z), 0xffd27f);
         this.effects.burst(

@@ -199,6 +199,50 @@ export function generateLevel(seed) {
     }
   }
 
+  // ---- secret rooms -----------------------------------------------------
+  // One per level: a solid cell on the edge of a room, with a one-cell alcove
+  // carved behind it. The wall looks like every other wall until you break it.
+  const secrets = [];
+  {
+    const candidates = [];
+    for (const [i, r] of rooms.entries()) {
+      if (i === exitRoomIdx) continue;
+      for (let z = r.z; z < r.z + r.h; z++) {
+        for (const [x, dx, dz] of [[r.x, -1, 0], [r.x + r.w - 1, 1, 0], [r.x, 0, -1], [r.x + r.w - 1, 0, 1]]) {
+          const sx = x + dx;
+          const sz = z + dz;
+          if (sx < 2 || sz < 2 || sx >= W - 2 || sz >= H - 2) continue;
+          const c = cells[idx(sx, sz)];
+          const behind = cells[idx(sx + dx, sz + dz)];
+          if (!c.solid || !behind.solid) continue;
+          // the alcove has to be free of any other room or corridor
+          if (behind.room !== -1) continue;
+          candidates.push({ sx, sz, bx: sx + dx, bz: sz + dz, room: i, dx, dz });
+        }
+      }
+    }
+    const pick = candidates.length ? candidates[rng.int(0, candidates.length - 1)] : null;
+    if (pick) {
+      const b = cells[idx(pick.bx, pick.bz)];
+      b.solid = false;
+      b.floor = 0;
+      b.ceil = 3.0;
+      b.wall = 0;
+      b.floorTex = 1;
+      b.secret = true;
+      const wallCell = cells[idx(pick.sx, pick.sz)];
+      wallCell.secretWall = true;
+      secrets.push({
+        x: pick.sx, z: pick.sz, cx: pick.sx, cz: pick.sz,
+        wx: pick.sx * CELL, wz: pick.sz * CELL,
+        idx: idx(pick.sx, pick.sz),
+        alcove: { x: pick.bx, z: pick.bz, wx: pick.bx * CELL, wz: pick.bz * CELL },
+        hp: 90,
+        broken: false,
+      });
+    }
+  }
+
   // ---- open floor list --------------------------------------------------
   const openCells = [];
   for (let z = 0; z < H; z++) {
@@ -219,6 +263,8 @@ export function generateLevel(seed) {
     door: doorCells.length ? doorCells[0] : null,
     doorOpen: false,
     openCells,
+    secrets,
+    broken: new Set(),   // secret walls that have been opened
     idx,
   };
 }
@@ -268,6 +314,8 @@ export function cellAt(level, x, z) {
 export function isBlocked(level, x, z) {
   const c = cellAt(level, x, z);
   if (!c) return true;
+  // a broken secret wall is a doorway
+  if (c.secretWall && level.broken && level.broken.has(c.z * level.W + c.x)) return false;
   if (c.solid) return true;
   if (c.door && !level.doorOpen) return true;
   return false;
@@ -336,7 +384,8 @@ export function raycastWalls(level, origin, dir, maxDist, step = 0.09) {
 
     const c = level.cells[cz * level.W + cx];
     if (c.solid || (c.door && !level.doorOpen)) {
-      return { dist: t, point: { x, y, z }, normal: axisNormal(x, z, prevCx, prevCz) };
+      // the cell comes back too: a caller may need to know what it hit
+      return { dist: t, point: { x, y, z }, normal: axisNormal(x, z, prevCx, prevCz), cell: c };
     }
     if (y <= c.floor) return { dist: t, point: { x, y, z }, normal: { x: 0, y: 1, z: 0 } };
     if (y >= c.ceil) return { dist: t, point: { x, y, z }, normal: { x: 0, y: -1, z: 0 } };

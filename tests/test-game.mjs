@@ -4,6 +4,7 @@
 
 import './domstub.mjs';
 import { WEAPONS } from '../play/src/weapons.js';
+import { isBlocked } from '../play/src/level.js';
 const { hasLineOfSight, cellAt } = await import('../play/src/level.js');
 const THREE = await import('three');
 
@@ -273,6 +274,24 @@ ok(typeof HG.audio.occludeTest === 'function', 'sound occlusion is installed');
 const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
+
+console.log('\n== secret rooms ==');
+ok(Array.isArray(HG.level.secrets), 'the level carries secrets');
+ok(HG.level.secrets.length === 1, 'one secret room per level (' + HG.level.secrets.length + ')');
+const sec = HG.level.secrets[0];
+if (sec) {
+  const cell = HG.level.cells[sec.idx];
+  ok(cell.secretWall === true, 'the entrance is a flagged wall cell');
+  ok(isBlocked(HG.level, sec.wx, sec.wz) === true, 'it is solid before it is broken');
+  ok(HG.damageSecret(cell, 40) === true, 'a shot chips it');
+  ok(isBlocked(HG.level, sec.wx, sec.wz) === true, 'it is still solid at 50 hp');
+  const scoreBefore = HG.game.score;
+  ok(HG.damageSecret(cell, 999) === true, 'enough damage breaks it');
+  ok(isBlocked(HG.level, sec.wx, sec.wz) === false, 'a broken secret is a doorway');
+  ok(HG.game.score === scoreBefore + 250, 'breaking one pays 250');
+  const alcove = HG.level.cells[HG.level.idx(sec.alcove.x, sec.alcove.z)];
+  ok(alcove.solid === false, 'the alcove behind it is open floor');
+}
 
 console.log('\n== barrels ==');
 HG.game.barrels.length = 0;

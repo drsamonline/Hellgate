@@ -161,5 +161,18 @@ export function buildLevelMeshes(level, mats) {
   pad.position.set(level.exit.x, ec.floor + 0.03, level.exit.z);
   group.add(pad);
 
-  return { group, doorMeshes, exitPad: pad };
+  // ---- secret walls ----------------------------------------------------
+  // Each secret wall gets its own mesh, a shade off the surrounding rock, so it
+  // can be removed the moment it is broken and can be spotted up close.
+  const secretMeshes = [];
+  for (const sec of level.secrets || []) {
+    const c = level.cells[sec.idx];
+    const mat = new THREE.MeshLambertMaterial({ color: 0x6b5a4a });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(CELL * 0.98, c.ceil, CELL * 0.98), mat);
+    mesh.position.set(sec.wx, c.floor + c.ceil / 2, sec.wz);
+    group.add(mesh);
+    secretMeshes.push({ mesh, secret: sec });
+  }
+
+  return { group, doorMeshes, exitPad: pad, secretMeshes };
 }
