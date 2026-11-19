@@ -141,6 +141,17 @@ factors and prints the four category scores plus LCP, CLS and TBT. It needs
 rasteriser, so paint and blocking time read several times worse than on a GPU. Treat them as a
 regression baseline, not a verdict.
 
+## Unattended play
+
+`node tools/soak.mjs` runs a bot that aims at the nearest enemy, follows the flow field to it, fires
+when it has line of sight and switches weapons when one runs dry. It plays 90 seconds per seed per
+difficulty and prints waves, kills, shots, health lost and the health left on the field.
+
+Read it as a stability check, not a balance measurement. The bot kills slowly — it fires through a
+shotgun's spread at whatever is nearest instead of closing to a range where the pellets land — so its
+kill count says more about the bot than about the game. What it is good for is catching a crash, a
+NaN position or an enemy that never resolves across three minutes of unattended play.
+
 ## Why cross-browser is not verified here
 
 Firefox and WebKit are not available in this environment. Playwright's builds download fine, but they

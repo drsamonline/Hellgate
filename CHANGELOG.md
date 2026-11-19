@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.9.1 — 2026-11-19
+
+**Unattended play harness**
+- `tools/soak.mjs`: a bot that aims at the nearest enemy, follows the flow field to it, fires only with
+  line of sight and switches weapons when one runs dry. 90 seconds per seed per difficulty.
+- it is documented as a stability check, not a balance measurement: the bot kills slowly because it
+  fires through a shotgun's spread at range, and its kill count says more about the bot than the game.
+
+**What the investigation found**
+- the first version fired with no line-of-sight check and every pellet ate a wall; the second walked
+  straight at the target and stuck on walls. Both were bot defects, not game defects — the hitscan
+  path is already covered by the gameplay suite.
+
+
 ## 1.9.0 — 2026-11-19
 
 **Branching terminals**
