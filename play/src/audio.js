@@ -103,8 +103,18 @@ export class Sfx {
     return this.ctx ? this.ctx.currentTime : 0;
   }
 
-  noise(dur, gain, type, f0, f1) {
+  /** A raw looping noise buffer, for a case that builds its own filter chain. */
+  noiseSource() {
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noiseBuf;
+    src.loop = true;
+    return src;
+  }
+
+  noise(dur = 0.12, gain = 0.1, type, f0, f1) {
     if (!this.ctx) return;
+    // a case that calls this with no arguments must not put NaN into an AudioParam
+    if (!Number.isFinite(dur) || !Number.isFinite(gain)) return;
     const src = this.ctx.createBufferSource();
     src.buffer = this.noiseBuf;
     const filt = this.ctx.createBiquadFilter();
@@ -197,7 +207,7 @@ export class Sfx {
         break;
       case 'chaingun': {
         const t = ctx.currentTime;
-        const src = this.noise();
+        const src = this.noiseSource();
         const bp = ctx.createBiquadFilter();
         bp.type = 'bandpass';
         bp.frequency.value = 1500;
@@ -269,7 +279,7 @@ export class Sfx {
       case 'step': {
         // a short filtered thud; the player's own feet, not an event
         const t = ctx.currentTime;
-        const src = this.noise();
+        const src = this.noiseSource();
         const bp = ctx.createBiquadFilter();
         bp.type = 'bandpass';
         bp.frequency.value = 260 + Math.random() * 90;

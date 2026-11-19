@@ -206,6 +206,7 @@ ok('main wires the footstep callback', wired.step === true);
 // is invisible until that case runs, which is how 'spot' broke the build
 const sounds = await page.evaluate(() => {
   const out = [];
+  if (!window.HG.audio.ctx) window.HG.audio.init(); // the cases build nodes; no ctx, no test
   const names = ['pistol', 'chaingun', 'shotgun', 'rocket', 'boom', 'hit', 'wall', 'hurt', 'pain',
     'enemyDie', 'enemyShoot', 'fireball', 'pickup', 'key', 'door', 'wave', 'empty', 'reload',
     'step', 'spot', 'dead', 'boss', 'heal', 'armor', 'relic'];
@@ -213,7 +214,9 @@ const sounds = await page.evaluate(() => {
     try { window.HG.audio.play(n, { x: 0, y: 0, z: 0 }); out.push(n + ':ok'); }
     catch (e) { out.push(n + ':' + e.message); }
   }
-  return out.filter((r) => !r.endsWith(':ok'));
+  return out.filter((r) => !r.endsWith(':ok')).concat(
+    window.HG.audio.ctx ? [] : ['audio context never initialised']
+  );
 });
 ok('every sound plays without throwing', sounds.length === 0, sounds.join(', '));
 ok('main installs the occlusion test', wired.occlude === true);
