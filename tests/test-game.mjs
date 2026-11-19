@@ -274,6 +274,25 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== barrels ==');
+HG.game.barrels.length = 0;
+HG.spawnBarrels();
+ok(HG.game.barrels.length > 0, 'barrels are placed (' + HG.game.barrels.length + ')');
+const b0 = HG.game.barrels[0];
+const origin = { x: b0.x - 5, y: 0, z: b0.z };
+const dir = { x: 1, y: 0, z: 0 };
+ok(HG.damageBarrels(origin, dir, 10, 10) === true, 'a shot along the ray hits a barrel');
+ok(b0.hp === 20, 'the barrel took the damage (' + b0.hp + ')');
+HG.enemies.clear();
+HG.enemies.spawnAt('imp', b0.x + 1, b0.z, 1);
+frames(2);
+const bystander = HG.enemies.list[HG.enemies.list.length - 1];
+const bystanderHp = bystander.hp;
+HG.damageBarrels(origin, dir, 10, 999);
+ok(b0.alive === false, 'the barrel explodes when its health runs out');
+ok(bystander.hp < bystanderHp, 'the blast hurts what is next to it (' + bystanderHp + ' -> ' + Math.round(bystander.hp) + ')');
+ok(HG.game.barrels.every((b) => b !== b0 || !b.alive), 'the exploded barrel is gone');
+
 console.log('\n== crouch and damage numbers ==');
 HG.game.state = 'playing';
 HG.input.keys = Object.create(null);

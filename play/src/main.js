@@ -3,7 +3,8 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, CELL } from './level.js';
+import { makeRng } from './rng.js';
+import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, CELL } from './level.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
 import { Player } from './player.js';
@@ -149,6 +150,7 @@ const game = {
   weaponKills: {},
   trinkets: [],
   drops: [],
+  barrels: [],
   loreChoices: {},
   wave: 0,
   kills: 0,
@@ -286,6 +288,8 @@ function buildRun(seed, zoneDef) {
     if (id && e) dropTrinket(id, e.pos);
   };
 
+  game.barrels = [];
+  spawnBarrels();
   props = new Props(scene, level, zone);
   lore = new Lore(scene, level, zone);
   companion = new Companion(scene, level, effects, audio);
@@ -593,6 +597,76 @@ function randomCell(minDist = 0, roomsOnly = true) {
   });
   const src = pool.length ? pool : level.openCells;
   return src[Math.floor(Math.random() * src.length)];
+}
+
+function spawnBarrels() {
+  const rng = makeRng(game.seed + ':barrels');
+  const rooms = level.rooms.filter((r, i) => i !== level.exitRoom && i !== level.spawnRoom);
+  const mat = new THREE.MeshLambertMaterial({ color: 0x8a4a1e });
+  const band = new THREE.MeshLambertMaterial({ color: 0x2a2a30 });
+  for (let i = 0; i < 6 && rooms.length; i++) {
+    const room = rooms[Math.floor(rng.next() * rooms.length)];
+    const x = room.cx * CELL + (rng.next() - 0.5) * 3;
+    const z = room.cz * CELL + (rng.next() - 0.5) * 3;
+    if (isBlocked(level, x, z)) continue;
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.92, 10), mat);
+    body.position.y = 0.46;
+    const ring = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.1, 10), band);
+    ring.position.y = 0.46;
+    g.add(body, ring);
+    g.position.set(x, floorHeightAt(level, x, z), z);
+    scene.add(g);
+    game.barrels.push({ mesh: g, x, z, hp: 30, alive: true });
+  }
+}
+
+function explodeBarrel(b) {
+  if (!b.alive) return;
+  b.alive = false;
+  scene.remove(b.mesh);
+  b.mesh.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+  const at = { x: b.x, y: floorHeightAt(level, b.x, b.z) + 0.5, z: b.z };
+  effects.burst(at, 0xff8a3d, 40, 9, 0.9, 2);
+  effects.flash(at, 0xffa040, 26, 0.12, 30);
+  effects.addShake(0.6);
+  audio.play('boom', at);
+
+  // everything in the radius takes it, including you
+  for (const e of enemies.list) {
+    if (!e.alive) continue;
+    const d = Math.hypot(e.pos.x - b.x, e.pos.z - b.z);
+    if (d > 4) continue;
+    e.hurt(70 * (1 - d / 5), { level, player, effects, audio, projectiles, onKill: enemies.onKill, weapon: 'BARREL' }, { x: b.x, y: 0, z: b.z });
+  }
+  const pd = Math.hypot(player.pos.x - b.x, player.pos.z - b.z);
+  if (pd < 4) {
+    player.damage(45 * (1 - pd / 5), { x: b.x, y: at.y, z: b.z });
+    hud.hurt(20);
+  }
+}
+
+// Point-to-ray distance on the ground plane: a barrel is hit when the shot
+// passes through it, wherever it is along the ray.
+function damageBarrels(origin, dir, maxDist, amount) {
+  let best = null;
+  let bestT = Infinity;
+  for (const b of game.barrels) {
+    if (!b.alive) continue;
+    const dx = b.x - origin.x;
+    const dz = b.z - origin.z;
+    const len = Math.hypot(dir.x, dir.z) || 1;
+    const t = (dx * dir.x + dz * dir.z) / len;
+    if (t < 0 || t > maxDist) continue;
+    const px = origin.x + (dir.x / len) * t;
+    const pz = origin.z + (dir.z / len) * t;
+    if (Math.hypot(b.x - px, b.z - pz) > 0.55) continue;
+    if (t < bestT) { bestT = t; best = b; }
+  }
+  if (!best) return false;
+  best.hp -= amount;
+  if (best.hp <= 0) explodeBarrel(best);
+  return true;
 }
 
 function spawnPickups(wave) {
@@ -1601,6 +1675,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
+  explodeBarrel, damageBarrels, spawnBarrels,
   runStats, topRuns, recordRun, gameOver,
   openLore, closeLore, resolveChoice, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,

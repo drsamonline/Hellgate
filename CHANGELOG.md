@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.17.0 — 2026-11-19
+
+**Exploding barrels** (roadmap 33, partial)
+- six per level, placed on open floor away from the spawn and the exit. 30 health each; a shot that
+  passes through one takes it down, and then it goes: 70 damage falling off over 4 m to everything in
+  range, including you, with a flash, a shake and the boom.
+- hits are a point-to-ray test on the ground plane, not a distance from the wall behind it, so a barrel
+  in the open is hit wherever it stands.
+
+**Crouch finishes** (roadmap 31)
+- enemies now aim at the crouched eye, so going low actually changes what they can hit.
+
+**Not built:** crates that block. The item was "barrels that explode, crates that block"; only the first
+half exists and the roadmap says so.
+
+
 ## 1.16.0 — 2026-11-19
 
 **Crouch** (roadmap 31)

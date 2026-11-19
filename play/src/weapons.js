@@ -222,6 +222,8 @@ export class Weapons {
         this.effects.tracer(muzzle, eh.point, 0xffe0a0);
         this.effects.burst(eh.point, 0xaa1010, 4, 3, 0.4, 14);
         if (killed) this.audio.play('hit');
+      } else if (ctx.damageBarrels && ctx.damageBarrels(origin, dir, maxD, w.damage)) {
+        // the barrel took it; its own explosion does the rest
       } else if (wallHit) {
         this.effects.tracer(muzzle, new THREE.Vector3(wallHit.point.x, wallHit.point.y, wallHit.point.z), 0xffd27f);
         this.effects.burst(

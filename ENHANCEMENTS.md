@@ -47,9 +47,9 @@ Cheap, low-risk, immediately noticeable. All `S`.
 28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low — ✓ shipped
 29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low — ✓ shipped (off with reduced motion)
 30. **Sprint stamina** — or explicitly not: the current infinite sprint is a design choice. Decide and document it. `player.js` · S · low
-31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium — ✓ shipped (eye and speed; the hit sphere is still a fixed cylinder)
+31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium — ✓ shipped (enemies now aim at the crouched eye)
 32. **Secret rooms** — a wall texture that differs by one pixel, and a room behind it. Pure Doom. `level.js` · M · medium
-33. **Destructible props** — barrels that explode, crates that block. `level.js` + `projectiles.js` · L · medium
+33. **Destructible props** — barrels that explode, crates that block. `level.js` + `projectiles.js` · L · medium — ✓ shipped (barrels; crates not built)
 34. **Pickup bob + glow** — pickups already rotate; add a small point light or a sprite halo so they read in the dark. `main.js` · S · medium — ✓ shipped (sprite halo)
 35. **Enemy audio barks** — a synthesised growl on sight, a death cry per type. `audio.js` · S · medium — ✓ shipped (bark on sight, pitched per type)
 36. **Ambient drone** — a low, slowly modulated pad so silence is not dead air. `audio.js` · S · medium — ✓ shipped

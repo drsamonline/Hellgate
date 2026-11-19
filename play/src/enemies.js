@@ -310,7 +310,7 @@ export class Enemy {
     const dx = player.pos.x - this.pos.x;
     const dz = player.pos.z - this.pos.z;
     const dist = Math.hypot(dx, dz);
-    const playerEye = { x: player.pos.x, y: player.pos.y + 1.6, z: player.pos.z };
+    const playerEye = { x: player.pos.x, y: player.pos.y + 1.6 - 0.57 * (player.crouch || 0), z: player.pos.z };
     const canSee = player.alive && dist < this.T.sight && hasLineOfSight(level, this.eyePos(), playerEye);
 
     this.attackCd -= dt;
