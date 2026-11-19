@@ -194,6 +194,9 @@ export class ConeGeometry extends Primitive {}
 export class OctahedronGeometry extends Primitive {}
 export class TorusGeometry extends Primitive {}
 export class DodecahedronGeometry extends Primitive {}
+export class TetrahedronGeometry extends Primitive {}
+export class IcosahedronGeometry extends Primitive {}
+export class RingGeometry extends Primitive {}
 
 class Material {
   constructor(params = {}) {

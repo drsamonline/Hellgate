@@ -48,6 +48,9 @@ jobs:
       - name: Exported symbols are documented
         run: node tools/check-docs.mjs
 
+      - name: The test double covers what the game uses
+        run: node tools/check-stub.mjs
+
       - name: Install a browser
         uses: browser-actions/setup-chrome@v1
         with:
