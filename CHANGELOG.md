@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.11.2 — 2026-11-19
+
+**`neon-engine` went from 2 to 86 documented exports**
+- every exported symbol in that repo now carries a JSDoc block: 86 of 86, up from 2. Its `docs`
+  workflow switched from `--warn` to hard mode, so the next export without a block fails its build.
+- 34 files changed, 252 lines added, nothing else touched. Every module still parses; the repo's own
+  `tests`, `docs` and `meta` workflows are all green.
+
+That closes the last gate running in warn mode anywhere in the fleet.
+
+
 ## 1.11.1 — 2026-11-19
 
 **The two fleet drifts, resolved**
