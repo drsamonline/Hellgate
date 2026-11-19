@@ -69,11 +69,33 @@ function serve() {
 }
 
 const server = await serve();
-const browser = await puppeteer.launch({
-  executablePath: CHROME,
-  headless: 'new',
-  args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-gpu-sandbox'],
-});
+// CI occasionally takes longer than 30 s to hand back the DevTools endpoint.
+// Launch with a longer budget, the container-safe flag, and one retry.
+async function launchBrowser(attempts = 2) {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await puppeteer.launch({
+        executablePath: CHROME,
+        headless: 'new',
+        timeout: 60000,
+        protocolTimeout: 180000,
+        args: [
+          '--no-sandbox',
+          '--disable-dev-shm-usage',
+          '--use-angle=swiftshader',
+          '--enable-unsafe-swiftshader',
+          '--disable-gpu-sandbox',
+        ],
+      });
+    } catch (err) {
+      if (i === attempts - 1) throw err;
+      console.error('browser launch failed, retrying: ' + err.message);
+      await new Promise((r) => setTimeout(r, 3000));
+    }
+  }
+}
+
+const browser = await launchBrowser();
 const page = await browser.newPage();
 await page.setViewport({ width: 1280, height: 720 });
 
