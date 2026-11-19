@@ -194,6 +194,15 @@ ok('tab opens the status panel', inv.state === 'inventory' && inv.len > 100, JSO
 ok('tab closes it again', inv.after === 'playing');
 ok('a run in progress is saved', inv.save === true);
 
+// the game itself must wire the footstep callback, not just the player class
+const wired = await page.evaluate(() => ({
+  step: typeof window.HG.player.onStep === 'function',
+  occlude: typeof window.HG.audio.occludeTest === 'function',
+  weapons: window.HG.weapons ? 4 : 0,
+}));
+ok('main wires the footstep callback', wired.step === true);
+ok('main installs the occlusion test', wired.occlude === true);
+
 // a save must survive a reload and come back on the Continue button
 const saved = await page.evaluate(() => {
   const HG = window.HG;
