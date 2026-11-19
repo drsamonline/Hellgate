@@ -19,6 +19,7 @@ node tools/soak.mjs          # a bot plays unattended; stability, not balance
 node tools/audit-dead.mjs    # unused exports, conflicting constants
 node tools/check-pages.mjs   # PAGES.json paths still exist
 node tools/check-links.mjs   # every local href/src resolves
+node tools/check-meta.mjs    # version and licence agree with their files
 node tools/smoke.mjs         # both pages in headless Chromium (needs puppeteer-core + a browser)
 node tools/shoot.mjs         # re-capture the screenshots into assets/*.png
 python3 tools/optimise_assets.py   # assets/*.png -> assets/*.webp (what the pages load)

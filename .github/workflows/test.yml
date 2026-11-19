@@ -60,6 +60,9 @@ jobs:
       - name: Every local link and asset resolves
         run: node tools/check-links.mjs
 
+      - name: Version and licence agree with their files
+        run: node tools/check-meta.mjs
+
       - name: Install a browser
         uses: browser-actions/setup-chrome@v1
         with:

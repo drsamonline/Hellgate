@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.11.0 — 2026-11-19
+
+**A portable metadata gate, and two real drifts found with it**
+- `tools/check-meta.mjs`: `VERSION` vs the newest `CHANGELOG` heading, `package.json` vs `VERSION`,
+  `LICENSE` vs the licence the README names. Absent files are skipped; a missing `VERSION` is a
+  warning, not a failure. Wired into CI as step 14 and pushed to all eight sibling game repos.
+- it found two genuine mismatches in the fleet: `saga-vn-engine` ships `VERSION 1.0.1` with a
+  `CHANGELOG` heading of `1.0.2`, and `aethelgard-rpg-engine` ships `VERSION 1.0.1` with `1.0.0`.
+  Both run in `--warn` mode until those are resolved; the other six run in hard mode.
+
+**Fixed while making it portable**
+- the licence comparison read the shields.io URL out of the README and reported `PolyForm
+  Noncommercial` against `PolyForm%20Noncommercial%201.0.0-2e7d32` — eight false positives. Both sides
+  are now normalised to a licence family.
+- `--warn` was referenced by two workflows before it existed; the tool grew the flag rather than the
+  workflows growing a workaround.
+
+
 ## 1.10.3 — 2026-11-19
 
 **The JSDoc gate reached exactly one sibling, and that is the honest answer**
