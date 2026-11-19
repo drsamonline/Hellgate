@@ -194,6 +194,51 @@ ok('tab opens the status panel', inv.state === 'inventory' && inv.len > 100, JSO
 ok('tab closes it again', inv.after === 'playing');
 ok('a run in progress is saved', inv.save === true);
 
+// a save must survive a reload and come back on the Continue button
+const saved = await page.evaluate(() => {
+  const HG = window.HG;
+  HG.game.score = 777;
+  HG.game.wave = 2;
+  HG.saveRun();
+  return HG.loadRun();
+});
+ok('a run saves with score and wave', saved && saved.score === 777 && saved.wave === 2, JSON.stringify(saved));
+
+await page.reload({ waitUntil: 'domcontentloaded' });
+await page.waitForFunction('typeof window.HG === "object"', { timeout: 20000 });
+const cont = await page.evaluate(() => {
+  const b = document.getElementById('continueBtn');
+  return { shown: !!b && b.style.display !== 'none', label: b ? b.textContent : '' };
+});
+ok('the reload offers Continue', cont.shown && /wave 2/.test(cont.label), cont.label);
+await page.click('#continueBtn');
+await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 20000 });
+const resumed = await page.evaluate(() => ({ score: window.HG.game.score, wave: window.HG.game.wave }));
+ok('resuming restores score and wave', resumed.score === 777 && resumed.wave === 2, JSON.stringify(resumed));
+
+// a zone must be completable: clear the last wave, step on the pad, get the screen
+const zoneEnd = await page.evaluate(async () => {
+  const HG = window.HG;
+  HG.enemies.clear();
+  HG.game.hasKey = true;
+  HG.game.wave = HG.game.wavesTarget;
+  HG.game.exitOpen = false;
+  HG.player.pos.set(HG.level.exit.x, 0, HG.level.exit.z);
+  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))));
+  return {
+    state: HG.game.state,
+    cleared: HG.progress.cleared.slice(),
+    zone: HG.zone.id,
+  };
+});
+ok('the zone completes when the pad is reached', zoneEnd.state === 'cleared', zoneEnd.state);
+ok('progress records the zone', zoneEnd.cleared.includes(zoneEnd.zone), JSON.stringify(zoneEnd));
+
+// back to a live run for the rest of the checks
+await page.goto(`http://127.0.0.1:${PORT}/play/?auto=1&seed=smoke&wave=2`, { waitUntil: 'domcontentloaded' });
+await page.waitForFunction('window.HG && window.HG.game.state === "playing"', { timeout: 20000 });
+await new Promise((r) => setTimeout(r, 400));
+
 // lore terminals and the timed buff pickups
 const loreOk = await page.evaluate(() => {
   const HG = window.HG;

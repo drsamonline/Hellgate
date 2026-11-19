@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.10.0 — 2026-11-19
+
+Everything here came from the fleet comparison: five things the sibling game repos do better, ported.
+
+**Fixed timestep** (from `game-kit`)
+- the simulation advances in 1/60 s steps whatever the display does, so 30 fps and 144 fps produce the
+  same game. The backlog is capped at four steps so a stalled tab cannot simulate a minute at once.
+  Closes roadmap item 57.
+
+**Save round-trip and zone completion** (from `aethelgard-rpg-engine/tools/verify.js`)
+- the smoke test now saves a run, reloads the page, asserts Continue appears with the wave in its
+  label, resumes, and checks the score and wave came back. It also plays a zone to the end and asserts
+  the progress record.
+
+**Dead-code audit** (from `aethelgard-rpg-engine/tools/static-audit.py`)
+- `tools/audit-dead.mjs`: exports nothing imports, and constants declared twice with different values.
+  Its first run found two dead exports (`ceilHeightAt`, `STORY_PANELS`), now deleted, and one false
+  positive (`isBlocked`, used by the level suite) that exposed the tool not scanning `tests/`.
+
+**PAGES.json guard** (from `neon-engine/tests/pages.cjs`)
+- `tools/check-pages.mjs`: every path declared in `PAGES.json` still exists, so a rename cannot quietly
+  404 the live site. The file protected nothing before this.
+
+**Onboarding and balance docs** (gap against `neon-engine`)
+- `documentation/getting-started.md` and `documentation/balance.md`. The second says plainly that no
+  constant in this repository is backed by playtest data.
+
+**CI**
+- 10 steps to 12.
+
+
 ## 1.9.1 — 2026-11-19
 
 **Unattended play harness**

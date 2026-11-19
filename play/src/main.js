@@ -1373,21 +1373,36 @@ function render() {
   lastRenderStats.tris = levelTris + info.triangles;
 }
 
+// Fixed timestep, taken from game-kit: the simulation advances in 1/60 s steps
+// whatever the display does, so 30 fps and 144 fps produce the same game. The
+// backlog is capped so a stalled tab cannot simulate a minute in one frame.
+const FIXED = 1 / 60;
+const MAX_STEPS = 4;
+let accumulator = 0;
+
 function loop() {
   requestAnimationFrame(loop);
-  const dt = Math.min(0.05, clock.getDelta());
-  elapsed += dt;
+  const frameDt = Math.min(0.25, clock.getDelta());
+  elapsed += frameDt;
 
   if (game.state === 'playing') {
-    update(dt);
+    accumulator += frameDt;
+    let steps = 0;
+    while (accumulator >= FIXED && steps < MAX_STEPS) {
+      update(FIXED);
+      accumulator -= FIXED;
+      steps++;
+    }
+    if (steps === MAX_STEPS) accumulator = 0; // drop the backlog, do not spiral
     if (effects) effects.applyShake(camera);
-    adaptResolution(dt);
-  } else if (game.state === 'intro') {
-    story.update(dt, level);
+    adaptResolution(frameDt);
+  } else {
+    accumulator = 0;
+    if (game.state === 'intro') story.update(frameDt, level);
   }
   if (touchCleanup && touchCleanup.setVisible) touchCleanup.setVisible(game.state === 'playing');
   render();
-  updateDebug(dt);
+  updateDebug(frameDt);
 }
 
 // ----------------------------------------------------------------- URL hooks

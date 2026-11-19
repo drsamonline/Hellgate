@@ -1,6 +1,7 @@
 # API
 
-Every module-level export, one line each. Generated from the doc blocks by `tools/check-docs.mjs`'s rule: if it is exported, it is described here and in the source.
+Every module-level export, one line each. Generated from the doc blocks by the same rule `tools/check-docs.mjs` enforces: if it is exported, it is described here and in the source.
+
 
 ## `play/src/audio.js`
 
@@ -37,7 +38,6 @@ Every module-level export, one line each. Generated from the doc blocks by `tool
 - **`cellAt`** (function) — The cell containing a world position, or null outside the map.
 - **`isBlocked`** (function) — True when a world position is solid rock, out of bounds, or a closed door.
 - **`floorHeightAt`** (function) — Floor height at a world position.
-- **`ceilHeightAt`** (function) — Ceiling height at a world position.
 - **`circleBlocked`** (function) — True when a circle of radius r at (x, z) overlaps anything solid.
 - **`raycastWalls`** (function) — March a ray through the grid and return the first wall hit with its normal, or null.
 - **`buildFlowField`** (function) — Breadth-first search from a world position over every reachable cell. -1 where unreachable.
@@ -47,6 +47,16 @@ Every module-level export, one line each. Generated from the doc blocks by `tool
 ## `play/src/levelmesh.js`
 
 - **`buildLevelMeshes`** (function) — Turn the sector grid into merged geometry with baked vertex shade, plus the door boxes and the exit pad.
+
+## `play/src/loot.js`
+
+- **`TRINKETS`** (const) — (no description)
+- **`SLOTS`** (const) — (no description)
+- **`DROP_CHANCE`** (const) — (no description)
+- **`SPARE_VALUE`** (const) — (no description)
+- **`trinketById`** (function) — (no description)
+- **`rollDrop`** (function) — (no description)
+- **`sumEffects`** (function) — (no description)
 
 ## `play/src/lore.js`
 
@@ -88,7 +98,6 @@ Every module-level export, one line each. Generated from the doc blocks by `tool
 ## `play/src/story.js`
 
 - **`Story`** (class) — The cold open: typed panels over a camera flythrough of the generated level.
-- **`STORY_PANELS`** (const) — The four panels, in order.
 
 ## `play/src/textures.js`
 

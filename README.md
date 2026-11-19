@@ -159,7 +159,9 @@ which is how the game was checked against the current release and not only again
 
 ## Documentation
 
+- [Getting started](documentation/getting-started.md) — clone to first run in five minutes
 - [Architecture](documentation/architecture.md) — modules, data flow, render loop
+- [Balance](documentation/balance.md) — the curve, the dials, and what is not measured
 - [Level generation](documentation/level-generation.md) — sectors, rooms, corridors, doors, sealing
 - [Combat](documentation/combat.md) — weapons, enemy FSM, damage model, projectiles
 - [RPG systems](documentation/rpg-systems.md) — classes, powers, companion, zones, story, touch

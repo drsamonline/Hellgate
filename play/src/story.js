@@ -119,4 +119,3 @@ export class Story {
 /**
  * The four panels, in order.
  */
-export const STORY_PANELS = PANELS;

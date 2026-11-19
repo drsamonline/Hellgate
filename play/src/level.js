@@ -281,14 +281,6 @@ export function floorHeightAt(level, x, z) {
   return c ? c.floor : 0;
 }
 
-/**
- * Ceiling height at a world position.
- */
-export function ceilHeightAt(level, x, z) {
-  const c = cellAt(level, x, z);
-  return c ? c.ceil : 3;
-}
-
 // circle vs. axis-aligned blocked cells
 /**
  * True when a circle of radius r at (x, z) overlaps anything solid.

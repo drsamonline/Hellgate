@@ -51,6 +51,12 @@ jobs:
       - name: The test double covers what the game uses
         run: node tools/check-stub.mjs
 
+      - name: No dead exports or conflicting constants
+        run: node tools/audit-dead.mjs
+
+      - name: PAGES.json paths still exist
+        run: node tools/check-pages.mjs
+
       - name: Install a browser
         uses: browser-actions/setup-chrome@v1
         with:
