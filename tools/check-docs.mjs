@@ -6,8 +6,13 @@
  * block explains the object; the methods are named in the docs), but every
  * module-level export is.
  *
- *   node tools/check-docs.mjs          # report and exit 1 on a gap
- *   node tools/check-docs.mjs --list   # also print what is missing
+ *   node tools/check-docs.mjs                    # report and exit 1 on a gap
+ *   node tools/check-docs.mjs --list             # also print what is missing
+ *   node tools/check-docs.mjs --src js --warn    # another repo, report only
+ *
+ * `--src` points at the source directory (default play/src). `--warn` exits 0
+ * whatever it finds, so a repo can adopt the measurement before it can adopt
+ * the rule.
  */
 
 import fs from 'node:fs';
@@ -15,8 +20,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SRC = path.join(ROOT, 'play', 'src');
+const srcArg = process.argv.indexOf('--src');
+const SRC = path.resolve(ROOT, srcArg > -1 ? process.argv[srcArg + 1] : path.join('play', 'src'));
 const list = process.argv.includes('--list');
+const warn = process.argv.includes('--warn');
 
 const files = fs.readdirSync(SRC).filter((f) => f.endsWith('.js')).sort();
 
@@ -49,11 +56,18 @@ for (const file of files) {
   });
 }
 
-const pct = total ? Math.round((documented / total) * 100) : 100;
+if (total === 0) {
+  // a green result on zero exports is a lie: either --src is wrong or the repo
+  // is not an ES-module codebase, and the rule does not apply
+  console.log('no ES module exports found in ' + path.relative(ROOT, SRC));
+  process.exit(warn ? 0 : 1);
+}
+
+const pct = Math.round((documented / total) * 100);
 console.log(`documented exports: ${documented}/${total} (${pct}%)`);
 if (missing.length) {
   if (list) for (const m of missing) console.log('  missing ' + m);
-  console.log('FAIL: ' + missing.length + ' export(s) without a JSDoc block');
-  process.exit(1);
+  console.log((warn ? 'WARN: ' : 'FAIL: ') + missing.length + ' export(s) without a JSDoc block');
+  process.exit(warn ? 0 : 1);
 }
 console.log('all exports documented');

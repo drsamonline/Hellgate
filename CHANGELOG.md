@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.10.3 — 2026-11-19
+
+**The JSDoc gate reached exactly one sibling, and that is the honest answer**
+- `check-docs.mjs` gained `--src` and `--warn`, and a fix for a false green: with no exports found it
+  reported 0/0 as 100 %. It now says so and fails in hard mode.
+- of the eight sibling game repos, only `neon-engine` is an ES-module codebase (36 files with
+  `export`). The other seven are IIFE or single-file scripts, so an export-level rule does not apply.
+- `neon-engine` now runs it in warn mode: 2 of 86 exports documented (2 %). The number is the point;
+  the badge stays green until the coverage earns a rule.
+
+
 ## 1.10.2 — 2026-11-19
 
 **The link gate is in all eight sibling game repos**
