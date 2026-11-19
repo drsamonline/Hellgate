@@ -66,6 +66,8 @@ export class Powers {
     this.invuln = 0;
     this.guard = 0;   // seconds of half damage
     this.lastCast = '';
+    this.regenMul = 1;  // raised by upgrades
+    this.cdMul = 1;     // lowered by upgrades
   }
 
   equip(classDef) {
@@ -85,7 +87,7 @@ export class Powers {
   }
 
   update(dt, player) {
-    this.energy = Math.min(this.maxEnergy, this.energy + REGEN * dt);
+    this.energy = Math.min(this.maxEnergy, this.energy + REGEN * this.regenMul * dt);
     for (const k of Object.keys(this.cd)) this.cd[k] = Math.max(0, this.cd[k] - dt);
     if (this.invuln > 0) this.invuln -= dt;
     if (this.guard > 0) this.guard -= dt;
@@ -162,7 +164,7 @@ export class Powers {
     }
 
     this.energy -= p.cost;
-    this.cd[p.id] = p.cd;
+    this.cd[p.id] = p.cd * this.cdMul;
     this.lastCast = p.id;
     return true;
   }

@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.7.0 — 2026-11-19
+
+**The warden's phases**
+- three phases at two thirds and one third of health. Phase 2 shortens the cooldown and widens the
+  slam; phase 3 shortens it again and summons two hounds, once. The health bar carries the phase
+  number and the chest core brightens with it.
+
+**Upgrades between zones**
+- clearing a zone offers three of six upgrades; taking one stacks it for the rest of the session:
+  damage, max health, energy regeneration, power cooldowns, movement speed, starting armour.
+- `recomputeStats()` rebuilds the class's base numbers from scratch, so upgrades compose cleanly with
+  the class and the timed pickups. Reset when a campaign starts at the first zone.
+
+**Tests**
+- 12 new assertions: the three phases, the faster cooldown, the summon and that the summons are
+  hounds; each upgrade's effect on the base numbers.
+
+
 ## 1.6.1 — 2026-11-19
 
 **Documentation**

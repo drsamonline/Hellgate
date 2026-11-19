@@ -108,6 +108,35 @@ Two more pickup kinds, both on a 20-second clock and shown as chips in the HUD:
 The multipliers are recomputed every frame from the class base, so they stack with a class bonus and
 expire cleanly rather than leaving a multiplied value behind.
 
+## Upgrades between zones
+
+Clearing a zone offers three of six upgrades; you take one and it stacks for the rest of the session.
+They are applied in `recomputeStats()`, which rebuilds the class's base numbers from scratch, so they
+compose cleanly with the class and the timed pickups.
+
+| Upgrade | Effect |
+| --- | --- |
+| Killing Edge | +15% weapon damage |
+| Thicker Hide | +25 max health |
+| Deep Well | +30% energy regeneration |
+| Fast Hands | −15% power cooldowns |
+| Light Step | +10% movement speed |
+| Plate | +20 starting armour |
+
+The list is reset when a campaign starts at the first zone, so a fresh run is a fresh run.
+
+## The warden's phases
+
+The boss reads its own health every frame and escalates:
+
+| Phase | Threshold | Change |
+| --- | --- | --- |
+| I | above 66% | slam and volley, 2.3 s cooldown |
+| II | 66% down | cooldown ×0.75, slam radius +1 m, burst and shake |
+| III | 33% down | cooldown ×0.7 again, and it summons two hounds once |
+
+The health bar carries the phase number. The chest core brightens as it climbs.
+
 ## Status panel
 
 `Tab` freezes the game and shows what you have: class, health, armour, energy, the three weapons with

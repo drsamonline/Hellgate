@@ -160,7 +160,7 @@ function makeWarden() {
   const legL = limb(0.42, 1.0, 0.42, M.wardenDark, -0.38, 1.0, 0, 0.5);
   const legR = limb(0.42, 1.0, 0.42, M.wardenDark, 0.38, 1.0, 0, 0.5);
   g.add(armL, armR, legL, legR);
-  return { group: g, parts: { armL, armR, legL, legR } };
+  return { group: g, parts: { armL, armR, legL, legR, core } };
 }
 
 function makeHound() {
@@ -370,6 +370,7 @@ export class Enemy {
       }
     }
 
+    this.updatePhase(ctx);
     this.animate(dt);
   }
 
@@ -483,7 +484,41 @@ export class Enemy {
     return true;
   }
 
+  // A boss reads its own health each frame and escalates at two thirds and one
+  // third. Phase 2 shortens the cooldown and widens the slam; phase 3 summons
+  // once and drops the cooldown again.
+  updatePhase(ctx) {
+    if (!this.T.boss) return;
+    const frac = this.hp / this.maxHp;
+    const next = frac > 0.66 ? 1 : frac > 0.33 ? 2 : 3;
+    if (next === this.phase) return;
+    this.phase = next;
+
+    if (this.phase === 2) {
+      this.T = { ...this.T, attackCd: this.T.attackCd * 0.75, meleeRange: this.T.meleeRange + 1 };
+      if (ctx && ctx.effects) {
+        ctx.effects.burst({ x: this.pos.x, y: this.pos.y + 1.6, z: this.pos.z }, 0xffb454, 24, 5, 0.7, 2);
+        ctx.effects.addShake(0.5);
+      }
+    }
+    if (this.phase === 3) {
+      this.T = { ...this.T, attackCd: this.T.attackCd * 0.7 };
+      if (!this.summoned && ctx && ctx.summon) {
+        this.summoned = true;
+        ctx.summon(this, 2);
+      }
+      if (ctx && ctx.effects) {
+        ctx.effects.burst({ x: this.pos.x, y: this.pos.y + 1.6, z: this.pos.z }, 0xff3b30, 36, 7, 1, 2);
+        ctx.effects.addShake(0.9);
+      }
+    }
+  }
+
   animate(dt) {
+    if (this.T.boss && this.parts && this.parts.core) {
+      const k = this.phase === 3 ? 1.4 : this.phase === 2 ? 1.15 : 1;
+      this.parts.core.scale.setScalar(k);
+    }
     if (this.flash > 0) {
       this.flash = Math.max(0, this.flash - dt);
       const e = this.flash / 0.16;
@@ -608,6 +643,19 @@ export class EnemyManager {
       audio: this.audio,
       projectiles,
       onKill: this.onKill,
+      // the warden calls this at a third of its health
+      summon: (boss, n) => {
+        for (let i = 0; i < n; i++) {
+          const a = (i / n) * Math.PI * 2;
+          const x = boss.pos.x + Math.cos(a) * 2.4;
+          const z = boss.pos.z + Math.sin(a) * 2.4;
+          const h = new Enemy('hound', new THREE.Vector3(x, 0, z), 4, this.scene, { diff: this.diff });
+          h.pos.y = floorHeightAt(this.level, x, z);
+          h.mesh.position.y = h.pos.y;
+          this.list.push(h);
+          this.effects.burst({ x, y: h.pos.y + 0.6, z }, 0xff3b30, 10, 3, 0.5, 2);
+        }
+      },
     };
     for (const e of this.list) e.update(dt, ctx);
 

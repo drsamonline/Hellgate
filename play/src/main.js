@@ -118,6 +118,16 @@ let zone = ZONES[0];
 
 // One multiplier table, three presets. Enemy hp and damage scale here; the wave
 // size scales in EnemyManager.spawnWave.
+// Between zones you pick one. They stack for the rest of the session.
+const UPGRADES = [
+  { id: 'damage', name: 'KILLING EDGE', blurb: '+15% weapon damage' },
+  { id: 'hp', name: 'THICKER HIDE', blurb: '+25 max health' },
+  { id: 'energy', name: 'DEEP WELL', blurb: '+30% energy regeneration' },
+  { id: 'cooldown', name: 'FAST HANDS', blurb: '-15% power cooldowns' },
+  { id: 'speed', name: 'LIGHT STEP', blurb: '+10% movement speed' },
+  { id: 'armour', name: 'PLATE', blurb: '+20 starting armour' },
+];
+
 const DIFF_MULT = {
   easy: { hp: 0.8, dmg: 0.7, count: 0.75 },
   normal: { hp: 1, dmg: 1, count: 1 },
@@ -133,6 +143,7 @@ const game = {
   relicsTotal: 0,
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
+  upgrades: {},
   wave: 0,
   kills: 0,
   waveKills: 0,
@@ -324,17 +335,27 @@ function syncHud() {
   hud.slotSig = '';
 }
 
+function recomputeStats() {
+  const def = getClass(game.classId);
+  const u = game.upgrades;
+  player.baseDamage = def.damage * (1 + 0.15 * (u.damage || 0));
+  player.baseSpeed = def.speed * (1 + 0.1 * (u.speed || 0));
+  player.maxHp = def.hp + 25 * (u.hp || 0);
+  player.damageMul = player.baseDamage;
+  player.speedMul = player.baseSpeed;
+  powers.regenMul = 1 + 0.3 * (u.energy || 0);
+  powers.cdMul = Math.pow(0.85, u.cooldown || 0);
+  player.health = Math.min(player.health, player.maxHp);
+}
+
 function applyClass(classId) {
   const def = getClass(classId);
   game.classId = def.id;
   settings.classId = def.id;
   saveSettings(settings);
-  player.health = def.hp;
-  player.armor = def.armor;
-  player.speedMul = def.speed;
-  player.damageMul = def.damage;
-  player.baseSpeed = def.speed;
-  player.baseDamage = def.damage;
+  recomputeStats();
+  player.health = player.maxHp;
+  player.armor = def.armor + 20 * (game.upgrades.armour || 0);
   weapons.select(def.weapon, true);
   weapons.cd = 0;
   powers.equip(def);
@@ -628,6 +649,7 @@ function checkWave() {
 
 function beginZone(zoneDef) {
   audio.init();
+  if (!zoneDef || zoneDef.id === ZONES[0].id) game.upgrades = {};
   zone = zoneDef || zone;
   game.zoneId = zone.id;
   try { history.replaceState(null, '', '?zone=' + encodeURIComponent(zone.id)); } catch (e) { /* no history */ }
@@ -787,6 +809,33 @@ function zoneCleared() {
   hud.setVisible(false);
   showScreen('cleared');
   audio.play('wave');
+  renderUpgrades();
+}
+
+function renderUpgrades() {
+  const wrap = document.getElementById('upgradeCards');
+  if (!wrap) return;
+  const pool = UPGRADES.slice();
+  const picks = [];
+  for (let i = 0; i < 3 && pool.length; i++) {
+    picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+  }
+  wrap.innerHTML = picks.map((u) => `
+    <button class="card upgradecard" data-up="${u.id}">
+      <span class="n">UPGRADE</span>
+      <h3>${u.name}</h3>
+      <p>${u.blurb}</p>
+    </button>`).join('');
+  wrap.querySelectorAll('[data-up]').forEach((el) => {
+    el.addEventListener('click', () => takeUpgrade(el.getAttribute('data-up')));
+  });
+}
+
+function takeUpgrade(id) {
+  game.upgrades[id] = (game.upgrades[id] || 0) + 1;
+  recomputeStats();
+  audio.play('pickup');
+  showZoneMap();
 }
 
 function startGame(seed, opts = {}) {
@@ -1291,6 +1340,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
+  takeUpgrade, UPGRADES,
   openLore, closeLore, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },

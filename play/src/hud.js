@@ -101,7 +101,8 @@ export class HUD {
       const boss = state && state.boss;
       if (boss) {
         this.elBoss.classList.add('on');
-        this.elBossName.textContent = boss.T.label || 'BOSS';
+        const roman = ['', 'I', 'II', 'III'][boss.phase || 1] || '';
+        this.elBossName.textContent = (boss.T.label || 'BOSS') + (boss.phase > 1 ? '  ·  ' + roman : '');
         this.elBossFill.style.width = Math.max(0, (boss.hp / boss.maxHp) * 100).toFixed(1) + '%';
       } else {
         this.elBoss.classList.remove('on');

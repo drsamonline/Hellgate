@@ -80,7 +80,8 @@ One FSM, two parameter sets (`TYPES` in `enemies.js`).
 | Sight | 22 | 24 | 26 | 32 |
 | From wave | 1 | 2 | 4 | final wave of The Throne |
 
-The warden alternates its two attacks: a ground slam that hits anything within 5 m and lights the room,
+The warden escalates through three phases at two thirds and one third of its health: the cooldown
+shortens, the slam widens, and at the last threshold it summons two hounds. It alternates its two attacks: a ground slam that hits anything within 5 m and lights the room,
 then a three-ball fireball spread. It is 3 m tall with a glowing chest core, so it reads as the boss
 before its health bar appears.
 

@@ -37,6 +37,7 @@ export class Player {
     this.roll = 0;
 
     this.health = 100;
+    this.maxHp = 100;
     this.armor = 0;
     this.ammo = { bullets: 60, shells: 16, rockets: 3 };
     this.alive = true;
@@ -63,6 +64,7 @@ export class Player {
     this.bob = 0;
     this.roll = 0;
     this.health = 100;
+    this.maxHp = 100;
     this.armor = 0;
     this.ammo = { bullets: 60, shells: 16, rockets: 3 };
     this.alive = true;

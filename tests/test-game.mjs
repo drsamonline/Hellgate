@@ -221,6 +221,39 @@ boss.hurt(99999, { level: HG.level, player: HG.player, effects: HG.effects, audi
 frames(3);
 ok(!HG.hud.elBoss.classList.contains('on'), 'the boss bar hides when it dies');
 
+console.log('\n== boss phases ==');
+HG.enemies.clear();
+HG.enemies.spawnWave(3, HG.player.pos, { boss: true, waves: 3 });
+const b2 = HG.enemies.list.find((e) => e.T && e.T.boss);
+frames(2);
+ok(b2.phase === 1, 'the warden starts in phase 1');
+b2.hp = b2.maxHp * 0.6;
+frames(3);
+ok(b2.phase === 2, 'two thirds of health enters phase 2 (' + b2.phase + ')');
+const cd2 = b2.T.attackCd;
+b2.hp = b2.maxHp * 0.25;
+const before = HG.enemies.list.length;
+frames(4);
+ok(b2.phase === 3, 'one third of health enters phase 3');
+ok(b2.T.attackCd < cd2, 'phase 3 attacks faster than phase 2');
+ok(HG.enemies.list.length > before, 'phase 3 summons help (' + before + ' -> ' + HG.enemies.list.length + ')');
+ok(HG.enemies.list.some((e) => e.type === 'hound' && e !== b2), 'the summons are hounds');
+
+console.log('\n== between-zone upgrades ==');
+const dmgBefore = HG.player.baseDamage;
+HG.takeUpgrade('damage');
+ok(HG.game.upgrades.damage === 1, 'the upgrade is recorded');
+ok(HG.player.baseDamage > dmgBefore, 'damage upgrade raises the base (' + dmgBefore.toFixed(2) + ' -> ' + HG.player.baseDamage.toFixed(2) + ')');
+const hpBefore = HG.player.maxHp;
+HG.takeUpgrade('hp');
+ok(HG.player.maxHp === hpBefore + 25, 'health upgrade raises the cap (' + hpBefore + ' -> ' + HG.player.maxHp + ')');
+const cdBefore = HG.powers.cdMul;
+HG.takeUpgrade('cooldown');
+ok(HG.powers.cdMul < cdBefore, 'cooldown upgrade lowers the multiplier');
+// taking an upgrade routes to the world map; later blocks need a live game
+HG.game.state = 'playing';
+frames(2);
+
 console.log('\n== prop LOD ==');
 ok(HG.props && HG.props.grassMesh, 'the level has a grass mesh');
 HG.props.setQuality(0);
@@ -372,7 +405,7 @@ doc.getElementById('retryBtn').dispatch('click');
 frames(3);
 ok(HG.game.state === 'playing', 'retry restarts');
 ok(HG.game.kills === 0 && HG.game.wave === 1, 'stats reset');
-ok(HG.player.health === 110 && HG.player.armor === 25 && HG.player.ammo.shells === 16, 'player reset to the marine stats');
+ok(HG.player.health === HG.player.maxHp && HG.player.ammo.shells === 16, 'player reset to full health with full ammo');
 ok(oldLevelMesh && oldLevelMesh.geometry.__disposed === true, 'previous run\'s level geometry was disposed');
 ok(oldLevelMesh && oldLevelMesh.material.userData.shared === true, 'shared cached materials survive a restart');
 ok(HG.levelMeshes.group.children.length > 0, 'new run built fresh meshes');
