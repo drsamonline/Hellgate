@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.12.0 — 2026-11-19
+
+Back to the game after the fleet work. Four roadmap items.
+
+**Footsteps** (roadmap 12)
+- a bandpass-filtered noise burst on each half cycle of the head bob, quieter when walking, silent
+  when standing. The player's own feet, synthesised like everything else.
+
+**Accuracy and damage on the game-over screen** (roadmap 27)
+- shots fired and hit percentage, tracked in `weapons.js`; damage taken, tracked through
+  `player.onDamage`. Favourite weapon is not built.
+
+**Top five runs** (roadmap 11)
+- a table of the five best runs by score, with wave and kill count, kept in `localStorage` under
+  `hellgate.runs`. The run you just finished is highlighted.
+
+**Copy seed** (roadmap 10)
+- a button under the seed that copies a linkable `?seed=` URL, with a clipboard fallback for browsers
+  without `navigator.clipboard`.
+
+**Tests**
+- 6 new assertions: accuracy arithmetic, the step callback firing while walking, the table capped at
+  five and sorted by score.
+
+**Screenshots** regenerated: 11 frames, 297 KB total after WebP conversion.
+
+
 ## 1.11.2 — 2026-11-19
 
 **`neon-engine` went from 2 to 86 documented exports**

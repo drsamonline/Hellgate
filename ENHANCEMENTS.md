@@ -23,9 +23,9 @@ Cheap, low-risk, immediately noticeable. All `S`.
 7. **Fullscreen toggle** — `F` calls `requestFullscreen`; pointer lock works better fullscreen anyway. `main.js` · S · medium
 8. **No wasted pickups** — health and armour are consumed even at 100; refuse the pickup (with a click) instead of eating it. `main.js` · S · medium — ✓ shipped
 9. **Seed in the URL** — `history.replaceState` on start so a run is linkable and reload-safe; the game already reads `?seed=`. `main.js` · S · medium — ✓ shipped
-10. **Copy-seed button on the game-over screen** — "you died on this seed, try again / share it". `index.html` + `main.js` · S · medium
-11. **Top-5 best runs** — one best run is a weak hook; keep a small table of waves/kills/seed/date. `main.js` · S · medium
-12. **Footsteps** — a filtered noise burst on each bob cycle, quieter when walking. Big cheap presence win. `player.js` + `audio.js` · S · high
+10. **Copy-seed button on the game-over screen** — "you died on this seed, try again / share it". `index.html` + `main.js` · S · medium — ✓ shipped
+11. **Top-5 best runs** — one best run is a weak hook; keep a small table of waves/kills/seed/date. `main.js` · S · medium — ✓ shipped
+12. **Footsteps** — a filtered noise burst on each bob cycle, quieter when walking. Big cheap presence win. `player.js` + `audio.js` · S · high — ✓ shipped
 13. **Exit compass** — when the exit opens, a small HUD arrow points at it; finding the pad in a 10-room arena is currently the least fun part of a wave. `hud.js` · S · high — ✓ shipped
 14. **Weapon raise/lower on switch** — a 120 ms dip sells the swap. `weapons.js` · S · medium — ✓ shipped
 15. **Pause on window blur** — `visibilitychange` covers tab switches, not alt-tab to another window. `main.js` · S · low
@@ -43,7 +43,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 24. **Grenade / alt-fire** — a right-click with a bounce and a fuse. `projectiles.js` · M · medium
 25. **Difficulty presets** — Easy/Normal/Hard as multipliers on enemy hp, damage and count. One object, three numbers. `main.js` · S · high — ✓ shipped
 26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high — ✓ shipped
-27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium
+27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium — ✓ shipped (accuracy, shots, damage taken; favourite weapon not built)
 28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low
 29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low
 30. **Sprint stamina** — or explicitly not: the current infinite sprint is a design choice. Decide and document it. `player.js` · S · low

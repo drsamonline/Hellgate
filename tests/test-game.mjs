@@ -254,6 +254,31 @@ ok(HG.powers.cdMul < cdBefore, 'cooldown upgrade lowers the multiplier');
 HG.game.state = 'playing';
 frames(2);
 
+console.log('\n== run stats and the top five ==');
+HG.game.state = 'playing';
+HG.weapons.shots = 40;
+HG.weapons.hits = 30;
+const st = HG.runStats();
+ok(st.accuracy === 75, 'accuracy is hits over shots: ' + st.accuracy + '%');
+ok(typeof st.damageTaken === 'number', 'damage taken is tracked');
+ok(HG.player.onStep === undefined || typeof HG.player.onStep === 'function', 'a footstep callback can be attached');
+
+let steps = 0;
+HG.player.onStep = () => { steps++; };
+HG.input.move.y = -1;
+frames(90);
+ok(steps > 0, 'walking produces footsteps: ' + steps);
+HG.input.move.y = 0;
+HG.player.onStep = null;
+
+for (let i = 0; i < 7; i++) {
+  HG.recordRun({ score: 100 * (i + 1), waves: i, kills: i * 2, seed: 's' + i });
+}
+const top = HG.topRuns();
+ok(top.length === 5, 'only five runs are kept (' + top.length + ')');
+ok(top[0].score === 700, 'the table is sorted by score (' + top[0].score + ')');
+ok(top[4].score === 300, 'the lowest of the kept five is 300');
+
 console.log('\n== trinkets (loot) ==');
 const { TRINKETS: TK, sumEffects, SLOTS: SL } = await import('../play/src/loot.js');
 ok(TK.length === 6, 'six trinkets defined');

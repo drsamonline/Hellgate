@@ -169,6 +169,23 @@ export class Sfx {
         this.noise(0.3, 0.3, 'bandpass', 900, 400);
         this.tone(300, 0.25, 'triangle', 0.1, 500);
         break;
+      case 'step': {
+        // a short filtered thud; the player's own feet, not an event
+        const t = ctx.currentTime;
+        const src = this.noise();
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 260 + Math.random() * 90;
+        bp.Q.value = 1.2;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(0.09, t + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0008, t + 0.11);
+        src.connect(bp).connect(g).connect(this.master);
+        src.start(t);
+        src.stop(t + 0.14);
+        break;
+      }
       case 'pickup':
         this.tone(660, 0.09, 'square', 0.12, 880);
         this.tone(990, 0.1, 'square', 0.1, 1320, 0.07);

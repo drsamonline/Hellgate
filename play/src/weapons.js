@@ -43,6 +43,8 @@ export class Weapons {
     this.kick = 0;
     this.raise = 0;   // 1 = fully lowered, decays to 0 after a swap
     this.bob = 0;
+    this.shots = 0;   // accuracy stat
+    this.hits = 0;
     this.models = [];
     this.muzzleTimer = 0;
 
@@ -211,7 +213,11 @@ export class Weapons {
       }
     }
 
-    if (anyHit) hud.hitmarker();
+    this.shots++;
+    if (anyHit) {
+      this.hits++;
+      hud.hitmarker();
+    }
     else this.audio.play('wall');
   }
 

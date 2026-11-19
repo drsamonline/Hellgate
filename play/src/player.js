@@ -147,7 +147,12 @@ export class Player {
 
     // ---- camera smoothing + head bob ------------------------------------
     const sp = Math.hypot(this.vel.x, this.vel.z);
+    const prevBob = this.bob;
     this.bob += dt * sp * 1.7;
+    // a footfall on each half cycle of the bob, silent when standing still
+    if (this.onStep && sp > 0.5 && Math.floor(prevBob / Math.PI) !== Math.floor(this.bob / Math.PI)) {
+      this.onStep(sp);
+    }
     const bobAmt = this.reducedMotion ? 0 : Math.min(1, sp / WALK);
     const bobY = Math.sin(this.bob * 2) * 0.035 * bobAmt;
     const bobRoll = this.reducedMotion ? 0 : Math.cos(this.bob) * 0.012 * bobAmt;

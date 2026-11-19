@@ -1000,6 +1000,35 @@ function resumeGame() {
   clock.getDelta();
 }
 
+function runStats() {
+  const acc = weapons.shots ? Math.round((weapons.hits / weapons.shots) * 100) : 0;
+  return {
+    waves: game.wave,
+    kills: game.kills,
+    score: game.score,
+    accuracy: acc,
+    shots: weapons.shots,
+    damageTaken: Math.round(game.damageTaken || 0),
+    relic: game.relicsTotal - game.relics.length,
+    seed: game.seed,
+  };
+}
+
+function topRuns() {
+  try {
+    return JSON.parse(localStorage.getItem('hellgate.runs') || '[]');
+  } catch (e) { return []; }
+}
+
+function recordRun(st) {
+  const runs = topRuns();
+  runs.push({ score: st.score, wave: st.waves, kills: st.kills, seed: st.seed, date: Date.now() });
+  runs.sort((a, b) => b.score - a.score);
+  const top = runs.slice(0, 5);
+  try { localStorage.setItem('hellgate.runs', JSON.stringify(top)); } catch (e) { /* private mode */ }
+  return top;
+}
+
 function gameOver() {
   if (game.state !== 'playing') return;
   game.state = 'dead';
@@ -1016,12 +1045,52 @@ function gameOver() {
     saveBest(game.best);
   }
 
-  document.getElementById('stats').innerHTML =
-    `SCORE <b>${game.score}</b><br />` +
-    `WAVES SURVIVED <b>${wavesSurvived}</b><br />` +
-    `KILLS <b>${game.kills}</b><br />` +
-    `REACHED WAVE <b>${game.wave}</b><br />` +
-    `SEED <b>${escapeHtml(game.seed)}</b>`;
+  const st = runStats();
+  const top = recordRun(st);
+  const rows = top
+    .map((r, i) => `<li class="${r.seed === st.seed && r.score === st.score ? 'you' : ''}">
+      <b>${i + 1}</b><span>${r.score}</span><i>wave ${r.wave} · ${r.kills} kills</i></li>`)
+    .join('');
+
+  document.getElementById('stats').innerHTML = `
+    <div class="goGrid">
+      <div>
+        <p>SCORE <b>${st.score}</b></p>
+        <p>WAVES SURVIVED <b>${wavesSurvived}</b></p>
+        <p>REACHED WAVE <b>${st.waves}</b></p>
+        <p>KILLS <b>${st.kills}</b></p>
+      </div>
+      <div>
+        <p>ACCURACY <b>${st.accuracy}%</b></p>
+        <p>SHOTS <b>${st.shots}</b></p>
+        <p>DAMAGE TAKEN <b>${st.damageTaken}</b></p>
+        <p>RELICS <b>${st.relic}/${game.relicsTotal}</b></p>
+      </div>
+    </div>
+    <p class="seedline">SEED <b>${escapeHtml(st.seed)}</b>
+      <button id="copySeed" class="ghost tiny">copy</button></p>
+    <h4 class="tophdr">BEST RUNS</h4>
+    <ol class="topruns">${rows}</ol>`;
+
+  const copy = document.getElementById('copySeed');
+  if (copy) {
+    copy.addEventListener('click', () => {
+      const url = location.origin + location.pathname + 'play/?seed=' + encodeURIComponent(st.seed);
+      const done = () => { copy.textContent = 'copied'; setTimeout(() => { copy.textContent = 'copy'; }, 1400); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done).catch(done);
+      } else {
+        const t = document.createElement('textarea');
+        t.value = url;
+        document.body.appendChild(t);
+        t.select();
+        try { document.execCommand('copy'); } catch (e) { /* nothing else to try */ }
+        document.body.removeChild(t);
+        done();
+      }
+    });
+  }
+
   showScreen('gameover');
   hud.setVisible(false);
 }
@@ -1492,6 +1561,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
+  runStats, topRuns, recordRun, gameOver,
   openLore, closeLore, resolveChoice, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },
