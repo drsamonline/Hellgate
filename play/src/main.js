@@ -311,6 +311,7 @@ function buildRun(seed, zoneDef) {
   }
   // footsteps were wired into the player in 1.12.0 and never connected here: the
   // suite tested the callback, not the integration, so the game had no steps
+  hud.damageNumbers = !settings.reducedMotion;
   player.onStep = (speed) => audio.play('step', null, { gain: speed > 6.5 ? 1 : 0.7 });
 
   // one line-of-sight test per sound, only for sounds that carry a position

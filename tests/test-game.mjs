@@ -274,6 +274,30 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== crouch and damage numbers ==');
+HG.game.state = 'playing';
+HG.input.keys = Object.create(null);
+HG.player.crouch = 0;
+frames(2);
+const standEye = HG.player.camera.position.y;
+HG.input.keys['ControlLeft'] = true;
+frames(30);
+const crouchEye = HG.player.camera.position.y;
+ok(HG.player.crouch > 0.8, 'holding control crouches (' + HG.player.crouch.toFixed(2) + ')');
+ok(crouchEye < standEye - 0.3, 'crouching lowers the eye (' + standEye.toFixed(2) + ' -> ' + crouchEye.toFixed(2) + ')');
+HG.input.keys['ControlLeft'] = false;
+frames(30);
+ok(HG.player.crouch < 0.2, 'releasing it stands back up');
+
+const kidsBefore = document.body.children.length;
+HG.hud.damageNumbers = true;
+HG.hud.damageNumber({ project() { this.z = 0.5; }, clone() { return { x: 0, y: 0, z: 0, project() { this.z = 0.5; } }; } }, 42, HG.player.camera, false);
+ok(document.body.children.length > kidsBefore, 'a damage number is added to the page');
+HG.hud.damageNumbers = false;
+const n2 = document.body.children.length;
+HG.hud.damageNumber({ project() {}, clone() { return this; } }, 42, HG.player.camera, false);
+ok(document.body.children.length === n2, 'turning damage numbers off stops them');
+
 console.log('\n== weapon attribution ==');
 HG.game.weaponKills = {};
 HG.enemies.clear();

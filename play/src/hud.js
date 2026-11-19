@@ -31,6 +31,7 @@ export class HUD {
     this.elBossName = document.getElementById('bossname');
     this.elPrompt = document.getElementById('prompt');
     this.elFeed = document.getElementById('killfeed');
+    this.damageNumbers = true;
     this.elBuffs = document.getElementById('buffs');
     this.promptText = '';
     this.slotSig = '';
@@ -53,6 +54,26 @@ export class HUD {
     this.hitT = 0;
     this.toastT = 0;
     this.drawFace(100);
+  }
+
+  /** A number that floats up from where the hit landed and fades. */
+  damageNumber(worldPos, amount, camera, crit = false) {
+    if (!this.damageNumbers || !worldPos || !camera) return;
+    // needs a Vector3: a plain {x,y,z} has nothing to project with
+    if (typeof worldPos.project !== 'function' && typeof worldPos.clone !== 'function') return;
+    const v = worldPos.clone ? worldPos.clone() : worldPos;
+    if (typeof v.project !== 'function') return;
+    v.project(camera);
+    if (v.z > 1) return; // behind the camera
+    const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+    const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+    const el = document.createElement('div');
+    el.className = 'dmgnum' + (crit ? ' crit' : '');
+    el.textContent = String(Math.max(1, Math.round(amount)));
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 700);
   }
 
   /** One line in the corner: who died, and to what. */

@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.16.0 — 2026-11-19
+
+**Crouch** (roadmap 31)
+- `Ctrl` or `C` lowers the eye from 1.62 m to 1.05 m and takes 45 % off your speed, easing in over about
+  80 ms. Sprint is disabled while crouched. The hit sphere is still a fixed cylinder — that half of the
+  item is not built.
+
+**Damage numbers** (roadmap 29)
+- the damage a shot lands floats up from the hit point and fades over 0.7 s, larger and orange above 60.
+  Off when reduced motion is on, because it is motion.
+
+**Guarded**
+- `damageNumber` needs a `Vector3` to project; a plain `{x, y, z}` is refused rather than throwing.
+
+
 ## 1.15.0 — 2026-11-19
 
 **Weapon attribution**

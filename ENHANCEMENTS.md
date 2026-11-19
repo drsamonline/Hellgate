@@ -45,9 +45,9 @@ Cheap, low-risk, immediately noticeable. All `S`.
 26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high — ✓ shipped
 27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium — ✓ shipped
 28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low — ✓ shipped
-29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low
+29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low — ✓ shipped (off with reduced motion)
 30. **Sprint stamina** — or explicitly not: the current infinite sprint is a design choice. Decide and document it. `player.js` · S · low
-31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium
+31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium — ✓ shipped (eye and speed; the hit sphere is still a fixed cylinder)
 32. **Secret rooms** — a wall texture that differs by one pixel, and a room behind it. Pure Doom. `level.js` · M · medium
 33. **Destructible props** — barrels that explode, crates that block. `level.js` + `projectiles.js` · L · medium
 34. **Pickup bob + glow** — pickups already rotate; add a small point light or a sprite halo so they read in the dark. `main.js` · S · medium — ✓ shipped (sprite halo)

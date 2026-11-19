@@ -33,6 +33,7 @@ export class Player {
     this.yaw = 0;
     this.pitch = 0;
     this.eyeY = EYE;
+    this.crouch = 0;   // 0 standing, 1 fully crouched
     this.bob = 0;
     this.roll = 0;
 
@@ -61,6 +62,7 @@ export class Player {
     this.yaw = lookYaw;
     this.pitch = 0;
     this.eyeY = this.pos.y + EYE;
+    this.crouch = 0;
     this.bob = 0;
     this.roll = 0;
     this.health = 100;
@@ -101,8 +103,12 @@ export class Player {
     const wx = ix * cosY + iz * sinY;
     const wz = -ix * sinY + iz * cosY;
 
-    const sprint = !!(keys['ShiftLeft'] || keys['ShiftRight']);
-    const speed = (sprint ? SPRINT : WALK) * this.speedMul;
+    // crouch lowers the eye and slows you: cover becomes something you use
+    const wantsCrouch = !!(keys['ControlLeft'] || keys['ControlRight'] || keys['KeyC']);
+    this.crouch += ((wantsCrouch ? 1 : 0) - this.crouch) * (1 - Math.exp(-12 * dt));
+    const crouching = this.crouch > 0.5;
+    const sprint = !crouching && !!(keys['ShiftLeft'] || keys['ShiftRight']);
+    const speed = (sprint ? SPRINT : WALK) * this.speedMul * (1 - 0.45 * this.crouch);
     const k = 1 - Math.exp(-ACCEL * dt);
     this.vel.x += (wx * speed - this.vel.x) * k;
     this.vel.z += (wz * speed - this.vel.z) * k;
@@ -157,7 +163,8 @@ export class Player {
     const bobY = Math.sin(this.bob * 2) * 0.035 * bobAmt;
     const bobRoll = this.reducedMotion ? 0 : Math.cos(this.bob) * 0.012 * bobAmt;
 
-    this.eyeY += (this.pos.y + EYE - this.eyeY) * (1 - Math.exp(-16 * dt));
+    const eyeTarget = this.pos.y + EYE - 0.57 * this.crouch;
+    this.eyeY += (eyeTarget - this.eyeY) * (1 - Math.exp(-16 * dt));
     this.roll += (bobRoll - this.roll) * (1 - Math.exp(-12 * dt));
 
     this.camera.position.set(this.pos.x, this.eyeY + bobY, this.pos.z);
