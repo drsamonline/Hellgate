@@ -42,6 +42,7 @@ python3 -m http.server 8000  # local dev: / is the landing page, /play/ is the g
 | `play/src/props.js` | instanced decor and animals |
 | `play/src/companion.js` | the ally drone |
 | `play/src/lore.js` | wall terminals and their text |
+| `play/src/loot.js` | trinket table, drop roll, effect summing |
 | `play/src/main.js` also owns | the run save (`hellgate.save`) and the status panel |
 | `play/src/touch.js` | mobile controls |
 | `play/src/settings.js` | the persisted settings |

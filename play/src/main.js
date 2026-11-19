@@ -22,6 +22,7 @@ import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
 import { Lore } from './lore.js';
+import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
 const canvas = document.getElementById('game');
@@ -92,6 +93,7 @@ function saveRun() {
       hp: Math.round(player.health),
       armor: Math.round(player.armor),
       ammo: { ...player.ammo },
+      trinkets: game.trinkets.slice(),
       ts: Date.now(),
     }));
   } catch (e) { /* private mode */ }
@@ -144,6 +146,8 @@ const game = {
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
   upgrades: {},
+  trinkets: [],
+  drops: [],
   wave: 0,
   kills: 0,
   waveKills: 0,
@@ -263,7 +267,13 @@ function buildRun(seed, zoneDef) {
   projectiles.onKill = () => { game.kills++; };
   enemies = new EnemyManager(scene, level, effects, audio);
   enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
-  enemies.onKill = () => { game.kills++; game.waveKills++; };
+  enemies.onKill = (e) => {
+    game.kills++;
+    game.waveKills++;
+    if (player.leech > 0) player.heal(player.leech);
+    const id = rollDrop(Math.random);
+    if (id && e) dropTrinket(id, e.pos);
+  };
 
   props = new Props(scene, level, zone);
   lore = new Lore(scene, level, zone);
@@ -317,6 +327,10 @@ function resumeRun(save) {
   player.health = Math.min(getClass(save.classId).hp, save.hp || getClass(save.classId).hp);
   player.armor = save.armor || 0;
   if (save.ammo) Object.assign(player.ammo, save.ammo);
+  if (Array.isArray(save.trinkets)) {
+    game.trinkets = save.trinkets.slice(0, SLOTS);
+    recomputeStats();
+  }
   startWave(Math.max(1, save.wave || 1));
   game.state = 'playing';
   hud.setVisible(true);
@@ -338,13 +352,16 @@ function syncHud() {
 function recomputeStats() {
   const def = getClass(game.classId);
   const u = game.upgrades;
-  player.baseDamage = def.damage * (1 + 0.15 * (u.damage || 0));
-  player.baseSpeed = def.speed * (1 + 0.1 * (u.speed || 0));
-  player.maxHp = def.hp + 25 * (u.hp || 0);
+  const t = sumEffects(game.trinkets);
+  player.baseDamage = def.damage * (1 + 0.15 * (u.damage || 0)) * (1 + (t.damage || 0));
+  player.baseSpeed = def.speed * (1 + 0.1 * (u.speed || 0)) * (1 + (t.speed || 0));
+  player.maxHp = def.hp + 25 * (u.hp || 0) + (t.hp || 0);
   player.damageMul = player.baseDamage;
   player.speedMul = player.baseSpeed;
-  powers.regenMul = 1 + 0.3 * (u.energy || 0);
+  powers.regenMul = (1 + 0.3 * (u.energy || 0)) * (1 + (t.energy || 0));
   powers.cdMul = Math.pow(0.85, u.cooldown || 0);
+  player.startArmourBonus = (t.armour || 0);
+  player.leech = t.leech || 0;
   player.health = Math.min(player.health, player.maxHp);
 }
 
@@ -355,7 +372,7 @@ function applyClass(classId) {
   saveSettings(settings);
   recomputeStats();
   player.health = player.maxHp;
-  player.armor = def.armor + 20 * (game.upgrades.armour || 0);
+  player.armor = def.armor + 20 * (game.upgrades.armour || 0) + (player.startArmourBonus || 0);
   weapons.select(def.weapon, true);
   weapons.cd = 0;
   powers.equip(def);
@@ -393,6 +410,53 @@ function clearRelics() {
     r.mesh.material.dispose();
   }
   game.relics.length = 0;
+}
+
+function dropTrinket(id, pos) {
+  const t = trinketById(id);
+  if (!t) return;
+  const mesh = new THREE.Mesh(
+    new THREE.TetrahedronGeometry(0.24, 0),
+    new THREE.MeshBasicMaterial({ color: t.color })
+  );
+  const y = floorHeightAt(level, pos.x, pos.z) + 0.6;
+  mesh.position.set(pos.x, y, pos.z);
+  scene.add(mesh);
+  game.drops.push({ id, mesh, x: pos.x, z: pos.z, baseY: y, t: 0 });
+}
+
+function updateDrops(dt) {
+  for (let i = game.drops.length - 1; i >= 0; i--) {
+    const d = game.drops[i];
+    d.t += dt;
+    d.mesh.rotation.y += dt * 2;
+    d.mesh.position.y = d.baseY + Math.sin(d.t * 3) * 0.08;
+    if (Math.hypot(d.x - player.pos.x, d.z - player.pos.z) > 1.3) continue;
+
+    const t = trinketById(d.id);
+    if (game.trinkets.length < SLOTS) {
+      game.trinkets.push(d.id);
+      recomputeStats();
+      hud.toast('TRINKET  ' + t.name + '  ·  ' + t.blurb, 2.2);
+    } else {
+      game.score += SPARE_VALUE;
+      hud.toast('BELT FULL  ·  ' + t.name + ' sold for ' + SPARE_VALUE, 2);
+    }
+    audio.play('key', { x: d.x, z: d.z });
+    scene.remove(d.mesh);
+    d.mesh.geometry.dispose();
+    d.mesh.material.dispose();
+    game.drops.splice(i, 1);
+  }
+}
+
+function clearDrops() {
+  for (const d of game.drops) {
+    scene.remove(d.mesh);
+    d.mesh.geometry.dispose();
+    d.mesh.material.dispose();
+  }
+  game.drops.length = 0;
 }
 
 function updateRelics(dt) {
@@ -783,6 +847,11 @@ function renderInventory() {
     <div class="invcol">
       <h4>POWERS</h4><ul>${pw}</ul>
       <h4>BUFFS</h4><ul>${buffs}</ul>
+      <h4>BELT ${game.trinkets.length}/${SLOTS}</h4>
+      <ul>${game.trinkets.map((id) => {
+        const t = trinketById(id);
+        return `<li><b>${t.name}</b><span>${t.blurb}</span></li>`;
+      }).join('') || '<li class="dim"><b>empty</b></li>'}</ul>
     </div>
     <div class="invcol">
       <h4>${zone.name}</h4>
@@ -1191,6 +1260,7 @@ function update(dt) {
   if (companion) companion.update(dt, player, enemies);
   if (props) props.update(dt, player);
   updateRelics(dt);
+  updateDrops(dt);
   effects.update(dt);
   updatePickups(dt);
   checkWave();
@@ -1340,7 +1410,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
-  takeUpgrade, UPGRADES,
+  takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
   openLore, closeLore, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },

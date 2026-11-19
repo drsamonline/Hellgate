@@ -137,6 +137,24 @@ The boss reads its own health every frame and escalates:
 
 The health bar carries the phase number. The chest core brightens as it climbs.
 
+## Trinkets
+
+A kill has a 12% chance to drop one. Walk over it: it takes a belt slot. Three fit. A fourth does not
+displace anything — it is sold for 100 score, which is a real decision rather than a punishment.
+
+| Trinket | Effect |
+| --- | --- |
+| Whetstone | +8% weapon damage |
+| Thick Hide | +15 max health |
+| Dry Cell | +20% energy regeneration |
+| Light Boots | +8% movement speed |
+| Iron Plate | +15 starting armour |
+| Ember | heal 2 on every kill |
+
+Effects are summed by `sumEffects()` and folded into `recomputeStats()`, so a trinket composes with the
+class, the between-zone upgrades and the timed pickups without any special casing. The belt is part of
+the run save.
+
 ## Status panel
 
 `Tab` freezes the game and shows what you have: class, health, armour, energy, the three weapons with

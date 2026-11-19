@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.8.0 — 2026-11-19
+
+**Trinkets**
+- six passive trinkets drop from kills at 12%: damage, max health, energy regeneration, movement
+  speed, starting armour, and 2 health per kill.
+- three fit in the belt; a fourth is sold for 100 score rather than displacing anything.
+- effects are summed by `sumEffects()` and folded into `recomputeStats()`, so trinkets compose with the
+  class, the between-zone upgrades and the timed pickups. The belt is part of the run save and shown
+  in the status panel.
+
+**Tests**
+- 8 new assertions: the table, the slot count, effect summing, each effect reaching the player, a
+  fourth drop not fitting, and spares paying score.
+
+
 ## 1.7.0 — 2026-11-19
 
 **The warden's phases**

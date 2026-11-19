@@ -95,7 +95,7 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 **Feel** — Doom-style face that degrades with health · damage direction arrows · red edge vignette · weapon sway and bob · pooled particles, tracers, decals and lights (nothing allocates per shot).
 
-**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · five zones with unlock progression, the last one a three-phase boss · an upgrade choice between zones · a run saved at every wave and offered as Continue · a status panel on Tab · a relic side objective in every zone · wall terminals to read · timed damage and haste pickups · a story cold open · mobile touch controls.
+**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · five zones with unlock progression, the last one a three-phase boss · an upgrade choice between zones · trinkets that drop from kills · a run saved at every wave and offered as Continue · a status panel on Tab · a relic side objective in every zone · wall terminals to read · timed damage and haste pickups · a story cold open · mobile touch controls.
 
 **Meta** — seeded maps · three difficulty presets · score with a per-wave time bonus · wave difficulty curve · procedural pickups · keycard gate · title / pause / game-over screens · best run in `localStorage`.
 
@@ -122,6 +122,7 @@ play/src/story.js     the cold open: typed panels over a camera flythrough
 play/src/props.js     instanced trees, rocks and grass; animals that bolt
 play/src/companion.js the drone that follows you and shoots
 play/src/lore.js      wall terminals you can read with V
+play/src/loot.js      trinkets: what a kill can drop, and what they do
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG
