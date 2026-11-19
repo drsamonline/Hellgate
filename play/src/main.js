@@ -146,6 +146,7 @@ const game = {
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
   upgrades: {},
+  weaponKills: {},
   trinkets: [],
   drops: [],
   loreChoices: {},
@@ -268,10 +269,18 @@ function buildRun(seed, zoneDef) {
   projectiles.onKill = () => { game.kills++; };
   enemies = new EnemyManager(scene, level, effects, audio);
   enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
-  enemies.onKill = (e) => {
+  enemies.onKill = (e, weaponName) => {
     game.kills++;
     game.waveKills++;
-    if (hud && e && e.T) hud.feed(String(e.T.label || e.type || 'ENEMY').toUpperCase(), 'DOWN');
+    if (weaponName) {
+      game.weaponKills[weaponName] = (game.weaponKills[weaponName] || 0) + 1;
+    }
+    if (hud && e && e.T) {
+      hud.feed(
+        String(e.T.label || e.type || 'ENEMY').toUpperCase(),
+        weaponName || 'DOWN'
+      );
+    }
     if (player.leech > 0) player.heal(player.leech);
     const id = rollDrop(Math.random);
     if (id && e) dropTrinket(id, e.pos);
@@ -302,7 +311,7 @@ function buildRun(seed, zoneDef) {
   }
   // footsteps were wired into the player in 1.12.0 and never connected here: the
   // suite tested the callback, not the integration, so the game had no steps
-  player.onStep = (speed) => audio.play('step', { gain: speed > 6.5 ? 1 : 0.7 });
+  player.onStep = (speed) => audio.play('step', null, { gain: speed > 6.5 ? 1 : 0.7 });
 
   // one line-of-sight test per sound, only for sounds that carry a position
   audio.occludeTest = (x, z) =>
@@ -1025,6 +1034,7 @@ function runStats() {
     shots: weapons.shots,
     damageTaken: Math.round(game.damageTaken || 0),
     relic: game.relicsTotal - game.relics.length,
+    favourite: Object.entries(game.weaponKills || {}).sort((a, b) => b[1] - a[1])[0] || null,
     seed: game.seed,
   };
 }
@@ -1081,6 +1091,7 @@ function gameOver() {
         <p>SHOTS <b>${st.shots}</b></p>
         <p>DAMAGE TAKEN <b>${st.damageTaken}</b></p>
         <p>RELICS <b>${st.relic}/${game.relicsTotal}</b></p>
+        <p>FAVOURITE <b>${st.favourite ? st.favourite[0] + ' · ' + st.favourite[1] : '—'}</b></p>
       </div>
     </div>
     <p class="seedline">SEED <b>${escapeHtml(st.seed)}</b>

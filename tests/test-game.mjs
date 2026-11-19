@@ -274,6 +274,19 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== weapon attribution ==');
+HG.game.weaponKills = {};
+HG.enemies.clear();
+HG.enemies.spawnAt('imp', HG.player.pos.x + 6, HG.player.pos.z, 1);
+frames(2);
+const imp = HG.enemies.list[0];
+imp.hurt(999, { level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, onKill: HG.enemies.onKill, weapon: 'SHOTGUN' }, { x: 0, y: 0, z: 1 });
+frames(2);
+ok(HG.game.weaponKills.SHOTGUN === 1, 'a kill is attributed to the weapon that made it');
+const st2 = HG.runStats();
+ok(st2.favourite && st2.favourite[0] === 'SHOTGUN', 'the favourite weapon is the top of that table');
+ok(typeof HG.audio.play === 'function', 'play takes an options argument now');
+
 console.log('\n== run stats and the top five ==');
 HG.game.state = 'playing';
 HG.weapons.shots = 40;

@@ -43,6 +43,9 @@ export class Sfx {
 
   // a panner + distance gain for one sound, or null when it is out of earshot
   spatialOut(at) {
+    // callers pass `{ gain: 0.7 }` when they mean an option, not a position;
+    // panGain would turn that into NaN and the sound would never be heard
+    if (!at || typeof at.x !== 'number' || typeof at.z !== 'number') return this.master;
     const { pan, gain } = panGain(at, this.listener);
     if (gain <= 0.03) return null;
     const p = this.ctx.createStereoPanner();
@@ -178,7 +181,7 @@ export class Sfx {
     this.drone = null;
   }
 
-  play(name, at) {
+  play(name, at, opts = {}) {
     if (!this.ctx || this.muted) return;
     this._pitch = 0.94 + Math.random() * 0.12; // no two plays are identical
     if (at) {
@@ -235,6 +238,26 @@ export class Sfx {
         this.tone(260, 0.5, 'sawtooth', 0.2, 60);
         this.noise(0.4, 0.25, 'lowpass', 900, 200);
         break;
+      case 'spot': {
+        // a bark on sight: a short growl, pitched per enemy type
+        const t = ctx.currentTime;
+        const o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        const base = opts && opts.pitch ? 120 * opts.pitch : 120;
+        o.frequency.setValueAtTime(base, t);
+        o.frequency.exponentialRampToValueAtTime(base * 1.6, t + 0.18);
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 900;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.13, t + 0.03);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+        o.connect(lp).connect(g).connect(this._out || this.master);
+        o.start(t);
+        o.stop(t + 0.34);
+        break;
+      }
       case 'enemyShoot':
         this.tone(620, 0.18, 'square', 0.12, 240);
         break;
@@ -252,7 +275,7 @@ export class Sfx {
         bp.Q.value = 1.2;
         const g = ctx.createGain();
         g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(0.09, t + 0.008);
+        g.gain.linearRampToValueAtTime(0.09 * (opts && opts.gain ? opts.gain : 1), t + 0.008);
         g.gain.exponentialRampToValueAtTime(0.0008, t + 0.11);
         src.connect(bp).connect(g).connect(this.master);
         src.start(t);

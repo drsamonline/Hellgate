@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.15.0 — 2026-11-19
+
+**Weapon attribution**
+- a kill records the weapon that made it, so the kill feed reads `IMP → CHAINGUN` and the game-over
+  screen shows the favourite weapon with its count.
+
+**Enemy barks** (roadmap 35)
+- a growl the first time an enemy sees you, pitched per type: the warden low, the hound high, the imp
+  and the grunt between. Positioned and occluded like every other sound.
+
+**Two audio bugs found on the way**
+- `play(name, at)` took no options, so `play('step', { gain })` passed an option object where a
+  position was expected, and `panGain` turned it into `NaN` — footsteps were silent even after being
+  wired in 1.14.0. `play` now takes `(name, at, opts)` and `spatialOut` refuses a position without
+  numeric `x`/`z`.
+- the step sound ignored its gain option entirely.
+
+**Feed**
+- `hud.feed` used `prepend` and `lastChild.remove()`, neither of which the test DOM has. Falls back to
+  append and `removeChild`.
+
+
 ## 1.14.0 — 2026-11-19
 
 **Chaingun** (roadmap 23)

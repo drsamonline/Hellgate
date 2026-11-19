@@ -20,7 +20,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 4. **Volume + mute** — `M` to mute, a gain slider, persisted. `audio.js` · S · medium — ✓ shipped
 5. **Weapon cycle on the wheel** — `wheel` already means nothing in a pointer-locked canvas. `main.js` · S · medium — ✓ shipped
 6. **Restart from the pause menu** — currently you must die or reload to reseed. `main.js` · S · medium — ✓ shipped
-7. **Fullscreen toggle** — `F` calls `requestFullscreen`; pointer lock works better fullscreen anyway. `main.js` · S · medium
+7. **Fullscreen toggle** — `F` calls `requestFullscreen`; pointer lock works better fullscreen anyway. `main.js` · S · medium — ✓ shipped
 8. **No wasted pickups** — health and armour are consumed even at 100; refuse the pickup (with a click) instead of eating it. `main.js` · S · medium — ✓ shipped
 9. **Seed in the URL** — `history.replaceState` on start so a run is linkable and reload-safe; the game already reads `?seed=`. `main.js` · S · medium — ✓ shipped
 10. **Copy-seed button on the game-over screen** — "you died on this seed, try again / share it". `index.html` + `main.js` · S · medium — ✓ shipped
@@ -36,22 +36,22 @@ Cheap, low-risk, immediately noticeable. All `S`.
 17. **Enemy navigation** — replace direct steering with a flow field over the grid (BFS from the player, recomputed every ~0.5 s, shared by all enemies). This is the single biggest gameplay fix: enemies currently stall on long walls. `level.js` + `enemies.js` · M · very high — ✓ shipped
 18. **Sound occlusion** — attenuate enemy sounds by line of sight, so a grunt behind a wall is muffled. `audio.js` · M · high — ✓ shipped (lowpass at 640 Hz, −55 % gain)
 19. **Directional audio** — a `PannerNode` per enemy, or at least a left/right gain based on the angle to the camera. `audio.js` · M · high — ✓ shipped
-20. **Hit-direction indicator on enemies** — a brief arc showing where damage came from, so you can find the imp shooting you from behind. `enemies.js` · M · high
+20. **Hit-direction indicator on enemies** — a brief arc showing where damage came from, so you can find the imp shooting you from behind. `enemies.js` · M · high — ✓ shipped (`hud.damageFrom`)
 21. **A third enemy type** — a fast melee "hound" that dies in one shotgun blast. Forces weapon switching. `enemies.js` · M · high — ✓ shipped
 22. **Boss wave every 5th wave** — one large, slow, high-HP enemy with a telegraphed area attack. Gives a run a shape. `enemies.js` · M · high — ✓ shipped
 23. **Weapon 4: chaingun** — sustained fire, wide spread, spin-up. Exercises the ammo/pickup path and rewards holding a lane. `weapons.js` · M · medium — ✓ shipped
 24. **Grenade / alt-fire** — a right-click with a bounce and a fuse. `projectiles.js` · M · medium
 25. **Difficulty presets** — Easy/Normal/Hard as multipliers on enemy hp, damage and count. One object, three numbers. `main.js` · S · high — ✓ shipped
 26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high — ✓ shipped
-27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium — ✓ shipped (accuracy, shots, damage taken; favourite weapon not built)
-28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low — ✓ shipped (enemy and outcome; weapon attribution still missing)
+27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium — ✓ shipped
+28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low — ✓ shipped
 29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low
 30. **Sprint stamina** — or explicitly not: the current infinite sprint is a design choice. Decide and document it. `player.js` · S · low
 31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium
 32. **Secret rooms** — a wall texture that differs by one pixel, and a room behind it. Pure Doom. `level.js` · M · medium
 33. **Destructible props** — barrels that explode, crates that block. `level.js` + `projectiles.js` · L · medium
 34. **Pickup bob + glow** — pickups already rotate; add a small point light or a sprite halo so they read in the dark. `main.js` · S · medium — ✓ shipped (sprite halo)
-35. **Enemy audio barks** — a synthesised growl on sight, a death cry per type. `audio.js` · S · medium
+35. **Enemy audio barks** — a synthesised growl on sight, a death cry per type. `audio.js` · S · medium — ✓ shipped (bark on sight, pitched per type)
 36. **Ambient drone** — a low, slowly modulated pad so silence is not dead air. `audio.js` · S · medium — ✓ shipped
 
 ## Tier 2 — Medium (a weekend each)

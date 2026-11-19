@@ -61,8 +61,14 @@ export class HUD {
     const row = document.createElement('div');
     row.className = 'feedrow';
     row.innerHTML = `<b>${what}</b><i>${how}</i>`;
-    this.elFeed.prepend(row);
-    while (this.elFeed.children.length > 5) this.elFeed.lastChild.remove();
+    // prepend, with an append fallback: the test DOM has no prepend
+    if (this.elFeed.prepend) this.elFeed.prepend(row);
+    else this.elFeed.appendChild(row);
+    while (this.elFeed.children.length > 5) {
+      const last = this.elFeed.lastChild;
+      if (!last) break;
+      this.elFeed.removeChild(last);
+    }
     setTimeout(() => row.classList.add('fade'), 3200);
     setTimeout(() => row.remove(), 4200);
   }

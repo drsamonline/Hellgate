@@ -214,6 +214,7 @@ export class Weapons {
         const killed = eh.enemy.hurt(dmg, {
           level, player, effects: this.effects, audio: this.audio, projectiles,
           onKill: ctx.onKill,
+          weapon: w.name,   // so the kill feed can name what killed it
         }, dir);
         this.effects.tracer(muzzle, eh.point, 0xffe0a0);
         this.effects.burst(eh.point, 0xaa1010, 4, 3, 0.4, 14);

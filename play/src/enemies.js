@@ -12,23 +12,23 @@ const TYPES = {
   imp: {
     hp: 55, speed: 2.5, radius: 0.45, height: 1.85, hitRadius: 0.62,
     attackRange: 14, attackCd: 2.1, telegraph: 0.55, damage: 15,
-    melee: false, sight: 22, color: 0x8a3524, label: 'IMP',
+    melee: false, sight: 22, color: 0x8a3524, label: 'IMP', pitch: 1.0,
   },
   warden: {
     hp: 620, speed: 1.9, radius: 1.05, height: 3.0, hitRadius: 1.45,
     attackRange: 20, attackCd: 2.3, telegraph: 0.7, damage: 18,
-    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN',
+    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN', pitch: 0.55,
     boss: true,
   },
   hound: {
     hp: 22, speed: 4.4, radius: 0.36, height: 1.05, hitRadius: 0.45,
     attackRange: 2.4, attackCd: 0.9, telegraph: 0.25, damage: 9,
-    melee: true, meleeRange: 1.9, meleeDamage: 11, sight: 26, color: 0x8a1f6a, label: 'HOUND',
+    melee: true, meleeRange: 1.9, meleeDamage: 11, sight: 26, color: 0x8a1f6a, label: 'HOUND', pitch: 1.45,
   },
   grunt: {
     hp: 40, speed: 3.3, radius: 0.42, height: 1.7, hitRadius: 0.55,
     attackRange: 16, attackCd: 1.4, telegraph: 0.4, damage: 8,
-    melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT',
+    melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT', pitch: 0.8,
   },
 };
 
@@ -284,7 +284,7 @@ export class Enemy {
     const c = this.chestPos();
     ctx.effects.gibs(c);
     ctx.audio.play('enemyDie', this.chestPos());
-    if (ctx.onKill) ctx.onKill(this);
+    if (ctx.onKill) ctx.onKill(this, ctx.weapon || null);
   }
 
   update(dt, ctx) {
@@ -323,7 +323,11 @@ export class Enemy {
           this.wanderAngle = Math.random() * Math.PI * 2;
         }
         this.moving = this.stepMove(level, Math.cos(this.wanderAngle) * 0.5, Math.sin(this.wanderAngle) * 0.5, dt);
-        if (canSee) this.setState(STATE.CHASE);
+        if (canSee) {
+          this.setState(STATE.CHASE);
+          // a bark on first sight, pitched by body type so you can hear what found you
+          ctx.audio.play('spot', this.chestPos(), { pitch: this.T.pitch || 1 });
+        }
         break;
       }
       case STATE.CHASE: {
