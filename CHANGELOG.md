@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.11.1 — 2026-11-19
+
+**The two fleet drifts, resolved**
+- `saga-vn-engine`: `VERSION` said 1.0.1 while `CHANGELOG.md` documented 1.0.2, and both version badges
+  still read 1.0.1. Version and badges now follow the changelog.
+- `aethelgard-rpg-engine`: `VERSION` 1.0.1 against a newest heading of 1.0.0. That is a version bumped
+  for work in progress, not a release the changelog forgot, so the tool now separates the two: behind
+  the changelog is a failure, ahead of it is a warning. Both repos run in hard mode.
+
+All eight sibling repos are now green in hard mode, with no `--warn` left in the fleet.
+
+
 ## 1.11.0 — 2026-11-19
 
 **A portable metadata gate, and two real drifts found with it**
