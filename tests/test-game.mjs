@@ -280,6 +280,15 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== story per zone ==');
+const { panelsFor, epilogueFor, ZONE_STORY } = await import('../play/src/story.js');
+const zones = Object.keys(ZONE_STORY);
+ok(zones.length === 5, 'five zones have their own story (' + zones.join(', ') + ')');
+ok(panelsFor('gate').length >= 3, 'the gate has panels');
+ok(panelsFor('throne')[0].text !== panelsFor('gate')[0].text, 'zones do not share text');
+ok(panelsFor('nope').length >= 3, 'an unknown zone falls back to the shared panels');
+ok(epilogueFor('foundry').length > 10, 'a zone has an epilogue line');
+
 console.log('\n== objective, diary, reachable picks ==');
 HG.game.state = 'playing';
 ok(HG.objectiveLine().length > 0, 'there is always an objective line: ' + HG.objectiveLine());

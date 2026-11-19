@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.25.0 — 2026-11-19
+
+**Story mode, per zone**
+- five cold opens instead of one. The gate, the foundry, the grove, the spire and the throne each type
+  their own panels over their own level, and each closes with an epilogue line on the cleared screen.
+- `panelsFor(zoneId)` falls back to the shared set, so a sixth zone added later still works.
+
+**The map says what to do next**
+- the zone screen opens with `NEXT — <zone> · <blurb>`, or `EVERY ZONE CLEARED` once all five are done.
+- it is reachable mid-run on `M` as of 1.24.0, so it is the answer to "where am I supposed to go".
+
+**Five levels**
+- the progression is unchanged (five zones, unlocked in sequence, the last one the warden) but it now
+  reads as five places: distinct cold open, distinct epilogue, distinct palette and props, and the map
+  shows which are cleared.
+
+**Tests**
+- 5 new assertions: five zones with story, zones do not share text, unknown zone falls back, epilogue
+  exists.
+
+
 ## 1.24.0 — 2026-11-19
 
 Four reports from play, two of them real defects.

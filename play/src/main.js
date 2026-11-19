@@ -17,7 +17,7 @@ import { Sfx } from './audio.js';
 import { loadSettings, saveSettings, clampSettings } from './settings.js';
 import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
-import { Story } from './story.js';
+import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, isUnlocked } from './world.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
@@ -896,7 +896,7 @@ function beginZone(zoneDef) {
   game.state = 'intro';
   hud.setVisible(false);
   showScreen('intro');
-  story.start(camera, level, () => showClassScreen());
+  story.start(camera, level, () => showClassScreen(), zone.id);
   clock.getDelta();
 }
 
@@ -933,8 +933,18 @@ function chooseClass(id) {
 }
 
 function showZoneMap() {
+  // the map is the "what now" screen: every zone, its state, and the one line
+  // that says what the next action is
   game.state = 'map';
   hud.setVisible(false);
+  // the next thing to do, in one line, above the list
+  const nextIdx = ZONES.findIndex((z, i) => isUnlocked(progress, i) && !progress.cleared.includes(z.id));
+  const hint = document.getElementById('mapHint');
+  if (hint) {
+    hint.textContent = nextIdx >= 0
+      ? 'NEXT — ' + ZONES[nextIdx].name + ' · ' + ZONES[nextIdx].blurb
+      : 'EVERY ZONE CLEARED · play any of them again for a better score';
+  }
   const wrap = document.getElementById('zoneList');
   if (wrap) {
     wrap.innerHTML = ZONES.map((z, i) => {
@@ -1187,6 +1197,8 @@ function zoneCleared() {
       `RELICS <b>${game.relicsTotal - game.relics.length}/${game.relicsTotal}</b>`;
   }
   hud.setVisible(false);
+  const epi = document.getElementById('clearedEpilogue');
+  if (epi) epi.textContent = epilogueFor(zone.id);
   showScreen('cleared');
   audio.play('wave');
   renderUpgrades();
