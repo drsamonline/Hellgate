@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.23.0 — 2026-11-19
+
+**Enemy level of detail** — the draw-call win the measurement pointed at
+
+1.22.1 established that the level is 11 of 117 draw calls and the rest is bodies and effects. Each
+enemy is ten meshes. Past 22 m an enemy is now a single slab instead of ten parts.
+
+| Scene | Draw calls | Triangles |
+| --- | --- | --- |
+| Before, 8 enemies | 66 | 5088 |
+| After, 8 enemies | **32** | 4738 |
+
+Same camera, same seed, 1280×720. The proxy shares one geometry and one material across every enemy,
+so the switch allocates nothing, and it hides the whole body group rather than walking the parts.
+
+**Guard** — the smoke test's draw-call budget drops from 160 to 140, which is the number the LOD change
+earns.
+
+**Test** — the geometry-sharing assertion had to reach through the new body group; it now finds the
+flashable torso by walking `e.body` rather than indexing `mesh.children[0]`.
+
+
 ## 1.22.1 — 2026-11-19
 
 **Chunked level meshes: measured, then rejected** (roadmap 46)

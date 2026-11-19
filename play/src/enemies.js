@@ -186,6 +186,13 @@ function makeHound() {
 /** How many bodies stay in the world before the oldest is cleared. */
 const MAX_CORPSES = 12;
 
+// Distance past which an enemy is drawn as one box instead of ten parts. The
+// bodies are ~10 meshes each, which is where the draw calls go: at 22 m you
+// cannot tell a limb from a slab, and the frame gets 9 calls back per enemy.
+const LOD_DIST = 22;
+const PROXY_GEO = new THREE.BoxGeometry(1, 1, 1);
+const PROXY_MAT = new THREE.MeshLambertMaterial({ color: 0x2a1a18 });
+
 /**
  * One enemy: mesh, state machine, health. Geometry is shared per type; body materials are cloned for the hit flash.
  */
@@ -200,7 +207,9 @@ export class Enemy {
       : typeName === 'hound' ? makeHound()
       : typeName === 'warden' ? makeWarden()
       : makeGrunt();
-    this.mesh = built.group;
+    this.body = built.group;
+    this.mesh = new THREE.Group();
+    this.mesh.add(this.body);
     this.parts = built.parts;
 
     // clone the body materials for this enemy only, so a hit can flash it
@@ -221,6 +230,13 @@ export class Enemy {
       }
       o.material = m;
     });
+
+    // a single-slab stand-in, shown only when the enemy is far away
+    this.proxy = new THREE.Mesh(PROXY_GEO, PROXY_MAT);
+    this.proxy.scale.set(T.radius * 2.2, T.height, T.radius * 2.2);
+    this.proxy.position.y = T.height / 2;
+    this.proxy.visible = false;
+    this.mesh.add(this.proxy);
 
     this.mesh.position.copy(worldPos);
     scene.add(this.mesh);
@@ -325,6 +341,16 @@ export class Enemy {
         this.mesh.position.y = f - 0.12 * sink;   // settles, does not sink away
       }
       return;
+    }
+
+    // level of detail: one slab when it is far away, the full body up close
+    const lodDist = Math.hypot(player.pos.x - this.pos.x, player.pos.z - this.pos.z);
+    const far = lodDist > LOD_DIST && this.state !== STATE.DEATH;
+    if (this.proxy) {
+      if (this.proxy.visible !== far) {
+        this.proxy.visible = far;
+        this.body.visible = !far;
+      }
     }
 
     const dx = player.pos.x - this.pos.x;

@@ -198,7 +198,7 @@ ok('a run in progress is saved', inv.save === true);
 // to one mesh per texture. Chunking measured 255 and was rejected; this keeps
 // anyone from re-introducing it by accident.
 const budget = await page.evaluate(() => window.HG.renderStats);
-ok('draw calls stay under 160', budget.calls > 0 && budget.calls < 160, JSON.stringify(budget));
+ok('draw calls stay under 140', budget.calls > 0 && budget.calls < 140, JSON.stringify(budget));
 
 // the game itself must wire the footstep callback, not just the player class
 const wired = await page.evaluate(() => ({

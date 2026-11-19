@@ -138,10 +138,15 @@ console.log('\n== shared enemy geometry ==');
 HG.enemies.spawnWave(1, HG.player.pos);
 const imps = HG.enemies.list.filter((x) => x.type === 'imp').slice(0, 2);
 if (imps.length === 2) {
-  const g0 = imps[0].mesh.children[0].geometry;
-  const g1 = imps[1].mesh.children[0].geometry;
-  ok(g0 === g1, 'imps share one torso geometry');
-  ok(imps[0].mesh.children[0].material !== imps[1].mesh.children[0].material, 'but not their flash material');
+  const torso = (e) => {
+    let found = null;
+    e.body.traverse((o) => { if (!found && o.isMesh && o.material && o.material.userData.flashable) found = o; });
+    return found;
+  };
+  const t0 = torso(imps[0]);
+  const t1 = torso(imps[1]);
+  ok(t0.geometry === t1.geometry, 'imps share one torso geometry');
+  ok(t0.material !== t1.material, 'but not their flash material');
 } else {
   ok(false, 'expected two imps to compare');
 }
@@ -274,6 +279,19 @@ ok(typeof HG.audio.occludeTest === 'function', 'sound occlusion is installed');
 const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
+
+console.log('\n== enemy level of detail ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('imp', HG.player.pos.x + 40, HG.player.pos.z, 1);
+HG.enemies.spawnAt('imp', HG.player.pos.x + 3, HG.player.pos.z, 1);
+frames(3);
+ok(HG.enemies.list.every((e) => !!e.proxy), 'every enemy carries a proxy: ' + HG.enemies.list.map((e) => e.type + ':' + (!!e.proxy)).join(','));
+const lodFar = HG.enemies.list.find((e) => Math.hypot(e.pos.x - HG.player.pos.x, e.pos.z - HG.player.pos.z) > 22);
+const lodNear = HG.enemies.list.find((e) => Math.hypot(e.pos.x - HG.player.pos.x, e.pos.z - HG.player.pos.z) < 22);
+ok(lodFar && lodFar.proxy.visible === true, 'a distant enemy draws as one slab');
+ok(lodFar && lodFar.body.visible === false, 'and its body is hidden');
+ok(lodNear && lodNear.proxy.visible === false, 'a near enemy draws its body');
+ok(lodNear && lodNear.body.visible === true, 'and the slab is hidden');
 
 console.log('\n== corpses, shadows, doors, touch ==');
 HG.game.state = 'playing';
