@@ -16,7 +16,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 1. **Settings that persist** — mouse sensitivity, FOV (70–100) and a reduced-motion toggle in a small panel, saved to `localStorage` next to the best run. `main.js` · S · high — ✓ shipped
 2. **Reduced motion** — one checkbox that disables screen shake, weapon bob and the vignette pulse. The landing page already honours `prefers-reduced-motion`; the game should too. `effects.js` · S · high (accessibility) — ✓ shipped
-3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape or icon difference as well as a hue change. `hud.js` · S · high (accessibility)
+3. **Colour-blind-safe palette** — the damage arrow, keycard chip and "EXIT OPEN" state are all colour-coded. Add a shape or icon difference as well as a hue change. `hud.js` · S · high (accessibility) — ◑ keycard chip reads ◇/◆ now; the exit compass and damage arrow are already directional
 4. **Volume + mute** — `M` to mute, a gain slider, persisted. `audio.js` · S · medium — ✓ shipped
 5. **Weapon cycle on the wheel** — `wheel` already means nothing in a pointer-locked canvas. `main.js` · S · medium — ✓ shipped
 6. **Restart from the pause menu** — currently you must die or reload to reseed. `main.js` · S · medium — ✓ shipped
@@ -28,8 +28,8 @@ Cheap, low-risk, immediately noticeable. All `S`.
 12. **Footsteps** — a filtered noise burst on each bob cycle, quieter when walking. Big cheap presence win. `player.js` + `audio.js` · S · high — ✓ shipped
 13. **Exit compass** — when the exit opens, a small HUD arrow points at it; finding the pad in a 10-room arena is currently the least fun part of a wave. `hud.js` · S · high — ✓ shipped
 14. **Weapon raise/lower on switch** — a 120 ms dip sells the swap. `weapons.js` · S · medium — ✓ shipped
-15. **Pause on window blur** — `visibilitychange` covers tab switches, not alt-tab to another window. `main.js` · S · low
-16. **`Esc` closes the settings panel before it pauses** — small correctness fix once settings exist. `main.js` · S · low
+15. **Pause on window blur** — `visibilitychange` covers tab switches, not alt-tab to another window. `main.js` · S · low — ✓ shipped
+16. **`Esc` closes the settings panel before it pauses** — small correctness fix once settings exist. `main.js` · S · low — ✓ shipped
 
 ## Tier 1 — Small (an afternoon each)
 
@@ -50,9 +50,9 @@ Cheap, low-risk, immediately noticeable. All `S`.
 31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium
 32. **Secret rooms** — a wall texture that differs by one pixel, and a room behind it. Pure Doom. `level.js` · M · medium
 33. **Destructible props** — barrels that explode, crates that block. `level.js` + `projectiles.js` · L · medium
-34. **Pickup bob + glow** — pickups already rotate; add a small point light or a sprite halo so they read in the dark. `main.js` · S · medium
+34. **Pickup bob + glow** — pickups already rotate; add a small point light or a sprite halo so they read in the dark. `main.js` · S · medium — ✓ shipped (sprite halo)
 35. **Enemy audio barks** — a synthesised growl on sight, a death cry per type. `audio.js` · S · medium
-36. **Ambient drone** — a low, slowly modulated pad so silence is not dead air. `audio.js` · S · medium
+36. **Ambient drone** — a low, slowly modulated pad so silence is not dead air. `audio.js` · S · medium — ✓ shipped
 
 ## Tier 2 — Medium (a weekend each)
 

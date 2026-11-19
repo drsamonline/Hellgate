@@ -32,6 +32,41 @@ const MAX_LIGHTS = 4;
 /**
  * Pooled tracers, decals, particles, lights and screen shake. Nothing allocates per shot.
  */
+let glowTex = null;
+
+/** A soft radial sprite used as a halo on pickups, so they read in the dark. */
+/**
+ * A soft radial halo for a pickup, so it reads in the dark. Falls back to a flat
+ * sprite when there is no 2d canvas context (headless tests, canvas disabled).
+ */
+export function glowSprite(color, size = 0.9) {
+  if (!glowTex) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext && c.getContext('2d');
+    // no 2d context (headless stub, or a browser with canvas disabled): a flat
+    // sprite still marks the pickup, it just does not fade at the edges
+    if (!g) {
+      const mat = new THREE.SpriteMaterial({ color, transparent: true, opacity: 0.35, depthWrite: false });
+      const flat = new THREE.Sprite(mat);
+      flat.scale.setScalar(size);
+      return flat;
+    }
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.4, 'rgba(255,255,255,0.35)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    glowTex = new THREE.CanvasTexture(c);
+  }
+  const mat = new THREE.SpriteMaterial({ map: glowTex, color, transparent: true, opacity: 0.55, depthWrite: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.setScalar(size);
+  return sprite;
+}
+
+/** Pooled tracers, decals, particles, lights and screen shake. Nothing allocates per shot. */
 export class Effects {
   constructor(scene, decalTextures) {
     this.scene = scene;

@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.13.0 — 2026-11-19
+
+**Ambient drone** (roadmap 36)
+- three detuned sawtooths under a lowpass, 0.07 Hz LFO on the gain, 0.028 peak: present, never noticed.
+  Starts with a run, fades out over 0.8 s on pause, death and zone clear.
+
+**Pickup glow** (roadmap 34)
+- every pickup carries a soft radial sprite halo, so it reads in the dark. Falls back to a flat sprite
+  when there is no 2d canvas context.
+
+**Accessibility** (roadmap 3, partial)
+- the keycard chip is ◇ when you do not have it and ◆ when you do, so it reads in greyscale. The exit
+  compass and the damage arrow were already directional, not colour-only.
+
+**Small fixes**
+- alt-tab to another window pauses the game; `visibilitychange` alone missed it (roadmap 15)
+- `Esc` closes the settings screen instead of doing nothing (roadmap 16)
+
+**Stub**
+- `Sprite`, `SpriteMaterial` and `CanvasTexture` added, which the halo needs. `check-stub` caught the gap
+  before the suites did.
+
+
 ## 1.12.0 — 2026-11-19
 
 Back to the game after the fleet work. Four roadmap items.

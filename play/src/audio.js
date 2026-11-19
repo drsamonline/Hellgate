@@ -120,6 +120,51 @@ export class Sfx {
     o.stop(t0 + dur + 0.02);
   }
 
+  // A low, slowly breathing pad so silence is not dead air. Three detuned
+  // oscillators under a lowpass, gain under 0.03: present, never noticed.
+  startDrone() {
+    if (!this.ctx || this.drone) return;
+    const ctx = this.ctx;
+    const out = ctx.createGain();
+    out.gain.value = 0;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 320;
+    const oscs = [];
+    for (const [freq, detune] of [[55, -7], [55.4, 6], [82.5, 3]]) {
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.value = freq;
+      o.detune.value = detune;
+      o.connect(lp);
+      o.start();
+      oscs.push(o);
+    }
+    lp.connect(out).connect(this.master);
+    out.gain.linearRampToValueAtTime(0.028, ctx.currentTime + 2.5);
+
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    lfo.frequency.value = 0.07;
+    lfoGain.gain.value = 0.012;
+    lfo.connect(lfoGain).connect(out.gain);
+    lfo.start();
+
+    this.drone = { oscs, lfo, out };
+  }
+
+  stopDrone() {
+    const d = this.drone;
+    if (!d || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    d.out.gain.cancelScheduledValues(t);
+    d.out.gain.setValueAtTime(d.out.gain.value, t);
+    d.out.gain.linearRampToValueAtTime(0, t + 0.8);
+    for (const o of d.oscs) { try { o.stop(t + 0.9); } catch (e) { /* already stopped */ } }
+    try { d.lfo.stop(t + 0.9); } catch (e) { /* already stopped */ }
+    this.drone = null;
+  }
+
   play(name, at) {
     if (!this.ctx || this.muted) return;
     this._pitch = 0.94 + Math.random() * 0.12; // no two plays are identical

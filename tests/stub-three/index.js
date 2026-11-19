@@ -195,6 +195,7 @@ export class OctahedronGeometry extends Primitive {}
 export class TorusGeometry extends Primitive {}
 export class DodecahedronGeometry extends Primitive {}
 export class TetrahedronGeometry extends Primitive {}
+
 export class IcosahedronGeometry extends Primitive {}
 export class RingGeometry extends Primitive {}
 
@@ -263,6 +264,23 @@ export class CanvasTexture {
     this.repeat = { set() {} };
     this.needsUpdate = false;
   }
+}
+
+export class SpriteMaterial {
+  constructor(o = {}) { Object.assign(this, o); }
+  dispose() {}
+}
+
+export class Sprite {
+  constructor(material) {
+    this.material = material;
+    this.position = new Vector3();
+    this.scale = new Vector3(1, 1, 1);
+    this.children = [];
+    this.visible = true;
+  }
+  setScalar(v) { this.scale.set(v, v, v); return this; }
+  add(o) { this.children.push(o); return o; }
 }
 
 export class Clock {

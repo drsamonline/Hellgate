@@ -10,7 +10,7 @@ import { Player } from './player.js';
 import { Weapons, WEAPONS } from './weapons.js';
 import { EnemyManager } from './enemies.js';
 import { Projectiles } from './projectiles.js';
-import { Effects } from './effects.js';
+import { Effects, glowSprite } from './effects.js';
 import { HUD } from './hud.js';
 import { Sfx } from './audio.js';
 import { loadSettings, saveSettings, clampSettings } from './settings.js';
@@ -334,6 +334,7 @@ function resumeRun(save) {
   }
   startWave(Math.max(1, save.wave || 1));
   game.state = 'playing';
+  audio.startDrone();
   hud.setVisible(true);
   hideScreens();
   requestLock();
@@ -588,6 +589,7 @@ function spawnPickups(wave) {
 function addPickup(kind, x, z) {
   const def = PICKUP_DEFS[kind];
   const mesh = new THREE.Mesh(def.geo(), new THREE.MeshBasicMaterial({ color: def.color }));
+  mesh.add(glowSprite(def.color, 1.1));
   const baseY = (level.cells[level.idx(Math.round(x / CELL), Math.round(z / CELL))] || { floor: 0 }).floor + 0.45;
   mesh.position.set(x, baseY, z);
   scene.add(mesh);
@@ -750,6 +752,7 @@ function renderClassCards() {
 function chooseClass(id) {
   applyClass(id);
   game.state = 'playing';
+  audio.startDrone();
   hud.setVisible(true);
   hideScreens();
   requestLock();
@@ -931,6 +934,7 @@ function renderInventory() {
 }
 
 function zoneCleared() {
+  if (audio) audio.stopDrone();
   game.state = 'cleared';
   releaseLock();
   clearZone(progress, zone.id, game.score);
@@ -978,6 +982,7 @@ function startGame(seed, opts = {}) {
   try { history.replaceState(null, '', '?seed=' + encodeURIComponent(seed)); } catch (e) { /* no history */ }
   buildRun(seed);
   game.state = 'playing';
+  audio.startDrone();
   hud.setVisible(true);
   hideScreens();
   if (!opts.auto) requestLock();
@@ -985,6 +990,7 @@ function startGame(seed, opts = {}) {
 }
 
 function pauseGame() {
+  if (audio) audio.stopDrone();
   if (game.state !== 'playing') return;
   game.state = 'paused';
   input.fire = false;
@@ -1032,6 +1038,7 @@ function recordRun(st) {
 function gameOver() {
   if (game.state !== 'playing') return;
   game.state = 'dead';
+  if (audio) audio.stopDrone();
   clearRun();
   input.fire = false;
   audio.play('dead');
@@ -1169,6 +1176,11 @@ function requestLock() {
   }
 }
 
+// alt-tab to another window does not fire visibilitychange on every browser
+window.addEventListener('blur', () => {
+  if (game.state === 'playing') pauseGame();
+});
+
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && game.state === 'playing') pauseGame();
 });
@@ -1219,6 +1231,11 @@ window.addEventListener('mouseup', () => { input.fire = false; });
 window.addEventListener('blur', () => { input.fire = false; input.keys = Object.create(null); });
 
 window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && document.getElementById('settings').classList.contains('on')) {
+    closeSettings();
+    e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape' && game.state === 'inventory') {
     toggleInventory();
     e.preventDefault();

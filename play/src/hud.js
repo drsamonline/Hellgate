@@ -35,6 +35,7 @@ export class HUD {
     this.slotSig = '';
     this.slotEls = [];
     this.elKey = document.getElementById('keycard');
+    this.keyHeld = null;
     this.crosshair = document.getElementById('crosshair');
     this.hitEl = document.getElementById('hitmarker');
     this.vignette = document.getElementById('vignette');
@@ -159,7 +160,12 @@ export class HUD {
       this.elWave.textContent = String(state.wave);
       this.elKills.textContent = String(state.kills);
       this.elEnemies.textContent = String(state.enemies);
-      this.elKey.classList.toggle('on', !!state.hasKey);
+      // shape as well as colour: the chip has to read in greyscale
+      if (this.keyHeld !== !!state.hasKey) {
+        this.keyHeld = !!state.hasKey;
+        this.elKey.classList.toggle('on', this.keyHeld);
+        this.elKey.textContent = this.keyHeld ? '\u25c6 KEYCARD' : '\u25c7 KEYCARD';
+      }
     }
 
     // vignette decay
