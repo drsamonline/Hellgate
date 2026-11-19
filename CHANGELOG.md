@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.10.1 — 2026-11-19
+
+**Link checker, and a fleet result**
+- `tools/check-links.mjs`: every local `href` and `src` in every page must resolve. Wired into CI as
+  step 13. It resolves root-absolute paths against the domain root, a project sub-path and `docs/`,
+  which is what makes it portable.
+- run against the eight sibling game repos: seven pass cleanly. `eon-commando` fails on
+  `src/00_head.html → icon-192.png`, which is a build fragment concatenated at build time, not a
+  broken page — a false positive the tool cannot see past.
+- piloted into `Scrap-and-Gun`, the closest genre sibling and the only one with no CI at all. Its
+  `links` workflow is green.
+
+**Fixed while making it portable**
+- `upi:` and every other scheme was treated as a local path; the check now skips anything with a
+  scheme.
+- root-absolute links to a project Pages root were reported broken in three repos before the
+  multi-base resolution.
+
+
 ## 1.10.0 — 2026-11-19
 
 Everything here came from the fleet comparison: five things the sibling game repos do better, ported.

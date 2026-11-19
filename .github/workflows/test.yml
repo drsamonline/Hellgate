@@ -57,6 +57,9 @@ jobs:
       - name: PAGES.json paths still exist
         run: node tools/check-pages.mjs
 
+      - name: Every local link and asset resolves
+        run: node tools/check-links.mjs
+
       - name: Install a browser
         uses: browser-actions/setup-chrome@v1
         with:
