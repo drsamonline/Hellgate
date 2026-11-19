@@ -206,5 +206,18 @@ export function buildLevelMeshes(level, mats) {
     secretMeshes.push({ mesh, secret: sec });
   }
 
-  return { group, doorMeshes, exitPad: pad, secretMeshes };
+  // ---- crates ----------------------------------------------------------
+  const crateMeshes = [];
+  for (const cr of level.crates || []) {
+    const c = level.cells[cr.idx];
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(CELL * 0.62, 0.9, CELL * 0.62),
+      new THREE.MeshLambertMaterial({ color: 0x6a5136 })
+    );
+    box.position.set(cr.wx, c.floor + 0.45, cr.wz);
+    group.add(box);
+    crateMeshes.push({ mesh: box, crate: cr });
+  }
+
+  return { group, doorMeshes, exitPad: pad, secretMeshes, crateMeshes };
 }

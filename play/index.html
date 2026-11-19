@@ -163,6 +163,13 @@
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
 
+  #stamina{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);
+    width:150px;height:3px;background:rgba(10,9,8,.7);border-radius:2px;overflow:hidden;opacity:0;
+    transition:opacity .2s;pointer-events:none}
+  #stamina.on{opacity:.9}
+  #stamina i{display:block;height:100%;width:100%;background:#7fd6ff;transform-origin:left}
+  #stamina.spent i{background:#ff8a3d}
+
   #killfeed{position:absolute;right:14px;top:78px;display:flex;flex-direction:column;gap:3px;
     align-items:flex-end;pointer-events:none}
   .feedrow{font-size:10px;letter-spacing:.12em;color:#cbbda8;background:rgba(10,9,8,.6);
@@ -319,6 +326,13 @@
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
 
+  #stamina{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);
+    width:150px;height:3px;background:rgba(10,9,8,.7);border-radius:2px;overflow:hidden;opacity:0;
+    transition:opacity .2s;pointer-events:none}
+  #stamina.on{opacity:.9}
+  #stamina i{display:block;height:100%;width:100%;background:#7fd6ff;transform-origin:left}
+  #stamina.spent i{background:#ff8a3d}
+
   #killfeed{position:absolute;right:14px;top:78px;display:flex;flex-direction:column;gap:3px;
     align-items:flex-end;pointer-events:none}
   .feedrow{font-size:10px;letter-spacing:.12em;color:#cbbda8;background:rgba(10,9,8,.6);
@@ -409,6 +423,7 @@
       <span id="bossname">WARDEN</span>
       <div id="bosswrap"><div id="bossfill"></div></div>
     </div>
+    <div id="stamina"><i></i></div>
     <div id="killfeed"></div>
     <div id="prompt"></div>
     <div id="buffs"></div>

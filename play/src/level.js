@@ -356,6 +356,24 @@ export function generateLevel(seed) {
     }
   }
 
+  // ---- crates -----------------------------------------------------------
+  // Solid cells you can shoot through: cover that is not a wall, and it breaks.
+  const crates = [];
+  for (const [i, r] of rooms.entries()) {
+    if (i === exitRoomIdx || r.w < 4 || r.h < 4) continue;
+    const want = rng.int(1, 2);
+    for (let n = 0; n < want; n++) {
+      const x = rng.int(r.x + 1, r.x + r.w - 2);
+      const z = rng.int(r.z + 1, r.z + r.h - 2);
+      const c = cells[idx(x, z)];
+      if (c.solid || c.stair || c.platform || c.room !== i) continue;
+      if (Math.abs(x - r.cx) <= 1 && Math.abs(z - r.cz) <= 1) continue; // keep the middle clear
+      c.crate = true;
+      c.crateHp = 45;
+      crates.push({ x, z, wx: x * CELL, wz: z * CELL, idx: idx(x, z), hp: 45, broken: false });
+    }
+  }
+
   // ---- open floor list --------------------------------------------------
   const openCells = [];
   for (let z = 0; z < H; z++) {
@@ -376,6 +394,7 @@ export function generateLevel(seed) {
     door: doorCells.length ? doorCells[0] : null,
     doorOpen: false,
     openCells,
+    crates,
     stairs,
     secrets,
     broken: new Set(),   // secret walls that have been opened
@@ -428,8 +447,9 @@ export function cellAt(level, x, z) {
 export function isBlocked(level, x, z) {
   const c = cellAt(level, x, z);
   if (!c) return true;
-  // a broken secret wall is a doorway
-  if (c.secretWall && level.broken && level.broken.has(c.z * level.W + c.x)) return false;
+  // a broken secret wall is a doorway, and so is a broken crate
+  if ((c.secretWall || c.crate) && level.broken && level.broken.has(c.z * level.W + c.x)) return false;
+  if (c.crate) return true;
   if (c.solid) return true;
   if (c.door && !level.doorOpen) return true;
   return false;
@@ -465,7 +485,8 @@ export function circleBlocked(level, x, z, r) {
       const c = (cx < 0 || cz < 0 || cx >= level.W || cz >= level.H)
         ? null
         : level.cells[cz * level.W + cx];
-      const blocked = !c || c.solid || (c.door && !level.doorOpen);
+      const crateShut = c && c.crate && !(level.broken && level.broken.has(cz * level.W + cx));
+      const blocked = !c || c.solid || crateShut || (c.door && !level.doorOpen);
       if (!blocked) continue;
       const minX = (cx - 0.5) * CELL;
       const maxX = (cx + 0.5) * CELL;

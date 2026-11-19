@@ -289,6 +289,7 @@ function buildRun(seed, zoneDef) {
   };
 
   game.secretMeshes = (levelMeshes && levelMeshes.secretMeshes) || [];
+  game.crateMeshes = (levelMeshes && levelMeshes.crateMeshes) || [];
   game.barrels = [];
   spawnBarrels();
   props = new Props(scene, level, zone);
@@ -671,6 +672,29 @@ function damageSecret(cell, amount) {
   audio.play('door', { x: sec.wx, y: 1, z: sec.wz });
   hud.toast('SECRET', 2);
   game.score += 250;
+  return true;
+}
+
+// A crate blocks the cell it stands in until it is shot apart. Unlike a barrel
+// it does not explode: it is cover, and cover that can be removed.
+function damageCrate(cell, amount) {
+  if (!cell || !cell.crate) return false;
+  const cr = (level.crates || []).find((k) => k.idx === level.idx(cell.x, cell.z));
+  if (!cr || cr.broken) return false;
+  cr.hp -= amount;
+  if (cr.hp > 0) return true;
+
+  cr.broken = true;
+  cell.crate = false;
+  level.broken.add(cr.idx);
+  const hit = (game.crateMeshes || []).find((m) => m.crate === cr);
+  if (hit) {
+    scene.remove(hit.mesh);
+    hit.mesh.geometry.dispose();
+    hit.mesh.material.dispose();
+  }
+  effects.burst({ x: cr.wx, y: 0.6, z: cr.wz }, 0x8a6a44, 18, 4, 0.6, 2);
+  audio.play('wall', { x: cr.wx, y: 0.6, z: cr.wz });
   return true;
 }
 
@@ -1545,6 +1569,7 @@ function update(dt) {
   pad.material.opacity = game.exitOpen ? 0.65 + Math.sin(elapsed * 5) * 0.3 : 0.28;
 
   hud.update(dt, player, weapons, {
+    player,
     wave: game.wave,
     kills: game.kills,
     enemies: enemies.aliveCount,
@@ -1701,7 +1726,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
-  explodeBarrel, damageBarrels, spawnBarrels, damageSecret,
+  explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
   runStats, topRuns, recordRun, gameOver,
   openLore, closeLore, resolveChoice, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,

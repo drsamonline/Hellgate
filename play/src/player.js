@@ -34,6 +34,8 @@ export class Player {
     this.pitch = 0;
     this.eyeY = EYE;
     this.crouch = 0;   // 0 standing, 1 fully crouched
+    this.stamina = 1;  // 0..1; sprint drains it, standing refills it
+    this.staminaT = 0; // time since the last sprint, before it starts refilling
     this.bob = 0;
     this.roll = 0;
 
@@ -107,7 +109,20 @@ export class Player {
     const wantsCrouch = !!(keys['ControlLeft'] || keys['ControlRight'] || keys['KeyC']);
     this.crouch += ((wantsCrouch ? 1 : 0) - this.crouch) * (1 - Math.exp(-12 * dt));
     const crouching = this.crouch > 0.5;
-    const sprint = !crouching && !!(keys['ShiftLeft'] || keys['ShiftRight']);
+    const wantsSprint = !crouching && !!(keys['ShiftLeft'] || keys['ShiftRight']);
+    const moving = !!(ix || iz);
+    // Sprint is a resource, not a free key: it drains, and it comes back after a
+    // moment of not sprinting. Standing still refills it twice as fast.
+    const sprint = wantsSprint && moving && this.stamina > 0.02;
+    if (sprint) {
+      this.stamina = Math.max(0, this.stamina - dt * 0.30);
+      this.staminaT = 0;
+    } else {
+      this.staminaT += dt;
+      if (this.staminaT > 0.55) {
+        this.stamina = Math.min(1, this.stamina + dt * (moving ? 0.20 : 0.40));
+      }
+    }
     const speed = (sprint ? SPRINT : WALK) * this.speedMul * (1 - 0.45 * this.crouch);
     const k = 1 - Math.exp(-ACCEL * dt);
     this.vel.x += (wx * speed - this.vel.x) * k;

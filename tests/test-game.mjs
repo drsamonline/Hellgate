@@ -275,6 +275,32 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== sprint stamina and crates ==');
+HG.game.state = 'playing';
+HG.input.keys = Object.create(null);
+HG.player.stamina = 1;
+HG.input.keys['ShiftLeft'] = true;
+HG.input.move.y = -1;
+frames(120);
+ok(HG.player.stamina < 0.8, 'sprinting drains stamina (' + HG.player.stamina.toFixed(2) + ')');
+const drained = HG.player.stamina;
+HG.input.keys['ShiftLeft'] = false;
+HG.input.move.y = 0;
+frames(240);
+ok(HG.player.stamina > drained, 'standing still refills it (' + drained.toFixed(2) + ' -> ' + HG.player.stamina.toFixed(2) + ')');
+
+const cr = (HG.level.crates || [])[0];
+if (cr) {
+  const cell = HG.level.cells[cr.idx];
+  ok(cell.crate === true, 'a crate marks its cell');
+  ok(HG.damageCrate(cell, 20) === true, 'a shot chips it');
+  ok(HG.damageCrate(cell, 999) === true, 'enough damage breaks it');
+  ok(cell.crate === false, 'the cell stops being a crate');
+  ok(HG.level.broken.has(cr.idx), 'the cell is recorded as open');
+} else {
+  ok(false, 'no crates in this level');
+}
+
 console.log('\n== secret rooms ==');
 ok(Array.isArray(HG.level.secrets), 'the level carries secrets');
 ok(HG.level.secrets.length === 1, 'one secret room per level (' + HG.level.secrets.length + ')');

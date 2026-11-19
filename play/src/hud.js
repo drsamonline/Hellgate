@@ -31,6 +31,8 @@ export class HUD {
     this.elBossName = document.getElementById('bossname');
     this.elPrompt = document.getElementById('prompt');
     this.elFeed = document.getElementById('killfeed');
+    this.elStamina = document.getElementById('stamina');
+    this.staminaBar = this.elStamina ? this.elStamina.firstElementChild : null;
     this.damageNumbers = true;
     this.elBuffs = document.getElementById('buffs');
     this.promptText = '';
@@ -129,6 +131,15 @@ export class HUD {
       this.elWeapon.textContent = wname;
       this.lastWeapon = wname;
     }
+    // ---- stamina ---------------------------------------------------------
+    if (this.elStamina && this.staminaBar && state && state.player) {
+      const v = Math.max(0, Math.min(1, state.player.stamina));
+      const show = v < 0.995;
+      this.elStamina.classList.toggle('on', show);
+      this.elStamina.classList.toggle('spent', v < 0.25);
+      this.staminaBar.style.transform = 'scaleX(' + v.toFixed(3) + ')';
+    }
+
     // ---- timed buffs -----------------------------------------------------
     if (this.elBuffs && state && state.buffs) {
       const parts = [];

@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.20.0 — 2026-11-19
+
+**Sprint stamina** (roadmap 30)
+- sprint is a resource now: 3.3 seconds of it, drained at 0.30/s, refilled at 0.20/s while moving and
+  0.40/s standing still, starting 0.55 s after you stop. Below 2 % you walk. A thin bar under the health
+  appears only when it is not full, and turns orange below a quarter.
+
+**Crates** (roadmap 33, second half)
+- one or two per room: solid cells you can shoot apart. 45 health, they block movement and line of
+  sight through `circleBlocked`, and breaking one opens the cell and leaves debris. Unlike a barrel, a
+  crate does not explode — it is cover, and cover that can be removed.
+
+**Tests**
+- 7 new assertions: sprint draining, refilling while still, a crate marking its cell, chipping,
+  breaking, and the cell being recorded as open.
+
+
 ## 1.19.0 — 2026-11-19
 
 **Stairs and raised platforms** (roadmap 38)
