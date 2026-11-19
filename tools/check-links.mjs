@@ -4,8 +4,14 @@
  * The smoke test checks images at runtime; this checks every reference
  * statically, including the ones a browser only asks for when you click them.
  *
- *   node tools/check-links.mjs            # the pages in this repo
- *   node tools/check-links.mjs <dir>      # any static site
+ *   node tools/check-links.mjs                     # the pages in this repo
+ *   node tools/check-links.mjs <dir>               # any static site
+ *   node tools/check-links.mjs <dir> --ignore 'src/*'
+ *
+ * `--ignore` takes a prefix; any page whose path relative to the root starts
+ * with it is skipped. Build fragments that carry a doctype but are concatenated
+ * later (eon-commando's src/*.html) resolve their paths against the output, not
+ * against where they sit, so they need to be excluded rather than fixed.
  */
 
 import fs from 'node:fs';
@@ -27,8 +33,14 @@ function walk(dir, out = []) {
 // A page is a whole document. Fragments that get concatenated at build time
 // (eon-commando's src/*.html) resolve their paths against the built output, not
 // against where they sit, so checking them here produces false positives.
+const ignoreIdx = process.argv.indexOf('--ignore');
+const ignore = ignoreIdx > -1 ? process.argv[ignoreIdx + 1] : null;
+
 const allHtml = walk(ROOT);
-const pages = allHtml.filter((p) => /<!DOCTYPE|<html/i.test(fs.readFileSync(p, 'utf8')));
+const pages = allHtml.filter((p) => {
+  if (ignore && path.relative(ROOT, p).startsWith(ignore.replace(/\*$/, ''))) return false;
+  return /<!DOCTYPE|<html/i.test(fs.readFileSync(p, 'utf8'));
+});
 const skipped = allHtml.length - pages.length;
 
 // where the site is actually served from, when the repo says so

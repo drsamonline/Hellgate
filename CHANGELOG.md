@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.10.2 — 2026-11-19
+
+**The link gate is in all eight sibling game repos**
+- `Scrap-and-Gun`, `retro-strike`, `app-story-engine`, `saga-vn-engine`, `neon-engine`,
+  `aethelgard-rpg-engine`, `game-kit`, `eon-commando` — every one has `tools/check-links.mjs` and a
+  `links` workflow, and every one is green.
+- `eon-commando` needed a new `--ignore 'src/*'` flag: its `src/*.html` are build fragments that carry a
+  doctype but are concatenated into `index.html`, so their relative paths resolve against the output
+  rather than against where they sit.
+
+Four of those repos had no CI before this. The workflows pin `actions/checkout` and
+`actions/setup-node` by SHA and set `permissions: contents: read`.
+
+
 ## 1.10.1 — 2026-11-19
 
 **Link checker, and a fleet result**
