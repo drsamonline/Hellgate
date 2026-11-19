@@ -90,6 +90,30 @@ export function generateLevel(seed) {
     }
   });
 
+  // ---- stair reconciliation ---------------------------------------------
+  // Corridors are carved at floor 0 and can meet a raised platform at its edge.
+  // Any open cell that touches a platform without being one becomes a stair, so
+  // the height change is walkable instead of a wall the pathfinder refuses.
+  const reconcileStairs = () => {
+    for (let z = 1; z < H - 1; z++) {
+      for (let x = 1; x < W - 1; x++) {
+        const c = cells[idx(x, z)];
+        if (c.solid || c.stair || c.platform) continue;
+        for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const n = cells[idx(x + dx, z + dz)];
+          if (!n || n.solid || !n.platform) continue;
+          if (n.floor <= c.floor + MAX_STEP) continue;
+          c.stair = dx !== 0 ? 'x' : 'z';
+          c.flip = dx < 0 || dz < 0;
+          c.stairLow = c.floor;
+          c.stairHigh = n.floor;
+          stairs.push({ x, z, along: c.stair, low: c.stairLow, high: c.stairHigh, flip: c.flip });
+          break;
+        }
+      }
+    }
+  };
+
   // ---- corridors --------------------------------------------------------
   const carve = (x, z) => {
     if (x < 1 || z < 1 || x >= W - 1 || z >= H - 1) return;
@@ -144,6 +168,95 @@ export function generateLevel(seed) {
     if (d > bestD) { bestD = d; exitRoomIdx = i; }
   }
   const exitRoom = rooms[exitRoomIdx];
+
+  // Reachability check used to accept or roll back a platform: a raised room
+  // that seals a corridor is worse than no stairs at all.
+  const reachableFrom = (startX, startZ) => {
+    const seen = new Uint8Array(W * H);
+    const q = [startZ * W + startX];
+    seen[q[0]] = 1;
+    let n = 1;
+    for (let head = 0; head < q.length; head++) {
+      const k = q[head];
+      const x = k % W;
+      const z = (k - x) / W;
+      const from = cells[k];
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx;
+        const nz = z + dz;
+        if (nx < 0 || nz < 0 || nx >= W || nz >= H) continue;
+        const nk = nz * W + nx;
+        if (seen[nk]) continue;
+        const c = cells[nk];
+        if (c.solid) continue;
+        if (!(c.stair || from.stair) && c.floor - from.floor > MAX_STEP) continue;
+        seen[nk] = 1;
+        n++;
+        q.push(nk);
+      }
+    }
+    return { seen, n };
+  };
+
+  const openCount = () => cells.filter((c) => !c.solid).length;
+
+  // ---- raised platforms with a stair band -------------------------------
+  // A room can carry a dais: part of its floor is lifted, and the one-cell band
+  // between the two levels is a stair that interpolates across the cell. Height
+  // changes stop being a hard cliff you have to jump.
+  const stairs = [];
+  rooms.forEach((r, i) => {
+    if (i === exitRoomIdx) return; // the exit pad stays flat
+    const snapshot = [];
+    for (let z = r.z; z < r.z + r.h; z++) {
+      for (let x = r.x; x < r.x + r.w; x++) {
+        const c = cells[idx(x, z)];
+        snapshot.push([c, c.floor, c.stair, c.stairLow, c.stairHigh, c.flip, c.platform]);
+      }
+    }
+    const stairsBefore = stairs.length;
+    if (r.w < 5 || r.h < 5 || !rng.chance(0.75)) return;
+    const rise = rng.range(0.8, 1.4); // three steps of at most 0.47
+    const along = rng.chance(0.5); // steps run along x or z
+    const from = along ? r.z + 2 : r.x + 2;
+    const to = along ? r.z + r.h - 1 : r.x + r.w - 1;
+    if (to - from < 2) return;
+    const band = along ? from : from;
+
+    for (let z = r.z; z < r.z + r.h; z++) {
+      for (let x = r.x; x < r.x + r.w; x++) {
+        const c = cells[idx(x, z)];
+        const coord = along ? z : x;
+        if (coord === band) {
+          c.stair = along ? 'z' : 'x';
+          c.stairLow = c.floor;
+          c.stairHigh = c.floor + rise;
+          c.floor = c.floor; // the surface is computed by floorHeightAt
+          stairs.push({ x, z, along, low: c.stairLow, high: c.stairHigh });
+        } else if (coord > band) {
+          c.floor = c.floor + rise;
+          c.platform = true;
+        }
+      }
+    }
+    reconcileStairs();
+
+    // the platform has to leave the level walkable; if it does not, put it back
+    const { n } = reachableFrom(spawnCell.x, spawnCell.z);
+    if (n < openCount()) {
+      for (const [c, floor, stair, low, high, flip, platform] of snapshot) {
+        c.floor = floor;
+        c.stair = stair;
+        c.stairLow = low;
+        c.stairHigh = high;
+        c.flip = flip;
+        c.platform = platform;
+      }
+      stairs.length = stairsBefore;
+    }
+  });
+
+
   const exitCell = { x: exitRoom.cx, z: exitRoom.cz };
   cells[idx(exitCell.x, exitCell.z)].exit = true;
 
@@ -263,6 +376,7 @@ export function generateLevel(seed) {
     door: doorCells.length ? doorCells[0] : null,
     doorOpen: false,
     openCells,
+    stairs,
     secrets,
     broken: new Set(),   // secret walls that have been opened
     idx,
@@ -326,7 +440,15 @@ export function isBlocked(level, x, z) {
  */
 export function floorHeightAt(level, x, z) {
   const c = cellAt(level, x, z);
-  return c ? c.floor : 0;
+  if (!c) return 0;
+  if (!c.stair) return c.floor;
+  // interpolate across the cell: the band is a ramp made of three steps
+  const t = c.stair === 'z'
+    ? (z - (c.z * CELL)) / CELL
+    : (x - (c.x * CELL)) / CELL;
+  let k = Math.min(1, Math.max(0, t));
+  if (c.flip) k = 1 - k;
+  return c.stairLow + (c.stairHigh - c.stairLow) * k;
 }
 
 // circle vs. axis-aligned blocked cells
@@ -466,7 +588,11 @@ export function buildFlowField(level, tx, tz) {
       const c = level.cells[nk];
       if (c.solid) continue;
       if (c.door && !level.doorOpen) continue;
-      if (c.floor - from.floor > MAX_STEP) continue;
+      // a stair cell bridges the two levels: stepping onto it is always allowed,
+      // and from it you can reach the platform it climbs to
+      if (c.stair || from.stair) {
+        // passable in both directions
+      } else if (c.floor - from.floor > MAX_STEP) continue;
       dist[nk] = d;
       queue[tail++] = nk;
     }

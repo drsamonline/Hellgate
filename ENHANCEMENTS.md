@@ -57,7 +57,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 ## Tier 2 — Medium (a weekend each)
 
 37. **Sector portals / real 2.5D** — the current model is one floor and one ceiling per cell. Storing per-cell floor *and* ceiling polygons with portal edges would allow true multi-level rooms, stairs and catwalks. This is the big one. `level.js` + `levelmesh.js` · XL · very high
-38. **Stairs and ramps** — a stair cell type with 2–3 sub-steps, so height changes stop being a hard 0.5 m cliff. `level.js` · L · high
+38. **Stairs and ramps** — a stair cell type with 2–3 sub-steps, so height changes stop being a hard 0.5 m cliff. `level.js` · L · high — ✓ shipped (raised platforms with a three-step band)
 39. **Door animation** — doors currently pop out of existence. Slide them up over 400 ms with a sound. `levelmesh.js` · M · high
 40. **Enemy corpses persist** — leave the last N bodies instead of sinking them all. Needs per-enemy material cloning for a fade (already half-done for the hit flash). `enemies.js` · M · medium
 41. **Blood pools on the floor** — a decal at the death position, oriented to the floor normal. `effects.js` · S · medium

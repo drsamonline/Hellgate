@@ -78,8 +78,40 @@ export function buildLevelMeshes(level, mats) {
       const fNW = ao(solidAt(x - 1, z), solidAt(x, z + 1)) * jitter;
 
       // floor (+Y): lit from above, softened into the wall bases
-      quad(FLOOR_KEY[c.floorTex], [x0, c.floor, z1], [x1, c.floor, z1], [x1, c.floor, z0], [x0, c.floor, z0], 1, 1,
-        [fNW, fNE, fSE, fSW]);
+      if (c.stair) {
+        // three steps across the cell, so a height change reads as stairs
+        const steps = 3;
+        for (let sIdx = 0; sIdx < steps; sIdx++) {
+          const t0 = sIdx / steps;
+          const t1 = (sIdx + 1) / steps;
+          const h = c.stairLow + (c.stairHigh - c.stairLow) * ((sIdx + 0.5) / steps);
+          if (c.stair === 'z') {
+            const za = z0 + (z1 - z0) * t0;
+            const zb = z0 + (z1 - z0) * t1;
+            quad(FLOOR_KEY[c.floorTex], [x0, h, za], [x1, h, za], [x1, h, zb], [x0, h, zb], 1, 1,
+              [fNW, fNE, fSE, fSW]);
+            // riser up to the next step
+            if (sIdx < steps - 1) {
+              const h2 = c.stairLow + (c.stairHigh - c.stairLow) * ((sIdx + 1.5) / steps);
+              quad(WALL_KEY[c.wall], [x0, h, za], [x1, h, za], [x1, h2, za], [x0, h2, za], 1, 1,
+                [0.6, 0.6, 0.7, 0.7]);
+            }
+          } else {
+            const xa = x0 + (x1 - x0) * t0;
+            const xb = x0 + (x1 - x0) * t1;
+            quad(FLOOR_KEY[c.floorTex], [xa, h, z1], [xb, h, z1], [xb, h, z0], [xa, h, z0], 1, 1,
+              [fNW, fNE, fSE, fSW]);
+            if (sIdx < steps - 1) {
+              const h2 = c.stairLow + (c.stairHigh - c.stairLow) * ((sIdx + 1.5) / steps);
+              quad(WALL_KEY[c.wall], [xb, h, z0], [xb, h, z1], [xb, h2, z1], [xb, h2, z0], 1, 1,
+                [0.6, 0.6, 0.7, 0.7]);
+            }
+          }
+        }
+      } else {
+        quad(FLOOR_KEY[c.floorTex], [x0, c.floor, z1], [x1, c.floor, z1], [x1, c.floor, z0], [x0, c.floor, z0], 1, 1,
+          [fNW, fNE, fSE, fSW]);
+      }
       // ceiling (-Y): dark, and darker in the corners
       quad('ceil', [x0, c.ceil, z0], [x1, c.ceil, z0], [x1, c.ceil, z1], [x0, c.ceil, z1], 1, 1,
         [fSW * 0.88, fSE * 0.88, fNE * 0.88, fNW * 0.88]);

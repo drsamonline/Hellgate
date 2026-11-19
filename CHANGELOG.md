@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.19.0 — 2026-11-19
+
+**Stairs and raised platforms** (roadmap 38)
+- a room can carry a dais: part of its floor is lifted 0.8–1.4 m and the one-cell band between the two
+  levels is a stair that interpolates across the cell, drawn as three steps with risers. Height changes
+  stop being a cliff you have to jump.
+- `floorHeightAt` interpolates across a stair cell, so the player, the pickups and the enemies all
+  follow the ramp rather than the cell's nominal floor.
+- corridors are carved at floor 0 and can meet a raised platform at its edge, so a reconciliation pass
+  turns any open cell that touches a platform into a stair.
+- each platform is verified before it is accepted: if it leaves any open cell unreachable, that room's
+  platform is rolled back and the level is generated without it.
+
+**Test invariants**
+- the step-height check now distinguishes a stair band (rise ÷ 3) from a ledge, and skips platform cells
+  reached across one.
+- the walk-the-flow-field test skips the sealed secret alcove, which is open floor by design and
+  unreachable until broken.
+
+
 ## 1.18.0 — 2026-11-19
 
 **Secret rooms** (roadmap 32)

@@ -81,10 +81,19 @@ for (const seed of seeds) {
   }
   if (shut.has(L.exit.cz * L.W + L.exit.cx)) bad(seed, 'exit pad reachable while doors are shut');
 
-  // walking from spawn: step heights must never exceed MAX_STEP on a legal path
-  // (checked implicitly: no cell floor exceeds MAX_STEP except ledges of exactly MAX_STEP)
+  // walking from spawn: step heights must never exceed MAX_STEP on a legal path.
+  // A platform reached by a stair band is the exception: the band interpolates,
+  // so the walkable rise across it is (high - low) / steps, which is under
+  // MAX_STEP by construction.
   for (const c of L.cells) {
-    if (!c.solid && c.floor > MAX_STEP + 1e-6) bad(seed, 'floor above max step');
+    if (c.solid) continue;
+    if (c.platform) continue;   // reached across a stair band, not a step
+    if (c.stair) {
+      const rise = c.stairHigh - c.stairLow;
+      if (rise / 3 > MAX_STEP + 1e-6) bad(seed, 'stair band rises too far in one step');
+      continue;
+    }
+    if (c.floor > MAX_STEP + 1e-6) bad(seed, 'floor above max step');
     if (!c.solid && c.ceil <= c.floor + 0.5) bad(seed, 'ceiling too low');
   }
 
@@ -145,7 +154,9 @@ for (const seed of seeds) {
   }
 
   for (let t = 0; t < 12; t++) {
-    const c = L.openCells[Math.floor((t / 12) * L.openCells.length)];
+    // the sealed secret alcove is open floor but unreachable until broken
+    const walkable = L.openCells.filter((o) => !L.cells[o.z * L.W + o.x].secret);
+    const c = walkable[Math.floor((t / 12) * walkable.length)];
     let x = c.wx;
     let z = c.wz;
     let steps = 0;
