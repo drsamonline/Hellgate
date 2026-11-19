@@ -201,6 +201,21 @@ const wired = await page.evaluate(() => ({
   weapons: window.HG.weapons ? 4 : 0,
 }));
 ok('main wires the footstep callback', wired.step === true);
+
+// every sound in the switch must be playable: an undefined variable in one case
+// is invisible until that case runs, which is how 'spot' broke the build
+const sounds = await page.evaluate(() => {
+  const out = [];
+  const names = ['pistol', 'chaingun', 'shotgun', 'rocket', 'boom', 'hit', 'wall', 'hurt', 'pain',
+    'enemyDie', 'enemyShoot', 'fireball', 'pickup', 'key', 'door', 'wave', 'empty', 'reload',
+    'step', 'spot', 'dead', 'boss', 'heal', 'armor', 'relic'];
+  for (const n of names) {
+    try { window.HG.audio.play(n, { x: 0, y: 0, z: 0 }); out.push(n + ':ok'); }
+    catch (e) { out.push(n + ':' + e.message); }
+  }
+  return out.filter((r) => !r.endsWith(':ok'));
+});
+ok('every sound plays without throwing', sounds.length === 0, sounds.join(', '));
 ok('main installs the occlusion test', wired.occlude === true);
 
 // a save must survive a reload and come back on the Continue button

@@ -183,6 +183,7 @@ export class Sfx {
 
   play(name, at, opts = {}) {
     if (!this.ctx || this.muted) return;
+    const ctx = this.ctx;   // the switch cases build nodes directly
     this._pitch = 0.94 + Math.random() * 0.12; // no two plays are identical
     if (at) {
       const out = this.spatialOut(at);
