@@ -163,6 +163,10 @@
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
 
+  #grenades{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);
+    font-size:9px;letter-spacing:.3em;color:#9fd67f;opacity:.85;pointer-events:none}
+  #grenades.empty{opacity:.25}
+
   #stamina{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);
     width:150px;height:3px;background:rgba(10,9,8,.7);border-radius:2px;overflow:hidden;opacity:0;
     transition:opacity .2s;pointer-events:none}
@@ -326,6 +330,10 @@
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
 
+  #grenades{position:absolute;left:50%;bottom:120px;transform:translateX(-50%);
+    font-size:9px;letter-spacing:.3em;color:#9fd67f;opacity:.85;pointer-events:none}
+  #grenades.empty{opacity:.25}
+
   #stamina{position:absolute;left:50%;bottom:104px;transform:translateX(-50%);
     width:150px;height:3px;background:rgba(10,9,8,.7);border-radius:2px;overflow:hidden;opacity:0;
     transition:opacity .2s;pointer-events:none}
@@ -423,6 +431,7 @@
       <span id="bossname">WARDEN</span>
       <div id="bosswrap"><div id="bossfill"></div></div>
     </div>
+    <div id="grenades"></div>
     <div id="stamina"><i></i></div>
     <div id="killfeed"></div>
     <div id="prompt"></div>

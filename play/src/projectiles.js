@@ -3,10 +3,12 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { raycastWalls } from './level.js';
+import { raycastWalls, floorHeightAt } from './level.js';
 
 const ROCKET = { speed: 26, radius: 0.18, splash: 4.5, damage: 95, life: 5 };
 const FIREBALL = { speed: 13, radius: 0.22, splash: 1.4, damage: 15, life: 6 };
+// a thrown grenade: slower than a rocket, bounces, and the fuse is the weapon
+const GRENADE = { speed: 15, radius: 0.2, splash: 5, damage: 110, life: 1.7, gravity: 22, bounce: 0.42 };
 
 /**
  * Rockets and fireballs: spawn, travel, explode, and what they hit on the way.
@@ -27,11 +29,14 @@ export class Projectiles {
   }
 
   spawn(kind, pos, dir, opts = {}) {
-    const spec = kind === 'rocket' ? ROCKET : FIREBALL;
+    const spec = kind === 'rocket' ? ROCKET : kind === 'grenade' ? GRENADE : FIREBALL;
     let mesh;
     if (kind === 'rocket') {
       mesh = new THREE.Mesh(this.rocketGeo, this.rocketMat);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    } else if (kind === 'grenade') {
+      mesh = new THREE.Mesh(this.fireGeo, new THREE.MeshLambertMaterial({ color: 0x4a5a3a }));
+      mesh.scale.setScalar(0.9);
     } else {
       mesh = new THREE.Mesh(this.fireGeo, this.fireMat);
     }
@@ -50,6 +55,10 @@ export class Projectiles {
       owner: opts.owner || 'player',
       life: spec.life,
       dead: false,
+      // grenades fall and bounce; everything else flies straight
+      vy: kind === 'grenade' ? (opts.vy != null ? opts.vy : 3.2) : 0,
+      gravity: spec.gravity || 0,
+      bounce: spec.bounce || 0,
     });
   }
 
@@ -59,6 +68,17 @@ export class Projectiles {
       p.life -= dt;
       if (p.life <= 0) { this.explode(p, player, enemies); continue; }
 
+      if (p.gravity) {
+        p.vy -= p.gravity * dt;
+        const floor = floorHeightAt(this.level, p.pos.x, p.pos.z) + p.radius;
+        p.pos.y += p.vy * dt;
+        if (p.pos.y <= floor) {
+          p.pos.y = floor;
+          p.vy = Math.abs(p.vy) * p.bounce;
+          if (p.vy < 0.6) p.vy = 0;
+        }
+      }
+
       const travel = p.speed * dt;
       const steps = Math.max(1, Math.ceil(travel / 0.3));
       const stepLen = travel / steps;
@@ -66,6 +86,17 @@ export class Projectiles {
       for (let s = 0; s < steps && !p.dead; s++) {
         const hit = raycastWalls(this.level, p.pos, p.dir, stepLen + 0.06, 0.05);
         if (hit) {
+          if (p.bounce) {
+            // reflect off the wall and keep going: the fuse decides when it ends
+            p.pos.set(hit.point.x, hit.point.y, hit.point.z);
+            const n = hit.normal || { x: 0, y: 1, z: 0 };
+            const dot = p.dir.x * n.x + p.dir.y * n.y + p.dir.z * n.z;
+            p.dir.x -= 2 * dot * n.x;
+            p.dir.y -= 2 * dot * n.y;
+            p.dir.z -= 2 * dot * n.z;
+            p.speed *= 0.6;
+            break;
+          }
           p.pos.set(hit.point.x, hit.point.y, hit.point.z);
           this.explode(p, player, enemies);
           break;
@@ -74,6 +105,7 @@ export class Projectiles {
 
         if (p.owner === 'player') {
           // enemy proximity
+          if (p.bounce) continue; // a grenade passes by; the fuse does the work
           for (const e of enemies.list) {
             if (!e.alive) continue;
             const c = e.chestPos();

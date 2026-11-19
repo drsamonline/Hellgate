@@ -275,6 +275,25 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== grenades ==');
+HG.game.state = 'playing';
+HG.player.grenades = 3;
+const liveBefore = HG.projectiles.list.length;
+HG.throwGrenade();
+frames(1);
+ok(HG.player.grenades === 2, 'throwing spends one (' + HG.player.grenades + ' left)');
+ok(HG.projectiles.list.length > liveBefore, 'a grenade is in the air');
+const gren = HG.projectiles.list[HG.projectiles.list.length - 1];
+ok(gren.kind === 'grenade', 'it is a grenade, not a rocket');
+ok(gren.bounce > 0 && gren.gravity > 0, 'it falls and it bounces');
+frames(150);
+ok(!HG.projectiles.list.includes(gren), 'the fuse runs out and it is gone');
+HG.player.grenades = 0;
+const beforeEmpty = HG.projectiles.list.length;
+HG.throwGrenade();
+ok(HG.projectiles.list.length === beforeEmpty, 'no grenades, no throw');
+HG.player.grenades = 3;
+
 console.log('\n== sprint stamina and crates ==');
 HG.game.state = 'playing';
 HG.input.keys = Object.create(null);

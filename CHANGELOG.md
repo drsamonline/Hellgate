@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.21.0 — 2026-11-19
+
+**Grenades** (roadmap 24)
+- `G` or right-click lobs one: 15 m/s with an upward toss, gravity 22, bounce 0.42 off walls and floor,
+  a 1.7 s fuse and a 5 m blast for 110 damage. Three per run, shown as pips above the stamina bar.
+- the fuse is the weapon: it passes by enemies without detonating, so a bounce around a corner works.
+
+**Under the hood**
+- `Projectiles` gained gravity and bounce, both zero for rockets and fireballs, so nothing else changed.
+- a bouncing projectile reflects off the wall normal and slows to 60 % rather than exploding.
+
+
 ## 1.20.0 — 2026-11-19
 
 **Sprint stamina** (roadmap 30)

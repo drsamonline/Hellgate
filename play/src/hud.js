@@ -32,6 +32,7 @@ export class HUD {
     this.elPrompt = document.getElementById('prompt');
     this.elFeed = document.getElementById('killfeed');
     this.elStamina = document.getElementById('stamina');
+    this.elGrenades = document.getElementById('grenades');
     this.staminaBar = this.elStamina ? this.elStamina.firstElementChild : null;
     this.damageNumbers = true;
     this.elBuffs = document.getElementById('buffs');
@@ -131,6 +132,13 @@ export class HUD {
       this.elWeapon.textContent = wname;
       this.lastWeapon = wname;
     }
+    // ---- grenades --------------------------------------------------------
+    if (this.elGrenades && state && state.player) {
+      const n = state.player.grenades || 0;
+      this.elGrenades.textContent = '\u25cf '.repeat(Math.min(5, n)) + (n > 5 ? '+' + (n - 5) : '');
+      this.elGrenades.classList.toggle('empty', n === 0);
+    }
+
     // ---- stamina ---------------------------------------------------------
     if (this.elStamina && this.staminaBar && state && state.player) {
       const v = Math.max(0, Math.min(1, state.player.stamina));

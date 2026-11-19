@@ -40,7 +40,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 21. **A third enemy type** — a fast melee "hound" that dies in one shotgun blast. Forces weapon switching. `enemies.js` · M · high — ✓ shipped
 22. **Boss wave every 5th wave** — one large, slow, high-HP enemy with a telegraphed area attack. Gives a run a shape. `enemies.js` · M · high — ✓ shipped
 23. **Weapon 4: chaingun** — sustained fire, wide spread, spin-up. Exercises the ammo/pickup path and rewards holding a lane. `weapons.js` · M · medium — ✓ shipped
-24. **Grenade / alt-fire** — a right-click with a bounce and a fuse. `projectiles.js` · M · medium
+24. **Grenade / alt-fire** — a right-click with a bounce and a fuse. `projectiles.js` · M · medium — ✓ shipped (`G` or right-click, three per run)
 25. **Difficulty presets** — Easy/Normal/Hard as multipliers on enemy hp, damage and count. One object, three numbers. `main.js` · S · high — ✓ shipped
 26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high — ✓ shipped
 27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium — ✓ shipped

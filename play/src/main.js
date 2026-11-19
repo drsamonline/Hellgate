@@ -399,6 +399,7 @@ function applyClass(classId) {
   saveSettings(settings);
   recomputeStats();
   player.health = player.maxHp;
+  player.grenades = 3;
   player.armor = def.armor + 20 * (game.upgrades.armour || 0) + (player.startArmourBonus || 0);
   weapons.select(def.weapon, true);
   weapons.cd = 0;
@@ -1019,6 +1020,21 @@ function closeLore() {
   clock.getDelta();
 }
 
+function throwGrenade() {
+  if (game.state !== 'playing' || !player.alive) return;
+  if ((player.grenades || 0) <= 0) {
+    hud.toast('NO GRENADES');
+    audio.play('empty');
+    return;
+  }
+  player.grenades--;
+  const dir = camera.getWorldDirection(new THREE.Vector3());
+  const from = camera.localToWorld(new THREE.Vector3(0.2, -0.12, -0.5));
+  projectiles.spawn('grenade', from, dir, { vy: 3.4, owner: 'player' });
+  audio.play('pickup');
+  hud.toast('GRENADE  ·  ' + player.grenades + ' LEFT', 1.4);
+}
+
 function toggleInventory() {
   if (game.state === 'inventory') {
     game.state = 'playing';
@@ -1159,6 +1175,7 @@ function runStats() {
     shots: weapons.shots,
     damageTaken: Math.round(game.damageTaken || 0),
     relic: game.relicsTotal - game.relics.length,
+    grenades: player.grenades || 0,
     favourite: Object.entries(game.weaponKills || {}).sort((a, b) => b[1] - a[1])[0] || null,
     seed: game.seed,
   };
@@ -1366,6 +1383,7 @@ function toggleFullscreen() {
 }
 
 canvas.addEventListener('mousedown', (e) => {
+  if (e.button === 2) { throwGrenade(); return; }   // right-click: lob a grenade
   if (e.button !== 0) return;
   if (game.state === 'playing') {
     input.fire = true;
@@ -1407,6 +1425,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyR') castPower(2);
   if (e.code === 'KeyX') weapons.next(1);
   if (e.code === 'KeyV') openLore();
+  if (e.code === 'KeyG') throwGrenade();
   if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
   if (e.code === 'KeyF') toggleFullscreen();
   if (e.code === 'KeyM') {
@@ -1724,7 +1743,7 @@ window.HG = {
   get companion() { return companion; },
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
-  resumeRun, saveRun, loadRun, clearRun, toggleInventory,
+  resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
   runStats, topRuns, recordRun, gameOver,
