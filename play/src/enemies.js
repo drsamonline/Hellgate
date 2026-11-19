@@ -622,6 +622,16 @@ export class EnemyManager {
     }
   }
 
+  /** Put one enemy of a type at a world position, mid-wave. */
+  spawnAt(type, x, z, wave) {
+    const e = new Enemy(type, new THREE.Vector3(x, 0, z), wave, this.scene, { diff: this.diff });
+    e.pos.y = floorHeightAt(this.level, x, z);
+    e.mesh.position.y = e.pos.y;
+    this.list.push(e);
+    this.effects.burst({ x, y: e.pos.y + 0.8, z }, 0xff3311, 10, 3, 0.5, 2);
+    return e;
+  }
+
   get boss() {
     return this.list.find((e) => e.alive && e.T.boss) || null;
   }

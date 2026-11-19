@@ -148,6 +148,7 @@ const game = {
   upgrades: {},
   trinkets: [],
   drops: [],
+  loreChoices: {},
   wave: 0,
   kills: 0,
   waveKills: 0,
@@ -791,12 +792,77 @@ function openLore() {
   const b = document.getElementById('loreBody');
   if (t) t.textContent = r.entry.title;
   if (b) b.textContent = r.entry.lines.join('\n\n');
+  renderLoreChoices(r.entry);
   if (r.fresh) {
     game.score += 75;
     hud.toast('TERMINAL READ  +75', 1.8);
   }
   showScreen('lore');
   releaseLock();
+}
+
+// Two of the terminals ask a question. The answer is applied once and recorded,
+// so the same terminal cannot be farmed.
+function renderLoreChoices(entry) {
+  const wrap = document.getElementById('loreChoices');
+  if (!wrap) return;
+  const chosen = game.loreChoices[entry.title];
+  if (!entry.choice || chosen) {
+    wrap.innerHTML = chosen ? `<p class="sub">You chose: ${chosen}</p>` : '';
+    return;
+  }
+  wrap.innerHTML =
+    `<p class="sub">${entry.choice.prompt}</p>` +
+    entry.choice.options
+      .map((o) => `<button class="card choicecard" data-choice="${o.id}"><h3>${o.label}</h3></button>`)
+      .join('');
+  wrap.querySelectorAll('[data-choice]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const opt = entry.choice.options.find((o) => o.id === el.getAttribute('data-choice'));
+      if (opt) resolveChoice(entry, opt);
+    });
+  });
+}
+
+function resolveChoice(entry, opt) {
+  if (game.loreChoices[entry.title]) return; // one answer per terminal
+  game.loreChoices[entry.title] = opt.label;
+  switch (opt.effect) {
+    case 'relic':
+      player.damage(20, null);
+      spawnRelicAt(player.pos.x, player.pos.z);
+      hud.toast('A RELIC, PAID FOR', 2.2);
+      break;
+    case 'score':
+      game.score += 150;
+      hud.toast('+150', 1.6);
+      break;
+    case 'ambush': {
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * Math.PI * 2;
+        enemies.spawnAt('imp', player.pos.x + Math.cos(a) * 4, player.pos.z + Math.sin(a) * 4, game.wave);
+      }
+      hud.toast('SOMETHING WAS IN THERE', 2.4);
+      effects.addShake(0.4);
+      break;
+    }
+    default:
+      hud.toast('LEFT ALONE', 1.6);
+  }
+  audio.play('pickup');
+  renderLoreChoices(entry);
+}
+
+function spawnRelicAt(x, z) {
+  const mesh = new THREE.Mesh(
+    new THREE.OctahedronGeometry(0.26, 0),
+    new THREE.MeshBasicMaterial({ color: 0xc77dff })
+  );
+  const baseY = floorHeightAt(level, x, z) + 0.7;
+  mesh.position.set(x, baseY, z);
+  scene.add(mesh);
+  game.relics.push({ mesh, x, z, baseY, t: 0 });
+  game.relicsTotal = Math.max(game.relicsTotal, game.relicsTotal);
 }
 
 function closeLore() {
@@ -1411,7 +1477,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory,
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
-  openLore, closeLore, get lore() { return lore; },
+  openLore, closeLore, resolveChoice, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,
   get weapons() { return weapons; },
   get level() { return level; },

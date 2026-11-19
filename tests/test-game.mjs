@@ -283,6 +283,35 @@ HG.game.trinkets = [];
 HG.recomputeStats();
 frames(2);
 
+console.log('\n== branching terminals ==');
+const choiceEntry = HG.lore.entries.find((e) => e.entry.choice);
+if (choiceEntry) {
+  HG.player.pos.set(choiceEntry.x + 0.4, choiceEntry.y, choiceEntry.z);
+  HG.lore.update(HG.player);
+  HG.openLore();
+  frames(1);
+  ok(HG.game.state === 'lore', 'a terminal with a question opens');
+  const opt = choiceEntry.entry.choice.options.find((o) => o.effect === 'score');
+  const sc = HG.game.score;
+  HG.resolveChoice(choiceEntry.entry, opt);
+  ok(HG.game.score === sc + 150, 'the choice pays its reward (' + sc + ' -> ' + HG.game.score + ')');
+  ok(HG.game.loreChoices[choiceEntry.entry.title], 'the choice is recorded');
+  const sc2 = HG.game.score;
+  HG.resolveChoice(choiceEntry.entry, opt);
+  ok(HG.game.score === sc2, 'the same terminal cannot be farmed');
+  HG.closeLore();
+  frames(1);
+} else {
+  ok(false, 'no terminal in this level carries a choice');
+}
+const ambush = HG.lore.entries.find((e) => e.entry.choice && e.entry.choice.options.some((o) => o.effect === 'ambush'));
+if (ambush) {
+  const before = HG.enemies.list.length;
+  const optA = ambush.entry.choice.options.find((o) => o.effect === 'ambush');
+  HG.resolveChoice(ambush.entry, optA);
+  ok(HG.enemies.list.length > before, 'the ambush choice spawns enemies (' + before + ' -> ' + HG.enemies.list.length + ')');
+}
+
 console.log('\n== prop LOD ==');
 ok(HG.props && HG.props.grassMesh, 'the level has a grass mesh');
 HG.props.setQuality(0);
@@ -292,7 +321,7 @@ ok(HG.props.grassMesh.visible === true, 'high quality restores it');
 
 console.log('\n== lore terminals ==');
 ok(HG.lore && HG.lore.entries.length === 3, 'three terminals placed (' + (HG.lore ? HG.lore.entries.length : 0) + ')');
-const t0 = HG.lore.entries[0];
+const t0 = HG.lore.entries.find((e) => !HG.lore.read.has(e.entry.title)) || HG.lore.entries[0];
 HG.player.pos.set(t0.x + 0.5, t0.y, t0.z);
 frames(2);
 ok(HG.lore.near === t0, 'the nearest terminal is detected');

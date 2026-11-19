@@ -41,11 +41,39 @@ export const TERMINALS = [
     ],
   },
   {
+    title: 'THE OFFER',
+    lines: [
+      'A handshake protocol is still running. It has been waiting for someone with a pulse to accept.',
+      'The terms are not hidden. Twenty of your health, and the relic behind the panel is yours.',
+    ],
+    choice: {
+      prompt: 'Accept the handshake?',
+      options: [
+        { id: 'take', label: 'Take the deal — 20 health for a relic', effect: 'relic' },
+        { id: 'refuse', label: 'Refuse — walk away with 150', effect: 'score' },
+      ],
+    },
+  },
+  {
     title: 'ARMOURY NOTE',
     lines: [
       'Rockets do not care how many of them there are. That is the whole lesson.',
       'Do not fire one at your own feet. I know. I know.',
     ],
+  },
+  {
+    title: 'A NAME SCRATCHED OUT',
+    lines: [
+      'Someone wrote a name here, then took it back with a knife. The blade is still on the desk.',
+      'Underneath, in different ink: it got in through the maintenance shaft. Do not open the shaft.',
+    ],
+    choice: {
+      prompt: 'Open the maintenance shaft?',
+      options: [
+        { id: 'open', label: 'Open it — something is in there', effect: 'ambush' },
+        { id: 'leave', label: 'Leave it shut', effect: 'safe' },
+      ],
+    },
   },
   {
     title: 'UNFILED',
@@ -73,9 +101,17 @@ export class Lore {
     const pool = rooms.length ? rooms : level.rooms;
     const count = Math.min(3, pool.length);
 
+    // one terminal in every level asks a question: the mechanic should never be
+    // something a player can miss by luck of the draw
+    const withChoice = TERMINALS.filter((t) => t.choice);
+    const sequence = [
+      withChoice[(this.rng.next() * withChoice.length) | 0],
+      ...Array.from({ length: Math.max(0, count - 1) }, () => TERMINALS[(this.rng.next() * TERMINALS.length) | 0]),
+    ];
+
     for (let i = 0; i < count; i++) {
       const room = pool[Math.floor(this.rng.next() * pool.length)];
-      const entry = TERMINALS[(this.rng.next() * TERMINALS.length) | 0];
+      const entry = sequence[i] || TERMINALS[0];
       const x = room.cx * CELL + (this.rng.next() - 0.5) * 2;
       const z = room.cz * CELL + (this.rng.next() - 0.5) * 2;
       const y = floorHeightAt(level, x, z);

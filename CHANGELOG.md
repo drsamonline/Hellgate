@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.9.0 — 2026-11-19
+
+**Branching terminals**
+- two terminals ask a question with two answers: 20 health for a relic or 150 score; open the
+  maintenance shaft and get three imps, or leave it shut.
+- every level is guaranteed to hold at least one, so the mechanic cannot be missed by luck of the draw.
+- an answer is recorded by terminal title: `resolveChoice()` returns early on a second call and the
+  panel shows what you chose instead of the buttons.
+
+**Documented limit**
+- Firefox and WebKit cannot run here: Playwright's builds need `libXcursor`, `libgtk-3` and `libgdk-3`,
+  and the sandbox has no package manager. Recorded in `documentation/testing.md` rather than left as a
+  vague "not tested".
+
+**Tests**
+- 6 new assertions: a choice terminal opens, the reward lands, the answer is recorded, a repeat pays
+  nothing, and the ambush answer spawns enemies.
+
+
 ## 1.8.0 — 2026-11-19
 
 **Trinkets**

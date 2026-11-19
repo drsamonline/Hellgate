@@ -96,6 +96,19 @@ Three per zone, stuck to a floor post with a green screen, readable once with `V
 second read shows the same text and pays nothing. It is the closest thing here to an NPC: somebody was
 in this room before you and left a note.
 
+## Branching terminals
+
+Two of the eight terminals ask a question, and every level is guaranteed to hold at least one — the
+mechanic should not be something a player misses by luck of the draw.
+
+| Terminal | Question | Answers |
+| --- | --- | --- |
+| The Offer | Accept the handshake? | 20 health for a relic, or walk away with 150 |
+| A Name Scratched Out | Open the maintenance shaft? | something is in there (three imps), or leave it shut |
+
+An answer is recorded by terminal title, so the same terminal cannot be farmed; `resolveChoice()`
+returns early on a second call, and the panel replaces the buttons with what you chose.
+
 ## Timed pickups
 
 Two more pickup kinds, both on a 20-second clock and shown as chips in the HUD:
@@ -171,7 +184,7 @@ something you could still be playing.
 
 ## What this is not
 
-- No dialogue and no branching. Terminals are monologues; nothing replies.
+- No conversation. Terminals ask a single question with two answers; nothing replies to what you say.
 - One boss, two attacks, no phases. It is a fight, not an encounter design.
 - No inventory: powers are fixed per class, pickups are ammo and health only.
 - No saving mid-wave. The save is a wave boundary, not a quicksave: dying rewinds to the start of the

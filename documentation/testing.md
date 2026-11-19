@@ -141,6 +141,20 @@ factors and prints the four category scores plus LCP, CLS and TBT. It needs
 rasteriser, so paint and blocking time read several times worse than on a GPU. Treat them as a
 regression baseline, not a verdict.
 
+## Why cross-browser is not verified here
+
+Firefox and WebKit are not available in this environment. Playwright's builds download fine, but they
+need system libraries the sandbox does not have and cannot install:
+
+```
+Missing libraries: libXcursor.so.1  libgtk-3.so.0  libgdk-3.so.0
+```
+
+Chromium works because it is a static build with its dependencies bundled. Every claim about browser
+behaviour in this repo is therefore a Chromium claim. The code avoids the usual traps — pointer lock
+is optional, `unadjustedMovement` falls back, and touch uses pointer events — but that is design, not
+verification.
+
 ## Screenshots and the map
 
 `node tools/shoot.mjs` runs the game in headless Chromium (SwiftShader software WebGL), poses the
