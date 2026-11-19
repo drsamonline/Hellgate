@@ -34,17 +34,17 @@ Cheap, low-risk, immediately noticeable. All `S`.
 ## Tier 1 — Small (an afternoon each)
 
 17. **Enemy navigation** — replace direct steering with a flow field over the grid (BFS from the player, recomputed every ~0.5 s, shared by all enemies). This is the single biggest gameplay fix: enemies currently stall on long walls. `level.js` + `enemies.js` · M · very high — ✓ shipped
-18. **Sound occlusion** — attenuate enemy sounds by line of sight, so a grunt behind a wall is muffled. `audio.js` · M · high
+18. **Sound occlusion** — attenuate enemy sounds by line of sight, so a grunt behind a wall is muffled. `audio.js` · M · high — ✓ shipped (lowpass at 640 Hz, −55 % gain)
 19. **Directional audio** — a `PannerNode` per enemy, or at least a left/right gain based on the angle to the camera. `audio.js` · M · high — ✓ shipped
 20. **Hit-direction indicator on enemies** — a brief arc showing where damage came from, so you can find the imp shooting you from behind. `enemies.js` · M · high
 21. **A third enemy type** — a fast melee "hound" that dies in one shotgun blast. Forces weapon switching. `enemies.js` · M · high — ✓ shipped
 22. **Boss wave every 5th wave** — one large, slow, high-HP enemy with a telegraphed area attack. Gives a run a shape. `enemies.js` · M · high — ✓ shipped
-23. **Weapon 4: chaingun** — sustained fire, wide spread, spin-up. Exercises the ammo/pickup path and rewards holding a lane. `weapons.js` · M · medium
+23. **Weapon 4: chaingun** — sustained fire, wide spread, spin-up. Exercises the ammo/pickup path and rewards holding a lane. `weapons.js` · M · medium — ✓ shipped
 24. **Grenade / alt-fire** — a right-click with a bounce and a fuse. `projectiles.js` · M · medium
 25. **Difficulty presets** — Easy/Normal/Hard as multipliers on enemy hp, damage and count. One object, three numbers. `main.js` · S · high — ✓ shipped
 26. **Wave timer + score** — time bonus per wave, score = kills × wave × accuracy. Turns a survival loop into a score attack. `main.js` · M · high — ✓ shipped
 27. **Accuracy + damage stats on the game-over screen** — shots fired, hit percentage, damage taken, favourite weapon. `main.js` · S · medium — ✓ shipped (accuracy, shots, damage taken; favourite weapon not built)
-28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low
+28. **Kill feed** — "IMP → ROCKET" lines in the corner. Cheap personality. `hud.js` · S · low — ✓ shipped (enemy and outcome; weapon attribution still missing)
 29. **Damage numbers** — floating text on hits, toggleable. Divisible, but players love them. `effects.js` · M · low
 30. **Sprint stamina** — or explicitly not: the current infinite sprint is a design choice. Decide and document it. `player.js` · S · low
 31. **Crouch** — lowers the eye and the hit sphere; makes cover meaningful. `player.js` · M · medium

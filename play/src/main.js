@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { generateLevel, raycastWalls, floorHeightAt, CELL } from './level.js';
+import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, CELL } from './level.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
 import { Player } from './player.js';
@@ -271,6 +271,7 @@ function buildRun(seed, zoneDef) {
   enemies.onKill = (e) => {
     game.kills++;
     game.waveKills++;
+    if (hud && e && e.T) hud.feed(String(e.T.label || e.type || 'ENEMY').toUpperCase(), 'DOWN');
     if (player.leech > 0) player.heal(player.leech);
     const id = rollDrop(Math.random);
     if (id && e) dropTrinket(id, e.pos);
@@ -299,6 +300,14 @@ function buildRun(seed, zoneDef) {
     player.yaw = bestYaw;
     player.syncCamera();
   }
+  // footsteps were wired into the player in 1.12.0 and never connected here: the
+  // suite tested the callback, not the integration, so the game had no steps
+  player.onStep = (speed) => audio.play('step', { gain: speed > 6.5 ? 1 : 0.7 });
+
+  // one line-of-sight test per sound, only for sounds that carry a position
+  audio.occludeTest = (x, z) =>
+    hasLineOfSight(level, { x: player.pos.x, y: player.pos.y + 1.5, z: player.pos.z }, { x, y: player.pos.y + 1.2, z });
+
   player.onDamage = (amt, src) => {
     hud.hurt(amt);
     hud.damageFrom(src, camera);
@@ -1256,6 +1265,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Digit1') weapons.select(0);
   if (e.code === 'Digit2') weapons.select(1);
   if (e.code === 'Digit3') weapons.select(2);
+  if (e.code === 'Digit4') weapons.select(3);
   if (e.code === 'KeyQ') castPower(0);
   if (e.code === 'KeyE') castPower(1);
   if (e.code === 'KeyR') castPower(2);
@@ -1389,6 +1399,7 @@ function update(dt) {
 
   player.update(dt, input, level);
   audio.setListener(player.pos.x, player.pos.z, player.yaw);
+  weapons.firing = !!input.fire;
   weapons.update(dt, player);
 
   if (input.fire) weapons.tryFire(fireCtx());

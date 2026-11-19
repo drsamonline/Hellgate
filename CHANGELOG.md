@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.14.0 — 2026-11-19
+
+**Chaingun** (roadmap 23)
+- a fourth weapon on `4`: 9 damage, 0.075 s cooldown once spun up, wide spread, shared bullet pool.
+  The cooldown starts at 2.6× and reaches its floor after 0.55 s of held fire, so it rewards staying on
+  target rather than tapping. Its own view model and its own synthesised report.
+
+**Sound occlusion** (roadmap 18)
+- a positioned sound with no line of sight to the player now runs through a 640 Hz lowpass at 55 % gain.
+  `main.js` installs the test; without it every sound is direct.
+
+**Kill feed** (roadmap 28)
+- enemy name and outcome in the corner, five rows, fading after three seconds.
+
+**A bug from 1.12.0, found while wiring occlusion**
+- footsteps were never connected: `player.onStep` was implemented and never assigned in `main.js`. The
+  suite passed because it attached its own callback, which tested the mechanism rather than the
+  integration. Now wired, and the smoke test asserts the game sets it.
+
+
 ## 1.13.0 — 2026-11-19
 
 **Ambient drone** (roadmap 36)

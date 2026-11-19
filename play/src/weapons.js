@@ -7,7 +7,8 @@ import * as THREE from 'three';
 import { raycastWalls } from './level.js';
 
 /**
- * The three weapons: ammo, damage, cooldown, spread, range.
+ * The four weapons: ammo, damage, cooldown, spread, range. `spin` is the time
+ * the chaingun takes to reach its cooldown from a cold barrel.
  */
 export const WEAPONS = [
   {
@@ -24,6 +25,11 @@ export const WEAPONS = [
     key: 'rocket', name: 'ROCKET', ammo: 'rockets',
     damage: 95, cooldown: 1.0, pellets: 1, spread: 0, range: 0,
     kick: 0.17, shake: 0.2, sound: 'rocket', projectile: true,
+  },
+  {
+    key: 'chaingun', name: 'CHAINGUN', ammo: 'bullets',
+    damage: 9, cooldown: 0.075, pellets: 1, spread: 0.05, range: 60,
+    kick: 0.03, shake: 0.035, sound: 'chaingun', spin: 0.55,
   },
 ];
 
@@ -45,6 +51,8 @@ export class Weapons {
     this.bob = 0;
     this.shots = 0;   // accuracy stat
     this.hits = 0;
+    this.spinT = 0;   // chaingun spin-up, decays when the trigger is released
+    this.firing = false;
     this.models = [];
     this.muzzleTimer = 0;
 
@@ -70,6 +78,18 @@ export class Weapons {
     pistol.add(bx(0.07, 0.19, 0.1, dark, 0, -0.13, 0.06));
     pistol.add(bx(0.05, 0.05, 0.06, dark, 0, 0.08, 0.06));
     this.models.push(pistol);
+
+    // chaingun: a fat barrel cluster on a boxy receiver
+    const chain = new THREE.Group();
+    chain.add(bx(0.16, 0.15, 0.4, metal, 0, 0.0, -0.1));
+    for (const [ox, oy] of [[-0.045, -0.03], [0.045, -0.03], [-0.045, 0.05], [0.045, 0.05]]) {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.42, 6), dark);
+      b.rotation.x = Math.PI / 2;
+      b.position.set(ox, oy, -0.34);
+      chain.add(b);
+    }
+    chain.add(bx(0.06, 0.12, 0.08, dark, 0, -0.12, 0.06));
+    this.models.push(chain);
 
     // shotgun
     const shotgun = new THREE.Group();
@@ -151,7 +171,8 @@ export class Weapons {
       return;
     }
     player.ammo[w.ammo]--;
-    this.cd = w.cooldown;
+    this.cd = w.spin ? w.cooldown * (1 + 1.6 * (1 - this.spinT / w.spin)) : w.cooldown;
+    if (w.spin) this.spinT = Math.min(w.spin, this.spinT + 0.06);
     this.kick = w.kick;
     this.muzzleTimer = 0.05;
     this.muzzle.visible = true;
@@ -222,6 +243,8 @@ export class Weapons {
   }
 
   update(dt, player) {
+    const w = this.weapon;
+    if (w && w.spin && !this.firing) this.spinT = Math.max(0, this.spinT - dt * 2.2);
     this.cd = Math.max(0, this.cd - dt);
     this.kick += (0 - this.kick) * (1 - Math.exp(-16 * dt));
     this.raise += (0 - this.raise) * (1 - Math.exp(-11 * dt));

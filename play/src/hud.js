@@ -30,6 +30,7 @@ export class HUD {
     this.elBossFill = document.getElementById('bossfill');
     this.elBossName = document.getElementById('bossname');
     this.elPrompt = document.getElementById('prompt');
+    this.elFeed = document.getElementById('killfeed');
     this.elBuffs = document.getElementById('buffs');
     this.promptText = '';
     this.slotSig = '';
@@ -52,6 +53,18 @@ export class HUD {
     this.hitT = 0;
     this.toastT = 0;
     this.drawFace(100);
+  }
+
+  /** One line in the corner: who died, and to what. */
+  feed(what, how) {
+    if (!this.elFeed) return;
+    const row = document.createElement('div');
+    row.className = 'feedrow';
+    row.innerHTML = `<b>${what}</b><i>${how}</i>`;
+    this.elFeed.prepend(row);
+    while (this.elFeed.children.length > 5) this.elFeed.lastChild.remove();
+    setTimeout(() => row.classList.add('fade'), 3200);
+    setTimeout(() => row.remove(), 4200);
   }
 
   setPrompt(text) {

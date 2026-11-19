@@ -3,6 +3,7 @@
 // restart, pause, and a 2000-frame random-input soak.
 
 import './domstub.mjs';
+import { WEAPONS } from '../play/src/weapons.js';
 const { hasLineOfSight, cellAt } = await import('../play/src/level.js');
 const THREE = await import('three');
 
@@ -253,6 +254,25 @@ ok(HG.powers.cdMul < cdBefore, 'cooldown upgrade lowers the multiplier');
 // taking an upgrade routes to the world map; later blocks need a live game
 HG.game.state = 'playing';
 frames(2);
+
+console.log('\n== chaingun, occlusion, kill feed ==');
+ok(WEAPONS.length === 4, 'four weapons (' + WEAPONS.length + ')');
+ok(WEAPONS[3].key === 'chaingun', 'the chaingun is the fourth slot');
+ok(WEAPONS[3].spin > 0, 'the chaingun has a spin-up');
+HG.player.ammo.bullets = 200;
+HG.weapons.select(3, true);
+HG.input.fire = true;
+frames(2);
+const cdCold = HG.weapons.cd;
+frames(30);
+const cdHot = HG.weapons.cd;
+ok(cdHot <= cdCold + 1e-9, 'holding the trigger does not lengthen the cooldown (' + cdCold.toFixed(3) + ' -> ' + cdHot.toFixed(3) + ')');
+HG.input.fire = false;
+frames(2);
+ok(typeof HG.audio.occludeTest === 'function', 'sound occlusion is installed');
+const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
+ok(closeBy === true, 'a sound next to the player is not occluded');
+ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
 console.log('\n== run stats and the top five ==');
 HG.game.state = 'playing';

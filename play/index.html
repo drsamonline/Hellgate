@@ -151,6 +151,15 @@
   #bosswrap{width:100%;height:9px;background:#1a0d0d;border:1px solid rgba(255,59,48,.45);border-radius:2px;overflow:hidden}
   #bossfill{height:100%;width:100%;background:linear-gradient(90deg,#7a0f0a,#ff3b30);transition:width .15s linear}
 
+  #killfeed{position:absolute;right:14px;top:78px;display:flex;flex-direction:column;gap:3px;
+    align-items:flex-end;pointer-events:none}
+  .feedrow{font-size:10px;letter-spacing:.12em;color:#cbbda8;background:rgba(10,9,8,.6);
+    border:1px solid rgba(255,180,84,.14);border-radius:2px;padding:3px 8px;display:flex;gap:8px;
+    transition:opacity .9s}
+  .feedrow b{color:#ffd9a8;font-weight:400}
+  .feedrow i{font-style:normal;color:#ff3b30}
+  .feedrow.fade{opacity:0}
+
   #prompt{
     position:absolute;left:50%;bottom:196px;transform:translateX(-50%);
     font-size:11px;letter-spacing:.24em;color:#39ff9a;opacity:0;transition:opacity .15s;
@@ -277,7 +286,7 @@
     #bottombar .stat{min-width:0;flex:1 1 auto;text-align:center}
     #bottombar .stat .label{font-size:7px;letter-spacing:.1em}
     #bottombar .stat b{font-size:14px;letter-spacing:.04em}
-    #bottombar .stat:last-child b{font-size:11px}
+    #bottombar .stat:last-child b{font-size:10px}
     #bottombar .stat:last-child .label{display:none}
     #powerbar{bottom:calc(180px + env(safe-area-inset-bottom));gap:6px;padding:4px 6px}
     #energyWrap{width:86px}
@@ -286,7 +295,16 @@
     .pslot span{font-size:7px}
     #topbar{font-size:9px;gap:8px;padding:5px 8px;flex-wrap:wrap}
     #relics{font-size:9px}
-    #prompt{bottom:calc(240px + env(safe-area-inset-bottom))}
+    #killfeed{position:absolute;right:14px;top:78px;display:flex;flex-direction:column;gap:3px;
+    align-items:flex-end;pointer-events:none}
+  .feedrow{font-size:10px;letter-spacing:.12em;color:#cbbda8;background:rgba(10,9,8,.6);
+    border:1px solid rgba(255,180,84,.14);border-radius:2px;padding:3px 8px;display:flex;gap:8px;
+    transition:opacity .9s}
+  .feedrow b{color:#ffd9a8;font-weight:400}
+  .feedrow i{font-style:normal;color:#ff3b30}
+  .feedrow.fade{opacity:0}
+
+  #prompt{bottom:calc(240px + env(safe-area-inset-bottom))}
     #bossbar{top:44px;width:86vw}
   }
   @media (max-height:420px){
@@ -367,6 +385,7 @@
       <span id="bossname">WARDEN</span>
       <div id="bosswrap"><div id="bossfill"></div></div>
     </div>
+    <div id="killfeed"></div>
     <div id="prompt"></div>
     <div id="buffs"></div>
     <div id="relics"></div>

@@ -49,7 +49,20 @@ export class Sfx {
     p.pan.value = pan;
     const g = this.ctx.createGain();
     g.gain.value = gain * gain; // squared: falls off faster than linearly
-    p.connect(g);
+
+    // Sound occlusion: something behind a wall is quieter and duller, not just
+    // quieter. `occludeTest` is installed by main.js and answers with line of
+    // sight; without it every sound is direct.
+    if (this.occludeTest && !this.occludeTest(at.x, at.z)) {
+      const lp = this.ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 640;
+      g.gain.value *= 0.45;
+      p.connect(lp);
+      lp.connect(g);
+    } else {
+      p.connect(g);
+    }
     g.connect(this.master);
     return p;
   }
@@ -178,6 +191,21 @@ export class Sfx {
         this.noise(0.09, 0.5, 'highpass', 900, 300);
         this.tone(320, 0.07, 'square', 0.12, 90);
         break;
+      case 'chaingun': {
+        const t = ctx.currentTime;
+        const src = this.noise();
+        const bp = ctx.createBiquadFilter();
+        bp.type = 'bandpass';
+        bp.frequency.value = 1500;
+        bp.Q.value = 0.9;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.12, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+        src.connect(bp).connect(g).connect(this._out || this.master);
+        src.start(t);
+        src.stop(t + 0.08);
+        break;
+      }
       case 'shotgun':
         this.noise(0.3, 0.75, 'lowpass', 2400, 260);
         this.tone(140, 0.16, 'sawtooth', 0.16, 50);
