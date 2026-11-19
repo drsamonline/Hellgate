@@ -77,6 +77,7 @@ let weapons = null;
 
 const settings = clampSettings(loadSettings());
 const progress = loadProgress();
+window.__THREE = THREE; // for tools that measure the scene
 
 // A run in progress: written at the start of every wave, cleared on death or on
 // clearing a zone, offered as Continue on the title screen.

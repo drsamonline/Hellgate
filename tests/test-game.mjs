@@ -280,6 +280,27 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== bodies fit their collision circle ==');
+for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) {
+  HG.enemies.clear();
+  HG.enemies.spawnAt(type, HG.player.pos.x + 6, HG.player.pos.z, 1);
+  frames(2);
+  const e = HG.enemies.list[0];
+  ok(Math.abs(e.radius - expect) < 0.01, type + ' collision radius is ' + e.radius + ', matching its body half-width');
+  // shove it into a wall and check the safety net moves it back out
+  e.pos.x = HG.level.spawn.x;
+  e.pos.z = HG.level.spawn.z;
+  const cx = Math.round(e.pos.x / 2), cz = Math.round(e.pos.z / 2);
+  const wall = HG.level.cells.find((c, i) => c.solid && Math.abs(c.x - cx) < 4 && Math.abs(c.z - cz) < 4);
+  if (wall) {
+    e.pos.x = wall.x * 2;
+    e.pos.z = wall.z * 2;
+    const moved = e.depenetrate(HG.level);
+    ok(moved === true, type + ' is pushed out of a solid cell');
+    ok(!isBlocked(HG.level, e.pos.x, e.pos.z), type + ' ends up on open floor');
+  }
+}
+
 console.log('\n== story per zone ==');
 const { panelsFor, epilogueFor, ZONE_STORY } = await import('../play/src/story.js');
 const zones = Object.keys(ZONE_STORY);

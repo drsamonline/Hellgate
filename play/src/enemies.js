@@ -10,7 +10,7 @@ const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DE
 
 const TYPES = {
   imp: {
-    hp: 55, speed: 2.5, radius: 0.45, height: 1.85, hitRadius: 0.62,
+    hp: 55, speed: 2.5, radius: 0.62, height: 1.85, hitRadius: 0.62,
     attackRange: 14, attackCd: 2.1, telegraph: 0.55, damage: 15,
     melee: false, sight: 22, color: 0x8a3524, label: 'IMP', pitch: 1.0,
   },
@@ -21,12 +21,12 @@ const TYPES = {
     boss: true,
   },
   hound: {
-    hp: 22, speed: 4.4, radius: 0.36, height: 1.05, hitRadius: 0.45,
+    hp: 22, speed: 4.4, radius: 0.64, height: 1.05, hitRadius: 0.45,
     attackRange: 2.4, attackCd: 0.9, telegraph: 0.25, damage: 9,
     melee: true, meleeRange: 1.9, meleeDamage: 11, sight: 26, color: 0x8a1f6a, label: 'HOUND', pitch: 1.45,
   },
   grunt: {
-    hp: 40, speed: 3.3, radius: 0.42, height: 1.7, hitRadius: 0.55,
+    hp: 40, speed: 3.3, radius: 0.52, height: 1.7, hitRadius: 0.55,
     attackRange: 16, attackCd: 1.4, telegraph: 0.4, damage: 8,
     melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT', pitch: 0.8,
   },
@@ -343,6 +343,9 @@ export class Enemy {
       return;
     }
 
+    // safety net: a body inside rock is a bug, but it should never be visible
+    if (this.depenetrate(level)) this.depenetrated = (this.depenetrated || 0) + 1;
+
     // level of detail: one slab when it is far away, the full body up close
     const lodDist = Math.hypot(player.pos.x - this.pos.x, player.pos.z - this.pos.z);
     const far = lodDist > LOD_DIST && this.state !== STATE.DEATH;
@@ -520,6 +523,33 @@ export class Enemy {
       if (this.tryMove(level, -mz * 0.7, mx * 0.7)) moved = true;
     }
     return moved;
+  }
+
+  /** If the body is inside rock, walk it to the nearest open cell centre. */
+  depenetrate(level) {
+    if (!circleBlocked(level, this.pos.x, this.pos.z, this.radius * 0.5)) return false;
+    const cx = Math.round(this.pos.x / 2);
+    const cz = Math.round(this.pos.z / 2);
+    let best = null;
+    let bestD = Infinity;
+    for (let dz = -2; dz <= 2; dz++) {
+      for (let dx = -2; dx <= 2; dx++) {
+        const nx = cx + dx;
+        const nz = cz + dz;
+        if (nx < 0 || nz < 0 || nx >= level.W || nz >= level.H) continue;
+        const c = level.cells[nz * level.W + nx];
+        if (c.solid || c.crate) continue;
+        const wx = nx * 2;
+        const wz = nz * 2;
+        const d = Math.hypot(wx - this.pos.x, wz - this.pos.z);
+        if (d < bestD) { bestD = d; best = { x: wx, z: wz }; }
+      }
+    }
+    if (!best) return false;
+    this.pos.x = best.x;
+    this.pos.z = best.z;
+    this.pos.y = floorHeightAt(level, best.x, best.z);
+    return true;
   }
 
   tryMove(level, dx, dz) {

@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.26.0 — 2026-11-19
+
+**Enemies through walls: found, measured, fixed**
+
+The report was right and my earlier headless test was looking in the wrong place. It tested whether an
+enemy's *centre* was inside a solid cell — which never happens. The body is what the player sees.
+
+Measured with `Box3.setFromObject` in a real browser:
+
+| Type | Collision radius | Body width | Poked through walls by |
+| --- | --- | --- | --- |
+| Imp | 0.45 | 1.21 | 0.16 m |
+| Grunt | 0.42 | 0.99 | 0.08 m |
+| Hound | 0.36 | 1.25 | 0.27 m |
+
+Every enemy's shoulders and arms were inside the wall it stood beside. Collision radii are now the
+measured half-widths — 0.62, 0.52, 0.64 — so the body fits the circle it is stopped by.
+
+**Safety net** — `depenetrate()` runs every frame: if a body ever is inside rock, it is walked to the
+nearest open cell centre and counted. A body inside a wall is now a bug that corrects itself rather
+than one the player sees.
+
+**Tests** — 9 new assertions: each radius matches its body half-width, and each type is pushed out of a
+solid cell onto open floor.
+
+**Tooling** — `window.__THREE` is exposed so a browser tool can measure scene geometry; that is how the
+body widths were measured.
+
+
 ## 1.25.0 — 2026-11-19
 
 **Story mode, per zone**
