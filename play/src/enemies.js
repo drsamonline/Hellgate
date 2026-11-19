@@ -525,11 +525,18 @@ export class Enemy {
     return moved;
   }
 
-  /** If the body is inside rock, walk it to the nearest open cell centre. */
+  /**
+   * If the centre is inside a solid cell, walk it to the nearest open one.
+   * The test is the cell, not a circle: a circle test with a body-sized radius
+   * fires in legal spots near a wall, and snapping to the cell centre every
+   * frame freezes the enemy in place.
+   */
   depenetrate(level) {
-    if (!circleBlocked(level, this.pos.x, this.pos.z, this.radius * 0.5)) return false;
     const cx = Math.round(this.pos.x / 2);
     const cz = Math.round(this.pos.z / 2);
+    if (cx < 0 || cz < 0 || cx >= level.W || cz >= level.H) return false;
+    const here = level.cells[cz * level.W + cx];
+    if (here && !here.solid && !here.crate) return false;
     let best = null;
     let bestD = Infinity;
     for (let dz = -2; dz <= 2; dz++) {

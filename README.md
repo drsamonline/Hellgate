@@ -144,6 +144,7 @@ bash tests/run.sh
 | --- | --- |
 | `test-level.mjs` | 47 seeds: determinism, every room reachable, spawn free, exit pad unreachable while doors are shut, a 400-step random walk never ends inside a wall, raycast sanity |
 | `test-geometry.mjs` | every merged triangle's winding matches its normal **and** its normal points into open space, which catches inverted faces that logic tests cannot see |
+| `test-playability.mjs` | five zones × six seeds, played: the spawn is free, the exit is reachable, the keycard is on reachable floor, no pickup or enemy is out of reach, no body stands inside rock, and clearing the wave opens the exit |
 | `test-game.mjs` | boots, walks, looks, fires all three weapons, kills, takes damage, closes on an enemy along the flow field, clears a wave, opens the exit, advances, checks the keycard gate, dies, restarts, pauses, then 2000 frames of random input without a crash |
 
 Two gates sit on top of the suites:

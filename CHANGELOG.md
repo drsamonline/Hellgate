@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.27.0 — 2026-11-19
+
+**A playability suite: every level must be completable**
+
+The two bugs reported from play — a keycard behind a sealed wall, and bodies wider than their collision
+circle — were both "the level works" failures. Neither was visible to a test of a single function, and
+my earlier checks asked the easier question.
+
+`tests/test-playability.mjs` plays five zones × six seeds and asks, per level:
+
+| Check | Why |
+| --- | --- |
+| The spawn is open floor | a level you cannot stand in is not a level |
+| The exit is reachable once doors open | the only way out |
+| Wave 3 places a keycard, on reachable floor | the gate's precondition |
+| No pickup, relic or barrel is out of reach | the keycard bug, generalised |
+| Every enemy spawned on reachable floor | an enemy you cannot reach is a wave you cannot clear |
+| No enemy body stands inside rock | the wall bug, measured against a constant rather than the radius under test |
+| Clearing the wave opens the exit | the whole loop, end to end |
+
+300 assertions, four suites, every gate green.
+
+**A bug the new suite found immediately**
+
+`depenetrate()` used a circle test at half the body radius. In a legal spot near a wall that test fires,
+and the enemy was snapped to its cell centre every frame — frozen in place. The navigation test caught
+it ("enemy closed along the field 6 → 6 cells"). It now tests the cell the enemy stands in, not a
+circle, so it only acts when the centre is genuinely inside rock.
+
+
 ## 1.26.0 — 2026-11-19
 
 **Enemies through walls: found, measured, fixed**

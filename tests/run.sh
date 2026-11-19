@@ -9,5 +9,6 @@ cp -r tests/stub-three node_modules/three
 node tests/test-level.mjs
 node tests/test-geometry.mjs
 node tests/test-game.mjs
+node tests/test-playability.mjs
 echo
 echo "all suites passed"
