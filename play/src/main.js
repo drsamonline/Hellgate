@@ -414,10 +414,10 @@ function spawnRelics(n) {
   game.relicsTotal = n;
   game.sideDone = false;
   if (!n) return;
-  const pool = level.openCells.filter(
+  const pool = level.reachableCells.filter(
     (c) => c.room >= 0 && c.room !== level.exitRoom && Math.hypot(c.wx - level.spawn.x, c.wz - level.spawn.z) > 8
   );
-  const use = pool.length ? pool : level.openCells;
+  const use = pool.length ? pool : level.reachableCells;
   for (let i = 0; i < n; i++) {
     const c = use[Math.floor(Math.random() * use.length)];
     const mesh = new THREE.Mesh(
@@ -615,12 +615,12 @@ const PICKUP_DEFS = {
 };
 
 function randomCell(minDist = 0, roomsOnly = true) {
-  const pool = level.openCells.filter((c) => {
+  const pool = level.reachableCells.filter((c) => {
     if (roomsOnly && c.room < 0) return false;
     if (c.x === level.exit.cx && c.z === level.exit.cz) return false;
     return Math.hypot(c.wx - player.pos.x, c.wz - player.pos.z) > minDist;
   });
-  const src = pool.length ? pool : level.openCells;
+  const src = pool.length ? pool : level.reachableCells;
   return src[Math.floor(Math.random() * src.length)];
 }
 
@@ -778,12 +778,14 @@ function clearPickups() {
 }
 
 function pickKeycardCell() {
-  const pool = level.openCells.filter(
+  // only cells the player can walk to: the sealed alcove and a crate cell are
+  // open floor and would put the keycard behind a wall
+  const pool = level.reachableCells.filter(
     (c) => c.room >= 0 && c.room !== level.exitRoom &&
       Math.hypot(c.wx - player.pos.x, c.wz - player.pos.z) > 8
   );
-  const src = pool.length ? pool : level.openCells.filter((c) => c.room !== level.exitRoom);
-  const use = src.length ? src : level.openCells;
+  const src = pool.length ? pool : level.reachableCells.filter((c) => c.room !== level.exitRoom);
+  const use = src.length ? src : level.reachableCells;
   return use[Math.floor(Math.random() * use.length)];
 }
 
@@ -1059,6 +1061,60 @@ function throwGrenade() {
   projectiles.spawn('grenade', from, dir, { vy: 3.4, owner: 'player' });
   audio.play('pickup');
   hud.toast('GRENADE  ·  ' + player.grenades + ' LEFT', 1.4);
+}
+
+function objectiveLine() {
+  if (game.exitOpen) return 'Reach the exit pad.';
+  if (enemies.aliveCount > 0) return 'Clear the wave: ' + enemies.aliveCount + ' left.';
+  if (game.wave >= 3 && !game.hasKey) return 'Find the keycard. It is somewhere on this floor.';
+  return 'The exit is open.';
+}
+
+function showDiary() {
+  if (game.state !== 'playing') return;
+  game.state = 'diary';
+  const el = document.getElementById('diaryBody');
+  if (el) {
+    const zoneDone = (progress.cleared || []).includes(zone.id);
+    const relicsLeft = game.relicsTotal - game.relics.length;
+    el.innerHTML = `
+      <div class="diarycol">
+        <h4>${zone.name}</h4>
+        <ul>
+          <li><b>OBJECTIVE</b><span>${objectiveLine()}</span></li>
+          <li><b>WAVE</b><span>${game.wave} of ${game.wavesTarget}</span></li>
+          <li><b>SCORE</b><span>${game.score}</span></li>
+          <li><b>ZONE</b><span>${zoneDone ? 'cleared before' : 'not cleared yet'}</span></li>
+        </ul>
+      </div>
+      <div class="diarycol">
+        <h4>FOUND</h4>
+        <ul>
+          <li><b>RELICS</b><span>${game.relicsTotal - relicsLeft}/${game.relicsTotal}</span></li>
+          <li><b>SECRETS</b><span>${(level.secrets || []).filter((x) => x.broken).length}/${(level.secrets || []).length}</span></li>
+          <li><b>TERMINALS</b><span>${lore ? lore.read.size : 0}/${lore ? lore.entries.length : 0}</span></li>
+          <li><b>TRINKETS</b><span>${game.trinkets.length}/${SLOTS}</span></li>
+        </ul>
+      </div>
+      <div class="diarycol">
+        <h4>NEXT</h4>
+        <ul>${ZONES.map((z, i) => {
+          const done = (progress.cleared || []).includes(z.id);
+          const here = z.id === zone.id;
+          return `<li class="${here ? 'here' : ''}"><b>${i + 1}. ${z.name}</b><span>${done ? 'cleared' : here ? 'you are here' : 'locked'}</span></li>`;
+        }).join('')}</ul>
+      </div>`;
+  }
+  showScreen('diary');
+  releaseLock();
+}
+
+function closeDiary() {
+  if (game.state !== 'diary') return;
+  game.state = 'playing';
+  hideScreens();
+  requestLock();
+  clock.getDelta();
 }
 
 function toggleInventory() {
@@ -1351,14 +1407,20 @@ function requestLock() {
   if (document.pointerLockElement === canvas) return;
   if (typeof canvas.requestPointerLock !== 'function') return;
   lockPendingAt = performance.now();
+  // Every path must swallow its own rejection: a lock request without a user
+  // gesture throws NotAllowedError, and an unhandled rejection surfaces as a
+  // page error even though nothing is broken.
   const plain = () => {
-    try { canvas.requestPointerLock(); } catch (e) { /* no lock available */ }
+    try {
+      const q = canvas.requestPointerLock();
+      if (q && typeof q.catch === 'function') q.catch(() => {});
+    } catch (e) { /* no lock available */ }
   };
   try {
     // unadjustedMovement asks for raw input (no OS mouse acceleration), which
     // makes aiming predictable. Not every browser supports it, hence the retry.
     const p = canvas.requestPointerLock({ unadjustedMovement: true });
-    if (p && typeof p.catch === 'function') p.catch(plain);
+    if (p && typeof p.catch === 'function') p.catch(plain).catch(() => {});
   } catch (e) {
     plain();
   }
@@ -1425,6 +1487,11 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     return;
   }
+  if (e.code === 'Escape' && game.state === 'diary') {
+    closeDiary();
+    e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape' && game.state === 'inventory') {
     toggleInventory();
     e.preventDefault();
@@ -1453,6 +1520,8 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyV') openLore();
   if (e.code === 'KeyG') throwGrenade();
   if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
+  if (e.code === 'KeyJ') showDiary();
+  if (e.code === 'KeyM' && game.state === 'playing') { pauseGame(); showZoneMap(); }
   if (e.code === 'KeyF') toggleFullscreen();
   if (e.code === 'KeyM') {
     changeSetting('muted', !settings.muted);
@@ -1626,6 +1695,7 @@ function update(dt) {
     relics: game.relicsTotal - game.relics.length,
     relicsTotal: game.relicsTotal,
     sideDone: game.sideDone,
+    keycard: game.keycard ? { x: game.keycard.x, z: game.keycard.z } : null,
     boss: enemies.boss,
     buffs: game.buffs,
     near: !!(lore && lore.near),
@@ -1773,6 +1843,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
+  showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,

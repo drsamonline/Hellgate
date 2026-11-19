@@ -34,6 +34,7 @@ export class HUD {
     this.elStamina = document.getElementById('stamina');
     this.elGrenades = document.getElementById('grenades');
     this.elExitState = document.getElementById('exitstate');
+    this.elObjective = document.getElementById('objective');
     this.staminaBar = this.elStamina ? this.elStamina.firstElementChild : null;
     this.damageNumbers = true;
     this.elBuffs = document.getElementById('buffs');
@@ -133,6 +134,32 @@ export class HUD {
       this.elWeapon.textContent = wname;
       this.lastWeapon = wname;
     }
+    // ---- objective -------------------------------------------------------
+    // The one line that answers "what am I supposed to be doing". It changes
+    // with the wave, and it is the reason the gate never opens for a player who
+    // is standing in front of it without the keycard.
+    if (this.elObjective && state) {
+      let text = '';
+      let tone = '';
+      if (state.exitOpen) {
+        text = 'REACH THE EXIT';
+        tone = 'go';
+      } else if (state.enemies > 0) {
+        text = 'CLEAR THE WAVE \u00b7 ' + state.enemies + ' LEFT';
+      } else if (state.wave >= 3 && !state.hasKey) {
+        text = 'FIND THE KEYCARD';
+        tone = 'warn';
+      } else {
+        text = 'THE EXIT IS OPEN';
+        tone = 'go';
+      }
+      if (this.objectiveText !== text) {
+        this.objectiveText = text;
+        this.elObjective.textContent = text;
+        this.elObjective.className = tone;
+      }
+    }
+
     // ---- grenades --------------------------------------------------------
     if (this.elGrenades && state && state.player) {
       const n = state.player.grenades || 0;
@@ -204,6 +231,10 @@ export class HUD {
     }
 
     if (state) {
+      // The compass points at whatever the objective needs: the keycard while
+      // it is missing, the exit once it is open.
+      const waypoint = state.exitOpen ? state.exit : (state.wave >= 3 && !state.hasKey ? state.keycard : null);
+
       // exit compass: a chevron pointing at the pad once the wave is cleared.
       // The chevron carries the direction; the label carries the state, so the
       // cue survives a colour-blind player and a greyscale screenshot.
@@ -213,11 +244,11 @@ export class HUD {
       }
 
       // exit compass: a chevron pointing at the pad once the wave is cleared
-      if (state.exitOpen && state.exit && state.camera) {
+      if (waypoint && state.camera) {
         const cam = state.camera;
         const dir = cam.getWorldDirection(_fwd);
-        const dx = state.exit.x - cam.position.x;
-        const dz = state.exit.z - cam.position.z;
+        const dx = waypoint.x - cam.position.x;
+        const dz = waypoint.z - cam.position.z;
         const ang = Math.atan2(dir.x * dz - dir.z * dx, dir.x * dx + dir.z * dz);
         this.compass.style.transform = `rotate(${(-ang * 180) / Math.PI}deg)`;
         this.compass.classList.add('on');

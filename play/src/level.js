@@ -374,13 +374,48 @@ export function generateLevel(seed) {
     }
   }
 
+  // ---- reachability -----------------------------------------------------
+  // Anything that picks a cell for a keycard, a pickup, a barrel or an enemy
+  // has to pick one the player can walk to. The sealed secret alcove is open
+  // floor and unreachable by design, and a crate cell is open floor until it is
+  // shot apart: both used to be handed out, which put the keycard behind a wall
+  // and made the level uncompletable.
+  const reach = new Uint8Array(W * H);
+  {
+    const startX = spawnRoom.cx;
+    const startZ = spawnRoom.cz;
+    const q = [startZ * W + startX];
+    reach[q[0]] = 1;
+    for (let head = 0; head < q.length; head++) {
+      const k = q[head];
+      const x = k % W;
+      const z = (k - x) / W;
+      const from = cells[k];
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nx = x + dx;
+        const nz = z + dz;
+        if (nx < 0 || nz < 0 || nx >= W || nz >= H) continue;
+        const nk = nz * W + nx;
+        if (reach[nk]) continue;
+        const c = cells[nk];
+        if (c.solid || c.door || c.crate) continue;
+        if (!(c.stair || from.stair) && c.floor - from.floor > MAX_STEP) continue;
+        reach[nk] = 1;
+        q.push(nk);
+      }
+    }
+  }
+
   // ---- open floor list --------------------------------------------------
   const openCells = [];
+  const reachableCells = [];
   for (let z = 0; z < H; z++) {
     for (let x = 0; x < W; x++) {
       const c = cells[idx(x, z)];
       if (c.solid || c.door) continue;
-      openCells.push({ x, z, wx: x * CELL, wz: z * CELL, room: c.room });
+      const entry = { x, z, wx: x * CELL, wz: z * CELL, room: c.room };
+      openCells.push(entry);
+      if (reach[z * W + x] && !c.secret && !c.crate) reachableCells.push(entry);
     }
   }
 
@@ -394,6 +429,8 @@ export function generateLevel(seed) {
     door: doorCells.length ? doorCells[0] : null,
     doorOpen: false,
     openCells,
+    reachableCells,
+    reach,
     crates,
     stairs,
     secrets,

@@ -280,6 +280,28 @@ const closeBy = HG.audio.occludeTest(HG.player.pos.x + 1, HG.player.pos.z);
 ok(closeBy === true, 'a sound next to the player is not occluded');
 ok(typeof HG.hud.feed === 'function', 'the kill feed exists');
 
+console.log('\n== objective, diary, reachable picks ==');
+HG.game.state = 'playing';
+ok(HG.objectiveLine().length > 0, 'there is always an objective line: ' + HG.objectiveLine());
+HG.enemies.clear();
+frames(3);
+HG.game.wave = 3;
+HG.game.hasKey = false;
+HG.game.exitOpen = false;
+frames(2);
+ok(/keycard/i.test(HG.objectiveLine()), 'wave 3 without the key asks for the keycard: ' + HG.objectiveLine());
+HG.showDiary();
+ok(HG.game.state === 'diary', 'j opens the journal');
+ok(document.getElementById('diaryBody').innerHTML.length > 100, 'the journal has content');
+HG.closeDiary();
+ok(HG.game.state === 'playing', 'and closes again');
+// every pickable cell must be walkable from the spawn
+const unreachablePicks = HG.level.reachableCells.filter((c) => {
+  const cell = HG.level.cells[c.z * HG.level.W + c.x];
+  return cell.solid || cell.secret || cell.crate;
+});
+ok(unreachablePicks.length === 0, 'no reachable pick is solid, secret or a crate (' + unreachablePicks.length + ')');
+
 console.log('\n== enemy level of detail ==');
 HG.enemies.clear();
 HG.enemies.spawnAt('imp', HG.player.pos.x + 40, HG.player.pos.z, 1);

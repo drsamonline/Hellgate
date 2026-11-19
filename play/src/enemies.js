@@ -645,13 +645,13 @@ export class EnemyManager {
     const bossWave = !!opts.boss && wave >= (opts.waves || 3);
     const base = bossWave ? 3 : 4 + wave * 2;
     const count = Math.max(2, Math.min(30, Math.round(base * diff.count)));
-    const cells = this.level.openCells.filter((c) => {
+    const cells = (this.level.reachableCells || this.level.openCells).filter((c) => {
       if (c.room < 0) return false;
       if (c.x === this.level.exit.cx && c.z === this.level.exit.cz) return false;
       const d = Math.hypot(c.wx - playerPos.x, c.wz - playerPos.z);
       return d > 9;
     });
-    const pool = cells.length ? cells : this.level.openCells;
+    const pool = cells.length ? cells : (this.level.reachableCells || this.level.openCells);
 
     for (let i = 0; i < count; i++) {
       const c = pool[Math.floor(Math.random() * pool.length)];

@@ -1,5 +1,42 @@
 # Changelog
 
+## 1.24.0 — 2026-11-19
+
+Four reports from play, two of them real defects.
+
+**Fixed: the keycard could be placed where nobody could reach it**
+- cell pickers used `openCells`, which includes the sealed secret alcove (open floor, unreachable by
+  design) and crate cells (open floor until shot apart). A keycard in either made the level
+  uncompletable, which is exactly "the gate never opens".
+- `generateLevel` now computes a reachability field once from the spawn and exposes `reachableCells`;
+  the keycard, relics, pickups and enemy spawns all draw from it.
+- a test asserts no reachable pick is solid, secret or a crate.
+
+**Fixed: an unhandled pointer-lock rejection**
+- `requestPointerLock` without a user gesture throws `NotAllowedError`. The retry path did not catch its
+  own promise, so pausing and resuming could throw in the console. Both paths swallow it now.
+
+**New: the objective line**
+- one line at the top of the HUD that answers "what am I doing": `CLEAR THE WAVE · 6 LEFT`, then
+  `FIND THE KEYCARD`, then `REACH THE EXIT`. This is the fix for standing in front of a shut gate with
+  no idea why it is shut.
+
+**New: the journal** (`J`)
+- zone, objective, wave, score, what you have found (relics, secrets, terminals, trinkets) and the five
+  zones with their state.
+
+**New: the world map mid-run** (`M`)
+- pauses and opens the zone map instead of only being reachable from the menu.
+
+**Compass retargets**
+- the waypoint points at the keycard while it is missing and at the exit once it is open.
+
+**Note on enemies through walls** — not reproduced: ten enemies crowded near a wall for ten seconds
+never entered a solid cell in the headless harness, and `tryMove` uses a circle test against the same
+collision the player uses. If it still happens in a browser, the next step is a recording of the
+position, not a guess.
+
+
 ## 1.23.0 — 2026-11-19
 
 **Enemy level of detail** — the draw-call win the measurement pointed at

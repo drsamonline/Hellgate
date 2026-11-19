@@ -163,6 +163,12 @@
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
 
+  #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);
+    font-size:10px;letter-spacing:.22em;color:#cbbda8;pointer-events:none;
+    background:rgba(10,9,8,.55);border:1px solid rgba(255,180,84,.16);border-radius:2px;padding:4px 12px}
+  #objective.warn{color:#ffd24a;border-color:rgba(255,210,74,.45)}
+  #objective.go{color:#39ff9a;border-color:rgba(57,255,154,.45)}
+
   #exitstate{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);
     font-size:9px;letter-spacing:.26em;color:#8d7f6c;pointer-events:none;transition:color .2s}
   #exitstate.open{color:#39ff9a}
@@ -235,6 +241,13 @@
   .topruns li span{color:#ffd9a8;min-width:56px}
   .topruns li i{font-style:normal;color:#8d7f6c;font-size:10px;margin-left:auto}
   .topruns li.you{border-color:rgba(255,180,84,.5)}
+
+  .diarycol h4{font-size:9px;letter-spacing:.26em;color:#ff3b30;margin:0 0 8px;font-weight:400}
+  .diarycol ul{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:5px}
+  .diarycol li{display:flex;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.1em;
+    color:#cbbda8;padding:5px 8px;border:1px solid rgba(255,180,84,.14);border-radius:2px}
+  .diarycol li b{color:#8d7f6c;font-weight:400}
+  .diarycol li.here{border-color:rgba(255,180,84,.5);color:#ffd9a8}
 
   .invgrid{
     display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:26px;
@@ -334,6 +347,12 @@
     20%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
+
+  #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);
+    font-size:10px;letter-spacing:.22em;color:#cbbda8;pointer-events:none;
+    background:rgba(10,9,8,.55);border:1px solid rgba(255,180,84,.16);border-radius:2px;padding:4px 12px}
+  #objective.warn{color:#ffd24a;border-color:rgba(255,210,74,.45)}
+  #objective.go{color:#39ff9a;border-color:rgba(57,255,154,.45)}
 
   #exitstate{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);
     font-size:9px;letter-spacing:.26em;color:#8d7f6c;pointer-events:none;transition:color .2s}
@@ -440,6 +459,7 @@
       <span id="bossname">WARDEN</span>
       <div id="bosswrap"><div id="bossfill"></div></div>
     </div>
+    <div id="objective"></div>
     <div id="exitstate">EXIT SHUT ▪</div>
     <div id="grenades"></div>
     <div id="stamina"><i></i></div>
@@ -484,6 +504,12 @@
     <section id="intro" class="screen cinema">
       <p id="storyText"></p>
       <button id="storySkip" class="ghost" style="margin-top:22px">Skip</button>
+    </section>
+
+    <section id="diary" class="screen">
+      <h2>JOURNAL</h2>
+      <p class="sub">j or esc to close</p>
+      <div id="diaryBody" class="invgrid"></div>
     </section>
 
     <section id="inventory" class="screen">
