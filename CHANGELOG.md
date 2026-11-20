@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.33.0 — 2026-11-20
+
+**Licence: MIT to PolyForm Noncommercial 1.0.0**
+
+The fleet's other games are PolyForm Noncommercial; HELLGATE was the outlier. It now matches: play it,
+read it, fork it for anything noncommercial; do not sell it.
+
+| File | Change |
+| --- | --- |
+| `LICENSE` | The full PolyForm Noncommercial 1.0.0 text with the required notice |
+| `NOTICE.md` | Says the project licence and the Three.js licence are two different things, because they are |
+| `README.md` | The sentence and the footer |
+| `index.html` | The landing-page footer |
+| `SPONSORS.md` | The one line that called it MIT |
+| `CONTRIBUTING.md` | A contribution clause: a PR is offered under the same terms, no CLA, no sign-off |
+| `tools/check-claims.js` | Names the licence in the file and fails if it is neither PolyForm nor MIT — the badge can no longer drift from the file |
+
+**Three.js stays MIT.** It is a separate work under its own licence; relicensing this repository does not
+and cannot change that. `NOTICE.md` says so explicitly, because that is the mistake people make.
+
+**Verified** — the legal scanner now reports `PolyForm-Noncommercial-1.0.0` and six legal files:
+LICENSE, NOTICE, PRIVACY, SECURITY, CODE_OF_CONDUCT, CONTRIBUTING.
+
+
 ## 1.32.0 — 2026-11-20
 
 **A fifth enemy: the spitter**

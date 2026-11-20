@@ -61,9 +61,12 @@ if (locClaim) {
 
 // 5. licence -----------------------------------------------------------------
 const lic = read('LICENSE');
-const isMIT = /MIT License/.test(lic);
+// the licence name in the file has to be the one the README badge points at
+const licenceName = /PolyForm Noncommercial/.test(lic) ? 'PolyForm Noncommercial'
+  : /MIT License/.test(lic) ? 'MIT' : null;
 const hasLicenceBadge = /img\.shields\.io\/github\/license\//.test(readme) || /license-MIT/.test(readme);
 ok('licence badge', hasLicenceBadge, 'no licence badge in the README');
+ok('licence is named in the file', !!licenceName, 'LICENSE names neither PolyForm Noncommercial nor MIT');
 ok('licence link', /\]\(LICENSE\)/.test(readme), 'badge does not link to LICENSE');
 ok('licence name', /Dr Sohil Momin/.test(lic), 'LICENSE has no copyright holder');
 

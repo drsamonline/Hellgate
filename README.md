@@ -208,7 +208,7 @@ text colours moved from 2.56:1 to above 4.5:1.
 | More apps | [drsamonline.github.io](https://drsamonline.github.io/) |
 | Email | [sohilmomin2000@gmail.com](mailto:sohilmomin2000@gmail.com) |
 
-Nothing is gated behind it: no accounts, no tracking, no network requests. HELLGATE is MIT-licensed
+Nothing is gated behind it: no accounts, no tracking, no network requests. HELLGATE is PolyForm Noncommercial licensed — free to play, study and fork for anything noncommercial; not to sell
 and always will be. The support links pay for the hours that go into
 [the roadmap](ENHANCEMENTS.md), not for access to anything.
 
@@ -236,4 +236,4 @@ and audio that is heard from where it stands. Credit to [@remorses](https://gith
 
 ## License
 
-[MIT](LICENSE) © Dr Sohil Momin
+[PolyForm Noncommercial 1.0.0](LICENSE) © Dr Sohil Momin

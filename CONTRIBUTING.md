@@ -43,3 +43,12 @@ face is invisible in a diff and obvious to that test.
 
 Conventional-ish and in the imperative: `feat: flow-field navigation`, `fix: hud label duplication`.
 One logical change per commit; the message should make the diff optional.
+
+## Licence of contributions
+
+HELLGATE is [PolyForm Noncommercial 1.0.0](LICENSE). By opening a pull request you agree that your
+contribution is licensed to this project under the same terms, and that you have the right to grant
+that — in practice, that the code is yours and not copied from somewhere with a different licence.
+
+There is no CLA and no sign-off requirement. If a contribution cannot be accepted under those terms,
+say so in the pull request and it will be left unmerged rather than relicensed.

@@ -1,5 +1,8 @@
 # Notice
 
+HELLGATE itself is licensed under [PolyForm Noncommercial 1.0.0](LICENSE): play it, read it, fork it for
+anything noncommercial; do not sell it. That licence covers the code in this repository and nothing else.
+
 HELLGATE bundles third-party software. This file records what, under what terms, and where it sits.
 
 ## Three.js
@@ -45,4 +48,6 @@ screenshots in `assets/` are captures of this game.
 
 The fonts are the system monospace and sans stacks; no webfont is bundled.
 
-Checked 19 Nov 2026 against commit `07fb599`.
+Three.js stays MIT: it is a separate work under its own licence, and nothing here changes that.
+
+Checked 20 Nov 2026 against commit `323964f`.
