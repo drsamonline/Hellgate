@@ -30,6 +30,13 @@ const TYPES = {
     attackRange: 16, attackCd: 1.4, telegraph: 0.4, damage: 8,
     melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT', pitch: 0.8,
   },
+  spitter: {
+    // holds its distance and lobs: the only enemy that punishes standing still
+    hp: 34, speed: 2.0, radius: 0.55, height: 1.95, hitRadius: 0.6,
+    attackRange: 18, attackCd: 2.6, telegraph: 0.75, damage: 14,
+    melee: false, sight: 26, color: 0x2f6a5e, label: 'SPITTER', pitch: 1.25,
+    keepsDistance: 9, lob: true,
+  },
 };
 
 // Geometry is cached and shared by every enemy of a type: 24 imps on screen
@@ -92,6 +99,10 @@ function mats() {
     wardenDark: body(0x320a12),
     wardenEye: plain(0xffb454, true),
     wardenGlow: plain(0xff3b30, true),
+    spitterBody: body(0x2f6a5e),
+    spitterSac: body(0x7fd67f),
+    spitterDark: body(0x1c3f38),
+    spitterEye: plain(0xaaffcc, true),
   };
   return MATS;
 }
@@ -235,6 +246,36 @@ function makeWarden() {
   return { group: g, parts: { armL, armR, legL, legR, core } };
 }
 
+function makeSpitter() {
+  const M = mats();
+  const g = new THREE.Group();
+  // thin and tall, bent forward over a sac that is the whole silhouette
+  const spine = new THREE.Mesh(cylGeo(0.16, 0.22, 1.1, 7), M.spitterBody);
+  spine.position.set(0, 1.32, -0.04);
+  spine.rotation.x = -0.22;
+  g.add(spine);
+  const sac = sphere(0.42, M.spitterSac, 0, 1.16, 0.26, 9);
+  sac.scale.set(1, 0.92, 1.05);
+  g.add(sac);
+  const head = sphere(0.2, M.spitterDark, 0, 1.86, 0.16, 7);
+  head.scale.set(1, 0.9, 1.2);
+  g.add(head);
+  for (const sx of [-1, 1]) {
+    g.add(sphere(0.05, M.spitterEye, sx * 0.09, 1.88, 0.32, 5));
+  }
+  // a dripping maw
+  const maw = new THREE.Mesh(coneGeo(0.12, 0.26, 6), M.spitterSac);
+  maw.rotation.x = Math.PI;
+  maw.position.set(0, 1.76, 0.36);
+  g.add(maw);
+  const armL = limbCyl(0.05, 0.07, 0.9, M.spitterDark, -0.26, 1.62, 0);
+  const armR = limbCyl(0.05, 0.07, 0.9, M.spitterDark, 0.26, 1.62, 0);
+  const legL = limbCyl(0.07, 0.1, 0.86, M.spitterDark, -0.16, 0.86, 0);
+  const legR = limbCyl(0.07, 0.1, 0.86, M.spitterDark, 0.16, 0.86, 0);
+  g.add(armL, armR, legL, legR);
+  return { group: g, parts: { armL, armR, legL, legR } };
+}
+
 function makeHound() {
   const M = mats();
   const g = new THREE.Group();
@@ -297,6 +338,7 @@ export class Enemy {
     const built = typeName === 'imp' ? makeImp()
       : typeName === 'hound' ? makeHound()
       : typeName === 'warden' ? makeWarden()
+      : typeName === 'spitter' ? makeSpitter()
       : makeGrunt();
     this.body = built.group;
     this.mesh = new THREE.Group();
@@ -471,6 +513,13 @@ export class Enemy {
         break;
       }
       case STATE.CHASE: {
+        if (this.T.keepsDistance && canSee && dist < this.T.keepsDistance) {
+          // hold the range it lobs from
+          this.moving = this.stepMove(level, -dx / (dist || 1), -dz / (dist || 1), dt);
+          this.faceTo(dx, dz);
+          if (this.attackCd <= 0) this.setState(STATE.ATTACK);
+          break;
+        }
         const nav = this.navDir(level, ctx.field, dx, dz, dist);
         if (dist > 0.9 && nav) this.moving = this.stepMove(level, nav.x, nav.z, dt);
         else this.moving = false;
@@ -520,6 +569,22 @@ export class Enemy {
 
   doAttack(ctx, dist, dx, dz, canSee, playerEye) {
     const { player, projectiles, audio } = ctx;
+
+    if (this.T.lob) {
+      // aim up so the arc lands on the player, not at their feet
+      const from = this.chestPos();
+      const to = { x: player.pos.x, y: player.pos.y + 1.0, z: player.pos.z };
+      const flat = Math.hypot(to.x - from.x, to.z - from.z);
+      const dir = new THREE.Vector3(to.x - from.x, 0, to.z - from.z).normalize();
+      projectiles.spawn('acid', new THREE.Vector3(from.x, from.y + 0.3, from.z), dir, {
+        damage: this.damage,
+        owner: 'enemy',
+        vy: 2.2 + flat * 0.28,
+      });
+      audio.play('fireball', from);
+      ctx.effects.burst({ x: from.x, y: from.y, z: from.z }, 0x7fd67f, 6, 2, 0.4, 2);
+      return;
+    }
 
     if (this.T.boss) {
       // alternate a ground slam with a three-ball volley
@@ -785,7 +850,9 @@ export class EnemyManager {
       const c = pool[Math.floor(Math.random() * pool.length)];
       // wave 2 brings grunts, wave 4 brings hounds; after that it is a mix
       let type = 'imp';
-      if (wave >= 4 && i % 4 === 3) type = 'hound';
+      if (wave >= 4 && i % 5 === 4) type = 'spitter';
+      else if (wave >= 4 && i % 4 === 3) type = 'hound';
+      else if (wave >= 3 && i % 6 === 5) type = 'spitter';
       else if (wave >= 2 && i % 3 === 2) type = 'grunt';
       const pos = new THREE.Vector3(c.wx + (Math.random() - 0.5) * 0.6, 0, c.wz + (Math.random() - 0.5) * 0.6);
       const e = new Enemy(type, pos, wave, this.scene, { diff });

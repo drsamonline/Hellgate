@@ -301,6 +301,25 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== the spitter (fifth type) ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('spitter', HG.player.pos.x + 12, HG.player.pos.z, 4);
+frames(2);
+const sp = HG.enemies.list.find((e) => e.type === 'spitter');
+ok(!!sp, 'a spitter spawns');
+ok(sp.T.lob === true, 'it lobs rather than shoots flat');
+ok(sp.T.keepsDistance > 0, 'it holds a distance');
+// drive the attack directly: whether it can see the player depends on where the
+// level put a wall, which is not what this assertion is about
+const shotsBefore = HG.projectiles.list.length;
+sp.doAttack({ level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, onKill: null },
+  6, 6, 0, true, { x: HG.player.pos.x, y: HG.player.pos.y + 1.6, z: HG.player.pos.z });
+ok(HG.projectiles.list.length > shotsBefore, 'it throws something');
+const glob = HG.projectiles.list[HG.projectiles.list.length - 1];
+ok(glob.kind === 'acid', 'the glob is an acid projectile');
+ok(glob.gravity > 0 && glob.bounce === 0, 'it arcs and does not bounce');
+ok(HG.enemies.list.some((e) => e.type === 'spitter'), 'and it is still in the level');
+
 console.log('\n== minimap and touch read button ==');
 ok(!!document.getElementById('minimap'), 'the HUD has a minimap canvas');
 const { Minimap } = await import('../play/src/minimap.js');

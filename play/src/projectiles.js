@@ -9,6 +9,8 @@ const ROCKET = { speed: 26, radius: 0.18, splash: 4.5, damage: 95, life: 5 };
 const FIREBALL = { speed: 13, radius: 0.22, splash: 1.4, damage: 15, life: 6 };
 // a thrown grenade: slower than a rocket, bounces, and the fuse is the weapon
 const GRENADE = { speed: 15, radius: 0.2, splash: 5, damage: 110, life: 1.7, gravity: 22, bounce: 0.42 };
+// a spitter's glob: arcs, does not bounce, splashes where it lands
+const ACID = { speed: 11, radius: 0.22, splash: 2.4, damage: 14, life: 3.5, gravity: 20, bounce: 0 };
 
 /**
  * Rockets and fireballs: spawn, travel, explode, and what they hit on the way.
@@ -29,11 +31,17 @@ export class Projectiles {
   }
 
   spawn(kind, pos, dir, opts = {}) {
-    const spec = kind === 'rocket' ? ROCKET : kind === 'grenade' ? GRENADE : FIREBALL;
+    const spec = kind === 'rocket' ? ROCKET
+      : kind === 'grenade' ? GRENADE
+      : kind === 'acid' ? ACID
+      : FIREBALL;
     let mesh;
     if (kind === 'rocket') {
       mesh = new THREE.Mesh(this.rocketGeo, this.rocketMat);
       mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+    } else if (kind === 'acid') {
+      mesh = new THREE.Mesh(this.fireGeo, new THREE.MeshBasicMaterial({ color: 0x7fd67f }));
+      mesh.scale.setScalar(0.8);
     } else if (kind === 'grenade') {
       mesh = new THREE.Mesh(this.fireGeo, new THREE.MeshLambertMaterial({ color: 0x4a5a3a }));
       mesh.scale.setScalar(0.9);
@@ -56,7 +64,7 @@ export class Projectiles {
       life: spec.life,
       dead: false,
       // grenades fall and bounce; everything else flies straight
-      vy: kind === 'grenade' ? (opts.vy != null ? opts.vy : 3.2) : 0,
+      vy: (kind === 'grenade' || kind === 'acid') ? (opts.vy != null ? opts.vy : 3.2) : 0,
       gravity: spec.gravity || 0,
       bounce: spec.bounce || 0,
     });

@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.32.0 — 2026-11-20
+
+**A fifth enemy: the spitter**
+
+Four types covered flat shots, closing, and melee. None of them punished standing still. The spitter
+holds nine metres, backs off when you close, and lobs an arcing glob that splashes where it lands.
+
+| Property | Value |
+| --- | --- |
+| Health | 34, and it is thin — two shotgun pellets put it down |
+| Range | Lobbed from up to 18 m, holds 9 |
+| Behaviour | Backs away when you close, so it is the one enemy you have to chase |
+| Body | Tall, thin, bent over a swollen green sac — the silhouette is the sac |
+| Appears | Wave 3, one in six; more from wave 4 |
+
+**The glob** is a new projectile kind: gravity, no bounce, a 2.4 m splash. It arcs, so it misses if you
+keep moving — which is the point of the enemy.
+
+**Tests** — 4 new assertions: it spawns, it lobs rather than shoots flat, it holds a distance, and the
+glob is an acid projectile that arcs without bouncing.
+
+
 ## 1.31.0 — 2026-11-20
 
 **Bloom** (roadmap 44)
