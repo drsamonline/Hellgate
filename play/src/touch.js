@@ -31,6 +31,15 @@ export function initTouch(input, handlers) {
   };
   setVisible(false);
 
+  // the READ button exists only while a terminal is in reach
+  const readBtn = document.getElementById('tRead');
+  if (readBtn) {
+    readBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      handlers.read?.();
+    });
+  }
+
   const stick = document.getElementById('tStick');
   const knob = document.getElementById('tKnob');
   const look = document.getElementById('tLook');
