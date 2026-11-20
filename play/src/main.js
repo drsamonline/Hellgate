@@ -189,7 +189,7 @@ let elapsed = 0;
 // Adaptive resolution, in the manner of castle-valley: draw at the screen's own
 // pixels until frames get slow, then give up pixels instead of frame rate.
 const RATIO_CAP = Math.min(window.devicePixelRatio || 1, 1.5);
-const perf = { ratio: RATIO_CAP, acc: 0, n: 0, min: 0.7 };
+const perf = { ratio: RATIO_CAP, acc: 0, n: 0, min: 0.7, bloomDropped: false };
 
 function adaptResolution(dt) {
   perf.acc += dt;
@@ -198,12 +198,24 @@ function adaptResolution(dt) {
   const avg = perf.acc / perf.n;
   perf.acc = 0;
   perf.n = 0;
+  // Bloom is four passes at quarter resolution; on a phone that is the first
+  // thing worth losing, and it is worth losing before the resolution does.
+  if (avg > 0.026 && bloom && bloom.enabled) {
+    bloom.enabled = false;
+    perf.bloomDropped = true;
+  } else if (perf.bloomDropped && avg < 0.014 && bloom) {
+    // and it comes back when the machine turns out to be fine
+    bloom.enabled = true;
+    perf.bloomDropped = false;
+  }
+
   let r = perf.ratio;
   if (avg > 0.021 && r > perf.min) r = Math.max(perf.min, r - 0.15);
   else if (avg < 0.0135 && r < RATIO_CAP) r = Math.min(RATIO_CAP, r + 0.1);
   if (Math.abs(r - perf.ratio) > 0.001) {
     perf.ratio = r;
     renderer.setPixelRatio(r);
+    if (bloom) bloom.setSize(Math.floor(canvas.clientWidth * r) || 1, Math.floor(canvas.clientHeight * r) || 1);
     // grass is the first thing to go when the machine is struggling: it is the
     // cheapest visual and the most instances
     if (props) props.setQuality(r >= 1.0 ? 1 : 0);
@@ -1756,14 +1768,19 @@ const lastRenderStats = { calls: 0, tris: 0 };
 
 function render() {
   renderer.clear();
+  let levelCalls;
+  let levelTris;
   if (bloom && bloom.enabled) {
-    bloom.render(scene, camera);
+    // the scene pass's own numbers, not the composite's one quad
+    const st = bloom.render(scene, camera);
+    levelCalls = st.calls;
+    levelTris = st.tris;
   } else {
     renderer.render(scene, camera);
+    levelCalls = renderer.info.render.calls;
+    levelTris = renderer.info.render.triangles;
   }
   const info = renderer.info.render;
-  const levelCalls = info.calls;
-  const levelTris = info.triangles;
   renderer.clearDepth();
   renderer.render(weaponScene, weaponCamera);
   lastRenderStats.calls = levelCalls + info.calls;
@@ -1893,6 +1910,9 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
+  // tools measure the post pass by switching it; nothing in the game reads this
+  get bloom() { return bloom; },
+  get perfState() { return { ratio: perf.ratio, bloomDropped: perf.bloomDropped }; },
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
   runStats, topRuns, recordRun, gameOver,

@@ -126,14 +126,21 @@ export class Bloom {
     this.renderer.render(this.scene, this.camera);
   }
 
-  /** Render the world into the target, then bloom it to the screen. */
+  /**
+   * Render the world into the target, then bloom it to the screen.
+   * Returns the scene pass's own draw-call count: after the composite the
+   * renderer's info describes one quad, and a budget that reads that number
+   * measures nothing.
+   */
   render(scene, camera) {
     const r = this.renderer;
     r.setRenderTarget(this.sceneTarget);
     r.clear();
     r.render(scene, camera);
+    const stats = { calls: r.info.render.calls, tris: r.info.render.triangles };
     r.setRenderTarget(null);
     this.composite();
+    return stats;
   }
 
   composite() {

@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.35.0 — 2026-11-20
+
+**The draw-call budget had stopped measuring anything**
+
+With bloom on, `render()` read `renderer.info` after the composite, so `renderStats.calls` described one
+quad — 1 call — and the smoke test's "under 140" passed trivially. The budget was written to catch a
+regression and had quietly become decoration.
+
+`Bloom.render()` now returns the scene pass's own counts and `render()` uses them. Measured after the
+fix: 41 calls with bloom, 40 without, on the same frame.
+
+**Bloom drops itself on a slow machine**
+
+The adaptive pass already traded resolution for frame time. It now drops bloom first — four passes at
+quarter resolution are worth more than the resolution they cost — and brings it back if the machine
+turns out to be fine.
+
+| Average frame time | Action |
+| --- | --- |
+| over 26 ms | bloom off |
+| under 14 ms, previously dropped | bloom back on |
+| over 21 ms | pixel ratio down 0.15, floor 0.7 |
+| under 13.5 ms | pixel ratio up 0.1, ceiling 1.5 |
+
+**Measurement honesty** — `documentation/testing.md` now says plainly that frame time cannot be measured
+in this sandbox: Chromium runs on SwiftShader, so every frame takes 150-200 ms whatever the game draws.
+Draw-call counts are trustworthy here; milliseconds are not, and a phone is needed for those.
+
+
 ## 1.34.0 — 2026-11-20
 
 **The campaign seeds are chosen now, not typed**
