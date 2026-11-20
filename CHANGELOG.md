@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.30.0 — 2026-11-20
+
+**The warden, in curves**
+
+It was the last body still built from boxes, which made the boss the least convincing thing on screen.
+It is now a barrel chest tapering to the waist, slabs of shoulder either side, a head sunk between them
+with two glowing eyes and horns, and the furnace core in the chest that the health bar is measuring.
+
+Same part names again, so the slam animation, the phase escalation, the hit flash and the distance slab
+all work unchanged. The core still scales with the phase.
+
+**Objective pill moves out of the boss bar's way** — when a boss is on screen the pill drops to 104 px so
+the two do not sit on top of each other.
+
+**Screenshots** — all eleven regenerated with the new bodies.
+
+
 ## 1.29.1 — 2026-11-20
 
 **The READ button was declared nowhere**

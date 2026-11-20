@@ -195,20 +195,42 @@ function makeGrunt() {
 function makeWarden() {
   const M = mats();
   const g = new THREE.Group();
-  // twice the height of an imp, and read as a silhouette from across a room
-  g.add(box(1.5, 1.5, 1.0, M.wardenBody, 0, 1.7, 0));
-  g.add(box(1.7, 0.35, 1.1, M.wardenDark, 0, 2.5, 0)); // shoulder plate
-  g.add(box(0.7, 0.6, 0.6, M.wardenDark, 0, 2.95, 0.06));
-  g.add(box(0.16, 0.12, 0.06, M.wardenEye, -0.18, 3.0, 0.36));
-  g.add(box(0.16, 0.12, 0.06, M.wardenEye, 0.18, 3.0, 0.36));
-  // a furnace in the chest
-  const core = new THREE.Mesh(new THREE.SphereGeometry(0.22, 8, 6), M.wardenGlow);
-  core.position.set(0, 1.75, 0.52);
+  // three metres of armoured bulk: a barrel chest that tapers to the waist, a
+  // slab of shoulder either side, and a furnace in the middle of it
+  const chest = new THREE.Mesh(cylGeo(0.86, 0.62, 1.5, 10), M.wardenBody);
+  chest.position.set(0, 1.95, 0);
+  g.add(chest);
+  const gut = new THREE.Mesh(cylGeo(0.62, 0.5, 0.7, 10), M.wardenDark);
+  gut.position.set(0, 1.15, 0);
+  g.add(gut);
+  for (const sx of [-1, 1]) {
+    const pad = sphere(0.52, M.wardenDark, sx * 0.92, 2.62, 0, 8);
+    pad.scale.set(1.15, 0.8, 1.05);
+    g.add(pad);
+  }
+  // head sunk between the shoulders, horned
+  const head = sphere(0.34, M.wardenDark, 0, 2.92, 0.06, 8);
+  head.scale.set(1, 0.92, 1.05);
+  g.add(head);
+  for (const sx of [-1, 1]) {
+    const horn = new THREE.Mesh(coneGeo(0.1, 0.62, 6), M.wardenDark);
+    horn.position.set(sx * 0.3, 3.18, 0.02);
+    horn.rotation.z = sx * 0.55;
+    g.add(horn);
+    g.add(sphere(0.07, M.wardenEye, sx * 0.15, 2.96, 0.34, 6));
+  }
+  // the furnace: what the health bar is actually measuring
+  const core = sphere(0.26, M.wardenGlow, 0, 1.95, 0.56, 8);
   g.add(core);
-  const armL = limb(0.34, 1.5, 0.34, M.wardenBody, -0.95, 2.35, 0, 0.62);
-  const armR = limb(0.34, 1.5, 0.34, M.wardenBody, 0.95, 2.35, 0, 0.62);
-  const legL = limb(0.42, 1.0, 0.42, M.wardenDark, -0.38, 1.0, 0, 0.5);
-  const legR = limb(0.42, 1.0, 0.42, M.wardenDark, 0.38, 1.0, 0, 0.5);
+  const ring = new THREE.Mesh(cylGeo(0.34, 0.34, 0.12, 10), M.wardenDark);
+  ring.rotation.x = Math.PI / 2;
+  ring.position.set(0, 1.95, 0.5);
+  g.add(ring);
+
+  const armL = limbCyl(0.26, 0.34, 1.5, M.wardenBody, -0.95, 2.5, 0);
+  const armR = limbCyl(0.26, 0.34, 1.5, M.wardenBody, 0.95, 2.5, 0);
+  const legL = limbCyl(0.34, 0.42, 1.0, M.wardenDark, -0.4, 1.0, 0);
+  const legR = limbCyl(0.34, 0.42, 1.0, M.wardenDark, 0.4, 1.0, 0);
   g.add(armL, armR, legL, legR);
   return { group: g, parts: { armL, armR, legL, legR, core } };
 }

@@ -157,8 +157,9 @@ export class HUD {
       if (this.objectiveText !== text) {
         this.objectiveText = text;
         this.elObjective.textContent = text;
-        this.elObjective.className = tone;
       }
+      // the boss bar owns the strip above the objective
+      this.elObjective.className = tone + (state.boss ? ' bossed' : '');
     }
 
     // ---- grenades --------------------------------------------------------
