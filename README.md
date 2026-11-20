@@ -125,6 +125,7 @@ play/src/lore.js      wall terminals you can read with V
 play/src/loot.js      trinkets: what a kill can drop, and what they do
 play/src/minimap.js   the floor plan, drawn once with live markers
 play/src/bloom.js     the post pass: bright pixels blurred and added back
+play/src/music.js     generated music: a scale, a tempo and a rule for the next note
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG

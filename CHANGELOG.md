@@ -1,5 +1,47 @@
 # Changelog
 
+## 1.39.0 — 2026-11-20
+
+**Music, generated**
+
+No audio files and no samples. A minor pentatonic, a tempo per scene, and a rule for which note comes
+next, scheduled from the game loop so it stops when the tab does.
+
+| Scene | Tempo | What it does |
+| --- | --- | --- |
+| Menu | 68 BPM | Sparse arpeggio, no drums |
+| Explore | 82 BPM | Adds a bass root, occasional hat |
+| Combat | 132 BPM | Drums on, arpeggio dense |
+| Boss | 150 BPM | Faster, higher root, double-time kick |
+
+The game's own tension number — the one the mix already uses — decides how busy it plays, so the music
+and the pad move together. `Music.update()` schedules a quarter second ahead and refuses to queue more
+than half a second of backlog, so a tab left in the background does not come back with an hour of notes.
+
+**Two more enemies**
+
+| Type | Behaviour | Body |
+| --- | --- | --- |
+| Brute | Walks at 1.7 m/s until it sees you, then charges at 5.2. 140 hp | A wedge of plate with the head low between the shoulders and knuckles near the floor |
+| Wisp | Floats 1.15 m up and ignores stairs. 18 hp, fires slow orbs | A hood and a light with nothing below the waist |
+
+**Four game modes**
+
+| Mode | Rule |
+| --- | --- |
+| Campaign | Five zones in order |
+| Endless | One zone, waves that never stop |
+| Boss Rush | One wave per zone, the warden every time |
+| Hardcore | Campaign rules, but death deletes the run |
+
+A mode changes the rules, not a slider: endless never fires the zone-clear path, boss rush forces the
+boss flag on every wave, hardcore clears the save on death.
+
+**A flaky test fixed** — `enemy closed along the field` used a line-of-sight pair, which is the wrong
+criterion for a pathing test: an enemy can see you across a crate it cannot walk around. It now asks the
+flow field for a pair that is actually walkable, and five consecutive runs are clean.
+
+
 ## 1.38.0 — 2026-11-20
 
 **The wind-up is visible now**

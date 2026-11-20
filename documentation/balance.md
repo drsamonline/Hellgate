@@ -12,8 +12,9 @@ The numbers, what they are trying to achieve, and what is known to be unmeasured
 | 4 | 12 | + hounds | force a weapon switch: one shotgun blast kills a hound |
 | 5+ | 14+ | all three | pressure |
 
-Five enemy types: the imp shoots flat, the grunt closes and shoots, the hound only closes, the spitter
-holds its distance and lobs an arcing glob, and the warden is the warden. The spitter exists to punish
+Seven enemy types: the imp shoots flat, the grunt closes and shoots, the hound only closes, the spitter
+holds its distance and lobs an arcing glob, the brute walks until it sees you and then charges at 5.2 m/s
+with 140 hp, the wisp floats over the stairs and fires slow orbs, and the warden is the warden. The spitter exists to punish
 standing still, which is the one thing the other four let you get away with.
 
 Health scales +10 % per wave, speed +3 %, damage +6 %, each capped (see `documentation/tuning.md`).

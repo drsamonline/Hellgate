@@ -30,6 +30,20 @@ const TYPES = {
     attackRange: 16, attackCd: 1.4, telegraph: 0.4, damage: 8,
     melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT', pitch: 0.8,
   },
+  brute: {
+    // slow until it sees you, then it does not stop
+    hp: 140, speed: 1.7, chargeSpeed: 5.2, radius: 0.78, height: 2.5, hitRadius: 0.9,
+    attackRange: 2.8, attackCd: 1.6, telegraph: 0.6, damage: 10,
+    melee: true, meleeRange: 2.6, meleeDamage: 24, sight: 26, color: 0x3d4a63, label: 'BRUTE', pitch: 0.65,
+    charges: true,
+  },
+  wisp: {
+    // floats, so it ignores stairs and looks wrong doing it
+    hp: 18, speed: 3.6, radius: 0.42, height: 1.2, hitRadius: 0.55,
+    attackRange: 15, attackCd: 2.4, telegraph: 0.5, damage: 9,
+    melee: false, sight: 24, color: 0x4fd8e8, label: 'WISP', pitch: 1.7,
+    hover: 1.15,
+  },
   spitter: {
     // holds its distance and lobs: the only enemy that punishes standing still
     hp: 34, speed: 2.0, radius: 0.55, height: 1.95, hitRadius: 0.6,
@@ -103,6 +117,10 @@ function mats() {
     spitterSac: body(0x7fd67f),
     spitterDark: body(0x1c3f38),
     spitterEye: plain(0xaaffcc, true),
+    bruteBody: body(0x3d4a63),
+    brutePlate: body(0x232c3d),
+    wispBody: body(0x4fd8e8),
+    wispGlow: plain(0xd8fbff, true),
   };
   return MATS;
 }
@@ -246,6 +264,64 @@ function makeWarden() {
   return { group: g, parts: { armL, armR, legL, legR, core } };
 }
 
+function makeBrute() {
+  const M = mats();
+  const g = new THREE.Group();
+  // a wedge of plate with the head low between the shoulders
+  const chest = new THREE.Mesh(cylGeo(0.72, 0.56, 1.25, 8), M.bruteBody);
+  chest.position.set(0, 1.55, 0);
+  chest.rotation.x = 0.12;
+  g.add(chest);
+  for (const sx of [-1, 1]) {
+    const pad = sphere(0.46, M.brutePlate, sx * 0.72, 2.16, -0.04, 7);
+    pad.scale.set(1.2, 0.75, 1.05);
+    g.add(pad);
+  }
+  const head = sphere(0.26, M.brutePlate, 0, 2.34, 0.28, 7);
+  head.scale.set(1, 0.8, 1.25);
+  g.add(head);
+  g.add(box(0.34, 0.05, 0.06, M.eye, 0, 2.36, 0.5));
+  // knuckles on the floor: the silhouette that says "it charges"
+  const armL = limbCyl(0.2, 0.3, 1.5, M.bruteBody, -0.76, 2.0, 0);
+  const armR = limbCyl(0.2, 0.3, 1.5, M.bruteBody, 0.76, 2.0, 0);
+  for (const a of [armL, armR]) {
+    const fist = sphere(0.24, M.brutePlate, 0, -1.5, 0, 6);
+    a.add(fist);
+  }
+  const legL = limbCyl(0.24, 0.3, 0.95, M.brutePlate, -0.3, 0.95, 0);
+  const legR = limbCyl(0.24, 0.3, 0.95, M.brutePlate, 0.3, 0.95, 0);
+  g.add(armL, armR, legL, legR);
+  return { group: g, parts: { armL, armR, legL, legR } };
+}
+
+function makeWisp() {
+  const M = mats();
+  const g = new THREE.Group();
+  // a hood and a light: nothing below the waist, because it floats
+  const hood = sphere(0.3, M.wispBody, 0, 0, 0, 8);
+  hood.scale.set(1, 1.25, 1);
+  g.add(hood);
+  const core = sphere(0.16, M.wispGlow, 0, 0.02, 0.06, 7);
+  g.add(core);
+  for (let i = 0; i < 3; i++) {
+    const tail = new THREE.Mesh(coneGeo(0.11 - i * 0.02, 0.34, 5), M.wispBody);
+    tail.position.set(0, -0.42 - i * 0.16, 0);
+    tail.rotation.x = Math.PI;
+    g.add(tail);
+  }
+  const armL = new THREE.Group();
+  const armR = new THREE.Group();
+  for (const [grp, sx] of [[armL, -1], [armR, 1]]) {
+    const wisp = new THREE.Mesh(coneGeo(0.06, 0.3, 4), M.wispBody);
+    wisp.position.set(sx * 0.3, 0.02, 0);
+    wisp.rotation.z = sx * -1.2;
+    grp.add(wisp);
+    grp.position.set(0, 0.1, 0);
+    g.add(grp);
+  }
+  return { group: g, parts: { armL, armR, legL: null, legR: null, core } };
+}
+
 function makeSpitter() {
   const M = mats();
   const g = new THREE.Group();
@@ -339,6 +415,8 @@ export class Enemy {
       : typeName === 'hound' ? makeHound()
       : typeName === 'warden' ? makeWarden()
       : typeName === 'spitter' ? makeSpitter()
+      : typeName === 'brute' ? makeBrute()
+      : typeName === 'wisp' ? makeWisp()
       : makeGrunt();
     this.body = built.group;
     this.mesh = new THREE.Group();
@@ -449,9 +527,14 @@ export class Enemy {
     const { level, player } = ctx;
     this.stateT += dt;
 
-    // ground follow
+    // ground follow, unless it floats
     const f = floorHeightAt(level, this.pos.x, this.pos.z);
-    this.pos.y = f;
+    if (this.T.hover) {
+      this.bobT = (this.bobT || 0) + dt;
+      this.pos.y = f + this.T.hover + Math.sin(this.bobT * 1.9) * 0.12;
+    } else {
+      this.pos.y = f;
+    }
     this.mesh.position.x = this.pos.x;
     this.mesh.position.z = this.pos.z;
     this.mesh.position.y = f;
@@ -523,6 +606,8 @@ export class Enemy {
           break;
         }
         const nav = this.navDir(level, ctx.field, dx, dz, dist);
+        if (this.T.charges && canSee && dist < 12) this.speed = this.T.chargeSpeed;
+        else if (this.T.charges) this.speed = this.T.speed;
         if (dist > 0.9 && nav) this.moving = this.stepMove(level, nav.x, nav.z, dt);
         else this.moving = false;
         this.faceTo(dx, dz);
@@ -864,7 +949,9 @@ export class EnemyManager {
       const c = pool[Math.floor(Math.random() * pool.length)];
       // wave 2 brings grunts, wave 4 brings hounds; after that it is a mix
       let type = 'imp';
-      if (wave >= 4 && i % 5 === 4) type = 'spitter';
+      if (wave >= 5 && i % 9 === 8) type = 'brute';
+      else if (wave >= 2 && i % 5 === 4) type = 'wisp';
+      else if (wave >= 4 && i % 5 === 3) type = 'spitter';
       else if (wave >= 4 && i % 4 === 3) type = 'hound';
       else if (wave >= 3 && i % 6 === 5) type = 'spitter';
       else if (wave >= 2 && i % 3 === 2) type = 'grunt';

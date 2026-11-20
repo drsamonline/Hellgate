@@ -251,6 +251,12 @@
   .topruns li i{font-style:normal;color:#8d7f6c;font-size:10px;margin-left:auto}
   .topruns li.you{border-color:rgba(255,180,84,.5)}
 
+  .modes{display:flex;gap:8px;margin:0 0 8px;flex-wrap:wrap;justify-content:center}
+  .modes .mode{font:inherit;font-size:10px;letter-spacing:.2em;padding:7px 14px;border-radius:2px;
+    background:transparent;border:1px solid rgba(255,180,84,.28);color:#8d7f6c;cursor:pointer}
+  .modes .mode.on{border-color:#ffb454;color:#ffd9a8;background:rgba(255,180,84,.1)}
+  .modeblurb{font-size:10px;letter-spacing:.14em;color:#8d7f6c;margin:0 0 14px;max-width:min(520px,92vw);text-align:center}
+
   .maphint{font-size:10px;letter-spacing:.18em;color:#ffd9a8;margin:0 0 14px;text-align:center;
     max-width:min(620px,92vw)}
 
@@ -520,6 +526,13 @@
       <h1>HELL<span>GATE</span></h1>
       <p class="sub">procedural arena · no assets · all synth</p>
       <label class="seed">SEED <input id="seedInput" value="hellgate" maxlength="24" spellcheck="false" autocomplete="off" /></label>
+      <div class="modes" id="modeRow">
+        <button class="mode on" id="modeCampaign" data-mode="campaign">CAMPAIGN</button>
+        <button class="mode" id="modeEndless" data-mode="endless">ENDLESS</button>
+        <button class="mode" id="modeBossrush" data-mode="bossrush">BOSS RUSH</button>
+        <button class="mode" id="modeHardcore" data-mode="hardcore">HARDCORE</button>
+      </div>
+      <p id="modeBlurb" class="modeblurb">Five zones in order. Clear a zone to unlock the next.</p>
       <div class="row">
         <button id="startBtn">Enter the gate</button>
       <button id="continueBtn" class="ghost" style="display:none"></button>

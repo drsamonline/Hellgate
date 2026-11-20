@@ -4,7 +4,7 @@
 
 import './domstub.mjs';
 import { WEAPONS } from '../play/src/weapons.js';
-import { isBlocked } from '../play/src/level.js';
+import { isBlocked, buildFlowField } from '../play/src/level.js';
 const { hasLineOfSight, cellAt } = await import('../play/src/level.js');
 const THREE = await import('three');
 
@@ -43,6 +43,35 @@ function duelSpot(dist) {
     const cb = cellAt(L, d.wx, d.wz);
     if (hasLineOfSight(L, { x: c.wx, y: ca.floor + 1.6, z: c.wz }, { x: d.wx, y: cb.floor + 1.1, z: d.wz })) {
       return { a: { x: c.wx, z: c.wz, floor: ca.floor }, b: { x: d.wx, z: d.wz, floor: cb.floor } };
+    }
+  }
+  return null;
+}
+
+/**
+ * Two cells a given distance apart that are actually walkable to each other.
+ * duelSpot() requires line of sight, which is the right criterion for a shooting
+ * test and the wrong one for a pathing test: an enemy can see you across a crate
+ * it cannot walk around. This one asks the flow field instead.
+ */
+function walkSpot(dist) {
+  const L = HG.level;
+  const pool = L.reachableCells || L.openCells;
+  for (let a = 0; a < 4000; a++) {
+    const c = pool[Math.floor(Math.random() * pool.length)];
+    if (!c || c.room < 0) continue;
+    const field = buildFlowField(L, c.wx, c.wz);
+    for (let b = 0; b < 40; b++) {
+      const d = pool[Math.floor(Math.random() * pool.length)];
+      if (!d || d.room < 0) continue;
+      const dd = Math.hypot(d.wx - c.wx, d.wz - c.wz);
+      if (dd < dist - 1 || dd > dist + 1) continue;
+      const idx = Math.round(d.z) * L.W + Math.round(d.x);
+      if (field[idx] > 0) {
+        const ca = cellAt(L, c.wx, c.wz);
+        const cb = cellAt(L, d.wx, d.wz);
+        return { a: { x: c.wx, z: c.wz, floor: ca.floor }, b: { x: d.wx, z: d.wz, floor: cb.floor } };
+      }
     }
   }
   return null;
@@ -180,7 +209,7 @@ HG.enemies.spawnWave(1, HG.player.pos);
 frames(4);
 ok(HG.enemies.field && HG.enemies.field.length === 1600, 'a shared flow field is built');
 const far = HG.enemies.list[0];
-const spot3 = duelSpot(9) || duelSpot(6);
+const spot3 = walkSpot(9) || walkSpot(6) || duelSpot(9);
 HG.player.pos.set(spot3.a.x, spot3.a.floor, spot3.a.z);
 far.pos.set(spot3.b.x, spot3.b.floor, spot3.b.z);
 far.state = 'CHASE';
@@ -312,6 +341,33 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
     ok(!isBlocked(HG.level, e.pos.x, e.pos.z), type + ' ends up on open floor');
   }
 }
+
+console.log('\n== game modes ==');
+ok(Object.keys(HG.MODES).length === 4, 'four modes are defined');
+ok(HG.mode === 'campaign', 'the default mode is campaign');
+for (const name of ['endless', 'bossrush', 'hardcore', 'campaign']) {
+  HG.selectMode(name);
+  ok(HG.mode === name, name + ' can be selected');
+  ok(document.getElementById('modeBlurb').textContent === HG.MODES[name].blurb,
+    name + ' explains itself on the title screen');
+}
+ok(HG.MODES.endless.waves === 999, 'endless does not end');
+ok(HG.MODES.bossrush.bossRush === true, 'boss rush is the warden every wave');
+ok(HG.MODES.hardcore.noSave === true, 'hardcore deletes the run on death');
+
+console.log('\n== brute and wisp ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('brute', HG.player.pos.x + 7, HG.player.pos.z, 3);
+HG.enemies.spawnAt('wisp', HG.player.pos.x + 5, HG.player.pos.z + 2, 3);
+frames(3);
+const brute = HG.enemies.list.find((e) => e.type === 'brute');
+const wisp = HG.enemies.list.find((e) => e.type === 'wisp');
+ok(!!brute && !!wisp, 'both new types spawn');
+ok(brute.T.charges === true, 'the brute charges');
+ok(brute.T.hp > 100, 'and it is the tankiest thing short of the boss (' + brute.T.hp + ')');
+ok(wisp.T.hover > 0, 'the wisp floats');
+const floorAt = HG.level.cells[Math.round(wisp.pos.z / 2) * HG.level.W + Math.round(wisp.pos.x / 2)].floor;
+ok(wisp.pos.y > floorAt + 0.6, 'and it is off the floor (' + (wisp.pos.y - floorAt).toFixed(2) + ' m up)');
 
 console.log('\n== the wind-up is visible ==');
 HG.enemies.clear();

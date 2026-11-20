@@ -25,6 +25,7 @@ import { initTouch, isTouchDevice } from './touch.js';
 import { Lore } from './lore.js';
 import { Minimap } from './minimap.js';
 import { Bloom } from './bloom.js';
+import { Music } from './music.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -121,6 +122,7 @@ let companion = null;
 let lore = null;
 let minimap = null;
 let bloom = null;
+const music = new Music(audio);
 let touchCleanup = null;
 let zone = ZONES[0];
 
@@ -135,6 +137,46 @@ const UPGRADES = [
   { id: 'speed', name: 'LIGHT STEP', blurb: '+10% movement speed' },
   { id: 'armour', name: 'PLATE', blurb: '+20 starting armour' },
 ];
+
+// Game modes. Each one changes the rules, not the difficulty preset: a mode you
+// can undo by dragging a slider is not a mode.
+const MODES = {
+  campaign: {
+    name: 'CAMPAIGN',
+    blurb: 'Five zones in order. Clear a zone to unlock the next.',
+    waves: null,       // the zone decides
+    lives: 1,
+    endless: false,
+    bossRush: false,
+  },
+  endless: {
+    name: 'ENDLESS',
+    blurb: 'One zone, waves that never stop. Score until you die.',
+    waves: 999,
+    lives: 1,
+    endless: true,
+    bossRush: false,
+  },
+  bossrush: {
+    name: 'BOSS RUSH',
+    blurb: 'One wave per zone, and it is the warden every time.',
+    waves: 1,
+    lives: 1,
+    endless: false,
+    bossRush: true,
+  },
+  hardcore: {
+    name: 'HARDCORE',
+    blurb: 'Campaign rules, but death ends the run and the save is deleted.',
+    waves: null,
+    lives: 1,
+    endless: false,
+    bossRush: false,
+    noSave: true,
+  },
+};
+
+let gameMode = 'campaign';
 
 const DIFF_MULT = {
   easy: { hp: 0.8, dmg: 0.7, count: 0.75 },
@@ -354,7 +396,9 @@ function buildRun(seed, zoneDef) {
   weapons.effects = effects;
   weapons.audio = audio;
 
-  game.wavesTarget = zone.boss ? 4 : 3;
+  const mode = MODES[gameMode] || MODES.campaign;
+  game.mode = gameMode;
+  game.wavesTarget = mode.waves != null ? mode.waves : (zone.boss ? 4 : 3);
   spawnRelics(zone.relics || 0);
   applyClass(game.classId);
   applySettings();
@@ -566,7 +610,8 @@ function startWave(n) {
 
   clearPickups();
   enemies.clear(); // defensive: a wave always starts from an empty arena
-  enemies.spawnWave(n, player.pos, { boss: !!zone.boss, waves: game.wavesTarget });
+  const mode = MODES[game.mode] || MODES.campaign;
+  enemies.spawnWave(n, player.pos, { boss: mode.bossRush || !!zone.boss, waves: game.wavesTarget });
   spawnPickups(n);
   if (n >= 3) spawnKeycard();
   saveRun();
@@ -939,12 +984,31 @@ function updateTension(dt) {
   }
 }
 
+/**
+ * Which piece of music belongs to what is happening. The scene is a mode, not a
+ * track: menu, explore, combat, boss, and the tension the game already computes
+ * decides how busy it plays.
+ */
+function updateMusic(dt) {
+  if (!music) return;
+  if (audio.ctx && !music.playing) music.start();
+  if (!audio.ctx) return;
+  const bossUp = enemies.boss && enemies.boss.alive;
+  let scene = 'explore';
+  if (game.state !== 'playing') scene = 'menu';
+  else if (bossUp) scene = 'boss';
+  else if (enemies.aliveCount > 0) scene = 'combat';
+  music.setScene(scene);
+  music.setIntensity(audio.tension || 0);
+  music.update();
+}
+
 function checkWave() {
   if (game.exitOpen) {
     const d = Math.hypot(player.pos.x - level.exit.x, player.pos.z - level.exit.z);
     if (d < 1.15) {
       audio.play('switch');
-      if (game.wave >= game.wavesTarget) zoneCleared();
+      if (game.wave >= game.wavesTarget && !MODES[game.mode]?.endless) zoneCleared();
       else startWave(game.wave + 1);
     }
     return;
@@ -1656,6 +1720,18 @@ function closeSettings() {
 
 document.getElementById('settingsBtnTitle').addEventListener('click', () => openSettings('title'));
 document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
+// bound by id, not by a class query: the test double can find an id and cannot
+// find a selector, and a mode you cannot test is a mode that breaks quietly
+const modeButtons = Object.keys(MODES).map((k) => [k, document.getElementById('mode' + k[0].toUpperCase() + k.slice(1))]);
+function selectMode(name) {
+  if (!MODES[name]) return;
+  gameMode = name;
+  for (const [key, btn] of modeButtons) if (btn) btn.classList.toggle('on', key === name);
+  const blurb = document.getElementById('modeBlurb');
+  if (blurb) blurb.textContent = MODES[name].blurb;
+}
+for (const [key, btn] of modeButtons) if (btn) btn.addEventListener('click', () => selectMode(key));
+
 document.getElementById('setQuality')?.addEventListener('change', (e) => changeSetting('quality', e.target.value));
 document.getElementById('settingsBack').addEventListener('click', closeSettings);
 document.getElementById('restartBtn').addEventListener('click', () => {
@@ -1766,6 +1842,7 @@ function update(dt) {
   updateDrops(dt);
   updateDoors(dt);
   updateTension(dt);
+  updateMusic(dt);
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {
@@ -1951,6 +2028,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
+  selectMode, get mode() { return gameMode; }, MODES,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this
