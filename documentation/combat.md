@@ -149,3 +149,13 @@ Enemies spawn in room cells at least 9 units from the player, in a burst of red 
 scattered at least 4 units away. The exit unlocks when `aliveCount === 0` and — from wave 3 — the
 keycard is held; the pad itself only advances the wave when `exitOpen` is true, so walking into the
 exit room early does nothing.
+
+## The wind-up is the read
+
+Every enemy that shoots glows while it winds up: the body's emissive channel ramps from black to hot
+orange across the telegraph — 0.55 s for an imp, 0.4 s for a grunt, 0.75 s for a spitter, 0.7 s for the
+warden. A hit uses the same channel for its flash, so the two never overlap: the flash wins while it
+lasts, then the charge colour is restored.
+
+This exists because the alternative is learning an enemy is shooting you from your health bar, which is
+the wrong way round.

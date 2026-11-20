@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.38.0 — 2026-11-20
+
+**The wind-up is visible now**
+
+Every enemy that shoots glows while it winds up: the body's emissive channel ramps from black to hot
+orange across the telegraph — 0.55 s for an imp, 0.4 s for a grunt, 0.75 s for a spitter, 0.7 s for the
+warden. Before this, the only tell was a small particle burst on the imp and the enemy's own scale
+animation, which reads as a twitch rather than a warning.
+
+A hit flash uses the same emissive channel, so the flash wins while it lasts and the charge colour is
+restored after it — the two never fight over the pixel.
+
+This follows from "kills you if not properly played": the game was asking the player to read a 0.55 s
+window off a health bar.
+
+**One test asserted the wrong thing** — `flash decays back to black` checked `emissive.r === 0`, which is
+no longer true once an enemy is winding up. It now checks that the flash ended and that whatever is left
+is the charge colour (no blue), which is the real invariant.
+
+**`documentation/combat.md`** describes the telegraph timings per type.
+
+
 ## 1.37.0 — 2026-11-20
 
 **The campaign ramps across zones, not just across waves**

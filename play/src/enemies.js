@@ -349,6 +349,8 @@ export class Enemy {
     // without lighting up every other enemy on the map
     this.flashMats = [];
     this.flash = 0;
+    this.charging = 0;   // 0..1 through the wind-up
+    this.charged = false; // true while a wind-up glow needs clearing
     const remap = new Map();
     this.mesh.traverse((o) => {
       if (!o.isMesh || !o.material) return;
@@ -539,7 +541,9 @@ export class Enemy {
         this.faceTo(dx, dz);
         const tg = this.T.telegraph;
         if (this.stateT < tg) {
-          // telegraph: wind up
+          // telegraph: wind up, and glow while doing it
+          this.charging = this.stateT / tg;
+          this.charged = true;
           this.mesh.scale.set(1, 1 + Math.sin(this.stateT * 30) * 0.04, 1);
           if (this.type === 'imp' && Math.random() < 0.35) {
             const c = this.chestPos();
@@ -547,6 +551,7 @@ export class Enemy {
           }
         } else if (!this.fired) {
           this.fired = true;
+          this.charging = 0;
           this.mesh.scale.set(1, 1, 1);
           this.doAttack(ctx, dist, dx, dz, canSee, playerEye);
         } else if (this.stateT > tg + 0.35) {
@@ -558,6 +563,7 @@ export class Enemy {
       }
       case STATE.PAIN: {
         this.moving = false;
+        this.charging = 0;
         if (this.stateT > 0.26) this.setState(STATE.CHASE);
         break;
       }
@@ -766,6 +772,14 @@ export class Enemy {
       this.flash = Math.max(0, this.flash - dt);
       const e = this.flash / 0.16;
       for (const m of this.flashMats) m.emissive.setRGB(e * 0.85, e * 0.12, e * 0.08);
+    } else if (this.charging > 0) {
+      // the wind-up is the read: the body heats up over the telegraph, so a
+      // player can see the shot coming instead of being told by their health bar
+      const k = Math.min(1, this.charging);
+      for (const m of this.flashMats) m.emissive.setRGB(k * 0.55, k * 0.22, 0);
+    } else if (this.charged) {
+      this.charged = false;
+      for (const m of this.flashMats) m.emissive.setRGB(0, 0, 0);
     }
     const sp = this.moving ? 1 : 0;
     this.walkPhase += dt * (this.moving ? 9 : 0);

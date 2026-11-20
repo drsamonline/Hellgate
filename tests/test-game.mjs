@@ -136,7 +136,12 @@ ok(target.flashMats && target.flashMats.length > 0, 'enemy owns cloned flash mat
 ok(target.flashMats.every((m) => m.userData.shared === false), 'flash materials are not the shared ones');
 ok(target.flash > 0 && target.flashMats[0].emissive.r > 0, 'enemy flashes white-hot on a hit');
 frames(24);
-ok(target.flash === 0 && target.flashMats[0].emissive.r === 0, 'flash decays back to black');
+// the emissive channel is shared with the wind-up glow, so "black" is the wrong
+// assertion: the flash ends, and anything left is the charge colour, which has no blue
+const emissiveAfter = target.flashMats[0].emissive;
+ok(target.flash === 0, 'the hit flash decays to nothing');
+ok(emissiveAfter.b === 0 && (emissiveAfter.r === 0 || emissiveAfter.g > 0),
+  'and the emissive left behind is the wind-up, not the flash');
 
 console.log('\n== shared enemy geometry ==');
 HG.enemies.spawnWave(1, HG.player.pos);
@@ -307,6 +312,21 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
     ok(!isBlocked(HG.level, e.pos.x, e.pos.z), type + ' ends up on open floor');
   }
 }
+
+console.log('\n== the wind-up is visible ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('imp', HG.player.pos.x + 5, HG.player.pos.z, 1);
+frames(2);
+const winding = HG.enemies.list[0];
+winding.setState('ATTACK');
+winding.stateT = 0.01;
+frames(6);
+ok(winding.charging > 0, 'the body charges during the telegraph (' + winding.charging.toFixed(2) + ')');
+ok(winding.flashMats.some((m) => m.emissive.r > 0), 'and it glows while charging');
+winding.stateT = 5;
+winding.fired = false;
+frames(4);
+ok(winding.charging === 0, 'the charge is cleared when it fires');
 
 console.log('\n== tension and heartbeat ==');
 ok(typeof HG.audio.setTension === 'function', 'the mix has a tension control');
