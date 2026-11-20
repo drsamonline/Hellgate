@@ -16,6 +16,7 @@ export const DEFAULTS = {
   muted: false,
   difficulty: 'normal', // easy | normal | hard
   classId: 'marine',    // marine | ranger | warden
+  quality: 'balanced',  // performance | balanced | pretty — performance drops bloom
 };
 
 /**
@@ -59,6 +60,7 @@ export function clampSettings(s) {
   s.volume = Math.min(1, Math.max(0, Number(s.volume) || 0));
   s.muted = !!s.muted;
   s.reducedMotion = !!s.reducedMotion;
+  s.quality = ['performance', 'balanced', 'pretty'].includes(s.quality) ? s.quality : 'balanced';
   if (!DIFFICULTIES.includes(s.difficulty)) s.difficulty = 'normal';
   return s;
 }

@@ -24,6 +24,7 @@ import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
 import { Lore } from './lore.js';
 import { Minimap } from './minimap.js';
+import { Bloom } from './bloom.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -119,6 +120,7 @@ let props = null;
 let companion = null;
 let lore = null;
 let minimap = null;
+let bloom = null;
 let touchCleanup = null;
 let zone = ZONES[0];
 
@@ -561,6 +563,19 @@ function startWave(n) {
   audio.play('wave');
 }
 
+// The performance preset drops bloom; the others keep it. A device that cannot
+// afford four quarter-res passes should not be given them.
+function applyBloom() {
+  const preset = settings.quality || 'balanced';
+  const want = preset !== 'performance' && !settings.reducedMotion;
+  if (want && !bloom) {
+    const w = canvas.clientWidth || window.innerWidth;
+    const h = canvas.clientHeight || window.innerHeight;
+    bloom = new Bloom(renderer, w, h, { strength: 1.15, threshold: 0.72 });
+  }
+  if (bloom) bloom.enabled = want;
+}
+
 function applySettings() {
   camera.fov = settings.fov;
   camera.updateProjectionMatrix();
@@ -570,6 +585,7 @@ function applySettings() {
   if (enemies) enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
   audio.setVolume(settings.volume);
   audio.setMuted(settings.muted);
+  applyBloom();
   syncSettingsUI();
 }
 
@@ -578,6 +594,7 @@ function syncSettingsUI() {
   const text = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('setSens', settings.sensitivity);
   set('setFov', settings.fov);
+  set('setQuality', settings.quality || 'balanced');
   set('setVol', Math.round(settings.volume * 100));
   text('setSensVal', settings.sensitivity.toFixed(2) + '×');
   text('setFovVal', settings.fov + '°');
@@ -1585,6 +1602,7 @@ function closeSettings() {
 
 document.getElementById('settingsBtnTitle').addEventListener('click', () => openSettings('title'));
 document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
+document.getElementById('setQuality')?.addEventListener('change', (e) => changeSetting('quality', e.target.value));
 document.getElementById('settingsBack').addEventListener('click', closeSettings);
 document.getElementById('restartBtn').addEventListener('click', () => {
   hideScreens();
@@ -1738,7 +1756,11 @@ const lastRenderStats = { calls: 0, tris: 0 };
 
 function render() {
   renderer.clear();
-  renderer.render(scene, camera);
+  if (bloom && bloom.enabled) {
+    bloom.render(scene, camera);
+  } else {
+    renderer.render(scene, camera);
+  }
   const info = renderer.info.render;
   const levelCalls = info.calls;
   const levelTris = info.triangles;

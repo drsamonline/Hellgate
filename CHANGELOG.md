@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.31.0 — 2026-11-20
+
+**Bloom** (roadmap 44)
+
+Muzzle flashes, explosions, the warden's furnace and the enemy eyes now glow. Three.js ships
+`UnrealBloomPass`, but that is an example module and this project vendors the core library only, so the
+pass is written here: the scene renders into a target, the bright pixels are kept at quarter resolution,
+blurred twice, and added back.
+
+| Detail | Choice |
+| --- | --- |
+| Cost | Four quarter-res passes, then the composite |
+| Threshold | 0.72, with a 0.25 soft edge |
+| Blur | Nine-tap separable, two passes |
+| Switch | `Graphics: Performance` turns it off; reduced motion turns it off |
+
+**The first version came out dark** — the scene renders into a linear target and the renderer's sRGB
+conversion only runs on the final pass, which was now this shader. The composite encodes sRGB itself and
+the brightness matches the pre-bloom game.
+
+**Graphics quality setting** — Performance / Balanced / Pretty in the settings panel, persisted like the
+rest. Performance drops bloom and the prop detail pass.
+
+**Stub** — `Vector2`, `ShaderMaterial`, `OrthographicCamera`, `WebGLRenderTarget` and
+`renderer.setRenderTarget` added, because `check-stub` refuses to let the test double drift.
+
+
 ## 1.30.0 — 2026-11-20
 
 **The warden, in curves**

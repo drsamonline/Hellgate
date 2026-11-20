@@ -138,6 +138,9 @@ export class WebGLRenderer {
   setPixelRatio() {}
   setSize() {}
   clear() {}
+  setRenderTarget(target) { this.renderTarget = target; }
+  getRenderTarget() { return this.renderTarget || null; }
+  setClearColor() {}
   clearDepth() {}
   render(scene) {
     this.renders++;
@@ -281,6 +284,41 @@ export class Sprite {
   }
   setScalar(v) { this.scale.set(v, v, v); return this; }
   add(o) { this.children.push(o); return o; }
+}
+
+export class Vector2 {
+  constructor(x = 0, y = 0) { this.x = x; this.y = y; }
+  set(x, y) { this.x = x; this.y = y; return this; }
+}
+
+export class ShaderMaterial {
+  constructor(o = {}) {
+    Object.assign(this, o);
+    this.uniforms = o.uniforms || {};
+    this.userData = {};
+  }
+  dispose() {}
+}
+
+export class OrthographicCamera {
+  constructor(l = -1, r = 1, t = 1, b = -1, n = 0, f = 1) {
+    Object.assign(this, { left: l, right: r, top: t, bottom: b, near: n, far: f });
+    this.position = new Vector3();
+    this.rotation = { x: 0, y: 0, z: 0 };
+    this.matrixWorld = { elements: new Array(16).fill(0) };
+  }
+  updateProjectionMatrix() {}
+}
+
+export class WebGLRenderTarget {
+  constructor(w = 1, h = 1, opts = {}) {
+    this.width = w;
+    this.height = h;
+    Object.assign(this, opts);
+    this.texture = { isTexture: true, width: w, height: h, dispose() {} };
+  }
+  setSize(w, h) { this.width = w; this.height = h; this.texture.width = w; this.texture.height = h; }
+  dispose() {}
 }
 
 export class Clock {
