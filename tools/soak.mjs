@@ -87,7 +87,8 @@ function play(seed, difficulty) {
       // enemies use, so the bot gets around a wall instead of leaning on it.
       HG.input.move.x = 0;
       if (seen) {
-        HG.input.move.y = bestD < 3.2 ? 1 : 0;
+        // close to 9 m, then hold and fire; back off under 3 m
+        HG.input.move.y = bestD > 9 ? -1 : bestD < 3.2 ? 1 : 0;
       } else {
         fieldT -= DT;
         if (fieldT <= 0 || !field) {
@@ -112,7 +113,7 @@ function play(seed, difficulty) {
       }
 
       // fire only when it can actually see the target, or every shot eats a wall
-      if (seen && bestD < 30) {
+      if (seen && bestD < 26) {
         HG.input.fire = true;
         shots++;
       } else HG.input.fire = false;

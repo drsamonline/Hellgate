@@ -16,6 +16,7 @@ node tools/check-claims.js   # README numbers vs the code, ~200 ms
 node tools/check-docs.mjs    # every export has a JSDoc block
 node tools/check-stub.mjs    # the Three.js stub covers every symbol used
 node tools/soak.mjs          # a bot plays unattended; stability, not balance
+node tools/balance-report.mjs # the curve as arithmetic over the constants
 node tools/audit-dead.mjs    # unused exports, conflicting constants
 node tools/check-pages.mjs   # PAGES.json paths still exist
 node tools/check-links.mjs   # every local href/src resolves

@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.28.0 — 2026-11-20
+
+**The difficulty curve, as arithmetic instead of opinion**
+
+`documentation/balance.md` said plainly that no constant in the repository was backed by data. A bot is
+not the answer — `tools/soak.mjs` aims badly and its kill count says more about the bot than the game —
+so the gap is filled the other way: `tools/balance-report.mjs` reads the same constants the game uses
+and prints what a wave costs.
+
+| Wave | Enemies | Total hp | Shells to clear | Enemy dps if all in range |
+| --- | --- | --- | --- | --- |
+| 1 | 6 | 330 | 4 | 43 |
+| 4 | 12 | 684 | 8 | 91 |
+| 8 | 20 | 1382 | 16 | 140 |
+
+Two findings, both from the numbers and neither a matter of taste:
+
+- **Ammo is the clock.** You carry 16 shells; wave 8 needs all of them. From wave 7 the run is about
+  finding ammo, not aiming.
+- **Enemy dps passes your health pool at wave 2.** 110 hp plus 25 armour against 55 dps means four
+  seconds in the open is fatal from the second wave.
+
+The dps column assumes every enemy is in range and attacking on cooldown — an upper bound, and labelled
+as one. The report moves when the code moves, because it imports the code.
+
+**Also** — the soak bot now closes to 9 m before firing instead of shooting through its own spread at
+26 m, which is why its kill count was meaningless before. It is still not a balance instrument and the
+tool says so in its own output.
+
+
 ## 1.27.0 — 2026-11-19
 
 **A playability suite: every level must be completable**
