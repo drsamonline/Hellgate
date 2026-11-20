@@ -10,7 +10,7 @@ export const ZONES = [
   {
     id: 'gate',
     name: 'THE GATE',
-    seed: 'hellgate',
+    seed: 'gate-238',
     blurb: 'Where it opened. Brick, blood and the first wave.',
     sky: 0x9fb4c8,
     ground: 0x6a5540,
@@ -25,7 +25,7 @@ export const ZONES = [
   {
     id: 'foundry',
     name: 'THE FOUNDRY',
-    seed: 'foundry-7',
+    seed: 'foundry-101',
     blurb: 'Still warm. The machines kept working after everyone left.',
     sky: 0xa8b6c4,
     ground: 0x5a4030,
@@ -40,7 +40,7 @@ export const ZONES = [
   {
     id: 'grove',
     name: 'THE GROVE',
-    seed: 'grove-3',
+    seed: 'grove-234',
     blurb: 'Something grew back. It is not friendly, but it is alive.',
     sky: 0x8fb4a0,
     ground: 0x3f4a30,
@@ -55,7 +55,7 @@ export const ZONES = [
   {
     id: 'vault',
     name: 'THE VAULT',
-    seed: 'vault-11',
+    seed: 'vault-199',
     blurb: 'Sealed from the inside. Whatever sealed it is still here.',
     sky: 0x8a94b4,
     ground: 0x40384a,
@@ -70,7 +70,7 @@ export const ZONES = [
   {
     id: 'throne',
     name: 'THE THRONE',
-    seed: 'throne-0',
+    seed: 'throne-173',
     blurb: 'The end of the corridor. It has been waiting for a body.',
     sky: 0xb48f8f,
     ground: 0x4a3030,

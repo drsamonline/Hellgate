@@ -39,8 +39,10 @@ const ok = (cond, msg) => {
 const SEEDS = 6;
 
 for (const zone of ZONES) {
-  for (let s = 0; s < SEEDS; s++) {
-    const seed = zone.seed + '-' + s;
+  // the campaign seed first, then five derived ones: the level a player actually
+  // gets is the one that must be completable
+  for (let s = -1; s < SEEDS; s++) {
+    const seed = s < 0 ? zone.seed : zone.seed + '-' + s;
     HG.beginZone(zone);
     HG.story.skip();
     frames(1);

@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.34.0 — 2026-11-20
+
+**The campaign seeds are chosen now, not typed**
+
+`world.js` held five seed strings somebody typed. Two of them — `grove` and `throne` — had **no room
+bigger than 7×7**, so the grove was the flattest level in the game and the warden fought in an ordinary
+room. That is a design flaw a string cannot tell you about.
+
+`tools/pick-seeds.mjs` scores 300 candidates per zone against what that zone needs and prints the best:
+
+| Zone | Was | Now | Rooms | Big rooms | Stairs |
+| --- | --- | --- | --- | --- | --- |
+| The Gate | `hellgate` | `gate-238` | 9 | 3 | 66 |
+| The Foundry | `foundry-7` | `foundry-101` | 12 | 3 | 65 |
+| The Grove | `grove-3` | `grove-234` | 11 | 3 | 75 |
+| The Vault | `vault-11` | `vault-199` | 12 | 2 | 70 |
+| The Throne | `throne-0` | `throne-173` | 11 | 5 | 60 |
+
+The throne now has five rooms of 7×7 or larger, so the warden has somewhere to be a boss.
+
+**The playability suite tests the campaign seed itself** — it used to test `zone.seed + '-0..5'`, which
+are five levels nobody plays. It now runs the real seed first and five derived ones after, so 350
+assertions instead of 300.
+
+**A candidate is rejected outright** if it has fewer than 9 rooms, no 7×7 room, fewer stairs than the
+zone wants, no secret, fewer than two crates, under 330 open cells, or more than 60 cells cut off behind
+shut doors.
+
+
 ## 1.33.0 — 2026-11-20
 
 **Licence: MIT to PolyForm Noncommercial 1.0.0**
