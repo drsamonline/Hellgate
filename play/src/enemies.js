@@ -955,7 +955,14 @@ export class EnemyManager {
       else if (wave >= 4 && i % 4 === 3) type = 'hound';
       else if (wave >= 3 && i % 6 === 5) type = 'spitter';
       else if (wave >= 2 && i % 3 === 2) type = 'grunt';
-      const pos = new THREE.Vector3(c.wx + (Math.random() - 0.5) * 0.6, 0, c.wz + (Math.random() - 0.5) * 0.6);
+      // the spawn jitter has to fit the body: a brute is 0.78 wide and a 0.3 m
+      // offset from a cell centre puts half of it inside the wall
+      const jitter = Math.max(0, Math.min(0.3, 0.9 - TYPES[type].radius));
+      const pos = new THREE.Vector3(
+        c.wx + (Math.random() - 0.5) * jitter,
+        0,
+        c.wz + (Math.random() - 0.5) * jitter
+      );
       const e = new Enemy(type, pos, wave, this.scene, { diff });
       e.pos.y = floorHeightAt(this.level, pos.x, pos.z);
       e.mesh.position.y = e.pos.y;
@@ -964,7 +971,18 @@ export class EnemyManager {
     }
 
     if (bossWave) {
-      const c = pool[Math.floor(Math.random() * pool.length)];
+      // the warden is 2.1 m across: a single open cell cannot hold it, so it
+      // spawns only where a 3x3 block is open and it is not born inside a wall
+      const roomy = pool.filter((c) => {
+        for (let dz = -1; dz <= 1; dz++) {
+          for (let dx = -1; dx <= 1; dx++) {
+            const n = this.level.cells[(c.z + dz) * this.level.W + (c.x + dx)];
+            if (!n || n.solid || n.crate) return false;
+          }
+        }
+        return true;
+      });
+      const c = (roomy.length ? roomy : pool)[Math.floor(Math.random() * (roomy.length || pool.length))];
       const pos = new THREE.Vector3(c.wx, 0, c.wz);
       const boss = new Enemy('warden', pos, wave, this.scene, { diff });
       boss.pos.y = floorHeightAt(this.level, pos.x, pos.z);

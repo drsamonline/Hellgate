@@ -103,6 +103,22 @@ export class Effects {
     }
     this.pCursor = 0;
 
+    // ---- shockwave rings -------------------------------------------------
+    // four reusable rings: a flat disc that expands and fades where something
+    // went off, so an explosion reads as pressure and not just sparks
+    this.rings = [];
+    const ringGeo = new THREE.RingGeometry(0.4, 0.62, 20);
+    for (let i = 0; i < 4; i++) {
+      const m = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({
+        color: 0xffb066, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false,
+      }));
+      m.visible = false;
+      m.rotation.x = -Math.PI / 2;
+      this.scene.add(m);
+      this.rings.push({ mesh: m, t: 0, life: 0.45, scale: 1 });
+    }
+    this.ringCursor = 0;
+
     // ---- tracers ---------------------------------------------------------
     this.tracers = [];
     for (let i = 0; i < MAX_TRACERS; i++) {
@@ -232,11 +248,37 @@ export class Effects {
     l.life = l.max = duration;
   }
 
+  /** A shockwave disc at a point, on the ground plane. */
+  shockwave(pos, scale = 1, color = 0xffb066) {
+    const r = this.rings[this.ringCursor % this.rings.length];
+    this.ringCursor++;
+    r.mesh.position.set(pos.x, pos.y + 0.06, pos.z);
+    r.mesh.material.color.setHex(color);
+    r.mesh.visible = true;
+    r.t = 0;
+    r.life = 0.4 + scale * 0.12;
+    r.scale = 1.6 + scale * 1.4;
+  }
+
+  /** Bright, short sparks with a hot core: a bullet meeting a wall. */
+  sparks(pos, normal, count = 10) {
+    this.burst(pos, 0xffe0a0, count, 5, 0.28, 12, 0.7);
+    this.burst(pos, 0xffa040, Math.ceil(count * 0.6), 3, 0.4, 10, 0.9);
+    if (normal) this.decal(pos, normal, 'spark', 0.3);
+  }
+
+  /** A puff of smoke at the muzzle, drifting up. */
+  muzzleSmoke(pos, dir) {
+    const p = { x: pos.x + (dir ? dir.x * 0.4 : 0), y: pos.y, z: pos.z + (dir ? dir.z * 0.4 : 0) };
+    this.burst(p, 0x9a9a9a, 4, 1.4, 0.55, -1.5, 1.4);
+  }
+
   explosion(pos, scale = 1) {
     this.burst(pos, 0xffa030, 26 * scale, 9 * scale, 0.6, 8);
     this.burst(pos, 0xff5522, 14 * scale, 5 * scale, 0.9, 4);
     this.burst(pos, 0x333333, 10, 3, 1.4, 2);
     this.flash(pos, 0xff8833, 26 * scale, 0.22, 26);
+    this.shockwave(pos, scale, 0xffa040);
   }
 
   blood(pos, dir) {
@@ -258,6 +300,15 @@ export class Effects {
   // ------------------------------------------------------------------ update
 
   update(dt) {
+    for (const r of this.rings) {
+      if (!r.mesh.visible) continue;
+      r.t += dt;
+      const k = r.t / r.life;
+      if (k >= 1) { r.mesh.visible = false; r.mesh.material.opacity = 0; continue; }
+      const s = 1 + k * r.scale;
+      r.mesh.scale.set(s, s, s);
+      r.mesh.material.opacity = (1 - k) * 0.75;
+    }
     // particles
     let dirty = false;
     for (let i = 0; i < MAX_PARTICLES; i++) {

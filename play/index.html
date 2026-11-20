@@ -216,6 +216,15 @@
   #relics{position:absolute;top:40px;left:16px;font-size:11px;letter-spacing:.18em;color:#c77dff;text-shadow:0 2px 6px #000}
 
   /* story: the level shows through */
+  #letterbox{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;z-index:40}
+  #letterbox.on{opacity:1}
+  #letterbox .bar{position:absolute;left:0;right:0;height:var(--bar,28%);background:#040406}
+  #letterbox .bar.top{top:0}
+  #letterbox .bar.bottom{bottom:0}
+  #letterbox .caption{position:absolute;left:0;right:0;bottom:calc(var(--bar,28%) + 22px);text-align:center}
+  #cineName{font-size:30px;letter-spacing:.3em;color:#ff3b30;text-shadow:0 4px 24px rgba(255,59,48,.45)}
+  #cineLine{font-size:11px;letter-spacing:.24em;color:#cbbda8;margin-top:8px}
+
   .screen.cinema{background:linear-gradient(180deg,rgba(4,4,6,.15),rgba(4,4,6,.85));justify-content:flex-end;padding-bottom:12vh}
   #storyText{
     max-width:760px;min-height:3.6em;font-size:clamp(16px,2.4vw,22px);line-height:1.7;color:#f2e7d4;
@@ -518,6 +527,15 @@
       <div class="stat"><span class="label">AMMO</span><span class="val" id="ammo">0</span></div>
       <div class="sep"></div>
       <div class="stat" style="min-width:104px"><span class="label">WEAPON</span><span class="val" id="weapon">PISTOL</span></div>
+    </div>
+  </div>
+
+  <div id="letterbox">
+    <div class="bar top"></div>
+    <div class="bar bottom"></div>
+    <div class="caption">
+      <div id="cineName"></div>
+      <div id="cineLine"></div>
     </div>
   </div>
 

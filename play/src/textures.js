@@ -258,5 +258,5 @@ export function makeMaterials(maxAnisotropy = 1) {
  * The two impact decal textures: scorch and blood.
  */
 export function makeDecalTextures() {
-  return { blood: splat(), scorch: scorch() };
+  return { blood: splat(), scorch: scorch(), spark: scorch() };
 }

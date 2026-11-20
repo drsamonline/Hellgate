@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.41.0 — 2026-11-21
+
+**The warden gets an entrance**
+
+When the boss wave starts, the letterbox closes, the camera orbits the thing that just arrived, its name
+and the zone type out over the bars, and control comes back. Three seconds, skippable on any key, click
+or tap — a cutscene you cannot skip is a hostage situation. The game loop hands the camera to the cut and
+takes it back, so nothing else runs while it plays.
+
+**More effects**
+
+| Effect | Where |
+| --- | --- |
+| Shockwave ring | Explosions: a flat disc that expands and fades, so a blast reads as pressure |
+| Sparks | Bullet meets wall: hot core plus embers plus a scorch |
+| Muzzle smoke | A puff at the barrel on every shot |
+
+The rings are four reused meshes, not four per explosion.
+
+**A real bug the new tests found**
+
+The warden is 2.1 m across and a cell is 2 m, so it was **born inside the wall** of whatever cell it
+spawned on. It now spawns only where a 3x3 block of cells is open. The same test found that the spawn
+jitter (±0.3 m) put a brute's shoulder into the wall; the jitter now scales with the body.
+
+**Test double fix** — the DOM stub had a no-op `classList` shadowing the real one, which broke five HUD
+assertions the moment a test needed `contains()`. The stub now has one `classList`, backed by a Set.
+
+
 ## 1.40.0 — 2026-11-20
 
 **Items look like items** (roadmap 58)

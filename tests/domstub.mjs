@@ -9,7 +9,8 @@ function makeCtx(canvas) {
 }
 function makeEl(id='',tag='div'){
   return { id, tagName: tag, className:'', textContent:'', innerHTML:'', value:'', width:0, height:0,
-    children:[], style:{}, dataset:{}, _listeners:{},
+    children:[], dataset:{}, _listeners:{},
+    style:{ setProperty(){}, removeProperty(){}, getPropertyValue(){ return ''; } },
     classList:{_s:new Set(),add(c){this._s.add(c);},remove(c){this._s.delete(c);},contains(c){return this._s.has(c);},
       toggle(c,on){ if(on===undefined){this._s.has(c)?this._s.delete(c):this._s.add(c);} else if(on) this._s.add(c); else this._s.delete(c); }},
     addEventListener(t,fn){(this._listeners[t]||(this._listeners[t]=[])).push(fn);},

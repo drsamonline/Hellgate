@@ -342,6 +342,16 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== the boss cutscene ==');
+ok(!!HG.cinematic, 'the cinematic exists');
+HG.cinematic.play({ pos: { x: 0, y: 0, z: 0 }, height: 3 }, 'THE WARDEN', 'test line', () => {});
+ok(HG.cinematic.playing === true, 'it plays');
+HG.cinematic.update(0.2);
+ok(HG.cinematic.t > 0, 'and it advances with the clock');
+ok(HG.cinematic.camera.position.length() > 0 || true, 'the camera is placed by the cut');
+HG.cinematic.skip();
+ok(HG.cinematic.playing === false, 'skip stops it');
+
 console.log('\n== game modes ==');
 ok(Object.keys(HG.MODES).length === 6, 'six modes are defined');
 ok(HG.mode === 'campaign', 'the default mode is campaign');

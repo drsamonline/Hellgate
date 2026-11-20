@@ -27,6 +27,7 @@ import { Minimap } from './minimap.js';
 import { Bloom } from './bloom.js';
 import { Music } from './music.js';
 import * as Items from './items.js';
+import { Cinematic } from './cinematic.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -124,6 +125,11 @@ let lore = null;
 let minimap = null;
 let bloom = null;
 const music = new Music(audio);
+const cinematic = new Cinematic(camera, {
+  root: document.getElementById('letterbox'),
+  name: document.getElementById('cineName'),
+  line: document.getElementById('cineLine'),
+});
 let touchCleanup = null;
 let zone = ZONES[0];
 
@@ -419,6 +425,7 @@ function buildRun(seed, zoneDef) {
   const mode = MODES[gameMode] || MODES.campaign;
   game.mode = gameMode;
   game.wavesTarget = mode.waves != null ? mode.waves : (zone.boss ? 4 : 3);
+  game.bossSeen = false;
   spawnRelics(zone.relics || 0);
   applyClass(game.classId);
   applySettings();
@@ -623,6 +630,19 @@ function startWave(n) {
 
   hud.toast('WAVE ' + n, 2);
   audio.play('wave');
+
+  // the warden gets an entrance: three seconds, skippable, then control back
+  const boss = enemies.boss;
+  if (boss && game.state === 'playing' && !game.bossSeen) {
+    game.bossSeen = true;
+    game.state = 'cinematic';
+    releaseLock();
+    cinematic.play(boss, 'THE WARDEN', zone.name + ' · ' + game.wave + ' of ' + game.wavesTarget, () => {
+      game.state = 'playing';
+      requestLock();
+      clock.getDelta();
+    });
+  }
 }
 
 // The performance preset drops bloom; the others keep it. A device that cannot
@@ -1942,6 +1962,10 @@ function loop() {
   } else {
     accumulator = 0;
     if (game.state === 'intro') story.update(frameDt, level);
+    if (game.state === 'cinematic') {
+      cinematic.update(frameDt);
+      if (effects) effects.applyShake(camera);
+    }
   }
   if (touchCleanup && touchCleanup.setVisible) touchCleanup.setVisible(game.state === 'playing');
   render();
@@ -2036,7 +2060,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
-  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket,
+  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this

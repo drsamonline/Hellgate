@@ -186,6 +186,7 @@ export class Weapons {
     const muzzle = this.camera.localToWorld(new THREE.Vector3(0.24, -0.16, -0.55));
 
     this.effects.flash(muzzle, 0xffcc88, 9, 0.06, 14);
+    this.effects.muzzleSmoke(muzzle, baseDir);
 
     if (w.projectile) {
       projectiles.spawn('rocket', muzzle, baseDir, { damage: w.damage, owner: 'player' });
@@ -235,6 +236,7 @@ export class Weapons {
           0xffddaa, 3, 2.5, 0.3, 10
         );
         this.effects.decal(wallHit.point, wallHit.normal, 'scorch', 0.3);
+        this.effects.sparks(wallHit.point, wallHit.normal, 8);
       } else {
         this.effects.tracer(muzzle, new THREE.Vector3(
           origin.x + dir.x * w.range,
