@@ -35,6 +35,7 @@ export class HUD {
     this.elGrenades = document.getElementById('grenades');
     this.elExitState = document.getElementById('exitstate');
     this.elObjective = document.getElementById('objective');
+    this.elWaypoint = document.getElementById('waypoint');
     this.staminaBar = this.elStamina ? this.elStamina.firstElementChild : null;
     this.damageNumbers = true;
     this.elBuffs = document.getElementById('buffs');
@@ -236,13 +237,6 @@ export class HUD {
       const waypoint = state.exitOpen ? state.exit : (state.wave >= 3 && !state.hasKey ? state.keycard : null);
 
       // exit compass: a chevron pointing at the pad once the wave is cleared.
-      // The chevron carries the direction; the label carries the state, so the
-      // cue survives a colour-blind player and a greyscale screenshot.
-      if (this.elExitState) {
-        this.elExitState.textContent = state.exitOpen ? 'EXIT OPEN \u25b8' : 'EXIT SHUT \u25aa';
-        this.elExitState.classList.toggle('open', !!state.exitOpen);
-      }
-
       // exit compass: a chevron pointing at the pad once the wave is cleared
       if (waypoint && state.camera) {
         const cam = state.camera;
@@ -252,8 +246,14 @@ export class HUD {
         const ang = Math.atan2(dir.x * dz - dir.z * dx, dir.x * dx + dir.z * dz);
         this.compass.style.transform = `rotate(${(-ang * 180) / Math.PI}deg)`;
         this.compass.classList.add('on');
+        // the distance makes the chevron a waypoint instead of decoration
+        if (this.elWaypoint) {
+          const d = Math.round(Math.hypot(waypoint.x - cam.position.x, waypoint.z - cam.position.z));
+          this.elWaypoint.textContent = (state.exitOpen ? 'EXIT ' : 'KEYCARD ') + d + ' m';
+        }
       } else {
         this.compass.classList.remove('on');
+        if (this.elWaypoint) this.elWaypoint.textContent = '';
       }
       this.elScore.textContent = String(state.score || 0);
       this.elWave.textContent = String(state.wave);

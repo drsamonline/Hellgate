@@ -123,6 +123,7 @@ play/src/props.js     instanced trees, rocks and grass; animals that bolt
 play/src/companion.js the drone that follows you and shoots
 play/src/lore.js      wall terminals you can read with V
 play/src/loot.js      trinkets: what a kill can drop, and what they do
+play/src/minimap.js   the floor plan, drawn once with live markers
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG

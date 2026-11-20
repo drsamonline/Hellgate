@@ -93,7 +93,7 @@
   #debug.on{opacity:1}
 
   #compass{
-    position:absolute;left:50%;top:62px;width:0;height:0;margin-left:-11px;
+    position:absolute;left:50%;top:150px;width:0;height:0;margin-left:-11px;
     border-left:11px solid transparent;border-right:11px solid transparent;
     border-bottom:16px solid #39ff9a;opacity:0;transition:opacity .2s;
     filter:drop-shadow(0 0 8px rgba(57,255,154,.55));
@@ -162,6 +162,14 @@
     20%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
+
+  #waypoint{position:absolute;left:50%;top:128px;transform:translateX(-50%);font-size:10px;
+    letter-spacing:.2em;color:#ffd24a;pointer-events:none;text-shadow:0 2px 8px #000}
+
+  #minimap{position:absolute;right:14px;top:96px;width:132px;height:132px;border-radius:3px;
+    border:1px solid rgba(255,180,84,.28);background:rgba(8,7,6,.6);pointer-events:none;opacity:.92}
+  @media (max-width:620px){ #minimap{width:96px;height:96px;top:auto;bottom:calc(250px + env(safe-area-inset-bottom));right:10px} }
+  @media (max-height:420px){ #minimap{width:84px;height:84px;top:52px;right:8px} }
 
   #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);
     font-size:10px;letter-spacing:.22em;color:#cbbda8;pointer-events:none;
@@ -324,6 +332,8 @@
   #tFire{grid-column:3;grid-row:1}
   #tWeap{grid-column:3;grid-row:2}
   #tNade{grid-column:2;grid-row:3}
+  #tRead{grid-column:1;grid-row:3;display:none;border-color:rgba(57,255,154,.6);color:#39ff9a}
+  #tRead.on{display:block}
 
   /* phones: the HUD and the touch furniture have to share one screen */
   @media (max-width:620px){
@@ -353,6 +363,14 @@
     20%{opacity:1;transform:translate(-50%,-60%) scale(1.1)}
     100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
   }
+
+  #waypoint{position:absolute;left:50%;top:128px;transform:translateX(-50%);font-size:10px;
+    letter-spacing:.2em;color:#ffd24a;pointer-events:none;text-shadow:0 2px 8px #000}
+
+  #minimap{position:absolute;right:14px;top:96px;width:132px;height:132px;border-radius:3px;
+    border:1px solid rgba(255,180,84,.28);background:rgba(8,7,6,.6);pointer-events:none;opacity:.92}
+  @media (max-width:620px){ #minimap{width:96px;height:96px;top:auto;bottom:calc(250px + env(safe-area-inset-bottom));right:10px} }
+  @media (max-height:420px){ #minimap{width:84px;height:84px;top:52px;right:8px} }
 
   #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);
     font-size:10px;letter-spacing:.22em;color:#cbbda8;pointer-events:none;
@@ -465,8 +483,9 @@
       <span id="bossname">WARDEN</span>
       <div id="bosswrap"><div id="bossfill"></div></div>
     </div>
+    <canvas id="minimap" width="132" height="132"></canvas>
+    <div id="waypoint"></div>
     <div id="objective"></div>
-    <div id="exitstate">EXIT SHUT ▪</div>
     <div id="grenades"></div>
     <div id="stamina"><i></i></div>
     <div id="killfeed"></div>
@@ -624,6 +643,7 @@
       <button id="tP3">R</button>
       <button id="tWeap">GUN</button>
       <button id="tNade">NADE</button>
+      <button id="tRead" class="ctx">READ</button>
       <button id="tJump">JMP</button>
       <button id="tFire">FIRE</button>
     </div>

@@ -23,6 +23,7 @@ import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
 import { Lore } from './lore.js';
+import { Minimap } from './minimap.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -117,6 +118,7 @@ const story = new Story();
 let props = null;
 let companion = null;
 let lore = null;
+let minimap = null;
 let touchCleanup = null;
 let zone = ZONES[0];
 
@@ -293,6 +295,8 @@ function buildRun(seed, zoneDef) {
   game.crateMeshes = (levelMeshes && levelMeshes.crateMeshes) || [];
   game.barrels = [];
   spawnBarrels();
+  const mmCanvas = document.getElementById('minimap');
+  if (mmCanvas) minimap = new Minimap(mmCanvas, level);
   props = new Props(scene, level, zone);
   lore = new Lore(scene, level, zone);
   companion = new Companion(scene, level, effects, audio);
@@ -1679,7 +1683,8 @@ function update(dt) {
   player.speedMul = (player.baseSpeed || 1) * (game.buffs.speed > 0 ? 1.25 : 1);
 
   const near = lore ? lore.update(player) : null;
-  hud.setPrompt(near ? 'V  READ' : '');
+  hud.setPrompt(near ? (TOUCH ? 'READ' : 'V  READ') : '');
+  if (touchCleanup && touchCleanup.setReadable) touchCleanup.setReadable(!!near);
 
   enemies.update(dt, player, projectiles);
   projectiles.update(dt, player, enemies);
@@ -1688,6 +1693,13 @@ function update(dt) {
   updateRelics(dt);
   updateDrops(dt);
   updateDoors(dt);
+  if (minimap) {
+    minimap.acc += dt;
+    if (minimap.acc > 0.1) {
+      minimap.acc = 0;
+      minimap.draw(player, enemies.list, game.exitOpen, game.keycard);
+    }
+  }
   effects.update(dt);
   updatePickups(dt);
   checkWave();
@@ -1833,6 +1845,7 @@ if (TOUCH) {
   document.body.classList.add('has-touch');
   touchCleanup = initTouch(input, {
     grenade: () => throwGrenade(),
+    read: () => openLore(),
     jump: () => { input.jumpQueued = true; },
     fire: () => {
       if (game.state !== 'playing') return;

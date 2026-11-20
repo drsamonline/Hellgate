@@ -139,5 +139,9 @@ export function initTouch(input, handlers) {
 
   const cleanup = () => root.classList.remove('on');
   cleanup.setVisible = setVisible;
+  // a terminal in reach shows a button; nothing else does
+  cleanup.setReadable = (on) => {
+    if (readBtn) readBtn.classList.toggle('on', !!on);
+  };
   return cleanup;
 }

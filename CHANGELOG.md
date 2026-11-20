@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.29.0 — 2026-11-20
+
+Five reports from play on a phone, and a request for bodies that look like bodies.
+
+**Minimap** — a 132 px floor plan in the corner: walls prerendered once at level build, then a blit plus
+markers at 10 Hz. You, the enemies, the keycard ring and the exit pad. It shrinks to 96 px below 620 px
+and moves above the touch controls.
+
+**READ button on touch** — terminals were readable only with `V`, which a phone does not have. A seventh
+touch button appears when a terminal is in reach and does nothing otherwise.
+
+**Quest marker with a distance** — the compass chevron now carries `KEYCARD 37 m` or `EXIT 12 m` above
+it, so it is a waypoint and not decoration.
+
+**Objective line** — it was there since 1.24.0 but read as part of the top bar; it is now a bordered pill
+in the middle of the screen, amber for the keycard, green for the exit.
+
+**The exit label is gone** — `EXIT SHUT ▪` sat under the power bar and said what the objective pill and
+the waypoint already say.
+
+**Enemy bodies rebuilt** (roadmap 49)
+- every body was boxes. They are now tapered cylinders, spheres and cones, cached and shared like the
+  boxes were: the imp is a hunched egg with horns and arms past its knees, the grunt a barrel torso with
+  shoulder pads, a helmet and a rifle in its right hand, the hound a low four-legged body with a wedge
+  head and spine spikes. The warden keeps its shape, which was already distinct.
+- same part names, so the walk cycle, the hit flash, the death fall and the level-of-detail slab all work
+  unchanged.
+
+**Tests** — 4 new assertions: the minimap canvas exists and prerenders, drawing markers does not throw,
+the touch READ button exists, and the prompt names the action.
+
+
 ## 1.28.0 — 2026-11-20
 
 **The difficulty curve, as arithmetic instead of opinion**

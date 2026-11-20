@@ -301,6 +301,20 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== minimap and touch read button ==');
+ok(!!document.getElementById('minimap'), 'the HUD has a minimap canvas');
+const { Minimap } = await import('../play/src/minimap.js');
+const cv = document.createElement('canvas');
+const mm = new Minimap(cv, HG.level, 132);
+ok(!!mm.base, 'the minimap prerenders the floor once');
+mm.draw(HG.player, HG.enemies.list, false, HG.game.keycard);
+ok(true, 'drawing markers does not throw');
+ok(!!document.getElementById('tRead'), 'the touch layout has a READ button');
+const term = HG.lore.entries[0];
+HG.player.pos.set(term.x + 0.4, term.y, term.z);
+frames(2);
+ok(HG.hud.promptText === 'READ' || HG.hud.promptText === 'V  READ', 'the prompt names the action: ' + HG.hud.promptText);
+
 console.log('\n== story per zone ==');
 const { panelsFor, epilogueFor, ZONE_STORY } = await import('../play/src/story.js');
 const zones = Object.keys(ZONE_STORY);
