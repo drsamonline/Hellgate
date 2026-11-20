@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.36.0 — 2026-11-20
+
+**The mix tells you what the HUD tells you**
+
+The ambient pad was a fixed drone at 320 Hz. It now opens up and gets louder as the room fills:
+`audio.setTension(0..1)` moves the lowpass from 300 Hz to 1080 Hz and the gain from 0.026 to 0.058 over
+about half a second, and the loop feeds it a number built from three things.
+
+| Input | Weight |
+| --- | --- |
+| How crowded the room is (alive / 10) | 0.55 |
+| How close the nearest enemy is (0 at 26 m) | 0.55 |
+| A boss being alive | 0.25 |
+
+Clamped to 1, so a boss with ten enemies on top of you is as loud as it gets.
+
+**A heartbeat under 30 % health**
+
+Two soft sub thumps, 0.55 s apart when you are nearly dead and slower as you recover. It is the one piece
+of information in the game that is easier to hear than to read.
+
+**Tests** — 4 new assertions on the tension control (exists, stores, clamps at both ends), and the smoke
+test's sound sweep now covers `heart`, `sprint` and `crouch`, which it had been missing.
+
+
 ## 1.35.0 — 2026-11-20
 
 **The draw-call budget had stopped measuring anything**

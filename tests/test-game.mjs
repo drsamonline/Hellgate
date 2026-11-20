@@ -301,6 +301,19 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== tension and heartbeat ==');
+ok(typeof HG.audio.setTension === 'function', 'the mix has a tension control');
+HG.audio.setTension(0.8);
+ok(Math.abs(HG.audio.tension - 0.8) < 0.01, 'tension is stored');
+HG.audio.setTension(5);
+ok(HG.audio.tension === 1, 'tension clamps at 1');
+HG.audio.setTension(-2);
+ok(HG.audio.tension === 0, 'and at 0');
+HG.player.health = 12;
+frames(90);
+ok(HG.audio.tension >= 0, 'the loop keeps the tension in range with a near-dead player');
+HG.player.health = HG.player.maxHealth || 110;
+
 console.log('\n== the spitter (fifth type) ==');
 HG.enemies.clear();
 HG.enemies.spawnAt('spitter', HG.player.pos.x + 12, HG.player.pos.z, 4);

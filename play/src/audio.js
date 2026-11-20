@@ -176,7 +176,24 @@ export class Sfx {
     lfo.connect(lfoGain).connect(out.gain);
     lfo.start();
 
-    this.drone = { oscs, lfo, out };
+    this.drone = { oscs, lfo, out, lp, tension: 0 };
+    this.tension = 0;
+  }
+
+  /**
+   * How much trouble the player is in, 0..1. The pad opens up and gets louder as
+   * the room fills, so the mix says what the HUD says without reading it.
+   */
+  setTension(t) {
+    const v = Math.max(0, Math.min(1, t));
+    this.tension = v;
+    const d = this.drone;
+    if (!d || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    d.lp.frequency.cancelScheduledValues(now);
+    d.lp.frequency.setTargetAtTime(300 + v * 780, now, 0.6);
+    d.out.gain.cancelScheduledValues(now);
+    d.out.gain.setTargetAtTime(0.026 + v * 0.032, now, 0.8);
   }
 
   stopDrone() {
@@ -296,6 +313,11 @@ export class Sfx {
       case 'pickup':
         this.tone(660, 0.09, 'square', 0.12, 880);
         this.tone(990, 0.1, 'square', 0.1, 1320, 0.07);
+        break;
+      case 'heart':
+        // a soft sub thump, twice, so it reads as a heartbeat and not a hit
+        this.tone(52, 0.11, 'sine', 0.2, 40);
+        this.tone(48, 0.13, 'sine', 0.15, 36, 0.16);
         break;
       case 'key':
         this.tone(880, 0.1, 'sine', 0.14, 1320);

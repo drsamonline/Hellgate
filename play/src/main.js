@@ -897,6 +897,36 @@ function openExit() {
   hud.toast('EXIT OPEN  +' + gained, 2.2);
 }
 
+// ------------------------------------------------------------------ tension
+
+let heartT = 0;
+
+/** The pad follows the room; the heart follows the health bar. */
+function updateTension(dt) {
+  if (!audio || !audio.ctx) return;
+  let near = 99;
+  for (const e of enemies.list) {
+    if (!e.alive) continue;
+    const d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
+    if (d < near) near = d;
+  }
+  const crowd = Math.min(1, enemies.aliveCount / 10);
+  const close = Math.max(0, 1 - near / 26);
+  const boss = enemies.boss && enemies.boss.alive ? 0.25 : 0;
+  audio.setTension(Math.min(1, crowd * 0.55 + close * 0.55 + boss));
+
+  const hp = player.health / (player.maxHealth || 110);
+  if (hp < 0.3 && player.alive) {
+    heartT -= dt;
+    if (heartT <= 0) {
+      heartT = 0.55 + hp * 2.4; // faster the closer to death
+      audio.play('heart');
+    }
+  } else {
+    heartT = 0;
+  }
+}
+
 function checkWave() {
   if (game.exitOpen) {
     const d = Math.hypot(player.pos.x - level.exit.x, player.pos.z - level.exit.z);
@@ -1723,6 +1753,7 @@ function update(dt) {
   updateRelics(dt);
   updateDrops(dt);
   updateDoors(dt);
+  updateTension(dt);
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {
