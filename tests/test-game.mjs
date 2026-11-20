@@ -80,7 +80,11 @@ HG.chooseClass('marine');
 frames(2);
 ok(HG.game.state === 'playing', 'state -> playing after choosing a class');
 ok(HG.weapons.current === 1, 'the marine starts with the shotgun');
-ok(HG.enemies.list.length === 6, 'wave 1 spawned 6 enemies (got ' + HG.enemies.list.length + ')');
+// the count is the preset times the zone's threat, so assert the shape, not a number
+const waveOneExpected = Math.max(2, Math.min(30, Math.round(6 * HG.enemies.diff.count)));
+ok(HG.enemies.list.length === waveOneExpected,
+  'wave 1 spawned what the zone threat says it should (' + HG.enemies.list.length + ' of ' + waveOneExpected + ')');
+ok(HG.enemies.list.length >= 2, 'and that is a fight, not a duel');
 ok(HG.powers.slots.length === 3, 'three power slots equipped');
 
 console.log('\n== movement ==');
@@ -187,12 +191,15 @@ HG.enemies.clear();
 HG.enemies.spawnWave(3, HG.player.pos);
 const nCount = HG.enemies.list.length;
 const nHp = HG.enemies.list[0].maxHp;
+const normalMul = HG.enemies.diff.count;
+
 HG.changeSetting('difficulty', 'hard');
-ok(HG.enemies.diff.count > 1, 'hard raises the wave size multiplier');
+const hardMul = HG.enemies.diff.count;
 HG.enemies.clear();
 HG.enemies.spawnWave(3, HG.player.pos);
 const hCount = HG.enemies.list.length;
 const hHp = HG.enemies.list[0].maxHp;
+ok(hardMul > normalMul, `hard raises the multiplier (${normalMul.toFixed(2)} -> ${hardMul.toFixed(2)})`);
 ok(hCount > nCount, `hard spawns more (${nCount} -> ${hCount})`);
 ok(hHp > nHp, `hard enemies are tougher (${nHp} -> ${hHp})`);
 HG.changeSetting('difficulty', 'easy');

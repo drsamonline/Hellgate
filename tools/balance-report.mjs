@@ -41,8 +41,20 @@ const TYPES = {
   warden: { hp: 620, damage: 26, attackCd: 2.3, melee: true },
 };
 
+const { ZONES } = await import('../play/src/world.js');
+
 const diffName = process.argv[2] && DIFF[process.argv[2]] ? process.argv[2] : 'normal';
-const diff = DIFF[diffName];
+const base = DIFF[diffName];
+// each zone scales the preset; the report has to do the same or it describes a
+// game that no longer exists
+const zoneArg = process.argv[3];
+const zone = zoneArg ? ZONES.find((z) => z.id === zoneArg) : ZONES[0];
+if (!zone) {
+  console.error('unknown zone; try ' + ZONES.map((z) => z.id).join(', '));
+  process.exit(1);
+}
+const t = zone.threat || 1;
+const diff = { hp: base.hp * t, dmg: base.dmg * t, count: base.count * t };
 
 // wave size, mirrored from EnemyManager.spawnWave
 const waveCount = (wave, boss) => {
@@ -68,7 +80,7 @@ const dps = (w) => {
 
 const weapon = (key) => WEAPONS.find((w) => w.key === key);
 
-console.log(`balance report — ${diffName} (hp x${diff.hp}, count x${diff.count})\n`);
+console.log(`balance report — ${diffName} on ${zone.name} (threat x${t}: hp x${diff.hp.toFixed(2)}, count x${diff.count.toFixed(2)})\n`);
 console.log('wave  enemies  total hp  shotgun dps  pistol dps  chaingun dps  rocket dps  shells needed  bullets needed');
 for (let wave = 1; wave <= 8; wave++) {
   const n = waveCount(wave, false);

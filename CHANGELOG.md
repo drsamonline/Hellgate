@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.37.0 — 2026-11-20
+
+**The campaign ramps across zones, not just across waves**
+
+The first playtest report: died on **The Gate, wave 3, Normal**. The arithmetic agreed with it. The
+difficulty preset alone made zone 1 wave 3 identical to zone 5 wave 3 — the first level was as hard as
+the last one at the same wave number, which is how a player dies on level one and never sees level five.
+
+Each zone now carries a `threat` scalar applied to health, damage and count:
+
+| Zone | threat | Wave 3 enemies | Wave 3 total hp |
+| --- | --- | --- | --- |
+| The Gate | 0.72 | 7 | 281 |
+| The Foundry | 0.86 | 8 | 335 |
+| The Grove | 1.00 | 10 | 390 |
+| The Vault | 1.12 | 11 | 437 |
+| The Throne | 1.22 | 12 | 476 |
+
+Before: every zone was 10 enemies and 526 hp at wave 3. The Gate is now about half the threat it was at
+the point where that run ended; The Throne is harder than it was.
+
+**`tools/balance-report.mjs` takes a zone** — `node tools/balance-report.mjs normal gate`. Without that
+it would have kept printing the old numbers and describing a game that no longer exists.
+
+**Two tests asserted absolute numbers** that this change moved: `wave 1 spawned 6 enemies` and
+`hard raises the wave size multiplier` (compared against 1 rather than against normal). Both now assert
+the relationship — the count the zone threat implies, and hard > normal — so the next tuning pass does
+not have to rewrite them.
+
+
 ## 1.36.0 — 2026-11-20
 
 **The mix tells you what the HUD tells you**

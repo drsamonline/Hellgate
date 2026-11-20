@@ -31,6 +31,31 @@ On top of that: an upgrade choice between zones and three trinkets from a belt o
 deliberately multiplicative with the class rather than additive with each other, so a good run
 snowballs without a lucky one becoming trivial.
 
+## The first playtest datapoint
+
+**2026-11-20** — one player, one run: died on **The Gate, wave 3, Normal**. Their own read: "mostly easy
+to play, kills you if not properly played".
+
+That is n=1 and it is not a balance study, but it is the first number in this file that did not come from
+arithmetic, and it agrees with the arithmetic: the preset alone made **zone 1 wave 3 identical to zone 5
+wave 3**, so the first level was as hard as the last one at the same wave number. Dying on level one and
+never seeing levels two to five is exactly what that produces.
+
+### What changed
+
+Each zone now carries a `threat` scalar, applied to health, damage and count:
+
+| Zone | threat | Wave 3 enemies | Wave 3 total hp |
+| --- | --- | --- | --- |
+| The Gate | 0.72 | 7 | 281 |
+| The Foundry | 0.86 | 8 | 335 |
+| The Grove | 1.00 | 10 | 390 |
+| The Vault | 1.12 | 11 | 437 |
+| The Throne | 1.22 | 12 | 476 |
+
+Before this, every zone was 10 enemies and 526 hp at wave 3. The Gate is now about half the threat it was
+at the point where that run ended, and The Throne is harder than it was.
+
 ## The curve, as arithmetic over the code
 
 `node tools/balance-report.mjs` reads the same constants the game uses and prints what a wave costs. Normal

@@ -287,7 +287,7 @@ function buildRun(seed, zoneDef) {
   projectiles = new Projectiles(scene, level, effects, audio);
   projectiles.onKill = () => { game.kills++; };
   enemies = new EnemyManager(scene, level, effects, audio);
-  enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
+  enemies.diff = zoneDiff();
   enemies.onKill = (e, weaponName) => {
     game.kills++;
     game.waveKills++;
@@ -577,6 +577,18 @@ function startWave(n) {
 
 // The performance preset drops bloom; the others keep it. A device that cannot
 // afford four quarter-res passes should not be given them.
+/**
+ * The difficulty preset, scaled by which zone you are in. The preset alone made
+ * zone 1 wave 3 identical to zone 5 wave 3, so the first level was as hard as
+ * the last one at the same wave number — which is how a player dies on level
+ * one and never sees the other four.
+ */
+function zoneDiff() {
+  const base = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
+  const t = (zone && zone.threat) || 1;
+  return { hp: base.hp * t, dmg: base.dmg * t, count: base.count * t };
+}
+
 function applyBloom() {
   const preset = settings.quality || 'balanced';
   const want = preset !== 'performance' && !settings.reducedMotion;
@@ -594,7 +606,7 @@ function applySettings() {
   player.sensitivity = settings.sensitivity;
   player.reducedMotion = settings.reducedMotion;
   if (effects) effects.reducedMotion = settings.reducedMotion;
-  if (enemies) enemies.diff = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
+  if (enemies) enemies.diff = zoneDiff();
   audio.setVolume(settings.volume);
   audio.setMuted(settings.muted);
   applyBloom();
