@@ -38,6 +38,16 @@ const REST = new THREE.Vector3(0.26, -0.26, -0.55);
 /**
  * View models, firing, recoil and weapon switching.
  */
+/** The blade: reach, arc, damage and how long it takes to swing again. */
+const MELEE = {
+  damage: 58,
+  reach: 2.6,
+  arc: 0.35,       // cos of the half-angle: about 70 degrees either side
+  cooldown: 0.52,
+  lunge: 1.6,      // metres per second of forward shove
+};
+
+/** Owns the gun, its cooldown, the blade, and every hit it resolves. */
 export class Weapons {
   constructor(weaponScene, weaponCamera, camera, effects, audio) {
     this.scene = weaponScene;
@@ -51,7 +61,9 @@ export class Weapons {
     this.bob = 0;
     this.shots = 0;   // accuracy stat
     this.hits = 0;
-    this.spinT = 0;   // chaingun spin-up, decays when the trigger is released
+    this.spinT = 0;
+    this.meleeCd = 0;
+    this.meleeAnim = 0;   // chaingun spin-up, decays when the trigger is released
     this.firing = false;
     this.models = [];
     this.muzzleTimer = 0;
@@ -167,7 +179,7 @@ export class Weapons {
     if (player.ammo[w.ammo] <= 0) {
       this.audio.play('empty');
       this.cd = 0.3;
-      hud.toast('OUT OF ' + w.ammo.toUpperCase());
+      hud.toast('OUT OF ' + w.ammo.toUpperCase() + '  \u00b7  F BLADE');
       return;
     }
     player.ammo[w.ammo]--;
@@ -254,7 +266,66 @@ export class Weapons {
     else this.audio.play('wall');
   }
 
+  /**
+   * A blade, always available and never out of ammo. It is the answer to
+   * "what do I do when the counter says zero": a short wide arc that hits
+   * everything in front of you, with a lunge so it can close the gap.
+   */
+  /**
+   * The blade: a short wide arc in front of the player, on its own cooldown and
+   * with no ammo cost. Returns true if it swung.
+   */
+  melee(ctx) {
+    const { player, enemies, level } = ctx;
+    if (!player.alive || this.meleeCd > 0) return false;
+    this.meleeCd = MELEE.cooldown;
+    this.meleeAnim = 1;
+    this.audio.play('swing');
+    this.effects.addShake(0.1);
+
+    const origin = new THREE.Vector3();
+    this.camera.getWorldPosition(origin);
+    const dir = this.camera.getWorldDirection(new THREE.Vector3());
+    this.effects.slash(origin, dir, MELEE.reach);
+
+    let hitAny = false;
+    for (const e of enemies.list) {
+      if (!e.alive) continue;
+      const dx = e.pos.x - player.pos.x;
+      const dz = e.pos.z - player.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d > MELEE.reach + (e.radius || 0.5)) continue;
+      // only what is in front of you: a dot product, not a sphere
+      const fx = -Math.sin(player.yaw);
+      const fz = -Math.cos(player.yaw);
+      const facing = (dx * fx + dz * fz) / (d || 1);
+      if (facing < MELEE.arc) continue;
+      const dmg = MELEE.damage * (player.damageMul || 1);
+      e.hurt(dmg, {
+        level, player, effects: this.effects, audio: this.audio, projectiles: ctx.projectiles,
+        onKill: ctx.onKill, weapon: 'BLADE',
+      }, { x: dx / (d || 1), y: 0, z: dz / (d || 1) });
+      this.effects.blood({ x: e.pos.x, y: e.pos.y + 1, z: e.pos.z });
+      if (ctx.hud && ctx.hud.damageNumber) {
+        ctx.hud.damageNumber(e.chestPos(), dmg, this.camera, true);
+      }
+      hitAny = true;
+    }
+
+    if (hitAny) {
+      this.audio.play('meleeHit');
+      if (ctx.hud) ctx.hud.hitmarker();
+      this.hits++;
+    }
+    this.shots++;
+    // the lunge: a short shove forward, blocked by walls like any other movement
+    if (player.lunge) player.lunge(MELEE.lunge);
+    return true;
+  }
+
   update(dt, player) {
+    this.meleeCd = Math.max(0, (this.meleeCd || 0) - dt);
+    this.meleeAnim = Math.max(0, (this.meleeAnim || 0) - dt * 3.2);
     const w = this.weapon;
     if (w && w.spin && !this.firing) this.spinT = Math.max(0, this.spinT - dt * 2.2);
     this.cd = Math.max(0, this.cd - dt);

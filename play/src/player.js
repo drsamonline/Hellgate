@@ -28,6 +28,8 @@ export class Player {
     this.camera = camera;
     this.pos = new THREE.Vector3();
     this.vel = new THREE.Vector3();
+    this.lungeT = 0;
+    this.lungeSpeed = 0;
     this.vy = 0;
     this.grounded = true;
     this.yaw = 0;
@@ -132,6 +134,14 @@ export class Player {
       this.vel.x *= damp;
       this.vel.z *= damp;
     }
+    // the blade's lunge: a short shove along the facing, then nothing
+    if (this.lungeT > 0) {
+      this.lungeT = Math.max(0, this.lungeT - dt);
+      const fx = -Math.sin(this.yaw);
+      const fz = -Math.cos(this.yaw);
+      this.vel.x += fx * this.lungeSpeed * dt * 12;
+      this.vel.z += fz * this.lungeSpeed * dt * 12;
+    }
 
     // ---- horizontal move, sub-stepped + axis separated (slide) -----------
     const dx = this.vel.x * dt;
@@ -225,6 +235,13 @@ export class Player {
     }
     if (this.onDamage) this.onDamage(dmg, sourcePos);
     return dmg;
+  }
+
+  /** A short forward shove, blocked by walls like any other movement. */
+  lunge(speed) {
+    if (!this.alive) return;
+    this.lungeT = 0.12;
+    this.lungeSpeed = speed;
   }
 
   heal(n) { this.health = Math.min(100, this.health + n); }

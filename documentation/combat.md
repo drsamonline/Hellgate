@@ -159,3 +159,19 @@ lasts, then the charge colour is restored.
 
 This exists because the alternative is learning an enemy is shooting you from your health bar, which is
 the wrong way round.
+
+## The blade
+
+`F`, middle-click, or the BLADE button on a phone. It costs no ammo, so a run with every counter at zero
+is still a run.
+
+| Property | Value |
+| --- | --- |
+| Damage | 58 per swing |
+| Reach | 2.6 m, plus the target's own radius |
+| Arc | cos 0.35 — about 70 degrees either side of where you are looking |
+| Cooldown | 0.52 s |
+| Lunge | a 1.6 m/s shove forward, blocked by walls like any other movement |
+
+It hits everything in the arc, not just the nearest thing, and it draws a wedge where the swing went so
+you can see why it missed.

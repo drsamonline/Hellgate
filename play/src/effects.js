@@ -119,6 +119,20 @@ export class Effects {
     }
     this.ringCursor = 0;
 
+    // ---- blade arcs ------------------------------------------------------
+    this.slashes = [];
+    const arcGeo = new THREE.RingGeometry(0.55, 1.0, 12, 1, -0.9, 1.8);
+    for (let i = 0; i < 2; i++) {
+      const m = new THREE.Mesh(arcGeo, new THREE.MeshBasicMaterial({
+        color: 0xfff0c0, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false,
+      }));
+      m.rotation.x = -Math.PI / 2;
+      m.visible = false;
+      this.scene.add(m);
+      this.slashes.push({ mesh: m, t: 0, life: 0.18 });
+    }
+    this.slashCursor = 0;
+
     // ---- tracers ---------------------------------------------------------
     this.tracers = [];
     for (let i = 0; i < MAX_TRACERS; i++) {
@@ -248,6 +262,20 @@ export class Effects {
     l.life = l.max = duration;
   }
 
+  /** The blade's arc: a thin wedge that sweeps where the swing went. */
+  slash(origin, dir, reach = 2.4) {
+    const s = this.slashes[this.slashCursor % this.slashes.length];
+    this.slashCursor++;
+    const yaw = Math.atan2(dir.x, dir.z);
+    s.mesh.position.set(origin.x + dir.x * reach * 0.45, origin.y - 0.25, origin.z + dir.z * reach * 0.45);
+    s.mesh.rotation.set(0, yaw, 0);
+    s.mesh.scale.setScalar(reach / 2.4);
+    s.mesh.visible = true;
+    s.mesh.material.opacity = 0.85;
+    s.t = 0;
+    s.life = 0.18;
+  }
+
   /** A shockwave disc at a point, on the ground plane. */
   shockwave(pos, scale = 1, color = 0xffb066) {
     const r = this.rings[this.ringCursor % this.rings.length];
@@ -300,6 +328,14 @@ export class Effects {
   // ------------------------------------------------------------------ update
 
   update(dt) {
+    for (const s of this.slashes) {
+      if (!s.mesh.visible) continue;
+      s.t += dt;
+      const k = s.t / s.life;
+      if (k >= 1) { s.mesh.visible = false; s.mesh.material.opacity = 0; continue; }
+      s.mesh.material.opacity = 0.85 * (1 - k);
+      s.mesh.rotation.z = -0.5 + k * 1.0; // the sweep
+    }
     for (const r of this.rings) {
       if (!r.mesh.visible) continue;
       r.t += dt;

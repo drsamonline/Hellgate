@@ -337,7 +337,7 @@
   #tLook{position:absolute;right:0;top:0;width:52%;height:100%;pointer-events:auto;touch-action:none}
   #tBtns{
     position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
-    display:grid;grid-template-columns:repeat(4,42px);grid-template-rows:repeat(2,42px);gap:7px;pointer-events:auto;
+    display:grid;grid-template-columns:repeat(5,42px);grid-template-rows:repeat(2,42px);gap:7px;pointer-events:auto;
   }
   #tBtns button{
     width:42px;height:42px;border-radius:50%;background:rgba(18,16,14,.78);
@@ -348,11 +348,12 @@
   #tP1{grid-column:1;grid-row:1}
   #tP2{grid-column:2;grid-row:1}
   #tP3{grid-column:3;grid-row:1}
-  #tFire{grid-column:4;grid-row:1}
+  #tFire{grid-column:5;grid-row:1}
   #tWeap{grid-column:1;grid-row:2}
   #tJump{grid-column:2;grid-row:2}
   #tNade{grid-column:3;grid-row:2}
   #tRead{grid-column:4;grid-row:2;display:none;border-color:rgba(57,255,154,.6);color:#39ff9a}
+  #tMelee{grid-column:5;grid-row:2;border-color:rgba(255,240,192,.5);color:#fff0c0}
   #tRead.on{display:block}
 
   /* phones: the HUD and the touch furniture have to share one screen */
@@ -691,6 +692,7 @@
       <button id="tWeap">GUN</button>
       <button id="tNade">NADE</button>
       <button id="tRead" class="ctx">READ</button>
+      <button id="tMelee">BLADE</button>
       <button id="tJump">JMP</button>
       <button id="tFire">FIRE</button>
     </div>

@@ -1032,6 +1032,15 @@ function updateMusic(dt) {
   music.update();
 }
 
+/** The blade: the one attack that cannot run out. */
+function swingBlade() {
+  if (game.state !== 'playing') return;
+  weapons.melee({
+    player, level, enemies, projectiles, hud,
+    onKill: enemies.onKill,
+  });
+}
+
 function checkWave() {
   if (game.exitOpen) {
     const d = Math.hypot(player.pos.x - level.exit.x, player.pos.z - level.exit.z);
@@ -1652,6 +1661,7 @@ function toggleFullscreen() {
 
 canvas.addEventListener('mousedown', (e) => {
   if (e.button === 2) { throwGrenade(); return; }   // right-click: lob a grenade
+  if (e.button === 1) { swingBlade(); e.preventDefault(); return; } // middle: swing
   if (e.button !== 0) return;
   if (game.state === 'playing') {
     input.fire = true;
@@ -1699,10 +1709,11 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyX') weapons.next(1);
   if (e.code === 'KeyV') openLore();
   if (e.code === 'KeyG') throwGrenade();
+  if (e.code === 'KeyF') swingBlade();
   if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
   if (e.code === 'KeyJ') showDiary();
   if (e.code === 'KeyM' && game.state === 'playing') { pauseGame(); showZoneMap(); }
-  if (e.code === 'KeyF') toggleFullscreen();
+  if (e.code === 'F11') { toggleFullscreen(); e.preventDefault(); }
   if (e.code === 'KeyM') {
     changeSetting('muted', !settings.muted);
     hud.toast(settings.muted ? 'MUTED' : 'SOUND ON');
@@ -2036,6 +2047,7 @@ if (TOUCH) {
   document.body.classList.add('has-touch');
   touchCleanup = initTouch(input, {
     grenade: () => throwGrenade(),
+    melee: () => swingBlade(),
     read: () => openLore(),
     jump: () => { input.jumpQueued = true; },
     fire: () => {
@@ -2059,7 +2071,7 @@ window.HG = {
   get companion() { return companion; },
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
-  resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
+  resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },

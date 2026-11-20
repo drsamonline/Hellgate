@@ -204,4 +204,5 @@ const ITEM_BUILDERS = {
   shellPickup,
 };
 
+/** The builder table, for tools that need to enumerate what a floor can hold. */
 export default ITEM_BUILDERS;

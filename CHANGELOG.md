@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.42.0 — 2026-11-21
+
+**The blade: a run with no ammo is still a run**
+
+`F`, middle-click, or the BLADE button on a phone. It costs nothing, so "out of shells" is a change of
+plan and not the end of the run.
+
+| Property | Value |
+| --- | --- |
+| Damage | 58 per swing |
+| Reach | 2.6 m, plus the target's own radius |
+| Arc | cos 0.35 — about 70 degrees either side of where you are looking |
+| Cooldown | 0.52 s |
+| Lunge | a 1.6 m/s shove forward, blocked by walls like any other movement |
+
+It hits everything in the arc, not just the nearest thing. The swing draws a wedge where it went, so a
+miss is legible: the arc is drawn in front of you and the enemy was not in it. Blood, a damage number and
+a hitmarker on connect, two new sounds, and a small screen kick.
+
+When a gun runs dry the toast now says what to do about it: `OUT OF SHELLS · F BLADE`.
+
+**Four flaky assertions fixed**, all of which had been failing about once in ten runs:
+
+| Test | Why it was flaky |
+| --- | --- |
+| `enemy closed along the field` | picked a walkable pair, but a wide body can wedge in a corridor the flow field calls open. It now also requires a clear straight run, and tries three pairs |
+| `the blade damaged what was in front of it` | aimed, then ran two frames, then swung: the imp walked out of the arc. Aim and swing are now the same frame |
+| `with every gun empty the blade still kills` | same aim-then-wait problem |
+| `addShake is a no-op under reduced motion` | the soak above it left a shake mid-decay |
+
+**`F` is the blade now; fullscreen moved to `F11`.** `Q` was already a power.
+
+
 ## 1.41.0 — 2026-11-21
 
 **The warden gets an entrance**
