@@ -343,9 +343,9 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
 }
 
 console.log('\n== game modes ==');
-ok(Object.keys(HG.MODES).length === 4, 'four modes are defined');
+ok(Object.keys(HG.MODES).length === 6, 'six modes are defined');
 ok(HG.mode === 'campaign', 'the default mode is campaign');
-for (const name of ['endless', 'bossrush', 'hardcore', 'campaign']) {
+for (const name of ['endless', 'bossrush', 'arena', 'nightmare', 'hardcore', 'campaign']) {
   HG.selectMode(name);
   ok(HG.mode === name, name + ' can be selected');
   ok(document.getElementById('modeBlurb').textContent === HG.MODES[name].blurb,
@@ -433,7 +433,8 @@ ok(HG.hud.promptText === 'READ' || HG.hud.promptText === 'V  READ', 'the prompt 
 console.log('\n== story per zone ==');
 const { panelsFor, epilogueFor, ZONE_STORY } = await import('../play/src/story.js');
 const zones = Object.keys(ZONE_STORY);
-ok(zones.length === 5, 'five zones have their own story (' + zones.join(', ') + ')');
+ok(zones.length === 8, 'every zone has its own story (' + zones.length + ')');
+ok(zones.every((z) => panelsFor(z).length >= 3), 'and every one of them is at least three panels');
 ok(panelsFor('gate').length >= 3, 'the gate has panels');
 ok(panelsFor('throne')[0].text !== panelsFor('gate')[0].text, 'zones do not share text');
 ok(panelsFor('nope').length >= 3, 'an unknown zone falls back to the shared panels');

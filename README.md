@@ -67,7 +67,7 @@ Nothing here is a mockup or a composited image.
 | <img src="assets/combat.webp" alt="Shotgun blast, blood spray, tracers" /> **Shotgun** — 8 pellets, per-pellet damage falloff, blood decals | <img src="assets/rocket.webp" alt="Rocket explosion lighting the room" /> **Rocket** — splash damage, pooled particles, a real point light, screen shake |
 | <img src="assets/exit.webp" alt="Exit room with glowing pad" /> **Exit** — wave cleared, doors open, pad lit | <img src="assets/title.webp" alt="Title screen" /> **Title** — seed entry, best run from localStorage |
 | <img src="assets/intro.webp" alt="Story intro over a camera flythrough" /> **Cold open** — typed panels over the level you are about to play | <img src="assets/class.webp" alt="Class selection" /> **Class** — body, starting weapon, powers |
-| <img src="assets/map.webp" alt="World map with five zones" /> **World map** — five zones, clear one to open the next | <img src="assets/grove.webp" alt="Grove zone with trees, animals and enemies" /> **Grove** — trees, grass, animals, and the energy bar | <img src="assets/boss.webp" alt="The warden boss with its health bar" /> **The warden** — 620 hp, ground slam and a three-ball volley | <img src="assets/mobile.webp" alt="The game on a phone in portrait, with touch controls" /> **On a phone** — stick, look, tap to fire, six buttons | <img src="assets/status.webp" alt="The status panel: class, weapons, powers, buffs, zone" /> **Status** — `Tab`: class, weapons, powers, buffs, relics |
+| <img src="assets/map.webp" alt="World map with eight zones" /> **World map** — eight zones, clear one to open the next | <img src="assets/grove.webp" alt="Grove zone with trees, animals and enemies" /> **Grove** — trees, grass, animals, and the energy bar | <img src="assets/boss.webp" alt="The warden boss with its health bar" /> **The warden** — 620 hp, ground slam and a three-ball volley | <img src="assets/mobile.webp" alt="The game on a phone in portrait, with touch controls" /> **On a phone** — stick, look, tap to fire, six buttons | <img src="assets/status.webp" alt="The status panel: class, weapons, powers, buffs, zone" /> **Status** — `Tab`: class, weapons, powers, buffs, relics |
 
 <img src="assets/map.svg" alt="Top-down view of a generated level" width="420" align="right" />
 
@@ -95,7 +95,7 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 **Feel** — Doom-style face that degrades with health · damage direction arrows · red edge vignette · weapon sway and bob · pooled particles, tracers, decals and lights (nothing allocates per shot).
 
-**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · five zones with unlock progression, the last one a three-phase boss · an upgrade choice between zones · trinkets that drop from kills · a run saved at every wave and offered as Continue · a status panel on Tab · a relic side objective in every zone · wall terminals to read · timed damage and haste pickups · a story cold open · mobile touch controls.
+**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · eight zones with unlock progression, the last one a three-phase boss · an upgrade choice between zones · trinkets that drop from kills · a run saved at every wave and offered as Continue · a status panel on Tab · a relic side objective in every zone · wall terminals to read · timed damage and haste pickups · a story cold open · mobile touch controls.
 
 **Meta** — seeded maps · three difficulty presets · score with a per-wave time bonus · wave difficulty curve · procedural pickups · keycard gate · title / pause / game-over screens · best run in `localStorage`.
 
@@ -117,7 +117,7 @@ play/src/hud.js       face, counters, crosshair, damage arrows
 play/src/audio.js     WebAudio synth — no samples
 play/src/classes.js   three classes: body, starting weapon, power set
 play/src/powers.js    energy pool, five powers, cooldowns
-play/src/world.js     five zones, unlock progression, best score per zone
+play/src/world.js     eight zones, unlock progression, best score per zone
 play/src/story.js     the cold open: typed panels over a camera flythrough
 play/src/props.js     instanced trees, rocks and grass; animals that bolt
 play/src/companion.js the drone that follows you and shoots
@@ -126,6 +126,7 @@ play/src/loot.js      trinkets: what a kill can drop, and what they do
 play/src/minimap.js   the floor plan, drawn once with live markers
 play/src/bloom.js     the post pass: bright pixels blurred and added back
 play/src/music.js     generated music: a scale, a tempo and a rule for the next note
+play/src/items.js     the things on the floor, built to look like the thing they are
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG
@@ -147,7 +148,7 @@ bash tests/run.sh
 | --- | --- |
 | `test-level.mjs` | 47 seeds: determinism, every room reachable, spawn free, exit pad unreachable while doors are shut, a 400-step random walk never ends inside a wall, raycast sanity |
 | `test-geometry.mjs` | every merged triangle's winding matches its normal **and** its normal points into open space, which catches inverted faces that logic tests cannot see |
-| `test-playability.mjs` | five zones × six seeds, played: the spawn is free, the exit is reachable, the keycard is on reachable floor, no pickup or enemy is out of reach, no body stands inside rock, and clearing the wave opens the exit |
+| `test-playability.mjs` | eight zones × six seeds, played: the spawn is free, the exit is reachable, the keycard is on reachable floor, no pickup or enemy is out of reach, no body stands inside rock, and clearing the wave opens the exit |
 | `test-game.mjs` | boots, walks, looks, fires all three weapons, kills, takes damage, closes on an enemy along the flow field, clears a wave, opens the exit, advances, checks the keycard gate, dies, restarts, pauses, then 2000 frames of random input without a crash |
 
 Two gates sit on top of the suites:

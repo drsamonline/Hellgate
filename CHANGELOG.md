@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.40.0 — 2026-11-20
+
+**Items look like items** (roadmap 58)
+
+Every pickup was a coloured octahedron or box. They are models now, in a new `play/src/items.js`:
+
+| Pickup | What it is |
+| --- | --- |
+| Health | A white case with a red cross and a handle — a medkit |
+| Armour | A flattened plate with shoulder straps and a V-neck — a vest, not a can |
+| Bullets | A green ammo can with a stencilled stripe and rounds glimpsed in the lid |
+| Shells | Three loose shotgun shells, brass on red |
+| Rockets | A tube, a nose cone and three fins |
+| Keycard | A card with a magnetic stripe and a chip |
+| Relics | A stone idol on a plinth with a chip of light in its skull |
+| Trinkets | A coin, a ring or a compass, one per slot |
+
+Geometry and materials are shared and cached, so eight pickups on a floor cost tens of draw calls. Disposal
+had to change with them: a pickup is a Group now, so `dropMesh()` removes it and disposes only the sprite
+that hangs off it, never the shared geometry.
+
+**Three more zones** — Ashfall (open sky, ash falling), The Cistern (standing water, something under it)
+and The Kiln (the last heat before the throne). Eight zones total, each with its own palette, props,
+threat, cold open and epilogue. Seeds chosen by `tools/pick-seeds.mjs`, not typed.
+
+**Two more modes** — Arena (one room, waves back to back) and Nightmare (Campaign on Hard, keycard from
+the first wave, whatever the settings say). Six modes total.
+
+**One test updated** — it asserted five zones have story; it now asserts every zone does and that each is
+at least three panels, which is the invariant that matters.
+
+
 ## 1.39.0 — 2026-11-20
 
 **Music, generated**

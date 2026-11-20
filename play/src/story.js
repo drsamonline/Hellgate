@@ -46,6 +46,30 @@ export const ZONE_STORY = {
     ],
     epilogue: 'From the spire the whole complex is visible. All of it is wrong.',
   },
+  ashfall: {
+    panels: [
+      { text: 'Above the gate the sky is a colour nobody named.', hold: 3.2 },
+      { text: 'It is not rain coming down. It has been falling since the gate opened.', hold: 3.6 },
+      { text: 'Nothing here is buried. Everything is on the surface.', hold: 3.2 },
+    ],
+    epilogue: 'The ash settles behind you. It will not settle for long.',
+  },
+  cistern: {
+    panels: [
+      { text: 'The water is waist deep and it is not water.', hold: 3.4 },
+      { text: 'Something has been living in it long enough to get big.', hold: 3.4 },
+      { text: 'Your boots are the loudest thing down here.', hold: 3.0 },
+    ],
+    epilogue: 'The cistern drains. Whatever was in it had already left.',
+  },
+  kiln: {
+    panels: [
+      { text: 'The kiln is still burning. Nobody has fed it in seven hundred years.', hold: 3.4 },
+      { text: 'Everything they made here was made to be closed.', hold: 3.4 },
+      { text: 'The throne is one room further in.', hold: 2.8 },
+    ],
+    epilogue: 'The fire goes out. The last door is warm.',
+  },
   throne: {
     panels: [
       { text: 'The last room. The warden has been waiting since before the gate was built.', hold: 3.6 },

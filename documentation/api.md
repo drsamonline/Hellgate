@@ -116,7 +116,7 @@ Every module-level export, one line each. Generated from the doc blocks by the s
 
 ## `play/src/world.js`
 
-- **`ZONES`** (const) — The five zones: seed, palette, props, objective.
+- **`ZONES`** (const) — The eight zones: seed, palette, props, objective.
 - **`loadProgress`** (function) — Read zone progress from localStorage, or a fresh record.
 - **`saveProgress`** (function) — Persist zone progress.
 - **`zoneById`** (function) — Look a zone up by id, falling back to the first.

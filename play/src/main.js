@@ -26,6 +26,7 @@ import { Lore } from './lore.js';
 import { Minimap } from './minimap.js';
 import { Bloom } from './bloom.js';
 import { Music } from './music.js';
+import * as Items from './items.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -164,6 +165,25 @@ const MODES = {
     lives: 1,
     endless: false,
     bossRush: true,
+  },
+  arena: {
+    name: 'ARENA',
+    blurb: 'One room, no exit, waves back to back. Survive the clock.',
+    waves: 999,
+    lives: 1,
+    endless: true,
+    bossRush: false,
+    arena: true,
+  },
+  nightmare: {
+    name: 'NIGHTMARE',
+    blurb: 'Campaign on Hard, with the keycard every wave.',
+    waves: null,
+    lives: 1,
+    endless: false,
+    bossRush: false,
+    forceHard: true,
+    keyEveryWave: true,
   },
   hardcore: {
     name: 'HARDCORE',
@@ -483,10 +503,7 @@ function spawnRelics(n) {
   const use = pool.length ? pool : level.reachableCells;
   for (let i = 0; i < n; i++) {
     const c = use[Math.floor(Math.random() * use.length)];
-    const mesh = new THREE.Mesh(
-      new THREE.OctahedronGeometry(0.26, 0),
-      new THREE.MeshBasicMaterial({ color: 0xc77dff })
-    );
+    const mesh = Items.relicItem();
     const baseY = (level.cells[level.idx(c.x, c.z)] || { floor: 0 }).floor + 0.7;
     mesh.position.set(c.wx, baseY, c.wz);
     scene.add(mesh);
@@ -495,11 +512,7 @@ function spawnRelics(n) {
 }
 
 function clearRelics() {
-  for (const r of game.relics) {
-    scene.remove(r.mesh);
-    r.mesh.geometry.dispose();
-    r.mesh.material.dispose();
-  }
+  for (const r of game.relics) dropMesh(r.mesh);
   game.relics.length = 0;
 }
 
@@ -523,10 +536,8 @@ function updateDoors(dt) {
 function dropTrinket(id, pos) {
   const t = trinketById(id);
   if (!t) return;
-  const mesh = new THREE.Mesh(
-    new THREE.TetrahedronGeometry(0.24, 0),
-    new THREE.MeshBasicMaterial({ color: t.color })
-  );
+  // a coin, a ring or a compass, so a drop looks like something you would pick up
+  const mesh = Items.trinketItem(game.trinkets.length % 3);
   const y = floorHeightAt(level, pos.x, pos.z) + 0.6;
   mesh.position.set(pos.x, y, pos.z);
   scene.add(mesh);
@@ -551,19 +562,13 @@ function updateDrops(dt) {
       hud.toast('BELT FULL  ·  ' + t.name + ' sold for ' + SPARE_VALUE, 2);
     }
     audio.play('key', { x: d.x, z: d.z });
-    scene.remove(d.mesh);
-    d.mesh.geometry.dispose();
-    d.mesh.material.dispose();
+    dropMesh(d.mesh);
     game.drops.splice(i, 1);
   }
 }
 
 function clearDrops() {
-  for (const d of game.drops) {
-    scene.remove(d.mesh);
-    d.mesh.geometry.dispose();
-    d.mesh.material.dispose();
-  }
+  for (const d of game.drops) dropMesh(d.mesh);
   game.drops.length = 0;
 }
 
@@ -629,7 +634,9 @@ function startWave(n) {
  * one and never sees the other four.
  */
 function zoneDiff() {
-  const base = DIFF_MULT[settings.difficulty] || DIFF_MULT.normal;
+  const mode = MODES[gameMode] || MODES.campaign;
+  const preset = mode.forceHard ? 'hard' : settings.difficulty;
+  const base = DIFF_MULT[preset] || DIFF_MULT.normal;
   const t = (zone && zone.threat) || 1;
   return { hp: base.hp * t, dmg: base.dmg * t, count: base.count * t };
 }
@@ -698,11 +705,12 @@ const PICKUP_DEFS = {
     label: 'HASTE x1.25',
     apply: () => { game.buffs.speed = 20; audio.play('key'); },
   },
-  health: { color: 0xff2f55, geo: () => new THREE.OctahedronGeometry(0.22), toast: 'HEALTH +25', apply: (p) => p.heal(25) },
-  armor: { color: 0x3fa9ff, geo: () => new THREE.BoxGeometry(0.3, 0.3, 0.3), toast: 'ARMOR +25', apply: (p) => p.addArmor(25) },
-  bullets: { color: 0xffd24a, geo: () => new THREE.BoxGeometry(0.3, 0.16, 0.18), toast: '+20 BULLETS', apply: (p) => { p.ammo.bullets += 20; } },
-  shells: { color: 0xff8a3c, geo: () => new THREE.BoxGeometry(0.3, 0.14, 0.2), toast: '+6 SHELLS', apply: (p) => { p.ammo.shells += 6; } },
-  rockets: { color: 0x8fe04a, geo: () => new THREE.BoxGeometry(0.13, 0.42, 0.13), toast: '+2 ROCKETS', apply: (p) => { p.ammo.rockets += 2; } },
+  // every pickup is a model of the thing it is, not a coloured octahedron
+  health: { color: 0xff2f55, build: Items.medkit, toast: 'HEALTH +25', apply: (p) => p.heal(25) },
+  armor: { color: 0x3fa9ff, build: Items.armourVest, toast: 'ARMOR +25', apply: (p) => p.addArmor(25) },
+  bullets: { color: 0xffd24a, build: () => Items.ammoBox(false), toast: '+20 BULLETS', apply: (p) => { p.ammo.bullets += 20; } },
+  shells: { color: 0xff8a3c, build: () => Items.shellPickup(), toast: '+6 SHELLS', apply: (p) => { p.ammo.shells += 6; } },
+  rockets: { color: 0x8fe04a, build: Items.rocket, toast: '+2 ROCKETS', apply: (p) => { p.ammo.rockets += 2; } },
 };
 
 function randomCell(minDist = 0, roomsOnly = true) {
@@ -845,7 +853,7 @@ function spawnPickups(wave) {
 
 function addPickup(kind, x, z) {
   const def = PICKUP_DEFS[kind];
-  const mesh = new THREE.Mesh(def.geo(), new THREE.MeshBasicMaterial({ color: def.color }));
+  const mesh = def.build ? def.build() : new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.3), new THREE.MeshBasicMaterial({ color: def.color }));
   mesh.add(glowSprite(def.color, 1.1));
   const baseY = (level.cells[level.idx(Math.round(x / CELL), Math.round(z / CELL))] || { floor: 0 }).floor + 0.45;
   mesh.position.set(x, baseY, z);
@@ -853,17 +861,21 @@ function addPickup(kind, x, z) {
   game.pickups.push({ kind, mesh, x, z, baseY, t: Math.random() * 6 });
 }
 
+// the item models share their geometry and materials, so only the sprite that
+// hangs off them is per-pickup and only that is disposed here
+function dropMesh(mesh) {
+  if (!mesh) return;
+  scene.remove(mesh);
+  mesh.traverse((o) => {
+    if (o.isSprite && o.material) o.material.dispose();
+  });
+}
+
 function clearPickups() {
-  for (const p of game.pickups) {
-    scene.remove(p.mesh);
-    p.mesh.geometry.dispose();
-    p.mesh.material.dispose();
-  }
+  for (const p of game.pickups) dropMesh(p.mesh);
   game.pickups.length = 0;
   if (game.keycard) {
-    scene.remove(game.keycard.mesh);
-    game.keycard.mesh.geometry.dispose();
-    game.keycard.mesh.material.dispose();
+    dropMesh(game.keycard.mesh);
     game.keycard = null;
   }
 }
@@ -883,10 +895,7 @@ function pickKeycardCell() {
 function spawnKeycard() {
   // never inside the locked exit room, or the run would be unwinnable
   const cell = pickKeycardCell();
-  const mesh = new THREE.Mesh(
-    new THREE.BoxGeometry(0.34, 0.07, 0.22),
-    new THREE.MeshBasicMaterial({ color: 0xffd24a })
-  );
+  const mesh = Items.keycardItem();
   const baseY = (level.cells[level.idx(Math.round(cell.wx / CELL), Math.round(cell.wz / CELL))] || { floor: 0 }).floor + 0.55;
   mesh.position.set(cell.wx, baseY, cell.wz);
   scene.add(mesh);
@@ -1014,7 +1023,9 @@ function checkWave() {
     return;
   }
   if (enemies.aliveCount > 0) return;
-  if (game.wave >= 3 && !game.hasKey) {
+  const modeNow = MODES[game.mode] || MODES.campaign;
+  const keyWave = modeNow.keyEveryWave ? 1 : 3;
+  if (game.wave >= keyWave && !game.hasKey) {
     if (!game.warnedKey) {
       game.warnedKey = true;
       hud.toast('FIND THE KEYCARD', 2.6);
@@ -1179,10 +1190,7 @@ function resolveChoice(entry, opt) {
 }
 
 function spawnRelicAt(x, z) {
-  const mesh = new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.26, 0),
-    new THREE.MeshBasicMaterial({ color: 0xc77dff })
-  );
+  const mesh = Items.relicItem();
   const baseY = floorHeightAt(level, x, z) + 0.7;
   mesh.position.set(x, baseY, z);
   scene.add(mesh);
@@ -2028,7 +2036,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade,
-  selectMode, get mode() { return gameMode; }, MODES,
+  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this

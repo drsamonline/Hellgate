@@ -51,7 +51,10 @@ Each zone now carries a `threat` scalar, applied to health, damage and count:
 | The Gate | 0.72 | 7 | 281 |
 | The Foundry | 0.86 | 8 | 335 |
 | The Grove | 1.00 | 10 | 390 |
+| Ashfall | 0.94 | 9 | 366 |
+| The Cistern | 1.06 | 10 | 413 |
 | The Vault | 1.12 | 11 | 437 |
+| The Kiln | 1.18 | 11 | 462 |
 | The Throne | 1.22 | 12 | 476 |
 
 Before this, every zone was 10 enemies and 526 hp at wave 3. The Gate is now about half the threat it was

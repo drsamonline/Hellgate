@@ -32,6 +32,9 @@ const WANTS = {
   grove: { rooms: [9, 13], big: 1, stairs: 20, boss: false },
   spire: { rooms: [10, 13], big: 1, stairs: 30, boss: false },
   throne: { rooms: [9, 13], big: 2, stairs: 20, boss: true }, // the warden needs room
+  ashfall: { rooms: [10, 13], big: 2, stairs: 25, boss: false },
+  cistern: { rooms: [9, 13], big: 1, stairs: 30, boss: false },
+  kiln: { rooms: [10, 13], big: 2, stairs: 35, boss: false },
 };
 
 function score(seed, want) {
