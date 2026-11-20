@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.29.1 — 2026-11-20
+
+**The READ button was declared nowhere**
+
+1.29.0 shipped a touch module that referenced `readBtn` in `setReadable` without ever declaring it. Every
+frame threw `readBtn is not defined`, the loop died before it could turn the overlay on, and the phone
+had no controls at all. The browser smoke test caught it; the suites could not, because the stub DOM has
+no touch overlay to break.
+
+**Touch layout, two rows instead of three**
+
+Three rows of 42 px buttons ran under the health bar. The grid is now `Q E R FIRE` over `GUN JMP NADE`,
+with `READ` taking the last cell when a terminal is in reach, and the HUD bar moved down to 108 px.
+
+**Objective pill** — `white-space: nowrap`, so `CLEAR THE WAVE · 10 LEFT` is one line instead of two.
+
+**Measured on a 390x844 viewport after the change**: objective (84, 76) 223x21, waypoint (147, 128),
+minimap (284, 498) 96x96, NADE (287, 788) — every element inside the viewport, none overlapping.
+
+
 ## 1.29.0 — 2026-11-20
 
 Five reports from play on a phone, and a request for bodies that look like bodies.

@@ -171,7 +171,7 @@
   @media (max-width:620px){ #minimap{width:96px;height:96px;top:auto;bottom:calc(250px + env(safe-area-inset-bottom));right:10px} }
   @media (max-height:420px){ #minimap{width:84px;height:84px;top:52px;right:8px} }
 
-  #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);
+  #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);white-space:nowrap;
     font-size:10px;letter-spacing:.22em;color:#cbbda8;pointer-events:none;
     background:rgba(10,9,8,.55);border:1px solid rgba(255,180,84,.16);border-radius:2px;padding:4px 12px}
   #objective.warn{color:#ffd24a;border-color:rgba(255,210,74,.45)}
@@ -321,23 +321,27 @@
   #tLook{position:absolute;right:0;top:0;width:52%;height:100%;pointer-events:auto;touch-action:none}
   #tBtns{
     position:absolute;right:12px;bottom:calc(14px + env(safe-area-inset-bottom));
-    display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(3,44px);gap:8px;pointer-events:auto;
+    display:grid;grid-template-columns:repeat(4,42px);grid-template-rows:repeat(2,42px);gap:7px;pointer-events:auto;
   }
   #tBtns button{
-    width:44px;height:44px;border-radius:50%;background:rgba(18,16,14,.78);
+    width:42px;height:42px;border-radius:50%;background:rgba(18,16,14,.78);
     border:1px solid rgba(255,180,84,.4);color:#ffd9a8;font-family:var(--mono);
     font-size:9px;letter-spacing:.06em;pointer-events:auto;touch-action:none;padding:0;
   }
   #tBtns button:active{background:rgba(255,180,84,.3)}
-  #tFire{grid-column:3;grid-row:1}
-  #tWeap{grid-column:3;grid-row:2}
-  #tNade{grid-column:2;grid-row:3}
-  #tRead{grid-column:1;grid-row:3;display:none;border-color:rgba(57,255,154,.6);color:#39ff9a}
+  #tP1{grid-column:1;grid-row:1}
+  #tP2{grid-column:2;grid-row:1}
+  #tP3{grid-column:3;grid-row:1}
+  #tFire{grid-column:4;grid-row:1}
+  #tWeap{grid-column:1;grid-row:2}
+  #tJump{grid-column:2;grid-row:2}
+  #tNade{grid-column:3;grid-row:2}
+  #tRead{grid-column:4;grid-row:2;display:none;border-color:rgba(57,255,154,.6);color:#39ff9a}
   #tRead.on{display:block}
 
   /* phones: the HUD and the touch furniture have to share one screen */
   @media (max-width:620px){
-    #bottombar{gap:6px;padding:6px 8px;bottom:calc(122px + env(safe-area-inset-bottom));
+    #bottombar{gap:6px;padding:6px 8px;bottom:calc(108px + env(safe-area-inset-bottom));
       border-radius:3px;width:calc(100vw - 24px);max-width:none;justify-content:space-between}
     #bottombar .face{width:40px;height:40px;flex:0 0 auto}
     #bottombar .stat{min-width:0;flex:1 1 auto;text-align:center}
@@ -345,7 +349,7 @@
     #bottombar .stat b{font-size:14px;letter-spacing:.04em}
     #bottombar .stat:last-child b{font-size:10px}
     #bottombar .stat:last-child .label{display:none}
-    #powerbar{bottom:calc(180px + env(safe-area-inset-bottom));gap:6px;padding:4px 6px}
+    #powerbar{bottom:calc(166px + env(safe-area-inset-bottom));gap:6px;padding:4px 6px}
     #energyWrap{width:86px}
     .pslot{min-width:48px;padding:2px 4px}
     .pslot b{font-size:8px}
@@ -372,7 +376,7 @@
   @media (max-width:620px){ #minimap{width:96px;height:96px;top:auto;bottom:calc(250px + env(safe-area-inset-bottom));right:10px} }
   @media (max-height:420px){ #minimap{width:84px;height:84px;top:52px;right:8px} }
 
-  #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);
+  #objective{position:absolute;left:50%;top:76px;transform:translateX(-50%);white-space:nowrap;
     font-size:10px;letter-spacing:.22em;color:#cbbda8;pointer-events:none;
     background:rgba(10,9,8,.55);border:1px solid rgba(255,180,84,.16);border-radius:2px;padding:4px 12px}
   #objective.warn{color:#ffd24a;border-color:rgba(255,210,74,.45)}
