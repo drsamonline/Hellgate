@@ -79,7 +79,9 @@ export function humanoid(p) {
   const g = new THREE.Group();
   const parts = {};
 
-  const hipY = p.legLen;
+  // the hip sits at the top of the leg: thigh + shin. There is no `legLen` on a
+  // proportions object, and reading one put every joint at NaN.
+  const hipY = (p.thigh || 0) + (p.shin || 0);
   const shoulderY = hipY + p.torsoLen * 0.92;
 
   // ---- pelvis and torso -------------------------------------------------
@@ -89,15 +91,22 @@ export function humanoid(p) {
   pelvis.add(hipMesh);
 
   const spine = joint(g, 0, hipY, 0);
-  const torso = new THREE.Mesh(cyl(p.chestR, p.waistR, p.torsoLen, 9), M.body);
-  torso.position.y = p.torsoLen / 2;
-  spine.add(torso);
+  // two sections so the body tapers at the waist instead of reading as a barrel
+  const abdomen = new THREE.Mesh(cyl(p.waistR * 1.02, p.waistR * 0.94, p.torsoLen * 0.42, 9), M.body);
+  abdomen.position.y = p.torsoLen * 0.21;
+  spine.add(abdomen);
+  const chest = new THREE.Mesh(cyl(p.chestR, p.waistR * 1.04, p.torsoLen * 0.6, 10), M.body);
+  chest.position.y = p.torsoLen * 0.7;
+  spine.add(chest);
   spine.rotation.x = p.lean || 0;
   spine.userData.lean = p.lean || 0; // the pose blend needs the rest value
 
   // shoulders and head ride the spine so a lean carries them
   const shoulders = joint(spine, 0, p.torsoLen * 0.92, 0);
-  const head = joint(shoulders, 0, p.neckLen, 0);
+  const neckMesh = new THREE.Mesh(cyl(p.headR * 0.42, p.headR * 0.5, p.neckLen + 0.06, 7), M.dark || M.body);
+  neckMesh.position.y = p.neckLen * 0.5;
+  shoulders.add(neckMesh);
+  const head = joint(shoulders, 0, p.neckLen + 0.1, 0);
   const skull = new THREE.Mesh(sph(p.headR, 8), M.dark || M.body);
   skull.scale.set(1, p.headTall || 0.92, 1.05);
   head.add(skull);
@@ -111,8 +120,8 @@ export function humanoid(p) {
   }
   if (p.eyes) {
     for (const sx of [-1, 1]) {
-      const eye = new THREE.Mesh(sph(p.headR * 0.22, 5), M.eye);
-      eye.position.set(sx * p.headR * 0.38, p.headR * 0.1, p.headR * 0.9);
+      const eye = new THREE.Mesh(sph(p.headR * 0.14, 5), M.eye);
+      eye.position.set(sx * p.headR * 0.34, p.headR * 0.12, p.headR * 0.92);
       head.add(eye);
     }
   }
@@ -199,32 +208,32 @@ export function humanoid(p) {
 /** The proportions for each enemy body. */
 export const PROPORTIONS = {
   imp: {
-    hipR: 0.24, hipLen: 0.2, waistR: 0.26, chestR: 0.34, torsoLen: 0.72,
-    shoulderX: 0.36, neckLen: 0.16, headR: 0.19, headTall: 0.85,
+    hipR: 0.22, hipLen: 0.18, waistR: 0.22, chestR: 0.3, torsoLen: 0.7,
+    shoulderX: 0.28, neckLen: 0.13, headR: 0.21, headTall: 0.9,
     armR: 0.075, upperArm: 0.42, lowerArm: 0.44,
     legR: 0.1, thigh: 0.4, shin: 0.4, legX: 0.17,
     lean: 0.22, horns: true, eyes: true,
   },
   grunt: {
-    hipR: 0.28, hipLen: 0.22, waistR: 0.32, chestR: 0.42, torsoLen: 0.8,
-    shoulderX: 0.44, neckLen: 0.12, headR: 0.23, headTall: 0.95,
+    hipR: 0.24, hipLen: 0.2, waistR: 0.26, chestR: 0.36, torsoLen: 0.78,
+    shoulderX: 0.32, neckLen: 0.11, headR: 0.24, headTall: 0.98,
     armR: 0.11, upperArm: 0.4, lowerArm: 0.38,
     legR: 0.13, thigh: 0.4, shin: 0.38, legX: 0.2,
-    lean: 0.06, eyes: true, pauldrons: true, pauldronR: 0.22, gun: true,
+    lean: 0.04, eyes: true, pauldrons: true, pauldronR: 0.15, gun: true,
   },
   brute: {
-    hipR: 0.36, hipLen: 0.26, waistR: 0.46, chestR: 0.66, torsoLen: 1.0,
-    shoulderX: 0.7, neckLen: 0.08, headR: 0.26, headTall: 0.8,
+    hipR: 0.32, hipLen: 0.24, waistR: 0.36, chestR: 0.54, torsoLen: 0.98,
+    shoulderX: 0.5, neckLen: 0.08, headR: 0.27, headTall: 0.86,
     armR: 0.2, upperArm: 0.6, lowerArm: 0.62,
     legR: 0.24, thigh: 0.5, shin: 0.48, legX: 0.3,
-    lean: 0.2, eyes: true, pauldrons: true, pauldronR: 0.42,
+    lean: 0.16, eyes: true, pauldrons: true, pauldronR: 0.26,
   },
   warden: {
-    hipR: 0.5, hipLen: 0.32, waistR: 0.62, chestR: 0.86, torsoLen: 1.4,
-    shoulderX: 0.92, neckLen: 0.1, headR: 0.34, headTall: 0.92,
+    hipR: 0.44, hipLen: 0.3, waistR: 0.5, chestR: 0.72, torsoLen: 1.35,
+    shoulderX: 0.68, neckLen: 0.1, headR: 0.36, headTall: 0.95,
     armR: 0.26, upperArm: 0.72, lowerArm: 0.7,
     legR: 0.34, thigh: 0.62, shin: 0.6, legX: 0.4,
-    lean: 0.04, horns: true, eyes: true, pauldrons: true, pauldronR: 0.52,
+    lean: 0.04, horns: true, eyes: true, pauldrons: true, pauldronR: 0.3,
     core: true, coreR: 0.26,
   },
 };

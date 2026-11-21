@@ -376,8 +376,14 @@ for (const t of ['imp', 'grunt', 'brute', 'warden']) {
   ok(p2.kneeL.parent === p2.hipL, t + ' knee hangs off the hip, so it bends where a knee bends');
   ok(p2.elbowR.parent === p2.shoulderR, t + ' elbow hangs off the shoulder');
   let meshes = 0;
-  e.body.traverse((o) => { if (o.isMesh) meshes++; });
+  let bad = 0;
+  e.body.traverse((o) => {
+    if (o.isMesh) meshes++;
+    // a joint at NaN puts the mesh nowhere: the body renders as nothing at all
+    if (!Number.isFinite(o.position.x) || !Number.isFinite(o.position.y) || !Number.isFinite(o.position.z)) bad++;
+  });
   ok(meshes >= 12, t + ' is built from ' + meshes + ' parts, not two boxes');
+  ok(bad === 0, t + ' has no mesh at a NaN position (' + bad + ')');
 }
 
 console.log('\n== pose blending ==');

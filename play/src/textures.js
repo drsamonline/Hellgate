@@ -58,18 +58,18 @@ function brick() {
 
 function tech() {
   const c = ctx2d();
-  c.fillStyle = '#1d2226';
+  c.fillStyle = '#333c44';
   c.fillRect(0, 0, S, S);
   // panels
   for (let y = 0; y < S; y += 16) {
     for (let x = 0; x < S; x += 32) {
-      const v = 34 + Math.random() * 14;
+      const v = 64 + Math.random() * 20;
       c.fillStyle = `rgb(${v},${v + 6},${v + 10})`;
       c.fillRect(x + 1, y + 1, 30, 14);
     }
   }
   // rivets
-  c.fillStyle = '#5c6a72';
+  c.fillStyle = '#8b9aa4';
   for (let y = 8; y < S; y += 16) {
     for (let x = 6; x < S; x += 32) {
       c.fillRect(x, y, 2, 2);

@@ -1,5 +1,45 @@
 # Changelog
 
+## 1.50.0 — 2026-11-21
+
+**The rig was building every body at NaN**
+
+`humanoid()` read `p.legLen`, and no proportions object has a `legLen` — it has `thigh` and `shin`. The
+hip height was `undefined`, so every joint position became `NaN` and the body rendered as nothing at all
+or as disconnected parts. That is why the enemies looked wrong however the models were shaped.
+
+The hip is now `thigh + shin`, and a test walks every biped asserting no mesh sits at a NaN position.
+
+**Human proportions**
+
+| Change | Why |
+| --- | --- |
+| A neck | The head was sitting on the shoulders |
+| Two torso sections | A single cylinder read as a barrel; chest over abdomen tapers |
+| Narrower shoulders | 0.44 → 0.32 on a grunt |
+| Smaller pauldrons | 0.22 → 0.15 on a grunt; the shoulders were the silhouette |
+| Smaller eyes | 0.22 of the head radius → 0.14 |
+| Bigger head | A head is about a seventh of a body |
+
+**The maps were too dark, and are not now**
+
+| Change | Before | After |
+| --- | --- | --- |
+| Ambient light | floor 0.62 | floor 0.85 |
+| Hemisphere light | 1.05 | 1.25 |
+| Fill light | 0.9, 22 m | 1.5, 30 m |
+| Fog | 9-32 m | 14-46 m |
+| Zone ambient | 0.44-0.82 | 0.72-0.95 |
+| Fog colours | near-black | lifted by 0x14 on every channel |
+| Tech texture | panels at 34-48 | panels at 64-84 |
+
+Measured in screenshots: the gate is warm brick, the foundry is hot rust, the cistern is blue-grey panels
+with hazard stripes. All three are readable at a glance and none is a black corridor.
+
+**Stronger palettes** — the wall tints are up from about ±6 % to ±30 % per channel, so the same geometry
+and the same nine textures read as different places.
+
+
 ## 1.49.2 — 2026-11-21
 
 **The door was facing the wrong way in half the corridors**

@@ -60,14 +60,15 @@ function newScene(z) {
   const fog = z ? z.fog : 0x07070a;
   const s = new THREE.Scene();
   s.background = new THREE.Color(fog);
-  s.fog = new THREE.Fog(fog, 9, 32);
+  // a shorter, lighter fog: the far wall should be dim, not invisible
+  s.fog = new THREE.Fog(fog, 14, 46);
   // never darker than this, whatever the zone says: a corridor you cannot see
   // is not atmospheric, it is broken
-  s.add(new THREE.AmbientLight(0xffffff, Math.max(0.62, z ? z.ambient : 0.62)));
-  s.add(new THREE.HemisphereLight(z ? z.sky : 0x9fb4c8, z ? z.ground : 0x6a5540, 1.05));
+  s.add(new THREE.AmbientLight(0xffffff, Math.max(0.85, z ? z.ambient : 0.85)));
+  s.add(new THREE.HemisphereLight(z ? z.sky : 0x9fb4c8, z ? z.ground : 0x6a5540, 1.25));
   // a soft light that travels with the player: the thing in front of you is lit
   // even in a room the zone light has given up on
-  fillLight = new THREE.PointLight(0xfff2e0, 0.9, 22, 1.6);
+  fillLight = new THREE.PointLight(0xfff2e0, 1.5, 30, 1.4);
   fillLight.position.set(0, 2, 0);
   s.add(fillLight);
   const d = new THREE.DirectionalLight(0xffd9b0, 0.3);
