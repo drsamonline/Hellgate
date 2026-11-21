@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.51.1 — 2026-11-21
+
+**A test that failed only in CI**
+
+`no wasted pickups` cleared every enemy to isolate itself, which completed the wave, opened the exit, and
+let a wave change clear the pickups the test had just placed. It passed locally and failed in CI because
+whether the player was standing near the exit depended on the seed.
+
+It now leaves one enemy alive, far away, so the wave cannot complete.
+
+
 ## 1.51.0 — 2026-11-21
 
 **One deep audit pass, and the bug it found**
