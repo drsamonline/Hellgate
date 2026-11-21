@@ -93,6 +93,7 @@ export function humanoid(p) {
   torso.position.y = p.torsoLen / 2;
   spine.add(torso);
   spine.rotation.x = p.lean || 0;
+  spine.userData.lean = p.lean || 0; // the pose blend needs the rest value
 
   // shoulders and head ride the spine so a lean carries them
   const shoulders = joint(spine, 0, p.torsoLen * 0.92, 0);

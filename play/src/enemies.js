@@ -799,6 +799,27 @@ export class Enemy {
     if (this.parts.kneeR) this.parts.kneeR.rotation.x = Math.max(0, swing) * 1.3;
     if (this.parts.elbowL) this.parts.elbowL.rotation.x = Math.max(0, swing) * 0.9 - 0.15;
     if (this.parts.elbowR) this.parts.elbowR.rotation.x = Math.max(0, -swing) * 0.9 - 0.15;
+
+    // Pose blending: the walk cycle is the base, and the state adds to it. A
+    // shooting enemy raises both arms and leans back; a hurt one folds forward.
+    // Blending a target per state is the cheap version of an animation blend
+    // tree, and it is what makes the wind-up readable in the body as well as
+    // the glow.
+    this.blend = this.blend || { attack: 0, pain: 0 };
+    const wantAttack = this.state === STATE.ATTACK ? 1 : 0;
+    const wantPain = this.state === STATE.PAIN ? 1 : 0;
+    this.blend.attack += (wantAttack - this.blend.attack) * Math.min(1, dt * 9);
+    this.blend.pain += (wantPain - this.blend.pain) * Math.min(1, dt * 12);
+    const a = this.blend.attack;
+    const pn = this.blend.pain;
+    if (this.parts.shoulderR) this.parts.shoulderR.rotation.x -= a * 1.35;
+    if (this.parts.shoulderL) this.parts.shoulderL.rotation.x -= a * 0.9;
+    if (this.parts.elbowR) this.parts.elbowR.rotation.x -= a * 0.5;
+    if (this.parts.spine) {
+      const rest = this.parts.spine.userData.lean || 0;
+      this.parts.spine.rotation.x = rest - a * 0.12 + pn * 0.5;
+    }
+    if (this.parts.head) this.parts.head.rotation.x = a * 0.1 - pn * 0.35;
     if (this.parts.legBL) this.parts.legBL.rotation.x = -swing;
     if (this.parts.legBR) this.parts.legBR.rotation.x = swing;
     if (this.type === 'imp') {

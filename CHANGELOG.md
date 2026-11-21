@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.49.0 — 2026-11-21
+
+**Pose blending on the rig**
+
+The walk cycle was the only animation. The rig now blends a pose on top of it per state, the cheap version
+of an animation blend tree:
+
+| State | What the body does |
+| --- | --- |
+| Attack | Both arms up and forward, a slight lean back, head lifts — the shot is readable in the silhouette and not only in the glow |
+| Pain | Folds forward, head drops |
+
+The blend is a lerp toward a target at 9-12 per second, so a state change reads as movement rather than a
+snap. This is the idea behind the Three.js blending examples applied to joints instead of skinned
+vertices: same principle, no skinning.
+
+**The kit got the four reusable pieces** — `game-kit` 1.9.0 now has `flowField`, `pool`, `minimap` and
+`audio.gen`, extracted from this game. Details are in that repository's changelog.
+
+
 ## 1.48.0 — 2026-11-21
 
 **A real rig for the bipeds**

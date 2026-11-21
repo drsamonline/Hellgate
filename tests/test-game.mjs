@@ -380,6 +380,21 @@ for (const t of ['imp', 'grunt', 'brute', 'warden']) {
   ok(meshes >= 12, t + ' is built from ' + meshes + ' parts, not two boxes');
 }
 
+console.log('\n== pose blending ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('imp', HG.player.pos.x + 4, HG.player.pos.z, 1);
+frames(2);
+const posed = HG.enemies.list[HG.enemies.list.length - 1];
+posed.setState('ATTACK');
+posed.stateT = 0.1;
+frames(6);
+ok(posed.blend.attack > 0.2, 'an attacking enemy blends toward the attack pose (' + posed.blend.attack.toFixed(2) + ')');
+const armUp = posed.parts.shoulderR.rotation.x;
+posed.setState('IDLE');
+frames(20);
+ok(posed.blend.attack < 0.2, 'and lets it go when it stops');
+ok(posed.parts.shoulderR.rotation.x !== armUp, 'the arm moves back');
+
 console.log('\n== doors and level shape ==');
 // a door is a panel that slides into the lintel, never a slab in the air
 const dm = HG.levelMeshes.doorMeshes;
