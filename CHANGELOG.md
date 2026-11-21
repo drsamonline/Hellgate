@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.48.0 — 2026-11-21
+
+**A real rig for the bipeds**
+
+The imp, grunt, brute and warden were compound meshes: a torso with sticks hanging off it. They are
+built by `play/src/rig.js` now, which is a parametric humanoid with actual joints.
+
+| Joint | What it does |
+| --- | --- |
+| Spine | Carries the shoulders and head, and leans |
+| Shoulder → elbow → hand | Two segments, so the arm bends at the elbow |
+| Hip → knee → foot | Two segments, so the leg bends at the knee |
+
+The walk cycle drives the knees and elbows: knees bend on the back swing, elbows on the forward one. That
+is the whole difference between a box with sticks and something that reads as walking.
+
+Proportions are per type — the imp is all spine and arm, the grunt is a barrel with pauldrons and a
+rifle in its hand, the brute is shoulders on legs, the warden is a monument with a furnace core. Every
+body is 19-23 parts.
+
+**A wave you cannot clear can no longer lock the level**
+
+Two fixes, both about being unable to find or reach the last enemy:
+
+- the compass points at the nearest enemy when the exit is shut and the keycard is not the objective, so
+  the last one is findable
+- `enemies.unstuck()` — an enemy that has not got closer for 14 s is moved to open floor near the player.
+  It is a compromise, and better than a door that never opens.
+
+**Tests** — 16 new assertions: every biped is a rig with a head, spine, shoulders, elbows, hips and
+knees; the knee hangs off the hip and the elbow off the shoulder; and each body is 19+ parts.
+
+
 ## 1.47.0 — 2026-11-21
 
 Six reports from playing past the first level.

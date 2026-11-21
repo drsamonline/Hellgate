@@ -1067,6 +1067,18 @@ function updateMusic(dt) {
   music.update();
 }
 
+/** The live enemy closest to the player, for the compass and the anti-stuck check. */
+function nearestEnemy() {
+  let best = null;
+  let bestD = Infinity;
+  for (const e of enemies.list) {
+    if (!e.alive) continue;
+    const d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
+    if (d < bestD) { bestD = d; best = e; }
+  }
+  return best ? { x: best.pos.x, z: best.pos.z, d: bestD, enemy: best } : null;
+}
+
 /** The blade: the one attack that cannot run out. */
 function swingBlade() {
   if (game.state !== 'playing') return;
@@ -1941,6 +1953,7 @@ function update(dt) {
   if (touchCleanup && touchCleanup.setReadable) touchCleanup.setReadable(!!near);
 
   enemies.update(dt, player, projectiles);
+  enemies.unstuck(dt, player);
   projectiles.update(dt, player, enemies);
   if (companion) companion.update(dt, player, enemies);
   if (props) props.update(dt, player);
@@ -1979,6 +1992,7 @@ function update(dt) {
     relicsTotal: game.relicsTotal,
     sideDone: game.sideDone,
     keycard: game.keycard ? { x: game.keycard.x, z: game.keycard.z } : null,
+    nearest: nearestEnemy(),
     boss: enemies.boss,
     buffs: game.buffs,
     near: !!(lore && lore.near),

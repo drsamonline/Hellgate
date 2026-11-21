@@ -4,6 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
+import { humanoid, PROPORTIONS, rigMat } from './rig.js';
 import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
 
 const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DEATH: 'DEATH' };
@@ -160,138 +161,47 @@ function limb(w, h, d, m, jx, jy, jz, drop) {
 
 function makeImp() {
   const M = mats();
-  const g = new THREE.Group();
-  const torso = new THREE.Mesh(cylGeo(0.30, 0.42, 0.9, 8), M.impBody);
-  torso.position.set(0, 1.18, 0.02);
-  torso.rotation.x = 0.16;
-  g.add(torso);
-  const hump = sphere(0.34, M.impBody, 0, 1.56, -0.06, 8);
-  hump.scale.set(1, 0.8, 0.9);
-  g.add(hump);
-  const neck = new THREE.Mesh(cylGeo(0.11, 0.14, 0.34, 6), M.impDark);
-  neck.position.set(0, 1.74, 0.12);
-  neck.rotation.x = 0.5;
-  g.add(neck);
-  const head = sphere(0.19, M.impDark, 0, 1.9, 0.26, 7);
-  head.scale.set(1, 0.85, 1.15);
-  g.add(head);
-  for (const sx of [-1, 1]) {
-    const horn = new THREE.Mesh(coneGeo(0.06, 0.32, 5), M.impDark);
-    horn.position.set(sx * 0.12, 2.06, 0.16);
-    horn.rotation.z = sx * 0.45;
-    horn.rotation.x = -0.3;
-    g.add(horn);
-    g.add(sphere(0.045, M.impEye, sx * 0.08, 1.92, 0.4, 5));
-  }
-  const armL = limbCyl(0.055, 0.075, 0.86, M.impBody, -0.34, 1.55, 0.04);
-  const armR = limbCyl(0.055, 0.075, 0.86, M.impBody, 0.34, 1.55, 0.04);
-  armL.rotation.z = 0.22;
-  armR.rotation.z = -0.22;
-  const legL = limbCyl(0.08, 0.11, 0.78, M.impDark, -0.17, 0.8, 0);
-  const legR = limbCyl(0.08, 0.11, 0.78, M.impDark, 0.17, 0.8, 0);
-  g.add(armL, armR, legL, legR);
-  return { group: g, parts: { armL, armR, legL, legR } };
+  const { group, parts } = humanoid({
+    ...PROPORTIONS.imp,
+    mats: {
+      body: M.impBody, dark: M.impDark, eye: M.impEye,
+    },
+  });
+  return { group, parts };
 }
 
 function makeGrunt() {
   const M = mats();
-  const g = new THREE.Group();
-  const torso = new THREE.Mesh(cylGeo(0.44, 0.34, 0.95, 8), M.gruntBody);
-  torso.position.set(0, 1.16, 0);
-  g.add(torso);
-  for (const sx of [-1, 1]) {
-    const pad = sphere(0.22, M.gruntMetal, sx * 0.42, 1.55, 0, 7);
-    pad.scale.set(1.1, 0.85, 1);
-    g.add(pad);
-  }
-  const helm = sphere(0.24, M.gruntMetal, 0, 1.78, 0.02, 8);
-  helm.scale.set(1, 0.95, 1.05);
-  g.add(helm);
-  g.add(box(0.3, 0.06, 0.05, M.eye, 0, 1.79, 0.22));
-  const gun = new THREE.Group();
-  gun.add(box(0.1, 0.1, 0.56, M.gruntMetal, 0, 0, 0.2));
-  gun.add(box(0.08, 0.18, 0.08, M.gruntDark, 0, -0.1, -0.02));
-  gun.position.set(0, -0.62, 0.08);
-  const armR = limbCyl(0.1, 0.12, 0.8, M.gruntBody, 0.48, 1.5, 0);
-  armR.add(gun);
-  const armL = limbCyl(0.1, 0.12, 0.8, M.gruntBody, -0.48, 1.5, 0);
-  const legL = limbCyl(0.12, 0.14, 0.78, M.gruntDark, -0.19, 0.78, 0);
-  const legR = limbCyl(0.12, 0.14, 0.78, M.gruntDark, 0.19, 0.78, 0);
-  g.add(armL, armR, legL, legR);
-  return { group: g, parts: { armL, armR, legL, legR } };
+  const { group, parts } = humanoid({
+    ...PROPORTIONS.grunt,
+    mats: {
+      body: M.gruntBody, dark: M.gruntDark, eye: M.eye, plate: M.gruntMetal,
+    },
+  });
+  return { group, parts };
 }
 
 function makeWarden() {
   const M = mats();
-  const g = new THREE.Group();
-  // three metres of armoured bulk: a barrel chest that tapers to the waist, a
-  // slab of shoulder either side, and a furnace in the middle of it
-  const chest = new THREE.Mesh(cylGeo(0.86, 0.62, 1.5, 10), M.wardenBody);
-  chest.position.set(0, 1.95, 0);
-  g.add(chest);
-  const gut = new THREE.Mesh(cylGeo(0.62, 0.5, 0.7, 10), M.wardenDark);
-  gut.position.set(0, 1.15, 0);
-  g.add(gut);
-  for (const sx of [-1, 1]) {
-    const pad = sphere(0.52, M.wardenDark, sx * 0.92, 2.62, 0, 8);
-    pad.scale.set(1.15, 0.8, 1.05);
-    g.add(pad);
-  }
-  // head sunk between the shoulders, horned
-  const head = sphere(0.34, M.wardenDark, 0, 2.92, 0.06, 8);
-  head.scale.set(1, 0.92, 1.05);
-  g.add(head);
-  for (const sx of [-1, 1]) {
-    const horn = new THREE.Mesh(coneGeo(0.1, 0.62, 6), M.wardenDark);
-    horn.position.set(sx * 0.3, 3.18, 0.02);
-    horn.rotation.z = sx * 0.55;
-    g.add(horn);
-    g.add(sphere(0.07, M.wardenEye, sx * 0.15, 2.96, 0.34, 6));
-  }
-  // the furnace: what the health bar is actually measuring
-  const core = sphere(0.26, M.wardenGlow, 0, 1.95, 0.56, 8);
-  g.add(core);
-  const ring = new THREE.Mesh(cylGeo(0.34, 0.34, 0.12, 10), M.wardenDark);
-  ring.rotation.x = Math.PI / 2;
-  ring.position.set(0, 1.95, 0.5);
-  g.add(ring);
-
-  const armL = limbCyl(0.26, 0.34, 1.5, M.wardenBody, -0.95, 2.5, 0);
-  const armR = limbCyl(0.26, 0.34, 1.5, M.wardenBody, 0.95, 2.5, 0);
-  const legL = limbCyl(0.34, 0.42, 1.0, M.wardenDark, -0.4, 1.0, 0);
-  const legR = limbCyl(0.34, 0.42, 1.0, M.wardenDark, 0.4, 1.0, 0);
-  g.add(armL, armR, legL, legR);
-  return { group: g, parts: { armL, armR, legL, legR, core } };
+  const { group, parts } = humanoid({
+    ...PROPORTIONS.warden,
+    mats: {
+      body: M.wardenBody, dark: M.wardenDark, eye: M.wardenEye,
+      plate: M.wardenDark, glow: M.wardenGlow,
+    },
+  });
+  return { group, parts };
 }
 
 function makeBrute() {
   const M = mats();
-  const g = new THREE.Group();
-  // a wedge of plate with the head low between the shoulders
-  const chest = new THREE.Mesh(cylGeo(0.72, 0.56, 1.25, 8), M.bruteBody);
-  chest.position.set(0, 1.55, 0);
-  chest.rotation.x = 0.12;
-  g.add(chest);
-  for (const sx of [-1, 1]) {
-    const pad = sphere(0.46, M.brutePlate, sx * 0.72, 2.16, -0.04, 7);
-    pad.scale.set(1.2, 0.75, 1.05);
-    g.add(pad);
-  }
-  const head = sphere(0.26, M.brutePlate, 0, 2.34, 0.28, 7);
-  head.scale.set(1, 0.8, 1.25);
-  g.add(head);
-  g.add(box(0.34, 0.05, 0.06, M.eye, 0, 2.36, 0.5));
-  // knuckles on the floor: the silhouette that says "it charges"
-  const armL = limbCyl(0.2, 0.3, 1.5, M.bruteBody, -0.76, 2.0, 0);
-  const armR = limbCyl(0.2, 0.3, 1.5, M.bruteBody, 0.76, 2.0, 0);
-  for (const a of [armL, armR]) {
-    const fist = sphere(0.24, M.brutePlate, 0, -1.5, 0, 6);
-    a.add(fist);
-  }
-  const legL = limbCyl(0.24, 0.3, 0.95, M.brutePlate, -0.3, 0.95, 0);
-  const legR = limbCyl(0.24, 0.3, 0.95, M.brutePlate, 0.3, 0.95, 0);
-  g.add(armL, armR, legL, legR);
-  return { group: g, parts: { armL, armR, legL, legR } };
+  const { group, parts } = humanoid({
+    ...PROPORTIONS.brute,
+    mats: {
+      body: M.bruteBody, dark: M.brutePlate, eye: M.eye, plate: M.brutePlate,
+    },
+  });
+  return { group, parts };
 }
 
 function makeWisp() {
@@ -883,6 +793,12 @@ export class Enemy {
     const swing = Math.sin(this.walkPhase) * 0.5 * sp;
     if (this.parts.legL) this.parts.legL.rotation.x = swing;
     if (this.parts.legR) this.parts.legR.rotation.x = -swing;
+    // knees bend on the back swing, elbows on the forward one: the whole reason
+    // to build a rig instead of a box with sticks
+    if (this.parts.kneeL) this.parts.kneeL.rotation.x = Math.max(0, -swing) * 1.3;
+    if (this.parts.kneeR) this.parts.kneeR.rotation.x = Math.max(0, swing) * 1.3;
+    if (this.parts.elbowL) this.parts.elbowL.rotation.x = Math.max(0, swing) * 0.9 - 0.15;
+    if (this.parts.elbowR) this.parts.elbowR.rotation.x = Math.max(0, -swing) * 0.9 - 0.15;
     if (this.parts.legBL) this.parts.legBL.rotation.x = -swing;
     if (this.parts.legBR) this.parts.legBR.rotation.x = swing;
     if (this.type === 'imp') {
@@ -1012,6 +928,37 @@ export class EnemyManager {
     this.list.push(e);
     this.effects.burst({ x, y: e.pos.y + 0.8, z }, 0xff3311, 10, 3, 0.5, 2);
     return e;
+  }
+
+  /**
+   * An enemy that has not got closer to the player in a long time is stuck
+   * behind geometry or in a room the player cannot reach. Moving it is better
+   * than a wave nobody can clear and a door nobody can open.
+   */
+  unstuck(dt, player) {
+    for (const e of this.list) {
+      if (!e.alive) continue;
+      const d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
+      if (!e.stuckRef || d < e.stuckRef - 0.5) {
+        e.stuckRef = d;
+        e.stuckT = 0;
+        continue;
+      }
+      e.stuckT = (e.stuckT || 0) + dt;
+      if (e.stuckT > 14 && d > 6) {
+        // put it in front of the player, on open floor
+        const a = Math.random() * Math.PI * 2;
+        const r = 7;
+        const x = player.pos.x + Math.cos(a) * r;
+        const z = player.pos.z + Math.sin(a) * r;
+        if (!circleBlocked(this.level, x, z, e.radius)) {
+          e.pos.set(x, floorHeightAt(this.level, x, z), z);
+          if (e.mesh) e.mesh.position.copy(e.pos);
+          e.stuckT = 0;
+          e.stuckRef = r;
+        }
+      }
+    }
   }
 
   get boss() {

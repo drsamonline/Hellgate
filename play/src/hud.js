@@ -235,7 +235,12 @@ export class HUD {
     if (state) {
       // The compass points at whatever the objective needs: the keycard while
       // it is missing, the exit once it is open.
-      const waypoint = state.exitOpen ? state.exit : (state.wave >= 3 && !state.hasKey ? state.keycard : null);
+      // where to go: the exit when it is open, the keycard when it is needed,
+      // otherwise the nearest enemy — a wave you cannot find is a wave you
+      // cannot clear, and a wave you cannot clear is a locked door
+      const waypoint = state.exitOpen ? state.exit
+        : (state.wave >= 3 && !state.hasKey ? state.keycard : null)
+        || state.nearest || null;
 
       // exit compass: a chevron pointing at the pad once the wave is cleared.
       // exit compass: a chevron pointing at the pad once the wave is cleared
@@ -250,7 +255,8 @@ export class HUD {
         // the distance makes the chevron a waypoint instead of decoration
         if (this.elWaypoint) {
           const d = Math.round(Math.hypot(waypoint.x - cam.position.x, waypoint.z - cam.position.z));
-          this.elWaypoint.textContent = (state.exitOpen ? 'EXIT ' : 'KEYCARD ') + d + ' m';
+          const label = state.exitOpen ? 'EXIT ' : (state.wave >= 3 && !state.hasKey ? 'KEYCARD ' : 'ENEMY ');
+          this.elWaypoint.textContent = label + d + ' m';
         }
       } else {
         this.compass.classList.remove('on');

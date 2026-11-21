@@ -364,6 +364,22 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== the enemy rig ==');
+HG.enemies.clear();
+for (const t of ['imp', 'grunt', 'brute', 'warden']) {
+  HG.enemies.spawnAt(t, HG.player.pos.x + 8, HG.player.pos.z, 2);
+  frames(1);
+  const e = HG.enemies.list[HG.enemies.list.length - 1];
+  const p2 = e.parts;
+  ok(!!(p2.head && p2.spine && p2.shoulderL && p2.elbowL && p2.hipL && p2.kneeL),
+    t + ' is a rig with a head, spine, shoulders, elbows, hips and knees');
+  ok(p2.kneeL.parent === p2.hipL, t + ' knee hangs off the hip, so it bends where a knee bends');
+  ok(p2.elbowR.parent === p2.shoulderR, t + ' elbow hangs off the shoulder');
+  let meshes = 0;
+  e.body.traverse((o) => { if (o.isMesh) meshes++; });
+  ok(meshes >= 12, t + ' is built from ' + meshes + ' parts, not two boxes');
+}
+
 console.log('\n== doors and level shape ==');
 // a door is a panel that slides into the lintel, never a slab in the air
 const dm = HG.levelMeshes.doorMeshes;
@@ -1075,9 +1091,20 @@ ok(location.search.includes('seed=urltest'), 'seed written to the URL: ' + locat
 
 console.log('\n== exit compass (roadmap 13) ==');
 HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);
-HG.game.exitOpen = false;
+// drive the HUD directly: in a real game the exit opens the moment the wave is
+// clear, so "nothing to point at" cannot be reached through the game loop
+HG.hud.update(0.016, HG.player, HG.weapons, {
+  player: HG.player, wave: 1, kills: 0, enemies: 0, hasKey: true, score: 0,
+  powers: HG.powers, zone: HG.zone, relics: 0, relicsTotal: 3, sideDone: false,
+  keycard: null, nearest: null, exitOpen: false, camera: HG.camera,
+});
+ok(!HG.hud.compass.classList.contains('on'), 'compass hidden with nothing to point at');
+// with an enemy alive it points at that instead: a wave you cannot find is a
+// wave you cannot clear
+HG.enemies.spawnAt('imp', HG.player.pos.x + 8, HG.player.pos.z, 1);
 frames(2);
-ok(!HG.hud.compass.classList.contains('on'), 'compass hidden while the exit is shut');
+ok(HG.hud.compass.classList.contains('on'), 'compass points at the nearest enemy');
+HG.enemies.clear();
 HG.game.exitOpen = true;
 frames(2);
 ok(HG.hud.compass.classList.contains('on'), 'compass shown when the exit opens');
