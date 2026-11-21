@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.56.2 — 2026-11-21
+
+**The quadruped cost draw calls, and CI said so**
+
+1.56.0 failed the smoke test at 147 calls against a 140 budget. Two changes:
+
+| Change | Effect |
+| --- | --- |
+| No separate paw mesh | Four fewer meshes per hound; at this size the paw was a draw call you cannot see |
+| LOD distance 15 m → 12 m | More of a wave is one coloured slab |
+
+Measured after: under budget, smoke green.
+
+
 ## 1.56.1 — 2026-11-21
 
 **The pickup test, again, and this time the cause**

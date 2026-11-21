@@ -282,9 +282,8 @@ export function quadruped(p) {
     const shin = new THREE.Mesh(cyl(p.legR * 0.7, p.legR * 0.5, p.shin, 6), M.dark || M.body);
     shin.position.y = -p.shin / 2;
     knee.add(shin);
-    const paw = new THREE.Mesh(box(p.legR * 1.5, p.legR * 0.6, p.legR * 2.2), M.dark || M.body);
-    paw.position.set(0, -p.shin, p.legR * 0.6);
-    knee.add(paw);
+    // no separate paw: at this size a fourth mesh per leg is a draw call you
+    // cannot see, and four of them is a hound's whole LOD budget
     parts[name] = hip;
     parts['knee' + name] = knee;
     return hip;
