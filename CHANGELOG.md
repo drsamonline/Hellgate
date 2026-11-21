@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.49.2 — 2026-11-21
+
+**The door was facing the wrong way in half the corridors**
+
+1.47.0 made doors thin panels, and got the axis backwards: it made the panel wide along the corridor
+instead of across it. In a corridor running along X the door lay flat along the walkway, blocking
+nothing and reading exactly like the slab in the air it was supposed to fix. That is why the report
+survived the fix — it was right, and my fix only worked in the other half of the corridors.
+
+The panel is now thin across the corridor and wide across the doorway, computed from which neighbours
+are open.
+
+**Test** — for every door in the level, the thin axis must match the corridor's direction. Zero
+misaligned, and it would have failed before this fix.
+
+
 ## 1.49.1 — 2026-11-21
 
 **The rig cost more draw calls than the budget allowed**

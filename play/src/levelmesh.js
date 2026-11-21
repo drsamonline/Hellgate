@@ -195,13 +195,17 @@ export function buildLevelMeshes(level, mats, zone) {
   for (const d of level.doors) {
     const dc = level.cells[d.z * level.W + d.x];
     const h = dc.ceil - dc.floor;
-    // a bulkhead panel, not a cube: thin enough to read as a door and to slide
-    // up into the lintel without ever looking like a slab lying in the air
-    const alongX = !level.cells[d.z * level.W + (d.x - 1)]?.solid || !level.cells[d.z * level.W + (d.x + 1)]?.solid;
+    // A bulkhead panel that faces the corridor. If the corridor runs along X you
+    // walk through in X, so the door must be THIN in X and wide in Z — getting
+    // this backwards makes a door that lies along the corridor and blocks
+    // nothing, which reads as a slab hanging in the air.
+    const openX = !(level.cells[d.z * level.W + (d.x - 1)] || { solid: true }).solid
+      || !(level.cells[d.z * level.W + (d.x + 1)] || { solid: true }).solid;
+    const corridorAlongX = openX;
     const geo = new THREE.BoxGeometry(
-      alongX ? CELL * 0.96 : 0.34,
+      corridorAlongX ? 0.34 : CELL * 0.96,   // thin across the corridor
       h,
-      alongX ? 0.34 : CELL * 0.96
+      corridorAlongX ? CELL * 0.96 : 0.34    // wide across the corridor
     );
     const mesh = new THREE.Mesh(geo, mats['door_plain'] || mats['door']);
     mesh.position.set(d.x * CELL, dc.floor + h / 2, d.z * CELL);
