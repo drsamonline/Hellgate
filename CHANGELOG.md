@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.51.0 — 2026-11-21
+
+**One deep audit pass, and the bug it found**
+
+`tools/audit-run.mjs` is new: it opens every zone, every mode and every screen in a browser, fires every
+action, plays forty frames of random input, and reports anything that throws, anything non-finite, and
+any state the game should not be in afterwards.
+
+It found a real bug on the first run:
+
+> `blade: Failed to execute 'setValueAtTime' on 'AudioParam': The provided float value is non-finite.`
+
+The blade's swing sound passed its arguments in the wrong order — `noise(dur, gain, 1800, 'bandpass', 900)`
+where the signature is `noise(dur, gain, type, f0, f1)`. The filter type became `1800` and the frequency
+became `'bandpass'`, so every swing threw. Both blade sounds are fixed.
+
+After the fix: **every zone clean, every mode starts, every action works.** The audit is in the repo so
+the next regression has somewhere to fail.
+
+**UI polish**
+
+| Change | Detail |
+| --- | --- |
+| One palette | Six slightly different ambers became `--amber`, `--amber-dim`, `--amber-faint` |
+| One scale | `--r` for radius, `--gap` for spacing, `--ease` for transitions |
+| Button states | hover, active, `:focus-visible` with a real focus ring, and `:disabled` |
+| Ghost buttons | A hover state; they had none |
+| Screen headings | One rhythm: 26px, 0.3em tracking, 6px below |
+| Screen backdrop | 0.9/0.985 with a 3px blur, so the HUD behind it stops competing |
+| Journal rows | Aligned label and value columns, and the objective row spans the full width because it is a sentence, not a number |
+
+
 ## 1.50.0 — 2026-11-21
 
 **The rig was building every body at NaN**

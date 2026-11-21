@@ -316,11 +316,11 @@ export class Sfx {
         break;
       case 'swing':
         // a short air whoosh: filtered noise, falling
-        this.noise(0.16, 0.10, 1800, 'bandpass', 900);
+        this.noise(0.16, 0.10, 'bandpass', 1800, 900);
         break;
       case 'meleeHit':
         this.tone(140, 0.09, 'square', 0.16, 70);
-        this.noise(0.12, 0.14, 900, 'lowpass', 300);
+        this.noise(0.12, 0.14, 'lowpass', 900, 300);
         break;
       case 'heart':
         // a soft sub thump, twice, so it reads as a heartbeat and not a hit

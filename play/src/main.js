@@ -1342,7 +1342,7 @@ function showDiary() {
       <div class="diarycol">
         <h4>${zone.name}</h4>
         <ul>
-          <li><b>OBJECTIVE</b><span>${objectiveLine()}</span></li>
+          <li class="wide"><b>OBJECTIVE</b><span>${objectiveLine()}</span></li>
           <li><b>WAVE</b><span>${game.wave} of ${game.wavesTarget}</span></li>
           <li><b>SCORE</b><span>${game.score}</span></li>
           <li><b>ZONE</b><span>${zoneDone ? 'cleared before' : 'not cleared yet'}</span></li>

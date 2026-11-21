@@ -7,11 +7,22 @@
 <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
 <style>
   :root{
+    /* one palette, one scale, used everywhere. A UI with six slightly different
+       ambers looks broken in a way nobody can name. */
     --amber:#ffb454;
+    --amber-dim:rgba(255,180,84,.35);
+    --amber-faint:rgba(255,180,84,.16);
     --red:#ff3b30;
     --green:#9de24f;
+    --ink:#e8dcc8;
+    --ink-dim:#cbbda8;
+    --ink-faint:#8d7f6c;
+    --ink-ghost:#6f6455;
     --panel:rgba(10,9,8,.78);
     --edge:rgba(255,180,84,.35);
+    --r:3px;                 /* one corner radius */
+    --gap:12px;              /* one gap */
+    --ease:.15s ease;
   }
   *{box-sizing:border-box}
   html,body{
@@ -279,9 +290,14 @@
 
   .diarycol h4{font-size:9px;letter-spacing:.26em;color:#ff3b30;margin:0 0 8px;font-weight:400}
   .diarycol ul{list-style:none;margin:0 0 18px;padding:0;display:flex;flex-direction:column;gap:5px}
-  .diarycol li{display:flex;justify-content:space-between;gap:10px;font-size:11px;letter-spacing:.1em;
-    color:#cbbda8;padding:5px 8px;border:1px solid rgba(255,180,84,.14);border-radius:2px}
-  .diarycol li b{color:#8d7f6c;font-weight:400}
+  .diarycol li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;font-size:11px;
+    letter-spacing:.1em;color:var(--ink-dim);padding:6px 9px;border:1px solid var(--amber-faint);
+    border-radius:var(--r);min-height:26px}
+  .diarycol li b{color:var(--ink-faint);font-weight:400;flex:0 0 auto}
+  .diarycol li span{text-align:right;min-width:0}
+  /* the objective is a sentence, not a number: let it use the whole row */
+  .diarycol li.wide{flex-direction:column;align-items:flex-start;gap:3px}
+  .diarycol li.wide span{text-align:left;color:var(--ink)}
   .diarycol li.here{border-color:rgba(255,180,84,.5);color:#ffd9a8}
 
   .invgrid{
@@ -473,8 +489,9 @@
   #screens{position:fixed;inset:0;z-index:20;pointer-events:none}
   .screen{
     position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
-    gap:14px;background:radial-gradient(ellipse at center,rgba(12,10,9,.82) 0%,rgba(4,4,6,.96) 75%);
+    gap:14px;background:radial-gradient(ellipse at center,rgba(10,9,8,.9) 0%,rgba(3,3,4,.985) 72%);
     pointer-events:auto;text-align:center;padding:24px;
+    -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
   }
   .screen.on{display:flex}
   h1{
@@ -502,7 +519,16 @@
   }
   button:hover{background:linear-gradient(#4d2314,#2f150c);color:#fff0d8;border-color:#ff8a4a;transform:translateY(-1px)}
   button:active{transform:translateY(0)}
+  button:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+  button:disabled{opacity:.4;cursor:not-allowed;transform:none}
   button.ghost{background:transparent;border-color:rgba(255,255,255,.18);color:#a99a86}
+  button.ghost:hover{background:rgba(255,255,255,.06);color:#e8dcc8;border-color:rgba(255,255,255,.32)}
+  /* one heading rhythm for every screen */
+  .screen h2{font-size:26px;letter-spacing:.3em;font-weight:400;margin:0 0 6px;color:#f0e4cf}
+  .screen .sub{margin:0 0 22px;font-size:11px;letter-spacing:.22em;color:var(--ink-ghost);text-transform:uppercase}
+  .screen{padding:28px 20px}
+  /* the small print under every screen */
+  .screen .keys{color:var(--ink-ghost)}
   .keys{margin:16px 0 0;font-size:11px;letter-spacing:.16em;color:#6f6455;line-height:1.9;max-width:640px}
   #best,#stats{font-size:12px;letter-spacing:.2em;color:#8d7f6c;line-height:2;text-transform:uppercase}
   #best b,#stats b{color:var(--amber)}
