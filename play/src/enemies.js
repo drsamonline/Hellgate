@@ -213,11 +213,17 @@ function makeWisp() {
   g.add(hood);
   const core = sphere(0.16, M.wispGlow, 0, 0.02, 0.06, 7);
   g.add(core);
+  // tendrils, each on its own joint so they can writhe instead of hanging
+  const tendrils = [];
   for (let i = 0; i < 3; i++) {
+    const joint = new THREE.Group();
+    joint.position.set(0, -0.36 - i * 0.02, 0);
     const tail = new THREE.Mesh(coneGeo(0.11 - i * 0.02, 0.34, 5), M.wispBody);
-    tail.position.set(0, -0.42 - i * 0.16, 0);
+    tail.position.y = -0.17;
     tail.rotation.x = Math.PI;
-    g.add(tail);
+    joint.add(tail);
+    g.add(joint);
+    tendrils.push(joint);
   }
   const armL = new THREE.Group();
   const armR = new THREE.Group();
@@ -229,37 +235,18 @@ function makeWisp() {
     grp.position.set(0, 0.1, 0);
     g.add(grp);
   }
-  return { group: g, parts: { armL, armR, legL: null, legR: null, core } };
+  return { group: g, parts: { armL, armR, legL: null, legR: null, core, tendrils } };
 }
 
 function makeSpitter() {
   const M = mats();
-  const g = new THREE.Group();
-  // thin and tall, bent forward over a sac that is the whole silhouette
-  const spine = new THREE.Mesh(cylGeo(0.16, 0.22, 1.1, 7), M.spitterBody);
-  spine.position.set(0, 1.32, -0.04);
-  spine.rotation.x = -0.22;
-  g.add(spine);
-  const sac = sphere(0.42, M.spitterSac, 0, 1.16, 0.26, 9);
-  sac.scale.set(1, 0.92, 1.05);
-  g.add(sac);
-  const head = sphere(0.2, M.spitterDark, 0, 1.86, 0.16, 7);
-  head.scale.set(1, 0.9, 1.2);
-  g.add(head);
-  for (const sx of [-1, 1]) {
-    g.add(sphere(0.05, M.spitterEye, sx * 0.09, 1.88, 0.32, 5));
-  }
-  // a dripping maw
-  const maw = new THREE.Mesh(coneGeo(0.12, 0.26, 6), M.spitterSac);
-  maw.rotation.x = Math.PI;
-  maw.position.set(0, 1.76, 0.36);
-  g.add(maw);
-  const armL = limbCyl(0.05, 0.07, 0.9, M.spitterDark, -0.26, 1.62, 0);
-  const armR = limbCyl(0.05, 0.07, 0.9, M.spitterDark, 0.26, 1.62, 0);
-  const legL = limbCyl(0.07, 0.1, 0.86, M.spitterDark, -0.16, 0.86, 0);
-  const legR = limbCyl(0.07, 0.1, 0.86, M.spitterDark, 0.16, 0.86, 0);
-  g.add(armL, armR, legL, legR);
-  return { group: g, parts: { armL, armR, legL, legR } };
+  // hunched over its sac, on the same rig as everything else: the lean is in the
+  // proportions, so its knees and elbows bend when it moves
+  const { group, parts } = humanoid({
+    ...PROPORTIONS.spitter,
+    mats: { body: M.spitterBody, dark: M.spitterDark, eye: M.spitterEye, sac: M.spitterSac },
+  });
+  return { group, parts };
 }
 
 function makeHound() {
@@ -759,12 +746,22 @@ export class Enemy {
       for (const m of this.flashMats) m.emissive.setRGB(0, 0, 0);
     }
     const sp = this.moving ? 1 : 0;
-    this.walkPhase += dt * (this.moving ? 9 : 0);
+    // a wisp floats: its tendrils move even when it is holding position
+    this.walkPhase += dt * (this.moving ? 9 : (this.parts.tendrils ? 2.2 : 0));
     const swing = Math.sin(this.walkPhase) * 0.5 * sp;
     if (this.parts.legL) this.parts.legL.rotation.x = swing;
     if (this.parts.legR) this.parts.legR.rotation.x = -swing;
     // knees bend on the back swing, elbows on the forward one: the whole reason
     // to build a rig instead of a box with sticks
+    // a wisp has no legs; its tendrils are what moves
+    if (this.parts.tendrils) {
+      const t = this.walkPhase || 0;
+      this.parts.tendrils.forEach((j, i) => {
+        j.rotation.x = 0.12 + Math.sin(t * 3 + i * 0.9) * 0.28;
+        j.rotation.z = Math.cos(t * 2.4 + i * 1.3) * 0.22;
+      });
+    }
+
     // a quadruped gallops: the front pair leads, the back pair follows, and the
     // knees fold on the lift
     if (this.parts.frontL) {

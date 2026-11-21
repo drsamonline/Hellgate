@@ -406,6 +406,21 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== the spitter and the wisp ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('spitter', HG.player.pos.x + 7, HG.player.pos.z, 2);
+HG.enemies.spawnAt('wisp', HG.player.pos.x + 9, HG.player.pos.z + 2, 2);
+frames(1);
+const spit = HG.enemies.list.find((e) => e.type === 'spitter');
+const tendrilUnit = HG.enemies.list.find((e) => e.type === 'wisp');
+ok(!!(spit.parts.kneeL && spit.parts.elbowL && spit.parts.sac),
+  'the spitter is a rig with knees, elbows and a sac');
+ok(spit.parts.spine.rotation.x > 0.2, 'and it is hunched over the sac (' + spit.parts.spine.rotation.x.toFixed(2) + ' rad)');
+ok(Array.isArray(tendrilUnit.parts.tendrils) && tendrilUnit.parts.tendrils.length === 3, 'the wisp has three tendrils on joints');
+const tendrilBefore = tendrilUnit.parts.tendrils[0].rotation.x;
+frames(8);
+ok(tendrilUnit.parts.tendrils[0].rotation.x !== tendrilBefore, 'and they move while it floats');
+
 console.log('\n== the hound rig ==');
 HG.enemies.clear();
 HG.enemies.spawnAt('hound', HG.player.pos.x + 8, HG.player.pos.z, 2);
@@ -523,13 +538,13 @@ HG.enemies.spawnAt('brute', HG.player.pos.x + 7, HG.player.pos.z, 3);
 HG.enemies.spawnAt('wisp', HG.player.pos.x + 5, HG.player.pos.z + 2, 3);
 frames(3);
 const brute = HG.enemies.list.find((e) => e.type === 'brute');
-const wisp = HG.enemies.list.find((e) => e.type === 'wisp');
-ok(!!brute && !!wisp, 'both new types spawn');
+const wispUnit = HG.enemies.list.find((e) => e.type === 'wisp');
+ok(!!brute && !!wispUnit, 'both new types spawn');
 ok(brute.T.charges === true, 'the brute charges');
 ok(brute.T.hp > 100, 'and it is the tankiest thing short of the boss (' + brute.T.hp + ')');
-ok(wisp.T.hover > 0, 'the wisp floats');
-const floorAt = HG.level.cells[Math.round(wisp.pos.z / 2) * HG.level.W + Math.round(wisp.pos.x / 2)].floor;
-ok(wisp.pos.y > floorAt + 0.6, 'and it is off the floor (' + (wisp.pos.y - floorAt).toFixed(2) + ' m up)');
+ok(wispUnit.T.hover > 0, 'the wisp floats');
+const floorAt = HG.level.cells[Math.round(wispUnit.pos.z / 2) * HG.level.W + Math.round(wispUnit.pos.x / 2)].floor;
+ok(wispUnit.pos.y > floorAt + 0.6, 'and it is off the floor (' + (wispUnit.pos.y - floorAt).toFixed(2) + ' m up)');
 
 console.log('\n== the wind-up is visible ==');
 HG.enemies.clear();

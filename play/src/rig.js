@@ -184,6 +184,13 @@ export function humanoid(p) {
       shoulders.add(pad);
     }
   }
+  if (p.sac) {
+    const sac = new THREE.Mesh(sph(p.sacR || 0.42, 9), M.sac || M.body);
+    sac.scale.set(1, 0.92, 1.05);
+    sac.position.set(0, p.torsoLen * 0.62, p.chestR * 0.5);
+    spine.add(sac);
+    parts.sac = sac;
+  }
   if (p.core) {
     const core = new THREE.Mesh(sph(p.coreR || 0.22, 8), M.glow);
     core.position.set(0, p.torsoLen * 0.45, p.chestR * 0.92);
@@ -329,6 +336,13 @@ export const PROPORTIONS = {
     bodyR: 0.26, bodyLen: 1.15, neckLen: 0.34, tailLen: 0.42,
     legR: 0.075, thigh: 0.34, shin: 0.3, legX: 0.21,
     eyes: true,
+  },
+  spitter: {
+    hipR: 0.2, hipLen: 0.16, waistR: 0.16, chestR: 0.22, torsoLen: 1.05,
+    shoulderX: 0.26, neckLen: 0.14, headR: 0.2, headTall: 0.9,
+    armR: 0.06, upperArm: 0.45, lowerArm: 0.42,
+    legR: 0.08, thigh: 0.45, shin: 0.42, legX: 0.17,
+    lean: 0.42, eyes: true, sac: true, sacR: 0.42,
   },
   warden: {
     hipR: 0.44, hipLen: 0.3, waistR: 0.5, chestR: 0.72, torsoLen: 1.35,

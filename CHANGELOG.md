@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.57.0 — 2026-11-21
+
+**The last two enemies without joints**
+
+| Type | Before | After |
+| --- | --- | --- |
+| Spitter | A bent spine with four straight cylinders | The humanoid rig with exaggerated proportions: a 0.42 rad hunch, knees, elbows, and a sac on the chest |
+| Wisp | Three static cones hanging under a hood | Three tendrils on their own joints, writhing while it floats |
+
+The wisp has no legs, so its walk phase now advances even when it is holding position — the tendrils are
+what moves, and a floating enemy that is perfectly still reads as a prop.
+
+Every enemy type is now either a humanoid rig, a quadruped rig, or a body with jointed limbs. Measured in
+the browser in the vault: the spitter reads as a hunched creature carrying a glowing sac, the wisp as a
+hooded light with tendrils.
+
+**Tests** — 5 new assertions: the spitter has knees, elbows and a sac; it is hunched over 0.2 rad; the
+wisp has three tendrils on joints; and they move while it floats.
+
+
 ## 1.56.2 — 2026-11-21
 
 **The quadruped cost draw calls, and CI said so**
