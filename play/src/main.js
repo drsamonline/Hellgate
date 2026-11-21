@@ -161,7 +161,7 @@ const UPGRADES = [
 const MODES = {
   campaign: {
     name: 'CAMPAIGN',
-    blurb: 'Five zones in order. Clear a zone to unlock the next.',
+    blurb: 'Eight zones in order. Clear a zone to unlock the next.',
     waves: null,       // the zone decides
     lives: 1,
     endless: false,
@@ -1854,6 +1854,18 @@ function closeSettings() {
   if (settingsReturn === 'pause' && game.state === 'paused') return;
 }
 
+// The build stamp exists because "I fixed it" and "you are running the old file"
+// look identical from a bug report. Bump this with VERSION; check-claims enforces
+// that they match.
+const BUILD = '1.53.0';
+
+function stampBuild() {
+  const el = document.getElementById('build');
+  if (!el) return;
+  el.textContent = 'BUILD ' + BUILD + ' \u00b7 seed ' + (game.seed || '\u2014');
+}
+
+stampBuild();
 document.getElementById('settingsBtnTitle').addEventListener('click', () => openSettings('title'));
 document.getElementById('journalBtn')?.addEventListener('click', () => { game.state = 'paused'; showDiary(); });
 document.getElementById('invBtn')?.addEventListener('click', () => { game.state = 'paused'; toggleInventory(); });

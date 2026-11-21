@@ -529,6 +529,7 @@
   .screen{padding:28px 20px}
   /* the small print under every screen */
   .screen .keys{color:var(--ink-ghost)}
+  .build{margin:10px 0 0;font-size:10px;letter-spacing:.18em;color:#4f4738}
   .keys{margin:16px 0 0;font-size:11px;letter-spacing:.16em;color:#6f6455;line-height:1.9;max-width:640px}
   #best,#stats{font-size:12px;letter-spacing:.2em;color:#8d7f6c;line-height:2;text-transform:uppercase}
   #best b,#stats b{color:var(--amber)}
@@ -607,13 +608,14 @@
         <button class="mode" id="modeNightmare" data-mode="nightmare">NIGHTMARE</button>
         <button class="mode" id="modeHardcore" data-mode="hardcore">HARDCORE</button>
       </div>
-      <p id="modeBlurb" class="modeblurb">Five zones in order. Clear a zone to unlock the next.</p>
+      <p id="modeBlurb" class="modeblurb">Eight zones in order. Clear a zone to unlock the next.</p>
       <div class="row">
         <button id="startBtn">Enter the gate</button>
       <button id="continueBtn" class="ghost" style="display:none"></button>
         <button id="settingsBtnTitle" class="ghost">Settings</button>
       </div>
       <div id="best"></div>
+      <p id="build" class="build"></p>
       <p class="keys">
         WASD move · SHIFT sprint · SPACE jump · MOUSE look · LMB fire<br />
         1 pistol · 2 shotgun · 3 rocket · ESC pause · ` shows fps
@@ -652,7 +654,7 @@
 
     <section id="map" class="screen">
       <h2>THE GATE</h2>
-      <p class="sub">five zones · clear one to open the next</p>
+      <p class="sub">eight zones · clear one to open the next</p>
       <p id="mapHint" class="maphint"></p>
       <div id="zoneList" class="zonelist"></div>
       <button id="mapBack" class="ghost" style="margin-top:18px">Back</button>

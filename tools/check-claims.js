@@ -70,6 +70,12 @@ ok('licence is named in the file', !!licenceName, 'LICENSE names neither PolyFor
 ok('licence link', /\]\(LICENSE\)/.test(readme), 'badge does not link to LICENSE');
 ok('licence name', /Dr Sohil Momin/.test(lic), 'LICENSE has no copyright holder');
 
+// 5b. the build stamp in the game must match VERSION ---------------------------
+const gameVersion = (read('play/src/main.js').match(/const BUILD = '([0-9.]+)'/) || [])[1];
+const fileVersion = read('VERSION').trim();
+ok('build stamp matches VERSION', gameVersion === fileVersion,
+  `main.js says BUILD ${gameVersion}, VERSION says ${fileVersion}`);
+
 // 6. version -----------------------------------------------------------------
 const version = read('VERSION').trim();
 const newest = (read('CHANGELOG.md').match(/^## (\d+\.\d+\.\d+)/m) || [])[1];

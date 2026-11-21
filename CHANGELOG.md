@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.53.0 — 2026-11-21
+
+**A build stamp, because "I fixed it" and "you are running the old file" look the same in a bug report**
+
+The title screen now prints `BUILD 1.53.0 · seed hellgate` under the best-run line. If a fix does not
+appear, the stamp says whether the page is the one that was built.
+
+`check-claims` now fails when the stamp and `VERSION` disagree, so it cannot drift, and a test asserts the
+stamp exists and names a version.
+
+**Stale text fixed** — the title, the mode blurb and the zone map all said "five zones". There are eight.
+
+
 ## 1.52.0 — 2026-11-21
 
 **The door axis, third attempt, and this one is right**

@@ -401,6 +401,11 @@ frames(20);
 ok(posed.blend.attack < 0.2, 'and lets it go when it stops');
 ok(posed.parts.shoulderR.rotation.x !== armUp, 'the arm moves back');
 
+console.log('\n== the build stamp ==');
+const stamp = document.getElementById('build');
+ok(!!stamp, 'the title screen has a build stamp');
+ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
+
 console.log('\n== doors and level shape ==');
 // a door is a panel that slides into the lintel, never a slab in the air
 const dm = HG.levelMeshes.doorMeshes;

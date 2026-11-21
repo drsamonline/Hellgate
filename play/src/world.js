@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 /**
- * The five zones: seed, palette, props, objective.
+ * The eight zones: seed, palette, props, objective.
  */
 export const ZONES = [
   {
