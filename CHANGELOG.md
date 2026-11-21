@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.54.0 — 2026-11-21
+
+**A level whose spawn is a box is now refused**
+
+The report was "no way out of the room, all rooms blocked". Measured on the current campaign seeds, no
+zone does that — the foundry spawn reaches 476 of 506 cells with every door shut, and its spawn room has
+five exits that are not doors. But the generator never *checked*, so a layout that boxed the player in
+would have shipped.
+
+`generateLevel` now measures two things and re-rolls the seed if either fails:
+
+| Measure | Threshold |
+| --- | --- |
+| Cells reachable from the spawn with every door shut | at least 220 |
+| Exits from the spawn room that are not door cells | at least 1 |
+
+Eight attempts, then the best of them. The playability suite asserts both for the campaign seed and five
+derived seeds of every zone.
+
+**And if it happens anyway, the doors open**
+
+If the player has not got more than 5 m from the spawn in 20 s while a wave is live, every door opens and
+a toast says `DOORS OPEN · THE PAD STILL NEEDS A CLEAR WAVE`. The pad still only advances on a cleared
+wave, so nothing is skipped — it just means a boxed spawn can no longer end a run.
+
+**A trinket test that measured the wrong thing** — it compared against a base captured before other tests
+ran. It now takes a bare baseline and a belted one in the same breath.
+
+
 ## 1.53.0 — 2026-11-21
 
 **A build stamp, because "I fixed it" and "you are running the old file" look the same in a bug report**

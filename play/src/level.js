@@ -25,7 +25,28 @@ const FLOOR_TEX = ['tile', 'plate'];
 /**
  * Build a whole level from a seed string. Pure data: no Three.js, no DOM, no clock.
  */
+/**
+ * Generate a level, and refuse a layout whose spawn is a box.
+ *
+ * A room whose only exits are door cells cannot be left until the wave is clear,
+ * and the wave cannot be cleared from inside it. Rather than trust that the
+ * generator never does that, it is checked and the seed is re-rolled.
+ */
 export function generateLevel(seed, opts = {}) {
+  let best = null;
+  for (let attempt = 0; attempt < 8; attempt++) {
+    const s = attempt === 0 ? seed : seed + '#' + attempt;
+    const level = buildLevel(s, opts);
+    if (!best) best = level;
+    // 220 cells is roughly a quarter of a level: enough to move, fight and find
+    // the rest of the floor
+    if (level.reachCount >= 220 && level.spawnRoomExits >= 1) return level;
+    if (level.reachCount > best.reachCount) best = level;
+  }
+  return best;
+}
+
+function buildLevel(seed, opts = {}) {
   const rng = makeRng(seed);
   // A zone shapes its own floor plan: how many rooms, how big, how tall. Without
   // this every zone is the same 9-13 rooms of 4-8 cells and the map reads as the
@@ -415,6 +436,31 @@ export function generateLevel(seed, opts = {}) {
     }
   }
 
+  // ---- the spawn must be a place you can leave --------------------------
+  // A room whose only exits are door cells is a room you cannot leave until the
+  // wave is clear, and if the wave is not clear you are stuck in it. Count the
+  // floor reachable from the spawn with every door shut and refuse a layout that
+  // is a box.
+  let reachCount = 0;
+  for (let i = 0; i < reach.length; i++) if (reach[i]) reachCount++;
+  const spawnRoomExits = (() => {
+    const r = rooms[0];
+    let n = 0;
+    for (let x = r.x; x < r.x + r.w; x++) {
+      const a = cells[idx(x, r.z - 1)];
+      const b = cells[idx(x, r.z + r.h)];
+      if (a && !a.solid && !a.door) n++;
+      if (b && !b.solid && !b.door) n++;
+    }
+    for (let z = r.z; z < r.z + r.h; z++) {
+      const a = cells[idx(r.x - 1, z)];
+      const b = cells[idx(r.x + r.w, z)];
+      if (a && !a.solid && !a.door) n++;
+      if (b && !b.solid && !b.door) n++;
+    }
+    return n;
+  })();
+
   // ---- open floor list --------------------------------------------------
   const openCells = [];
   const reachableCells = [];
@@ -440,6 +486,8 @@ export function generateLevel(seed, opts = {}) {
     openCells,
     reachableCells,
     reach,
+    reachCount,
+    spawnRoomExits,
     crates,
     stairs,
     secrets,

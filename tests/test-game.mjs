@@ -799,14 +799,17 @@ ok(TK.length === 6, 'six trinkets defined');
 ok(SL === 3, 'the belt holds three');
 HG.game.trinkets = [];
 HG.game.score = 0;
-const dmg0 = HG.player.baseDamage;
+// measure the belt's effect against a bare baseline taken in the same breath,
+// so nothing the suite did before can leak into the comparison
+HG.game.trinkets = [];
+HG.recomputeStats();
+const bare = HG.player.baseDamage;
 HG.game.trinkets.push('edge');
 HG.game.trinkets.push('hide');
 const effects = sumEffects(HG.game.trinkets);
 ok(effects.damage > 0 && effects.hp > 0, 'effects sum across the belt');
 HG.recomputeStats();
-frames(2);
-ok(HG.player.baseDamage > dmg0, 'the damage trinket raises the base (' + dmg0.toFixed(2) + ' -> ' + HG.player.baseDamage.toFixed(2) + ')');
+ok(HG.player.baseDamage > bare, 'the damage trinket raises the base (' + bare.toFixed(2) + ' -> ' + HG.player.baseDamage.toFixed(2) + ')');
 ok(HG.player.maxHp > 110, 'the health trinket raises the cap: ' + HG.player.maxHp);
 HG.game.trinkets.push('cell');
 HG.recomputeStats();

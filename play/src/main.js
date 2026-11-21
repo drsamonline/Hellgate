@@ -1309,6 +1309,32 @@ function throwGrenade() {
 }
 
 /**
+ * If the player has not got more than 5 m from the spawn in 20 s while a wave is
+ * live, the doors open anyway. It is a compromise, and better than a player who
+ * cannot reach the enemies and cannot reach the exit either. The exit pad still
+ * only advances once the wave is clear, so nothing is skipped.
+ */
+let stuckT = 0;
+let stuckFrom = null;
+function checkStuckSpawn(dt) {
+  if (level.doorOpen) return;
+  if (!stuckFrom) stuckFrom = { x: player.pos.x, z: player.pos.z };
+  const moved = Math.hypot(player.pos.x - stuckFrom.x, player.pos.z - stuckFrom.z);
+  if (moved > 5) { stuckFrom = null; stuckT = 0; return; }
+  stuckT += dt;
+  if (stuckT > 20) {
+    level.doorOpen = true;
+    for (const m of levelMeshes.doorMeshes) {
+      m.userData.slide = 0;
+      m.userData.opening = true;
+      if (m.userData.lamp) m.userData.lamp.material.color.setHex(0x39ff9a);
+    }
+    hud.toast('DOORS OPEN \u00b7 THE PAD STILL NEEDS A CLEAR WAVE', 2.6);
+    stuckT = 0;
+  }
+}
+
+/**
  * Say it out loud when the player walks into a locked door: the door is locked
  * because the wave is not clear, and standing in front of it guessing is the
  * most common way to think the level is broken.
@@ -1857,7 +1883,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.53.0';
+const BUILD = '1.54.0';
 
 function stampBuild() {
   const el = document.getElementById('build');
@@ -2001,6 +2027,7 @@ function update(dt) {
   updateBeacon(dt);
   updateFillLight();
   checkLockedDoors(dt);
+  checkStuckSpawn(dt);
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {
