@@ -1131,10 +1131,16 @@ ok(HG.perf.ratio <= r0, 'ratio never exceeds the cap');
 ok(typeof HG.perf.ratio === 'number' && HG.perf.ratio >= 0.7, 'ratio stays above the floor: ' + HG.perf.ratio.toFixed(2));
 
 console.log('\n== no wasted pickups (roadmap 8) ==');
-// one enemy, far away and unable to reach: clearing the wave would open the exit
-// and a wave change clears every pickup, which is not what this test is about
+// One enemy, far away and unable to reach: clearing the wave would open the exit
+// and a wave change clears every pickup, which is not what this test is about.
+// The cell is taken from the level's own open floor — a coordinate offset can
+// land outside the grid, spawn nothing, and silently un-isolate the test.
 HG.enemies.clear();
-HG.enemies.spawnAt('imp', HG.level.spawn.x + 40, HG.level.spawn.z + 40, 1);
+{
+  const far = HG.level.openCells[HG.level.openCells.length - 1];
+  HG.enemies.spawnAt('imp', far.wx, far.wz, 1);
+  ok(HG.enemies.list.length === 1, 'the isolation enemy spawned, so the wave cannot clear');
+}
 HG.player.health = 100;
 const before2 = HG.game.pickups.length;
 const cell = HG.level.openCells[0];

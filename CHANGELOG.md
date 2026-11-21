@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.56.1 — 2026-11-21
+
+**The pickup test, again, and this time the cause**
+
+The isolation enemy was spawned at `spawn.x + 40`, which can land outside the grid — so `spawnAt` created
+nothing, the wave cleared, the wave change cleared the pickups the test had just placed, and the test
+failed. It now takes a cell from the level's own open floor, and asserts the enemy exists so a broken
+setup fails loudly instead of looking like a pickup bug.
+
+
 ## 1.56.0 — 2026-11-21
 
 **The hound is a real quadruped now**
