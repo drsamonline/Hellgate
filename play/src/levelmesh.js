@@ -195,9 +195,18 @@ export function buildLevelMeshes(level, mats, zone) {
   for (const d of level.doors) {
     const dc = level.cells[d.z * level.W + d.x];
     const h = dc.ceil - dc.floor;
-    const geo = new THREE.BoxGeometry(CELL * 0.94, h, CELL * 0.94);
+    // a bulkhead panel, not a cube: thin enough to read as a door and to slide
+    // up into the lintel without ever looking like a slab lying in the air
+    const alongX = !level.cells[d.z * level.W + (d.x - 1)]?.solid || !level.cells[d.z * level.W + (d.x + 1)]?.solid;
+    const geo = new THREE.BoxGeometry(
+      alongX ? CELL * 0.96 : 0.34,
+      h,
+      alongX ? 0.34 : CELL * 0.96
+    );
     const mesh = new THREE.Mesh(geo, mats['door_plain'] || mats['door']);
     mesh.position.set(d.x * CELL, dc.floor + h / 2, d.z * CELL);
+    mesh.userData.height = h;
+    mesh.userData.baseY = dc.floor + h / 2;
     mesh.visible = true;
     group.add(mesh);
     doorMeshes.push(mesh);

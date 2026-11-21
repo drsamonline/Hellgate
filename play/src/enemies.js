@@ -399,7 +399,19 @@ const MAX_CORPSES = 12;
 // cannot tell a limb from a slab, and the frame gets 9 calls back per enemy.
 const LOD_DIST = 22;
 const PROXY_GEO = new THREE.BoxGeometry(1, 1, 1);
-const PROXY_MAT = new THREE.MeshLambertMaterial({ color: 0x2a1a18 });
+// One proxy material per type colour: a distant enemy is one slab, but it is a
+// red slab for an imp and a cyan one for a wisp, so you can still tell what is
+// walking at you.
+const PROXY_MATS = new Map();
+function proxyMat(color) {
+  let m = PROXY_MATS.get(color);
+  if (!m) {
+    m = new THREE.MeshLambertMaterial({ color });
+    m.userData.shared = true;
+    PROXY_MATS.set(color, m);
+  }
+  return m;
+}
 
 /**
  * One enemy: mesh, state machine, health. Geometry is shared per type; body materials are cloned for the hit flash.
@@ -445,7 +457,7 @@ export class Enemy {
     });
 
     // a single-slab stand-in, shown only when the enemy is far away
-    this.proxy = new THREE.Mesh(PROXY_GEO, PROXY_MAT);
+    this.proxy = new THREE.Mesh(PROXY_GEO, proxyMat(T.color));
     this.proxy.scale.set(T.radius * 2.2, T.height, T.radius * 2.2);
     this.proxy.position.y = T.height / 2;
     this.proxy.visible = false;

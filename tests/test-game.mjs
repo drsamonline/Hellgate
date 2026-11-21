@@ -364,6 +364,19 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== doors and level shape ==');
+// a door is a panel that slides into the lintel, never a slab in the air
+const dm = HG.levelMeshes.doorMeshes;
+ok(dm.length > 0, 'the level has door meshes');
+const d0 = dm[0];
+ok(d0.userData.height > 1.5, 'a door knows its own height (' + d0.userData.height.toFixed(1) + ' m)');
+const size = d0.geometry.parameters || {};
+ok(Math.min(size.width || 1, size.depth || 1) <= 0.5, 'a door is a thin panel, not a cube');
+HG.openExit && HG.openExit();
+frames(40);
+ok(dm.every((m) => !m.visible || m.userData.slide === 0), 'every door finishes opening');
+ok(dm.every((m) => !m.visible || !m.userData.opening), 'and none is left mid-slide');
+
 console.log('\n== colour grade ==');
 const { ZONES: ZS } = await import('../play/src/world.js');
 ok(ZS.every((z) => z.grade && Array.isArray(z.grade.tint) && z.grade.tint.length === 3),

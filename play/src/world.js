@@ -9,6 +9,7 @@
 export const ZONES = [
   {
     id: 'gate',
+    shape: { rooms: [8, 11], size: [4, 7], tall: 0.25 },
     wallTint: [1.0, 0.97, 0.92],
     grade: { tint: [1.02, 1.0, 0.96], saturation: 1.05, vignette: 0.42 },
     name: 'THE GATE',
@@ -27,6 +28,7 @@ export const ZONES = [
   },
   {
     id: 'foundry',
+    shape: { rooms: [10, 14], size: [3, 6], tall: 0.5 },
     wallTint: [1.12, 0.92, 0.78],
     grade: { tint: [1.06, 1.0, 0.92], saturation: 1.1, vignette: 0.4 },
     name: 'THE FOUNDRY',
@@ -45,6 +47,7 @@ export const ZONES = [
   },
   {
     id: 'grove',
+    shape: { rooms: [6, 9], size: [6, 9], tall: 0.15 },
     wallTint: [0.88, 1.05, 0.9],
     grade: { tint: [0.96, 1.04, 0.98], saturation: 1.12, vignette: 0.36 },
     name: 'THE GROVE',
@@ -63,6 +66,7 @@ export const ZONES = [
   },
   {
     id: 'vault',
+    shape: { rooms: [11, 15], size: [3, 5], tall: 0.2 },
     wallTint: [0.9, 0.96, 1.06],
     grade: { tint: [0.99, 1.0, 1.05], saturation: 0.92, vignette: 0.48 },
     name: 'THE VAULT',
@@ -81,6 +85,7 @@ export const ZONES = [
   },
   {
     id: 'ashfall',
+    shape: { rooms: [5, 8], size: [7, 10], tall: 0.6 },
     wallTint: [1.05, 1.0, 0.95],
     grade: { tint: [1.04, 0.99, 0.94], saturation: 0.86, vignette: 0.46 },
     name: 'ASHFALL',
@@ -99,6 +104,7 @@ export const ZONES = [
   },
   {
     id: 'cistern',
+    shape: { rooms: [9, 13], size: [3, 5], tall: 0.1 },
     wallTint: [0.82, 1.0, 1.08],
     grade: { tint: [0.92, 1.02, 1.08], saturation: 0.95, vignette: 0.42 },
     name: 'THE CISTERN',
@@ -117,6 +123,7 @@ export const ZONES = [
   },
   {
     id: 'kiln',
+    shape: { rooms: [7, 10], size: [5, 8], tall: 0.45 },
     wallTint: [1.18, 0.86, 0.74],
     grade: { tint: [1.1, 0.94, 0.88], saturation: 1.16, vignette: 0.44 },
     name: 'THE KILN',
@@ -135,6 +142,7 @@ export const ZONES = [
   },
   {
     id: 'throne',
+    shape: { rooms: [6, 9], size: [7, 10], tall: 0.7 },
     wallTint: [1.15, 0.78, 0.78],
     grade: { tint: [1.08, 0.9, 0.9], saturation: 1.2, vignette: 0.5 },
     name: 'THE THRONE',

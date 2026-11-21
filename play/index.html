@@ -216,6 +216,11 @@
   #relics{position:absolute;top:40px;left:16px;font-size:11px;letter-spacing:.18em;color:#c77dff;text-shadow:0 2px 6px #000}
 
   /* story: the level shows through */
+  #zonecard{position:fixed;inset:0;background:#040406;display:flex;align-items:center;justify-content:center;
+    z-index:45;pointer-events:none;opacity:0;transition:opacity .5s}
+  #zonecard.on{opacity:1}
+  #zonecardName{font-size:26px;letter-spacing:.42em;color:#cbbda8;text-transform:uppercase}
+
   #letterbox{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .25s;z-index:40}
   #letterbox.on{opacity:1}
   #letterbox .bar{position:absolute;left:0;right:0;height:var(--bar,28%);background:#040406}
@@ -552,6 +557,8 @@
     </div>
   </div>
 
+  <div id="zonecard"><span id="zonecardName"></span></div>
+
   <div id="letterbox">
     <div class="bar top"></div>
     <div class="bar bottom"></div>
@@ -641,10 +648,12 @@
       <p class="sub">the gate waits</p>
       <div class="row">
         <button id="resumeBtn">Resume</button>
+        <button id="journalBtn" class="ghost">Journal</button>
+        <button id="invBtn" class="ghost">Inventory</button>
         <button id="settingsBtnPause" class="ghost">Settings</button>
         <button id="restartBtn" class="ghost">Restart</button>
       </div>
-      <p class="keys">ESC toggles pause · your run is kept</p>
+      <p class="keys">J journal · TAB inventory · M map · ESC resume</p>
     </section>
 
     <section id="settings" class="screen">

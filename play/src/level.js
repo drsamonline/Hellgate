@@ -25,8 +25,17 @@ const FLOOR_TEX = ['tile', 'plate'];
 /**
  * Build a whole level from a seed string. Pure data: no Three.js, no DOM, no clock.
  */
-export function generateLevel(seed) {
+export function generateLevel(seed, opts = {}) {
   const rng = makeRng(seed);
+  // A zone shapes its own floor plan: how many rooms, how big, how tall. Without
+  // this every zone is the same 9-13 rooms of 4-8 cells and the map reads as the
+  // same place in a different colour.
+  const shape = {
+    rooms: [9, 13],
+    size: [4, 8],
+    tall: 0.35,
+    ...opts,
+  };
   const idx = (x, z) => z * W + x;
   const cells = [];
 
@@ -49,12 +58,12 @@ export function generateLevel(seed) {
 
   // ---- rooms ------------------------------------------------------------
   const rooms = [];
-  const want = rng.int(9, 13);
+  const want = rng.int(shape.rooms[0], shape.rooms[1]);
   let tries = 0;
   while (rooms.length < want && tries < 800) {
     tries++;
-    const w = rng.int(4, 8);
-    const h = rng.int(4, 8);
+    const w = rng.int(shape.size[0], shape.size[1]);
+    const h = rng.int(shape.size[0], shape.size[1]);
     const x = rng.int(2, W - w - 3);
     const z = rng.int(2, H - h - 3);
     let ok = true;
@@ -69,7 +78,7 @@ export function generateLevel(seed) {
       x, z, w, h,
       cx: x + (w >> 1),
       cz: z + (h >> 1),
-      ceil: rng.chance(0.35) ? rng.range(5.4, 6.8) : rng.range(3.2, 3.9),
+      ceil: rng.chance(shape.tall) ? rng.range(5.4, 6.8) : rng.range(3.2, 3.9),
       wall: rng.int(0, 1),
       floorTex: rng.int(0, 1),
       floor: 0,

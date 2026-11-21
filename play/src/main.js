@@ -347,7 +347,7 @@ function buildRun(seed, zoneDef) {
   game.keycard = null;
 
   scene = newScene(zone);
-  level = generateLevel(seed);
+  level = generateLevel(seed, zone.shape);
   level.doorOpen = false;
   // the zone decides the palette: same generator, different surface
   for (const c of level.cells) {
@@ -550,10 +550,11 @@ function updateDoors(dt) {
   for (const m of levelMeshes.doorMeshes) {
     if (!m.userData.opening) continue;
     if (m.userData.baseY == null) m.userData.baseY = m.position.y;
-    m.userData.slide = Math.min(1, m.userData.slide + dt / 0.4);
+    m.userData.slide = Math.min(1, m.userData.slide + dt / 0.45);
     const k = m.userData.slide;
-    m.position.y = m.userData.baseY + k * 3.2;      // a little over the ceiling
-    m.scale.y = Math.max(0.02, 1 - k);
+    // translate only: scaling made a shrinking slab that hung in the air when
+    // the animation was interrupted by a screen change
+    m.position.y = m.userData.baseY + k * (m.userData.height + 0.15);
     if (k >= 1) {
       m.visible = false;
       m.userData.opening = false;
@@ -1110,6 +1111,14 @@ function beginZone(zoneDef) {
   game.state = 'intro';
   hud.setVisible(false);
   showScreen('intro');
+  // a card between levels: the zone changes and you are told which one
+  const card = document.getElementById('zonecard');
+  const cardName = document.getElementById('zonecardName');
+  if (card && cardName) {
+    cardName.textContent = zone.name;
+    card.classList.add('on');
+    setTimeout(() => card.classList.remove('on'), 700);
+  }
   story.start(camera, level, () => showClassScreen(), zone.id);
   clock.getDelta();
 }
@@ -1810,6 +1819,8 @@ function closeSettings() {
 }
 
 document.getElementById('settingsBtnTitle').addEventListener('click', () => openSettings('title'));
+document.getElementById('journalBtn')?.addEventListener('click', () => { game.state = 'paused'; showDiary(); });
+document.getElementById('invBtn')?.addEventListener('click', () => { game.state = 'paused'; toggleInventory(); });
 document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
 // bound by id, not by a class query: the test double can find an id and cannot
 // find a selector, and a mode you cannot test is a mode that breaks quietly
@@ -2030,6 +2041,7 @@ function loop() {
     adaptResolution(frameDt);
   } else {
     accumulator = 0;
+    updateDoors(frameDt); // finish opening even if a screen is up
     if (game.state === 'intro') story.update(frameDt, level);
     if (game.state === 'cinematic') {
       cinematic.update(frameDt);
@@ -2130,7 +2142,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
-  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic,
+  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this

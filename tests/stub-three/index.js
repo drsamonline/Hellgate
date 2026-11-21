@@ -186,10 +186,15 @@ export class BufferGeometry {
 }
 
 class Primitive extends BufferGeometry {
-  constructor() { super(); this.kind = this.constructor.name; }
+  constructor(...args) { super(); this.kind = this.constructor.name; this.parameters = { args }; }
   translate() { return this; }
 }
-export class BoxGeometry extends Primitive {}
+export class BoxGeometry extends Primitive {
+  constructor(w = 1, h = 1, d = 1, ...rest) {
+    super(w, h, d, ...rest);
+    this.parameters = { width: w, height: h, depth: d };
+  }
+}
 export class PlaneGeometry extends Primitive {}
 export class SphereGeometry extends Primitive {}
 export class CylinderGeometry extends Primitive {}

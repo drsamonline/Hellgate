@@ -1,5 +1,51 @@
 # Changelog
 
+## 1.47.0 — 2026-11-21
+
+Six reports from playing past the first level.
+
+**The gates were horizontal slabs in the air**
+
+Doors were cubes, and the opening animation shrank them (`scale.y` to 0.02) while lifting them 3.2 m —
+so an interrupted open left a flat sliver hanging above the corridor. Doors are now thin bulkhead panels
+that translate up into the lintel and are hidden when they arrive, and `updateDoors` runs from the main
+loop rather than the playing-state branch, so a pause or a screen change can no longer freeze one
+half-open.
+
+**Every zone is now a different floor plan**
+
+`generateLevel` took no options, so all eight zones were 9-13 rooms of 4-8 cells. Each zone now passes a
+`shape`:
+
+| Zone | Rooms | Room size | Tall rooms |
+| --- | --- | --- | --- |
+| The Gate | 8-11 | 4-7 | 25% |
+| The Foundry | 10-14 | 3-6 | 50% |
+| The Grove | 6-9 | 6-9 | 15% |
+| The Vault | 11-15 | 3-5 | 20% |
+| Ashfall | 5-8 | 7-10 | 60% |
+| The Cistern | 9-13 | 3-5 | 10% |
+| The Kiln | 7-10 | 5-8 | 45% |
+| The Throne | 6-9 | 7-10 | 70% |
+
+Measured: Ashfall is 5 rooms averaging 73 cells, the Vault is 14 rooms averaging 17, the Throne is 8
+rooms averaging 70 with 6 of them over 5 m tall. They are not the same map any more.
+
+**Distant enemies were all the same grey slab**
+
+The level-of-detail proxy shared one material, so past 22 m every type was an identical dark box. It is
+now coloured per type: red for an imp, cyan for a wisp, magenta for a hound.
+
+**A card between levels** — the screen fades to black with the zone name for 0.7 s when a level starts, so
+the change is visible.
+
+**Journal and inventory are on the pause screen** — both existed behind `J` and `Tab` and were invisible
+if you did not know. There are buttons now, and the pause screen lists the keys.
+
+**A test double gap** — `BoxGeometry` recorded no dimensions, so "a door is a thin panel" could not be
+asserted. It records them now.
+
+
 ## 1.46.0 — 2026-11-21
 
 **Four more surfaces, and a pair for every zone**
