@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.56.0 — 2026-11-21
+
+**The hound is a real quadruped now**
+
+It was a body with four straight cylinders for legs. `rig.js` gained `quadruped()` — the same joint
+hierarchy as the humanoid, on four legs instead of two:
+
+| Part | Detail |
+| --- | --- |
+| Spine | Trunk, haunch and chest, so the back has a shape |
+| Neck and head | A jointed neck, a boxed skull, a snout, eyes and ears |
+| Tail | A joint that swings |
+| Legs | Four, each hip → knee → paw, so the legs bend |
+
+The gait is a gallop: the front pair and the back pair in opposition, knees folding on the lift, tail
+swinging, neck dipping. Before, all four legs rotated together and it read as a table walking.
+
+Measured in the browser beside a grunt: the hound reads as a beast with a head, a back and four legs, and
+the grunt as a soldier. 23 parts, no mesh at NaN, four new assertions.
+
+
 ## 1.55.0 — 2026-11-21
 
 **The old-build problem, fixed at the source**

@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { humanoid, PROPORTIONS, rigMat } from './rig.js';
+import { humanoid, quadruped, PROPORTIONS, rigMat } from './rig.js';
 import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
 
 const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DEATH: 'DEATH' };
@@ -264,41 +264,11 @@ function makeSpitter() {
 
 function makeHound() {
   const M = mats();
-  const g = new THREE.Group();
-  const body = new THREE.Mesh(cylGeo(0.22, 0.26, 1.15, 7), M.houndBody);
-  body.rotation.x = Math.PI / 2;
-  body.position.set(0, 0.62, 0);
-  g.add(body);
-  const haunch = sphere(0.28, M.houndBody, 0, 0.66, -0.44, 7);
-  haunch.scale.set(1, 0.85, 1);
-  g.add(haunch);
-  const neck = new THREE.Mesh(cylGeo(0.13, 0.18, 0.4, 6), M.houndDark);
-  neck.position.set(0, 0.7, 0.5);
-  neck.rotation.x = 1.15;
-  g.add(neck);
-  const head = new THREE.Mesh(coneGeo(0.17, 0.44, 6), M.houndDark);
-  head.rotation.x = Math.PI / 2;
-  head.position.set(0, 0.66, 0.82);
-  g.add(head);
-  for (const sx of [-1, 1]) {
-    g.add(sphere(0.04, M.houndEye, sx * 0.09, 0.74, 0.78, 5));
-    const ear = new THREE.Mesh(coneGeo(0.05, 0.2, 4), M.houndDark);
-    ear.position.set(sx * 0.12, 0.88, 0.62);
-    ear.rotation.z = sx * 0.3;
-    g.add(ear);
-  }
-  for (let i = 0; i < 3; i++) {
-    const spike = new THREE.Mesh(coneGeo(0.06, 0.22, 4), M.houndDark);
-    spike.position.set(0, 0.9, -0.1 - i * 0.28);
-    spike.rotation.x = -0.25;
-    g.add(spike);
-  }
-  const legL = limbCyl(0.06, 0.08, 0.62, M.houndDark, -0.2, 0.62, 0.36);
-  const legR = limbCyl(0.06, 0.08, 0.62, M.houndDark, 0.2, 0.62, 0.36);
-  const backL = limbCyl(0.06, 0.08, 0.62, M.houndDark, -0.2, 0.62, -0.4);
-  const backR = limbCyl(0.06, 0.08, 0.62, M.houndDark, 0.2, 0.62, -0.4);
-  g.add(legL, legR, backL, backR);
-  return { group: g, parts: { armL: legL, armR: legR, legL: backL, legR: backR } };
+  const { group, parts } = quadruped({
+    ...PROPORTIONS.hound,
+    mats: { body: M.houndBody, dark: M.houndDark, eye: M.houndEye },
+  });
+  return { group, parts };
 }
 
 /** How many bodies stay in the world before the oldest is cleared. */
@@ -795,6 +765,23 @@ export class Enemy {
     if (this.parts.legR) this.parts.legR.rotation.x = -swing;
     // knees bend on the back swing, elbows on the forward one: the whole reason
     // to build a rig instead of a box with sticks
+    // a quadruped gallops: the front pair leads, the back pair follows, and the
+    // knees fold on the lift
+    if (this.parts.frontL) {
+      const g1 = swing * 1.15;
+      this.parts.frontL.rotation.x = g1;
+      this.parts.frontR.rotation.x = g1;
+      this.parts.backL.rotation.x = -g1;
+      this.parts.backR.rotation.x = -g1;
+      if (this.parts.kneefrontL) {
+        this.parts.kneefrontL.rotation.x = Math.max(0, -g1) * 1.5;
+        this.parts.kneefrontR.rotation.x = Math.max(0, -g1) * 1.5;
+        this.parts.kneebackL.rotation.x = Math.max(0, g1) * 1.5;
+        this.parts.kneebackR.rotation.x = Math.max(0, g1) * 1.5;
+      }
+      if (this.parts.tail) this.parts.tail.rotation.x = 0.9 + Math.sin(swing * 4) * 0.22;
+      if (this.parts.neck) this.parts.neck.rotation.x = -0.9 + Math.abs(swing) * 0.12;
+    }
     if (this.parts.kneeL) this.parts.kneeL.rotation.x = Math.max(0, -swing) * 1.3;
     if (this.parts.kneeR) this.parts.kneeR.rotation.x = Math.max(0, swing) * 1.3;
     if (this.parts.elbowL) this.parts.elbowL.rotation.x = Math.max(0, swing) * 0.9 - 0.15;

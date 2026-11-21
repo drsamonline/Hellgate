@@ -205,6 +205,104 @@ export function humanoid(p) {
   return { group: g, parts };
 }
 
+/**
+ * A quadruped: a spine, a head on a neck, a tail, and four legs that bend at the
+ * knee. Built the same way as the humanoid — joints, not parts — because a leg
+ * that cannot bend reads as a table leg however good the body is.
+ *
+ * The parts it returns are named for the two gaits the animation uses: the front
+ * pair and the back pair move in opposition, which is what a gallop is.
+ */
+export function quadruped(p) {
+  const M = p.mats;
+  const g = new THREE.Group();
+  const parts = {};
+
+  const hipY = (p.thigh || 0) + (p.shin || 0);
+  const spineY = hipY + p.bodyR * 0.55;
+
+  // ---- spine and haunch --------------------------------------------------
+  const spine = joint(g, 0, spineY, 0);
+  const trunk = new THREE.Mesh(cyl(p.bodyR, p.bodyR * 1.1, p.bodyLen, 8), M.body);
+  trunk.rotation.x = Math.PI / 2;
+  spine.add(trunk);
+  const haunch = new THREE.Mesh(sph(p.bodyR * 1.12, 8), M.body);
+  haunch.scale.set(1, 0.9, 1);
+  haunch.position.z = -p.bodyLen * 0.45;
+  spine.add(haunch);
+  const chest = new THREE.Mesh(sph(p.bodyR * 0.95, 8), M.body);
+  chest.position.z = p.bodyLen * 0.42;
+  spine.add(chest);
+
+  // ---- neck, head, tail --------------------------------------------------
+  const neck = joint(spine, 0, p.bodyR * 0.5, p.bodyLen * 0.45);
+  const neckMesh = new THREE.Mesh(cyl(p.bodyR * 0.55, p.bodyR * 0.75, p.neckLen, 7), M.body);
+  neckMesh.position.y = p.neckLen * 0.4;
+  neck.add(neckMesh);
+  neck.rotation.x = -0.9;
+
+  const head = joint(neck, 0, p.neckLen * 0.85, 0);
+  const skull = new THREE.Mesh(box(p.bodyR * 1.1, p.bodyR * 0.85, p.bodyR * 1.9), M.dark || M.body);
+  skull.position.z = p.bodyR * 0.8;
+  head.add(skull);
+  const snout = new THREE.Mesh(cone(p.bodyR * 0.5, p.bodyR * 1.5, 5), M.dark || M.body);
+  snout.rotation.x = Math.PI / 2;
+  snout.position.z = p.bodyR * 1.9;
+  head.add(snout);
+  if (p.eyes) {
+    for (const sx of [-1, 1]) {
+      const eye = new THREE.Mesh(sph(p.bodyR * 0.16, 5), M.eye);
+      eye.position.set(sx * p.bodyR * 0.42, p.bodyR * 0.22, p.bodyR * 1.1);
+      head.add(eye);
+    }
+  }
+  for (const sx of [-1, 1]) {
+    const ear = new THREE.Mesh(cone(p.bodyR * 0.22, p.bodyR * 0.8, 4), M.dark || M.body);
+    ear.position.set(sx * p.bodyR * 0.5, p.bodyR * 0.55, -p.bodyR * 0.1);
+    ear.rotation.z = sx * 0.35;
+    head.add(ear);
+  }
+  parts.head = head;
+  parts.neck = neck;
+
+  const tail = joint(spine, 0, p.bodyR * 0.35, -p.bodyLen * 0.55);
+  const tailMesh = new THREE.Mesh(cyl(p.bodyR * 0.16, p.bodyR * 0.3, p.tailLen, 5), M.dark || M.body);
+  tailMesh.position.y = -p.tailLen * 0.4;
+  tail.add(tailMesh);
+  tail.rotation.x = 0.9;
+  parts.tail = tail;
+
+  // ---- four legs, each with a knee --------------------------------------
+  const leg = (name, sx, sz) => {
+    const hip = joint(g, sx * p.legX, hipY, sz);
+    const thigh = new THREE.Mesh(cyl(p.legR * 0.9, p.legR * 0.75, p.thigh, 6), M.body);
+    thigh.position.y = -p.thigh / 2;
+    hip.add(thigh);
+    const knee = joint(hip, 0, -p.thigh, 0);
+    const shin = new THREE.Mesh(cyl(p.legR * 0.7, p.legR * 0.5, p.shin, 6), M.dark || M.body);
+    shin.position.y = -p.shin / 2;
+    knee.add(shin);
+    const paw = new THREE.Mesh(box(p.legR * 1.5, p.legR * 0.6, p.legR * 2.2), M.dark || M.body);
+    paw.position.set(0, -p.shin, p.legR * 0.6);
+    knee.add(paw);
+    parts[name] = hip;
+    parts['knee' + name] = knee;
+    return hip;
+  };
+  leg('frontL', -1, p.bodyLen * 0.38);
+  leg('frontR', 1, p.bodyLen * 0.38);
+  leg('backL', -1, -p.bodyLen * 0.42);
+  leg('backR', 1, -p.bodyLen * 0.42);
+
+  // the shared animation names
+  parts.armL = parts.frontL;
+  parts.armR = parts.frontR;
+  parts.legL = parts.backL;
+  parts.legR = parts.backR;
+
+  return { group: g, parts };
+}
+
 /** The proportions for each enemy body. */
 export const PROPORTIONS = {
   imp: {
@@ -227,6 +325,11 @@ export const PROPORTIONS = {
     armR: 0.2, upperArm: 0.6, lowerArm: 0.62,
     legR: 0.24, thigh: 0.5, shin: 0.48, legX: 0.3,
     lean: 0.16, eyes: true, pauldrons: true, pauldronR: 0.26,
+  },
+  hound: {
+    bodyR: 0.26, bodyLen: 1.15, neckLen: 0.34, tailLen: 0.42,
+    legR: 0.075, thigh: 0.34, shin: 0.3, legX: 0.21,
+    eyes: true,
   },
   warden: {
     hipR: 0.44, hipLen: 0.3, waistR: 0.5, chestR: 0.72, torsoLen: 1.35,

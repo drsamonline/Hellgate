@@ -406,6 +406,22 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== the hound rig ==');
+HG.enemies.clear();
+HG.enemies.spawnAt('hound', HG.player.pos.x + 8, HG.player.pos.z, 2);
+frames(1);
+const hound = HG.enemies.list[HG.enemies.list.length - 1];
+ok(!!(hound.parts.frontL && hound.parts.backL && hound.parts.kneefrontL && hound.parts.neck && hound.parts.tail),
+  'the hound is a quadruped with four jointed legs, a neck and a tail');
+ok(hound.parts.kneefrontL.parent === hound.parts.frontL, 'its front knee hangs off its front hip');
+let houndMeshes = 0, houndNaN = 0;
+hound.body.traverse((o) => {
+  if (o.isMesh) houndMeshes++;
+  if (!Number.isFinite(o.position.x) || !Number.isFinite(o.position.y) || !Number.isFinite(o.position.z)) houndNaN++;
+});
+ok(houndMeshes >= 14, 'built from ' + houndMeshes + ' parts');
+ok(houndNaN === 0, 'and no mesh sits at NaN');
+
 console.log('\n== doors and level shape ==');
 // a door is a panel that slides into the lintel, never a slab in the air
 const dm = HG.levelMeshes.doorMeshes;
