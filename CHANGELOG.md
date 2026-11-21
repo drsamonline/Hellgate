@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.55.0 — 2026-11-21
+
+**The old-build problem, fixed at the source**
+
+Browsers cache ES modules hard. A player who reloads after a fix can keep running the old file, and from a
+bug report "it is fixed" and "you are on the old build" are indistinguishable. That is the most likely
+explanation for several reports that survived their fix.
+
+`tools/stamp-cache.mjs` appends `?v=<VERSION>` to every relative import and to the entry script, so each
+release is a different set of URLs and a reload is always the new code.
+
+| Where | What it does |
+| --- | --- |
+| `pages.yml` | Runs the stamp between checkout and the mirror to `gh-pages`; the source stays clean |
+| The stamp | Idempotent — running it twice does not produce `?v=1.55.0?v=1.55.0` |
+| Tests | 3 new assertions: a relative import gets the version, the entry script gets it, and a second run changes nothing |
+
+The title screen also prints `BUILD 1.55.0 · seed …`, so a report can name the build it came from.
+
+
 ## 1.54.0 — 2026-11-21
 
 **A level whose spawn is a box is now refused**

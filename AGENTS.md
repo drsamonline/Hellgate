@@ -19,6 +19,7 @@ node tools/soak.mjs          # a bot plays unattended; stability, not balance
 node tools/balance-report.mjs # the curve as arithmetic over the constants
 node tools/pick-seeds.mjs    # score candidate seeds; the campaign seeds are chosen, not typed
 node tools/audit-run.mjs gate,foundry  # every screen, mode and action in a browser
+node tools/stamp-cache.mjs   # deploy only: version every module URL
 node tools/audit-dead.mjs    # unused exports, conflicting constants
 node tools/check-pages.mjs   # PAGES.json paths still exist
 node tools/check-links.mjs   # every local href/src resolves

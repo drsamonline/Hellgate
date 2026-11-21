@@ -23,5 +23,18 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262   # was @v4
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # Every release gets its own module URLs. Browsers cache ES modules hard,
+      # and a player who reloads after a fix can keep running the old file — from
+      # a bug report, "fixed" and "you are on the old build" look identical.
+      - name: Stamp the build version into every module URL
+        run: node tools/stamp-cache.mjs
       - name: Mirror main to gh-pages
-        run: git push origin HEAD:gh-pages --force
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add -A
+          git -c commit.gpgsign=false commit -q -m "deploy: $(cat VERSION)" || true
+          git push origin HEAD:gh-pages --force

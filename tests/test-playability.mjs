@@ -143,6 +143,31 @@ for (const zone of ZONES) {
   }
 }
 
+// ---- the cache stamp -------------------------------------------------------
+{
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const os = await import('node:os');
+  const { execFileSync } = await import('node:child_process');
+  const repo = path.resolve(new URL('..', import.meta.url).pathname);
+  // run it against a copy so the real source is untouched
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'stamp-'));
+  fs.cpSync(path.join(repo, 'play'), path.join(tmp, 'play'), { recursive: true });
+  fs.writeFileSync(path.join(tmp, 'VERSION'), '9.9.9\n');
+  fs.mkdirSync(path.join(tmp, 'tools'), { recursive: true });
+  fs.copyFileSync(path.join(repo, 'tools', 'stamp-cache.mjs'), path.join(tmp, 'tools', 'stamp-cache.mjs'));
+  execFileSync('node', [path.join(tmp, 'tools', 'stamp-cache.mjs')], { stdio: 'pipe' });
+  const stamped = fs.readFileSync(path.join(tmp, 'play', 'src', 'main.js'), 'utf8');
+  ok(stamped.includes("from './level.js?v=9.9.9'"), 'the stamp adds the version to a relative import');
+  const html = fs.readFileSync(path.join(tmp, 'play', 'index.html'), 'utf8');
+  ok(html.includes('src="./src/main.js?v=9.9.9"'), 'and to the entry script');
+  // running it twice must not produce ?v=9.9.9?v=9.9.9
+  execFileSync('node', [path.join(tmp, 'tools', 'stamp-cache.mjs')], { stdio: 'pipe' });
+  const twice = fs.readFileSync(path.join(tmp, 'play', 'src', 'main.js'), 'utf8');
+  ok(!twice.includes('?v=9.9.9?v='), 'stamping twice is a no-op');
+  fs.rmSync(tmp, { recursive: true, force: true });
+}
+
 console.log('');
 console.log(`${pass} passed, ${fail} failed`);
 if (fail) process.exit(1);
