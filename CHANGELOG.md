@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.44.0 — 2026-11-21
+
+**The guns look like guns**
+
+The view models were two boxes and a cylinder. All four are rebuilt with the parts that make them
+recognisable:
+
+| Weapon | What is new |
+| --- | --- |
+| Pistol | Slide, grip, hammer, front sight, muzzle |
+| Chaingun | Six barrels on a bearing, ammo box, carry handle, sight |
+| Shotgun | Twin barrels, wooden pump, stock and grip, bead sight |
+| Rocket launcher | Muzzle ring, back blast, two grips, top rail, sight |
+
+The rest position also moved up 7 cm: at a 900x520 viewport the HUD bar was eating the gun.
+
+**Sprites**
+
+| Sprite | Where |
+| --- | --- |
+| Muzzle flash | A bright additive quad at the barrel, six reused, 60 ms |
+| Impact flash | A small bright hit where a shot lands on a body |
+| Keycard beacon | A gold light column over the card, the same idea as the exit beacon |
+
+**Four real disposal bugs**
+
+A pickup, a relic and the keycard are Groups now, but three collection paths still called
+`mesh.geometry.dispose()` on them, which throws on a Group. The soak test caught it as an intermittent
+"no crash in 2000 frames" failure; it took a 60-run loop to reproduce reliably. `dropMesh()` is the one
+path now, and it handles a bare Sprite as well as a Group.
+
+**Two more flaky assertions fixed** — the pistol test aimed, waited sixteen frames, then fired, so an imp
+that wandered out of the crosshair failed it. Aim and fire are now the same frame.
+
+
 ## 1.43.0 — 2026-11-21
 
 **A colour grade per zone, and a light column over the exit**

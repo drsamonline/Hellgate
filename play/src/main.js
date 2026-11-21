@@ -601,9 +601,7 @@ function updateRelics(dt) {
       game.score += 150;
       effects.burst({ x: r.x, y: r.baseY, z: r.z }, 0xc77dff, 14, 3, 0.5, 3);
       audio.play('key', { x: r.x, z: r.z });
-      scene.remove(r.mesh);
-      r.mesh.geometry.dispose();
-      r.mesh.material.dispose();
+      dropMesh(r.mesh);
       game.relics.splice(i, 1);
       if (!game.relics.length) {
         game.sideDone = true;
@@ -901,9 +899,10 @@ function addPickup(kind, x, z) {
 function dropMesh(mesh) {
   if (!mesh) return;
   scene.remove(mesh);
-  mesh.traverse((o) => {
-    if (o.isSprite && o.material) o.material.dispose();
-  });
+  const free = (o) => { if (o && o.isSprite && o.material) o.material.dispose(); };
+  // a Sprite has no traverse; a Group does. Both get here.
+  if (typeof mesh.traverse === 'function') mesh.traverse(free);
+  else free(mesh);
 }
 
 function clearPickups() {
@@ -911,6 +910,7 @@ function clearPickups() {
   game.pickups.length = 0;
   if (game.keycard) {
     dropMesh(game.keycard.mesh);
+    dropMesh(game.keycard.beacon);
     game.keycard = null;
   }
 }
@@ -934,7 +934,13 @@ function spawnKeycard() {
   const baseY = (level.cells[level.idx(Math.round(cell.wx / CELL), Math.round(cell.wz / CELL))] || { floor: 0 }).floor + 0.55;
   mesh.position.set(cell.wx, baseY, cell.wz);
   scene.add(mesh);
-  game.keycard = { mesh, x: cell.wx, z: cell.wz, baseY, t: 0 };
+  // the same light column the exit gets, so the keycard is findable
+  const beacon = glowSprite(0xffd24a, 0.8);
+  beacon.scale.set(0.7, 3.2, 0.7);
+  beacon.position.set(cell.wx, baseY + 1.6, cell.wz);
+  beacon.material.opacity = 0.5;
+  scene.add(beacon);
+  game.keycard = { mesh, beacon, x: cell.wx, z: cell.wz, baseY, t: 0 };
 }
 
 function updatePickups(dt) {
@@ -952,9 +958,7 @@ function updatePickups(dt) {
       hud.toast(PICKUP_DEFS[p.kind].toast);
       audio.play('pickup', { x: p.x, z: p.z });
       effects.burst({ x: p.x, y: p.baseY, z: p.z }, PICKUP_DEFS[p.kind].color, 8, 2.4, 0.4, 4);
-      scene.remove(p.mesh);
-      p.mesh.geometry.dispose();
-      p.mesh.material.dispose();
+      dropMesh(p.mesh);
       game.pickups.splice(i, 1);
     }
   }
@@ -964,14 +968,14 @@ function updatePickups(dt) {
     k.t += dt;
     k.mesh.rotation.y += dt * 2.2;
     k.mesh.position.y = k.baseY + Math.sin(k.t * 3) * 0.1;
+    if (k.beacon) k.beacon.material.opacity = 0.45 + Math.sin(k.t * 2.4) * 0.12;
     if (Math.hypot(k.x - player.pos.x, k.z - player.pos.z) < 1.2) {
       game.hasKey = true;
       hud.toast('KEYCARD ACQUIRED', 2.2);
       audio.play('key', { x: k.x, z: k.z });
       effects.burst({ x: k.x, y: k.baseY, z: k.z }, 0xffd24a, 14, 3, 0.5, 4);
-      scene.remove(k.mesh);
-      k.mesh.geometry.dispose();
-      k.mesh.material.dispose();
+      dropMesh(k.mesh);
+      dropMesh(k.beacon);
       game.keycard = null;
     }
   }

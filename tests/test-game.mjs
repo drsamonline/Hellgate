@@ -157,10 +157,11 @@ HG.enemies.list = [target];
 target.pos.set(spot.b.x, spot.b.floor, spot.b.z);
 HG.player.pos.set(spot.a.x, spot.a.floor, spot.a.z);
 HG.player.vel.set(0, 0, 0);
-aimAt(target.pos.x, target.pos.y + target.height * 0.55, target.pos.z);
-frames(1);
 keyDown('Digit1');
 frames(16);
+// aim at where it is now, not where it was 16 frames ago: an imp that wandered
+// out of the crosshair is the test's problem
+aimAt(target.pos.x, target.pos.y + target.height * 0.55, target.pos.z);
 const hp0 = target.hp;
 mouseDown();
 frames(6);

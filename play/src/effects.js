@@ -119,6 +119,17 @@ export class Effects {
     }
     this.ringCursor = 0;
 
+    // ---- flash sprites ---------------------------------------------------
+    this.flashes = [];
+    for (let i = 0; i < 6; i++) {
+      const sp = glowSprite(0xfff0c0, 0.4);
+      sp.material.opacity = 0;
+      sp.visible = false;
+      this.scene.add(sp);
+      this.flashes.push({ sprite: sp, t: 0, life: 0.06 });
+    }
+    this.flashCursor = 0;
+
     // ---- blade arcs ------------------------------------------------------
     this.slashes = [];
     const arcGeo = new THREE.RingGeometry(0.55, 1.0, 12, 1, -0.9, 1.8);
@@ -262,6 +273,30 @@ export class Effects {
     l.life = l.max = duration;
   }
 
+  /** A bright additive quad at the muzzle: the flash the point light cannot draw. */
+  muzzleFlash(pos, size = 0.42) {
+    const f = this.flashes[this.flashCursor % this.flashes.length];
+    this.flashCursor++;
+    f.sprite.position.set(pos.x, pos.y, pos.z);
+    f.sprite.scale.set(size, size, 1);
+    f.sprite.material.opacity = 0.95;
+    f.sprite.visible = true;
+    f.t = 0;
+    f.life = 0.06;
+  }
+
+  /** A small bright hit where a shot landed on a body. */
+  impact(pos, size = 0.3) {
+    const f = this.flashes[this.flashCursor % this.flashes.length];
+    this.flashCursor++;
+    f.sprite.position.set(pos.x, pos.y, pos.z);
+    f.sprite.scale.set(size, size, 1);
+    f.sprite.material.opacity = 0.9;
+    f.sprite.visible = true;
+    f.t = 0;
+    f.life = 0.1;
+  }
+
   /** The blade's arc: a thin wedge that sweeps where the swing went. */
   slash(origin, dir, reach = 2.4) {
     const s = this.slashes[this.slashCursor % this.slashes.length];
@@ -328,6 +363,13 @@ export class Effects {
   // ------------------------------------------------------------------ update
 
   update(dt) {
+    for (const f of this.flashes) {
+      if (!f.sprite.visible) continue;
+      f.t += dt;
+      const k = f.t / f.life;
+      if (k >= 1) { f.sprite.visible = false; f.sprite.material.opacity = 0; continue; }
+      f.sprite.material.opacity = 0.95 * (1 - k);
+    }
     for (const s of this.slashes) {
       if (!s.mesh.visible) continue;
       s.t += dt;

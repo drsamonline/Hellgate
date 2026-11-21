@@ -33,7 +33,7 @@ export const WEAPONS = [
   },
 ];
 
-const REST = new THREE.Vector3(0.26, -0.26, -0.55);
+const REST = new THREE.Vector3(0.24, -0.19, -0.55);
 
 /**
  * View models, firing, recoil and weapon switching.
@@ -84,47 +84,69 @@ export class Weapons {
       return mesh;
     };
 
-    // pistol
+    // a shared little vocabulary so the four guns read as one arsenal
+    const cyl = (rt, rb, len, m, x, y, z, rotX = Math.PI / 2) => {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, len, 8), m);
+      mesh.rotation.x = rotX;
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
+    const sight = (x, y, z, m = dark) => {
+      const g = new THREE.Group();
+      g.add(bx(0.012, 0.03, 0.012, m, -0.02, 0, 0));
+      g.add(bx(0.012, 0.03, 0.012, m, 0.02, 0, 0));
+      g.add(bx(0.05, 0.008, 0.012, m, 0, 0.022, 0));
+      g.position.set(x, y, z);
+      return g;
+    };
+
+    // ---- pistol: slide, grip, hammer, front sight
     const pistol = new THREE.Group();
-    pistol.add(bx(0.09, 0.1, 0.34, metal, 0, 0.02, -0.1));
-    pistol.add(bx(0.07, 0.19, 0.1, dark, 0, -0.13, 0.06));
-    pistol.add(bx(0.05, 0.05, 0.06, dark, 0, 0.08, 0.06));
+    pistol.add(bx(0.085, 0.085, 0.3, metal, 0, 0.03, -0.1));
+    pistol.add(bx(0.075, 0.02, 0.3, dark, 0, 0.075, -0.1));   // slide top
+    pistol.add(bx(0.07, 0.17, 0.09, dark, 0, -0.1, 0.07));    // grip
+    pistol.add(bx(0.05, 0.03, 0.05, metal, 0, 0.1, 0.03));    // hammer
+    pistol.add(cyl(0.018, 0.018, 0.08, dark, 0, 0.035, -0.28)); // muzzle
+    pistol.add(sight(0, 0.1, -0.2));
     this.models.push(pistol);
 
-    // chaingun: a fat barrel cluster on a boxy receiver
+    // ---- chaingun: receiver, six barrels, ammo box, carry handle
     const chain = new THREE.Group();
-    chain.add(bx(0.16, 0.15, 0.4, metal, 0, 0.0, -0.1));
-    for (const [ox, oy] of [[-0.045, -0.03], [0.045, -0.03], [-0.045, 0.05], [0.045, 0.05]]) {
-      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.42, 6), dark);
+    chain.add(bx(0.17, 0.15, 0.38, metal, 0, 0.0, -0.08));
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.44, 6), dark);
       b.rotation.x = Math.PI / 2;
-      b.position.set(ox, oy, -0.34);
+      b.position.set(Math.cos(a) * 0.048, Math.sin(a) * 0.048 + 0.02, -0.36);
       chain.add(b);
     }
-    chain.add(bx(0.06, 0.12, 0.08, dark, 0, -0.12, 0.06));
+    chain.add(cyl(0.062, 0.062, 0.05, metal, 0, 0.02, -0.14)); // barrel bearing
+    chain.add(bx(0.06, 0.13, 0.09, dark, 0, -0.12, 0.06));     // grip
+    chain.add(bx(0.11, 0.09, 0.14, dark, 0.12, -0.06, 0.02));  // ammo box
+    chain.add(bx(0.09, 0.02, 0.09, metal, 0, 0.1, -0.04));     // carry handle
+    chain.add(sight(0, 0.14, -0.12));
     this.models.push(chain);
 
-    // shotgun
+    // ---- shotgun: twin barrel, pump, wooden stock, bead sight
     const shotgun = new THREE.Group();
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.62, 8), metal);
-    barrel.rotation.x = Math.PI / 2;
-    barrel.position.set(0, 0.03, -0.16);
-    shotgun.add(barrel);
-    const pump = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.2, 8), dark);
-    pump.rotation.x = Math.PI / 2;
-    pump.position.set(0, 0.0, -0.08);
-    shotgun.add(pump);
-    shotgun.add(bx(0.1, 0.1, 0.22, wood, 0, -0.05, 0.16));
-    shotgun.add(bx(0.08, 0.16, 0.09, wood, 0, -0.14, 0.24));
+    shotgun.add(cyl(0.042, 0.042, 0.62, metal, -0.026, 0.035, -0.16));
+    shotgun.add(cyl(0.042, 0.042, 0.62, metal, 0.026, 0.035, -0.16));
+    shotgun.add(bx(0.11, 0.06, 0.34, dark, 0, 0.0, -0.02));    // receiver
+    shotgun.add(cyl(0.058, 0.058, 0.19, wood, 0, -0.005, -0.1)); // pump
+    shotgun.add(bx(0.09, 0.09, 0.2, wood, 0, -0.05, 0.17));    // stock
+    shotgun.add(bx(0.08, 0.15, 0.08, wood, 0, -0.13, 0.25));   // grip
+    shotgun.add(bx(0.006, 0.012, 0.006, metal, 0, 0.085, -0.44)); // bead
     this.models.push(shotgun);
 
-    // rocket launcher
+    // ---- rocket launcher: tube, cone, two grips, top rail
     const rocket = new THREE.Group();
-    const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.11, 0.66, 10), dark);
-    tube.rotation.x = Math.PI / 2;
-    tube.position.set(0, 0.02, -0.14);
-    rocket.add(tube);
-    rocket.add(bx(0.07, 0.17, 0.1, metal, 0, -0.13, 0.02));
-    rocket.add(bx(0.05, 0.08, 0.12, metal, 0, 0.13, -0.02));
+    rocket.add(cyl(0.1, 0.11, 0.62, dark, 0, 0.02, -0.14));
+    rocket.add(cyl(0.115, 0.115, 0.06, metal, 0, 0.02, -0.42));  // muzzle ring
+    rocket.add(cyl(0.1, 0.085, 0.1, metal, 0, 0.02, 0.2));       // back blast
+    rocket.add(bx(0.06, 0.16, 0.1, metal, 0, -0.13, 0.04));      // front grip
+    rocket.add(bx(0.06, 0.14, 0.09, metal, 0, -0.12, -0.16));    // rear grip
+    rocket.add(bx(0.04, 0.03, 0.3, dark, 0, 0.12, -0.1));        // top rail
+    rocket.add(sight(0, 0.16, -0.16));
     this.models.push(rocket);
 
     for (const m of this.models) {
@@ -199,6 +221,7 @@ export class Weapons {
 
     this.effects.flash(muzzle, 0xffcc88, 9, 0.06, 14);
     this.effects.muzzleSmoke(muzzle, baseDir);
+    this.effects.muzzleFlash(muzzle, w.melee ? 0.3 : 0.42);
 
     if (w.projectile) {
       projectiles.spawn('rocket', muzzle, baseDir, { damage: w.damage, owner: 'player' });
@@ -234,6 +257,7 @@ export class Weapons {
         }
         this.effects.tracer(muzzle, eh.point, 0xffe0a0);
         this.effects.burst(eh.point, 0xaa1010, 4, 3, 0.4, 14);
+        this.effects.impact(eh.point, 0.34);
         if (killed) this.audio.play('hit');
       } else if (ctx.damageBarrels && ctx.damageBarrels(origin, dir, maxD, w.damage)) {
         // the barrel took it; its own explosion does the rest
