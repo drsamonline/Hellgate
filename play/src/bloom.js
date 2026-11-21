@@ -54,15 +54,32 @@ const COMPOSITE = `
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
 uniform float strength;
+uniform vec3 tint;       // per-zone colour: the whole frame leans this way
+uniform float saturation; // 1 is untouched, below 1 drains, above 1 pushes
+uniform float vignette;   // how much the corners fall off
 varying vec2 vUv;
 void main() {
   vec3 base = texture2D(tScene, vUv).rgb;
   vec3 glow = texture2D(tBloom, vUv).rgb;
   vec3 lin = base + glow * strength;
+
+  // grade: tint, then saturation about the luminance
+  lin *= tint;
+  float luma = dot(lin, vec3(0.2126, 0.7152, 0.0722));
+  lin = mix(vec3(luma), lin, saturation);
+
+  // vignette: a soft falloff from the centre, strongest in the corners
+  vec2 d = vUv - 0.5;
+  float v = 1.0 - dot(d, d) * vignette * 1.9;
+  lin *= clamp(v, 0.0, 1.0);
+
   vec3 srgb = pow(max(lin, 0.0), vec3(1.0 / 2.2));
   gl_FragColor = vec4(srgb, 1.0);
 }
 `;
+
+/** The grade a frame gets when nobody set one. */
+export const DEFAULT_GRADE = { tint: [1, 1, 1], saturation: 1, vignette: 0.35 };
 
 /** A two-target bloom pass: bright pass at quarter res, two blurs, composite. */
 export class Bloom {
@@ -71,6 +88,7 @@ export class Bloom {
     this.enabled = opts.enabled !== false;
     this.strength = opts.strength != null ? opts.strength : 1.15;
     this.threshold = opts.threshold != null ? opts.threshold : 0.72;
+    this.grade = opts.grade || DEFAULT_GRADE;
 
     const qw = Math.max(1, Math.floor(width / 4));
     const qh = Math.max(1, Math.floor(height / 4));
@@ -105,9 +123,17 @@ export class Bloom {
         tScene: { value: null },
         tBloom: { value: null },
         strength: { value: this.strength },
+        tint: { value: new THREE.Vector3(1, 1, 1) },
+        saturation: { value: 1 },
+        vignette: { value: 0.35 },
       },
       vertexShader: VERT, fragmentShader: COMPOSITE, depthTest: false, depthWrite: false,
     });
+  }
+
+  /** The colour grade for the current zone: tint, saturation, vignette. */
+  setGrade(grade) {
+    this.grade = grade || DEFAULT_GRADE;
   }
 
   setSize(width, height) {
@@ -160,9 +186,13 @@ export class Bloom {
     this.blurMat.uniforms.dir.value.set(0, 1 / h);
     this.pass(this.blurMat, this.blurB);
 
+    const g = this.grade || DEFAULT_GRADE;
     this.compMat.uniforms.tScene.value = this.sceneTarget.texture;
     this.compMat.uniforms.tBloom.value = this.blurB.texture;
     this.compMat.uniforms.strength.value = this.strength;
+    this.compMat.uniforms.tint.value.set(g.tint[0], g.tint[1], g.tint[2]);
+    this.compMat.uniforms.saturation.value = g.saturation;
+    this.compMat.uniforms.vignette.value = g.vignette;
     this.quad.material = this.compMat;
     r.setRenderTarget(null);
     r.clear();

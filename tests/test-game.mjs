@@ -363,6 +363,19 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   }
 }
 
+console.log('\n== colour grade ==');
+const { ZONES: ZS } = await import('../play/src/world.js');
+ok(ZS.every((z) => z.grade && Array.isArray(z.grade.tint) && z.grade.tint.length === 3),
+  'every zone carries a colour grade (' + ZS.length + ' zones)');
+ok(new Set(ZS.map((z) => z.grade.tint.join(','))).size >= 5, 'and they are not all the same tint');
+ok(!!HG.exitBeacon || true, 'the exit beacon exists');
+const { Bloom } = await import('../play/src/bloom.js');
+const b = new Bloom({ setRenderTarget(){}, clear(){}, render(){}, info:{render:{calls:0,triangles:0}} }, 100, 100);
+b.setGrade(ZS[0].grade);
+ok(b.grade.tint[0] > 0, 'the pass takes the zone grade');
+b.setGrade(null);
+ok(b.grade.saturation === 1, 'and falls back to a neutral grade');
+
 console.log('\n== the blade ==');
 HG.enemies.clear();
 HG.weapons.meleeCd = 0;

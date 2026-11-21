@@ -270,7 +270,11 @@ export class CanvasTexture {
 }
 
 export class SpriteMaterial {
-  constructor(o = {}) { Object.assign(this, o); }
+  constructor(o = {}) {
+    Object.assign(this, o);
+    this.color = new Color(o.color != null ? o.color : 0xffffff);
+    this.userData = {};
+  }
   dispose() {}
 }
 

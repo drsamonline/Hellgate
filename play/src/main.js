@@ -123,6 +123,7 @@ let props = null;
 let companion = null;
 let lore = null;
 let minimap = null;
+let exitBeacon = null;
 let bloom = null;
 const music = new Music(audio);
 const cinematic = new Cinematic(camera, {
@@ -304,6 +305,7 @@ function getDecals() {
 
 function disposeRun() {
   if (!scene) return;
+  if (exitBeacon) { scene.remove(exitBeacon); exitBeacon = null; }
   scene.traverse((o) => {
     const geo = o.geometry;
     if (geo && !(geo.userData && geo.userData.shared) && !geo.__disposed) {
@@ -377,6 +379,16 @@ function buildRun(seed, zoneDef) {
   game.crateMeshes = (levelMeshes && levelMeshes.crateMeshes) || [];
   game.barrels = [];
   spawnBarrels();
+  if (bloom) bloom.setGrade(zone.grade);
+
+  // a light column over the exit pad: the one thing you should be able to find
+  // from across a dark room without reading the HUD
+  exitBeacon = glowSprite(0xff3b30, 1.0);
+  exitBeacon.scale.set(1.1, 7, 1);
+  exitBeacon.position.set(level.exit.x, floorHeightAt(level, level.exit.x, level.exit.z) + 3.2, level.exit.z);
+  exitBeacon.material.opacity = 0.55;
+  scene.add(exitBeacon);
+
   const mmCanvas = document.getElementById('minimap');
   if (mmCanvas) minimap = new Minimap(mmCanvas, level);
   props = new Props(scene, level, zone);
@@ -669,7 +681,10 @@ function applyBloom() {
     const h = canvas.clientHeight || window.innerHeight;
     bloom = new Bloom(renderer, w, h, { strength: 1.15, threshold: 0.72 });
   }
-  if (bloom) bloom.enabled = want;
+  if (bloom) {
+    bloom.setGrade(zone && zone.grade);
+    bloom.enabled = want;
+  }
 }
 
 function applySettings() {
@@ -1248,6 +1263,16 @@ function throwGrenade() {
   projectiles.spawn('grenade', from, dir, { vy: 3.4, owner: 'player' });
   audio.play('pickup');
   hud.toast('GRENADE  ·  ' + player.grenades + ' LEFT', 1.4);
+}
+
+/** The exit beacon leans green the moment the pad opens. */
+function updateBeacon(dt) {
+  if (!exitBeacon) return;
+  const t = performance.now() * 0.001;
+  exitBeacon.material.opacity = (game.exitOpen ? 0.75 : 0.4) + Math.sin(t * 2.2) * 0.12;
+  const s = game.exitOpen ? 1.5 : 1.0;
+  exitBeacon.scale.set(s, 6.5 + Math.sin(t * 1.4) * 0.4, s);
+  exitBeacon.material.color.setHex(game.exitOpen ? 0x39ff9a : 0xff3b30);
 }
 
 function objectiveLine() {
@@ -1882,6 +1907,7 @@ function update(dt) {
   updateDoors(dt);
   updateTension(dt);
   updateMusic(dt);
+  updateBeacon(dt);
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {

@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.43.0 — 2026-11-21
+
+**A colour grade per zone, and a light column over the exit**
+
+The composite pass now takes three more uniforms — a tint, a saturation and a vignette — and every zone
+carries its own:
+
+| Zone | Tint | Saturation | Vignette | Reads as |
+| --- | --- | --- | --- | --- |
+| The Gate | neutral, warm | 1.05 | 0.42 | cold brick |
+| The Foundry | amber | 1.10 | 0.40 | heat and dust |
+| The Grove | green | 1.12 | 0.36 | alive |
+| Ashfall | grey | 0.86 | 0.46 | drained |
+| The Cistern | blue | 0.95 | 0.42 | wet and cold |
+| The Vault | cool | 0.92 | 0.48 | sealed |
+| The Kiln | deep orange | 1.16 | 0.44 | hot |
+| The Throne | red | 1.20 | 0.50 | the end |
+
+The grade rides on the composite, so `Graphics: Performance` (which drops bloom) keeps the flat colour —
+one pass, one place.
+
+**The exit beacon** — a soft light column over the pad, red while the exit is shut and green the moment it
+opens, pulsing slowly. It is the one thing you should be able to find from across a dark room without
+reading the HUD.
+
+**The three new zones were too dark to play.** Measured in a screenshot, not by feel: the Kiln's tech
+walls and 0.5 ambient rendered as near-black with orange dots. Ambient up, fog lighter, and the Kiln now
+uses the brick set. It reads as a warm brick corridor instead of a cave.
+
+**Test double** — `SpriteMaterial` had no `color`, so the first sprite that tried to change colour threw.
+
+
 ## 1.42.0 — 2026-11-21
 
 **The blade: a run with no ammo is still a run**
