@@ -157,6 +157,13 @@ export class Weapons {
     }
   }
 
+  /** Scale the view model for the aspect: a portrait phone gets a smaller gun. */
+  setAspectScale(k) {
+    if (!Number.isFinite(k) || k <= 0) return;
+    this.aspectScale = k;
+    for (const m of this.models) m.scale.setScalar(k);
+  }
+
   buildMuzzleFlash() {
     const g = new THREE.Group();
     const mat = new THREE.MeshBasicMaterial({ color: 0xffd08a, transparent: true, opacity: 0.95, depthWrite: false });

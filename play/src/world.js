@@ -9,6 +9,7 @@
 export const ZONES = [
   {
     id: 'gate',
+    wallTint: [1.0, 0.97, 0.92],
     grade: { tint: [1.02, 1.0, 0.96], saturation: 1.05, vignette: 0.42 },
     name: 'THE GATE',
     seed: 'gate-238',
@@ -26,6 +27,7 @@ export const ZONES = [
   },
   {
     id: 'foundry',
+    wallTint: [1.12, 0.92, 0.78],
     grade: { tint: [1.06, 1.0, 0.92], saturation: 1.1, vignette: 0.4 },
     name: 'THE FOUNDRY',
     seed: 'foundry-101',
@@ -43,6 +45,7 @@ export const ZONES = [
   },
   {
     id: 'grove',
+    wallTint: [0.88, 1.05, 0.9],
     grade: { tint: [0.96, 1.04, 0.98], saturation: 1.12, vignette: 0.36 },
     name: 'THE GROVE',
     seed: 'grove-234',
@@ -60,6 +63,7 @@ export const ZONES = [
   },
   {
     id: 'vault',
+    wallTint: [0.9, 0.96, 1.06],
     grade: { tint: [0.99, 1.0, 1.05], saturation: 0.92, vignette: 0.48 },
     name: 'THE VAULT',
     seed: 'vault-199',
@@ -77,6 +81,7 @@ export const ZONES = [
   },
   {
     id: 'ashfall',
+    wallTint: [1.05, 1.0, 0.95],
     grade: { tint: [1.04, 0.99, 0.94], saturation: 0.86, vignette: 0.46 },
     name: 'ASHFALL',
     seed: 'ashfall-187',
@@ -94,6 +99,7 @@ export const ZONES = [
   },
   {
     id: 'cistern',
+    wallTint: [0.82, 1.0, 1.08],
     grade: { tint: [0.92, 1.02, 1.08], saturation: 0.95, vignette: 0.42 },
     name: 'THE CISTERN',
     seed: 'cistern-32',
@@ -111,6 +117,7 @@ export const ZONES = [
   },
   {
     id: 'kiln',
+    wallTint: [1.18, 0.86, 0.74],
     grade: { tint: [1.1, 0.94, 0.88], saturation: 1.16, vignette: 0.44 },
     name: 'THE KILN',
     seed: 'kiln-112',
@@ -128,6 +135,7 @@ export const ZONES = [
   },
   {
     id: 'throne',
+    wallTint: [1.15, 0.78, 0.78],
     grade: { tint: [1.08, 0.9, 0.9], saturation: 1.2, vignette: 0.5 },
     name: 'THE THRONE',
     seed: 'throne-173',

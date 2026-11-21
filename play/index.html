@@ -371,9 +371,29 @@
     .pslot{min-width:48px;padding:2px 4px}
     .pslot b{font-size:8px}
     .pslot span{font-size:7px}
-    #topbar{font-size:9px;gap:8px;padding:5px 8px;flex-wrap:wrap}
-    #relics{font-size:9px}
-    .dmgnum{
+    #topbar{font-size:8px;gap:6px;padding:4px 6px;flex-wrap:nowrap;overflow:hidden}
+    #relics{font-size:8px;top:34px;left:10px}
+    /* on a phone the HUD keeps the three numbers you act on and drops the rest */
+    #keycard{display:none}
+    #objective{font-size:9px;padding:3px 9px;top:64px;letter-spacing:.16em}
+    #objective.bossed{top:92px}
+    #waypoint{font-size:9px;top:110px;letter-spacing:.14em}
+    #compass{top:128px}
+    .pslot{min-width:40px}
+    .pslot b{font-size:7px}
+    .pslot span{display:none}
+  }
+  /* very small phones and landscape: fewer rows, bigger numbers */
+  @media (max-width:420px), (max-height:480px){
+    #bottombar{width:calc(100vw - 12px);padding:4px 6px;gap:4px}
+    #bottombar .stat b{font-size:13px}
+    #bottombar .stat .label{font-size:6px}
+    #minimap{width:78px;height:78px}
+    #tBtns{grid-template-columns:repeat(5,38px);grid-template-rows:repeat(2,38px);gap:5px}
+    #tBtns button{width:38px;height:38px;font-size:8px}
+    #objective{font-size:8px;padding:2px 8px}
+  }
+  .dmgnum{
     position:fixed;transform:translate(-50%,-50%);pointer-events:none;z-index:9;
     font-family:var(--mono);font-size:14px;letter-spacing:.04em;color:#ffd9a8;
     text-shadow:0 2px 6px #000;animation:dmgFloat .7s ease-out forwards;
@@ -424,7 +444,8 @@
   .feedrow i{font-style:normal;color:#ff3b30}
   .feedrow.fade{opacity:0}
 
-  #prompt{bottom:calc(240px + env(safe-area-inset-bottom))}
+  @media (max-width:620px){
+    #prompt{bottom:calc(240px + env(safe-area-inset-bottom))}
     #bossbar{top:44px;width:86vw}
   }
   @media (max-height:420px){

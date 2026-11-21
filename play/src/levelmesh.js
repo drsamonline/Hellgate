@@ -13,7 +13,11 @@ const FLOOR_KEY = ['floor_tile', 'floor_plate'];
 /**
  * Turn the sector grid into merged geometry with baked vertex shade, plus the door boxes and the exit pad.
  */
-export function buildLevelMeshes(level, mats) {
+export function buildLevelMeshes(level, mats, zone) {
+  // every zone leans the same geometry a different way: the vertex colours are
+  // shading only, so multiplying them by a zone tint is what makes the foundry
+  // rust and the cistern teal out of the same bricks
+  const T = (zone && zone.wallTint) || [1, 1, 1];
   // Geometry is bucketed by (chunk, texture) so a chunk can be culled. Measured
   // on this arena at 1280x720: 4x4-cell chunks cost 255 draw calls against 117
   // for one mesh per texture, because the level is small enough that almost
@@ -60,7 +64,7 @@ export function buildLevelMeshes(level, mats) {
     const sh = shades || [1, 1, 1, 1];
     for (let i = 0; i < 4; i++) {
       const v = Math.max(0, Math.min(1, sh[i]));
-      bk.c.push(v, v, v);
+      bk.c.push(v * T[0], v * T[1], v * T[2]);
     }
     bk.i.push(base, base + 1, base + 2, base, base + 2, base + 3);
   }

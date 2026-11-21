@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.45.0 — 2026-11-21
+
+**A palette per zone, not just a tint over the same bricks**
+
+The level geometry's vertex colours are shading only, so every zone drew the same walls. They are now
+multiplied by a per-zone `wallTint`, which means the foundry rusts, the cistern goes teal and the kiln
+goes orange out of the same geometry and the same five textures:
+
+| Zone | wallTint | Reads as |
+| --- | --- | --- |
+| The Gate | `[1.0, 0.97, 0.92]` | warm brick |
+| The Foundry | `[1.12, 0.92, 0.78]` | rust |
+| The Grove | `[0.88, 1.05, 0.9]` | moss |
+| The Vault | `[0.9, 0.96, 1.06]` | steel |
+| Ashfall | `[1.05, 1.0, 0.95]` | ash |
+| The Cistern | `[0.82, 1.0, 1.08]` | teal |
+| The Kiln | `[1.18, 0.86, 0.74]` | firebrick |
+| The Throne | `[1.15, 0.78, 0.78]` | blood |
+
+**It is brighter, and it cannot be too dark**
+
+- ambient light has a floor of 0.62, whatever a zone asks for: a corridor you cannot see is broken, not
+  atmospheric
+- a point light travels with the player, 3.5 m ahead and 2.4 m up, so the thing in front of you is lit
+- the hemisphere light is up from 0.95 to 1.05
+
+**The HUD on a phone**
+
+Measured at 390x844 and 360x640 before and after: the objective pill is 215x21 and fits, the keycard chip
+is hidden, the power slots drop their labels and keep their keys, the touch grid drops to 38 px buttons on
+the smallest screens, and the whole bar is 82 px tall instead of eating a third of the screen.
+
+**The gun no longer eats a portrait screen**
+
+The view model scales with the aspect ratio, clamped to 0.55, and re-applies on resize — a phone held
+sideways and turned upright gets the right size without a reload.
+
+
 ## 1.44.0 — 2026-11-21
 
 **The guns look like guns**

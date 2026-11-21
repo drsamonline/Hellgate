@@ -32,6 +32,8 @@ import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from 
 
 // ---------------------------------------------------------------- renderer --
 const canvas = document.getElementById('game');
+let fillLight = null;
+
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
@@ -59,8 +61,15 @@ function newScene(z) {
   const s = new THREE.Scene();
   s.background = new THREE.Color(fog);
   s.fog = new THREE.Fog(fog, 9, 32);
-  s.add(new THREE.AmbientLight(0xffffff, z ? z.ambient : 0.55));
-  s.add(new THREE.HemisphereLight(z ? z.sky : 0x9fb4c8, z ? z.ground : 0x6a5540, 0.95));
+  // never darker than this, whatever the zone says: a corridor you cannot see
+  // is not atmospheric, it is broken
+  s.add(new THREE.AmbientLight(0xffffff, Math.max(0.62, z ? z.ambient : 0.62)));
+  s.add(new THREE.HemisphereLight(z ? z.sky : 0x9fb4c8, z ? z.ground : 0x6a5540, 1.05));
+  // a soft light that travels with the player: the thing in front of you is lit
+  // even in a room the zone light has given up on
+  fillLight = new THREE.PointLight(0xfff2e0, 0.9, 22, 1.6);
+  fillLight.position.set(0, 2, 0);
+  s.add(fillLight);
   const d = new THREE.DirectionalLight(0xffd9b0, 0.3);
   d.position.set(1, 2, 0.6);
   s.add(d);
@@ -350,7 +359,7 @@ function buildRun(seed, zoneDef) {
   const mats = getMats();
   mats['pad'].color.setHex(0x552222);
   mats['pad'].opacity = 1;
-  levelMeshes = buildLevelMeshes(level, mats);
+  levelMeshes = buildLevelMeshes(level, mats, zone);
   scene.add(levelMeshes.group);
 
   effects = new Effects(scene, getDecals());
@@ -688,6 +697,12 @@ function applyBloom() {
 function applySettings() {
   camera.fov = settings.fov;
   camera.updateProjectionMatrix();
+  // a portrait phone sees the same model in a much narrower frustum, so the gun
+  // fills a third of the screen unless it is scaled down with the aspect
+  if (weapons && weapons.setAspectScale) {
+    const a = (canvas.clientWidth || window.innerWidth) / (canvas.clientHeight || window.innerHeight);
+    weapons.setAspectScale(Math.min(1, Math.max(0.55, a / 1.6)));
+  }
   player.sensitivity = settings.sensitivity;
   player.reducedMotion = settings.reducedMotion;
   if (effects) effects.reducedMotion = settings.reducedMotion;
@@ -1270,6 +1285,14 @@ function throwGrenade() {
 }
 
 /** The exit beacon leans green the moment the pad opens. */
+/** The fill light follows the player, a little ahead and above. */
+function updateFillLight() {
+  if (!fillLight) return;
+  const fx = -Math.sin(player.yaw);
+  const fz = -Math.cos(player.yaw);
+  fillLight.position.set(player.pos.x + fx * 3.5, player.pos.y + 2.4, player.pos.z + fz * 3.5);
+}
+
 function updateBeacon(dt) {
   if (!exitBeacon) return;
   const t = performance.now() * 0.001;
@@ -1841,6 +1864,10 @@ function updateDebug(dt) {
 }
 
 window.addEventListener('resize', () => {
+  if (weapons && weapons.setAspectScale) {
+    const a = (canvas.clientWidth || window.innerWidth) / (canvas.clientHeight || window.innerHeight);
+    weapons.setAspectScale(Math.min(1, Math.max(0.55, a / 1.6)));
+  }
   const w = window.innerWidth;
   const h = window.innerHeight;
   renderer.setSize(w, h, false);
@@ -1912,6 +1939,7 @@ function update(dt) {
   updateTension(dt);
   updateMusic(dt);
   updateBeacon(dt);
+  updateFillLight();
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {
