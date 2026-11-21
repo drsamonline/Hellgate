@@ -307,7 +307,7 @@ const MAX_CORPSES = 12;
 // Distance past which an enemy is drawn as one box instead of ten parts. The
 // bodies are ~10 meshes each, which is where the draw calls go: at 22 m you
 // cannot tell a limb from a slab, and the frame gets 9 calls back per enemy.
-const LOD_DIST = 22;
+const LOD_DIST = 15;
 const PROXY_GEO = new THREE.BoxGeometry(1, 1, 1);
 // One proxy material per type colour: a distant enemy is one slab, but it is a
 // red slab for an imp and a cyan one for a wisp, so you can still tell what is

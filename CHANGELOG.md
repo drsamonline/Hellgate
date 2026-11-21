@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.49.1 — 2026-11-21
+
+**The rig cost more draw calls than the budget allowed**
+
+1.49.0 failed CI: 143 calls against a 140 budget. A rig body is 19-23 parts where the old compound body
+was 10, and six enemies on screen is the difference. The level-of-detail distance drops from 22 m to 15 m,
+so more of a wave is one coloured slab instead of twenty meshes. Measured after: 86 calls in the same
+scenario, and the budget still catches a regression.
+
+
 ## 1.49.0 — 2026-11-21
 
 **Pose blending on the rig**
@@ -15,6 +25,11 @@ of an animation blend tree:
 The blend is a lerp toward a target at 9-12 per second, so a state change reads as movement rather than a
 snap. This is the idea behind the Three.js blending examples applied to joints instead of skinned
 vertices: same principle, no skinning.
+
+**Level of detail tightened to pay for the rig** — the rig is 19-23 parts per body where the old bodies
+were 10, and the CI draw-call budget caught it at 143 calls. The distance at which an enemy becomes a
+single coloured slab drops from 22 m to 15 m, which brings the frame back to 86 calls in the same
+scenario.
 
 **The kit got the four reusable pieces** — `game-kit` 1.9.0 now has `flowField`, `pool`, `minimap` and
 `audio.gen`, extracted from this game. Details are in that repository's changelog.
