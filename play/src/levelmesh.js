@@ -195,23 +195,35 @@ export function buildLevelMeshes(level, mats, zone) {
   for (const d of level.doors) {
     const dc = level.cells[d.z * level.W + d.x];
     const h = dc.ceil - dc.floor;
-    // A bulkhead panel that faces the corridor. If the corridor runs along X you
-    // walk through in X, so the door must be THIN in X and wide in Z — getting
-    // this backwards makes a door that lies along the corridor and blocks
-    // nothing, which reads as a slab hanging in the air.
-    const openX = !(level.cells[d.z * level.W + (d.x - 1)] || { solid: true }).solid
-      || !(level.cells[d.z * level.W + (d.x + 1)] || { solid: true }).solid;
-    const corridorAlongX = openX;
+    // A bulkhead panel sits ACROSS the way you walk through it. The reliable way
+    // to know which way that is: find the neighbour that belongs to the exit
+    // room. You walk from the corridor into the room along that axis, so the
+    // panel is thin along it. Guessing from "which neighbour is open" is wrong —
+    // the room itself is open, and it is not the corridor.
+    const cellAt = (x, z) => level.cells[z * level.W + x] || { solid: true, room: -1 };
+    const intoX = cellAt(d.x - 1, d.z).room === level.exitRoom || cellAt(d.x + 1, d.z).room === level.exitRoom;
+    const intoZ = cellAt(d.x, d.z - 1).room === level.exitRoom || cellAt(d.x, d.z + 1).room === level.exitRoom;
+    // if the room is on the X side you walk through in X: thin in X
+    const thinX = intoX || !intoZ;
     const geo = new THREE.BoxGeometry(
-      corridorAlongX ? 0.34 : CELL * 0.96,   // thin across the corridor
+      thinX ? 0.34 : CELL * 0.96,
       h,
-      corridorAlongX ? CELL * 0.96 : 0.34    // wide across the corridor
+      thinX ? CELL * 0.96 : 0.34
     );
     const mesh = new THREE.Mesh(geo, mats['door_plain'] || mats['door']);
     mesh.position.set(d.x * CELL, dc.floor + h / 2, d.z * CELL);
     mesh.userData.height = h;
     mesh.userData.baseY = dc.floor + h / 2;
     mesh.visible = true;
+    // a lamp on the door: red while it is locked, green when it opens, so the
+    // state is readable from down the corridor
+    const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.12), new THREE.MeshBasicMaterial({ color: 0xff3b30 }));
+    // proud of the face, or the lamp is buried inside the panel and never seen
+    lamp.position.set(0, h / 2 - 0.42, thinX ? 0 : 0.23);
+    if (thinX) lamp.rotation.y = Math.PI / 2;
+    lamp.userData.lamp = true;
+    mesh.add(lamp);
+    mesh.userData.lamp = lamp;
     group.add(mesh);
     doorMeshes.push(mesh);
   }

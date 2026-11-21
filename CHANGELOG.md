@@ -1,5 +1,40 @@
 # Changelog
 
+## 1.52.0 — 2026-11-21
+
+**The door axis, third attempt, and this one is right**
+
+1.49.2 decided the door's orientation by "which neighbour is open". That is the wrong question: the exit
+room itself is open, and it is not the corridor. A door beside the room concluded "the corridor runs
+along X" and lay flat again.
+
+The right question is "which neighbour is the room". You walk from the corridor into the room along that
+axis, so the panel is thin along it:
+
+```js
+const intoX = cellAt(d.x - 1, d.z).room === level.exitRoom || cellAt(d.x + 1, d.z).room === level.exitRoom;
+const intoZ = cellAt(d.x, d.z - 1).room === level.exitRoom || cellAt(d.x, d.z + 1).room === level.exitRoom;
+const thinX = intoX || !intoZ;
+```
+
+Verified for every door in the first four zones: room on Z → thin in Z, room on X → thin in X, zero
+misaligned. Captured in the browser in both corridor directions.
+
+**A locked door now says it is locked**
+
+| Change | Detail |
+| --- | --- |
+| Lock lamp | A lamp on the door face: red while locked, green when the wave clears |
+| Toast | Walking within 3 m of a locked door shows `LOCKED · CLEAR THE WAVE` and plays the door sound, at most once every 3 s |
+
+The door is locked because the wave is not clear. Standing in front of it guessing is the most common way
+to think the level is broken, so the game now says it.
+
+**Spawn positions do vary** — measured per zone: gate (50, 50), foundry (20, 20), grove (38, 40), vault
+(58, 44), ashfall (32, 36), cistern (10, 24), kiln (36, 36), throne (46, 44). If a level still starts in
+the same room every time, that is a different bug and I need to know which zone.
+
+
 ## 1.51.1 — 2026-11-21
 
 **A test that failed only in CI**

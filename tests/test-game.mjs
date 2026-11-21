@@ -409,22 +409,24 @@ const d0 = dm[0];
 ok(d0.userData.height > 1.5, 'a door knows its own height (' + d0.userData.height.toFixed(1) + ' m)');
 const size = d0.geometry.parameters || {};
 ok(Math.min(size.width || 1, size.depth || 1) <= 0.5, 'a door is a thin panel, not a cube');
-// the thin axis must face across the corridor: a door lying along the corridor
-// blocks nothing and reads as a slab hanging in the air
+// The panel must be thin along the axis that leads into the exit room: that is
+// the way you walk through it. "Which neighbour is open" is the wrong question —
+// the room itself is open.
 const doorLevel = HG.level;
 let misaligned = 0;
 for (let i = 0; i < dm.length; i++) {
   const d = doorLevel.doors[i];
   if (!d) continue;
-  const cellAt = (x, z) => doorLevel.cells[z * doorLevel.W + x] || { solid: true };
-  const openX = !cellAt(d.x - 1, d.z).solid || !cellAt(d.x + 1, d.z).solid;
-  const openZ = !cellAt(d.x, d.z - 1).solid || !cellAt(d.x, d.z + 1).solid;
+  const at = (x, z) => doorLevel.cells[z * doorLevel.W + x] || { solid: true, room: -1 };
+  const intoX = at(d.x - 1, d.z).room === doorLevel.exitRoom || at(d.x + 1, d.z).room === doorLevel.exitRoom;
+  const intoZ = at(d.x, d.z - 1).room === doorLevel.exitRoom || at(d.x, d.z + 1).room === doorLevel.exitRoom;
   const p2 = dm[i].geometry.parameters || {};
   const thin = (p2.width || 1) < (p2.depth || 1) ? 'x' : 'z';
-  const corridor = openX && !openZ ? 'x' : (!openX && openZ ? 'z' : 'both');
-  if (corridor !== 'both' && corridor !== thin) misaligned++;
+  if ((intoX && thin !== 'x') || (intoZ && thin !== 'z')) misaligned++;
 }
-ok(misaligned === 0, 'every door faces across its corridor (' + misaligned + ' misaligned)');
+ok(misaligned === 0, 'every door is thin along the way into its room (' + misaligned + ' misaligned)');
+ok(dm.every((m) => !!m.userData.lamp), 'every door has a lock lamp');
+ok(dm[0].userData.lamp.material.color.getHex() !== 0x39ff9a, 'and it is not green while the door is shut');
 HG.openExit && HG.openExit();
 frames(40);
 ok(dm.every((m) => !m.visible || m.userData.slide === 0), 'every door finishes opening');

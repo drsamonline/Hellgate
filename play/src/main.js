@@ -638,6 +638,7 @@ function startWave(n) {
     m.userData.slide = 0;
     m.userData.opening = false;
     m.position.y = m.userData.baseY != null ? m.userData.baseY : m.position.y;
+    if (m.userData.lamp) m.userData.lamp.material.color.setHex(0xff3b30);
   });
   getMats()['pad'].color.setHex(0x552222);
 
@@ -1012,6 +1013,7 @@ function openExit() {
   for (const m of levelMeshes.doorMeshes) {
     m.userData.slide = 0;
     m.userData.opening = true;
+    if (m.userData.lamp) m.userData.lamp.material.color.setHex(0x39ff9a);
   }
   getMats()['pad'].color.setHex(0x39ff9a);
   audio.play('door');
@@ -1304,6 +1306,27 @@ function throwGrenade() {
   projectiles.spawn('grenade', from, dir, { vy: 3.4, owner: 'player' });
   audio.play('pickup');
   hud.toast('GRENADE  ·  ' + player.grenades + ' LEFT', 1.4);
+}
+
+/**
+ * Say it out loud when the player walks into a locked door: the door is locked
+ * because the wave is not clear, and standing in front of it guessing is the
+ * most common way to think the level is broken.
+ */
+let lockedDoorT = 0;
+function checkLockedDoors(dt) {
+  lockedDoorT -= dt;
+  if (lockedDoorT > 0 || level.doorOpen) return;
+  for (const d of level.doors || []) {
+    const dx = player.pos.x - d.x * CELL;
+    const dz = player.pos.z - d.z * CELL;
+    if (dx * dx + dz * dz < 9) {
+      hud.toast('LOCKED \u00b7 CLEAR THE WAVE', 1.8);
+      lockedDoorT = 3;
+      audio.play('door');
+      return;
+    }
+  }
 }
 
 /** The exit beacon leans green the moment the pad opens. */
@@ -1965,6 +1988,7 @@ function update(dt) {
   updateMusic(dt);
   updateBeacon(dt);
   updateFillLight();
+  checkLockedDoors(dt);
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {
