@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.46.0 — 2026-11-21
+
+**Four more surfaces, and a pair for every zone**
+
+The game had five textures and used two of them for walls and two for floors, so a palette change was
+mostly a tint over the same bricks. There are nine now — brick, tech, **rust**, **moss**, **stained** for
+walls; tile, plate, **grate** for floors — and every zone picks its own pair.
+
+| Zone | Walls | Floor |
+| --- | --- | --- |
+| The Gate | brick | tile |
+| The Foundry | rust | plate |
+| The Grove | moss | tile |
+| The Vault | tech | plate |
+| Ashfall | stained | plate |
+| The Cistern | tech | grate |
+| The Kiln | rust | tile |
+| The Throne | stained | plate |
+
+The foundry now reads as oxidised metal, the grove as wet green stone, the cistern as a dark service
+tunnel with a grated floor. Same geometry, same vertex shading, different surfaces.
+
+Each new texture is drawn on a 64x64 canvas at boot like the others: no assets, no downloads.
+
+
 ## 1.45.0 — 2026-11-21
 
 **A palette per zone, not just a tint over the same bricks**

@@ -7,8 +7,8 @@
 import * as THREE from 'three';
 import { CELL } from './level.js';
 
-const WALL_KEY = ['wall_brick', 'wall_tech'];
-const FLOOR_KEY = ['floor_tile', 'floor_plate'];
+const WALL_KEY = ['wall_brick', 'wall_tech', 'wall_rust', 'wall_moss', 'wall_stained'];
+const FLOOR_KEY = ['floor_tile', 'floor_plate', 'floor_grate'];
 
 /**
  * Turn the sector grid into merged geometry with baked vertex shade, plus the door boxes and the exit pad.

@@ -138,6 +138,102 @@ function concrete() {
   return toTex(c);
 }
 
+// ---- four more surfaces, so a zone can pick a pair that is not a recolour ----
+
+/** Rusted plate: pitted metal with runnels of oxide. */
+function rust() {
+  const c = ctx2d();
+  c.fillStyle = '#2e1d14';
+  c.fillRect(0, 0, S, S);
+  for (let i = 0; i < 220; i++) {
+    const x = Math.random() * S;
+    const y = Math.random() * S;
+    const r = 1 + Math.random() * 4;
+    const t = Math.random();
+    c.fillStyle = t < 0.5 ? `rgba(${120 + Math.random() * 50 | 0},${60 + Math.random() * 30 | 0},30,0.7)`
+      : `rgba(${70 + Math.random() * 30 | 0},${40 + Math.random() * 20 | 0},26,0.8)`;
+    c.beginPath();
+    c.arc(x, y, r, 0, Math.PI * 2);
+    c.fill();
+  }
+  // rivets along the seam
+  for (let x = 4; x < S; x += 15) {
+    c.fillStyle = 'rgba(150,140,120,0.35)';
+    c.fillRect(x, 30, 3, 3);
+  }
+  c.fillStyle = 'rgba(0,0,0,0.45)';
+  c.fillRect(0, 30, S, 2);
+  grain(c, 30);
+  return toTex(c);
+}
+
+/** Moss over stone: green blotches eating a grey wall. */
+function moss() {
+  const c = ctx2d();
+  c.fillStyle = '#232a22';
+  c.fillRect(0, 0, S, S);
+  for (let y = 0; y < S; y += 16) {
+    for (let x = 0; x < S; x += 16) {
+      const v = 38 + Math.random() * 14;
+      c.fillStyle = `rgb(${v},${v + 10},${v})`;
+      c.fillRect(x + 1, y + 1, 14, 14);
+    }
+  }
+  for (let i = 0; i < 70; i++) {
+    const x = Math.random() * S;
+    const y = Math.random() * S;
+    c.fillStyle = `rgba(${40 + Math.random() * 40 | 0},${80 + Math.random() * 60 | 0},40,0.55)`;
+    c.beginPath();
+    c.arc(x, y, 2 + Math.random() * 6, 0, Math.PI * 2);
+    c.fill();
+  }
+  grain(c, 20);
+  return toTex(c);
+}
+
+/** A floor grate: bars over darkness. */
+function grate() {
+  const c = ctx2d();
+  c.fillStyle = '#0a0c0e';
+  c.fillRect(0, 0, S, S);
+  for (let x = 0; x < S; x += 8) {
+    const v = 52 + Math.random() * 18;
+    c.fillStyle = `rgb(${v},${v + 4},${v + 6})`;
+    c.fillRect(x, 0, 4, S);
+  }
+  c.fillStyle = 'rgba(0,0,0,0.5)';
+  for (let y = 0; y < S; y += 32) c.fillRect(0, y, S, 3);
+  grain(c, 24);
+  return toTex(c);
+}
+
+/** A wall someone died against: brick with old stains. */
+function stained() {
+  const c = ctx2d();
+  c.fillStyle = '#241a16';
+  c.fillRect(0, 0, S, S);
+  const rows = 8;
+  const rh = S / rows;
+  for (let r = 0; r < rows; r++) {
+    const offset = (r % 2) * 16;
+    for (let x = -32; x < S; x += 32) {
+      const shade = 46 + Math.random() * 22;
+      c.fillStyle = `rgb(${shade + 16},${shade - 6},${shade - 14})`;
+      c.fillRect(x + offset + 1, r * rh + 1, 30, rh - 2);
+    }
+  }
+  for (let i = 0; i < 12; i++) {
+    const x = Math.random() * S;
+    const y = Math.random() * S * 0.7;
+    const w = 3 + Math.random() * 9;
+    const h = 10 + Math.random() * 30;
+    c.fillStyle = `rgba(${70 + Math.random() * 30 | 0},12,10,0.5)`;
+    c.fillRect(x, y, w, h);
+  }
+  grain(c, 28);
+  return toTex(c);
+}
+
 function door() {
   const c = ctx2d();
   c.fillStyle = '#2b2b30';
@@ -238,6 +334,10 @@ export function makeMaterials(maxAnisotropy = 1) {
   const mats = {
     'wall_brick': L(brick()),
     'wall_tech': L(tech()),
+    'wall_rust': L(rust()),
+    'wall_moss': L(moss()),
+    'wall_stained': L(stained()),
+    'floor_grate': L(grate()),
     'floor_tile': L(tile()),
     'floor_plate': L(plate()),
     'ceil': L(concrete()),
