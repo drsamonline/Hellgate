@@ -1,5 +1,20 @@
 # Changelog
 
+## 1.87.0 — 2026-11-21
+
+**A barrel was a circle, not a volume**
+
+`damageBarrels()` projected the shot onto the ground plane and asked whether the barrel's centre was within
+0.55 m of that line. There was **no vertical test at all**, so a shot fired at the ceiling above a barrel — or
+over the top of it — still set it off.
+
+The barrel is 1.1 m tall and stands on the floor, so the check now reconstructs the ray's height at the hit
+distance and requires it to be within the barrel's own span. Aiming over a barrel misses; aiming at it hits.
+
+Two existing barrel tests fired from `y = 0`, which was fine while height did not matter. They fire from the
+barrel's own floor height now.
+
+
 ## 1.86.0 — 2026-11-21
 
 **The soak bot never left wave one**

@@ -237,3 +237,18 @@ this time in the tool rather than the game.
 **The honest limit of this tool**: it is a coarse proxy. Its job is "it did not fall over", and it now reaches
 wave two on hard rather than one everywhere. It is not a balance measurement, and the numbers should not be read
 as one.
+
+## Pass thirteen — a barrel was a circle, not a volume
+
+`damageBarrels()` projects the shot onto the ground plane and asks whether the barrel's centre is within 0.55 m
+of that line. There was **no vertical test at all**, so a shot fired at the ceiling above a barrel, or over the
+top of it, still hit.
+
+The barrel is 1.1 m tall and stands on the floor, so the check now reconstructs the ray's height at the hit
+distance and requires it to be within the barrel's own span. Aiming over a barrel misses it; aiming at it hits
+it, which is the thing the player expects and the thing the code did not do.
+
+Two existing barrel tests had to be corrected: both fired from `y = 0`, which was fine when height did not
+matter. They now fire from the barrel's own floor height. That is the second time in this audit that a correct
+fix broke a test that had encoded the wrong assumption — and both times the test was the thing that had to
+change, not the fix.

@@ -538,6 +538,31 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== barrels are a volume, not a circle ==');
+{
+  const cell = HG.level.openCells.find((c) =>
+    Math.hypot(c.wx - HG.level.exit.x, c.wz - HG.level.exit.z) > 8) || HG.level.openCells[0];
+  HG.game.barrels.length = 0;
+  HG.spawnBarrels(1);
+  const b = HG.game.barrels[0];
+  ok(!!b, 'a barrel exists');
+  const { floorHeightAt } = await import('../play/src/level.js');
+  const floorY = floorHeightAt(HG.level, b.x, b.z);
+  const from = { x: b.x - 4, y: floorY + 1.2, z: b.z };
+  // level shot: straight at the barrel's body
+  const flat = { x: 1, y: 0, z: 0 };
+  ok(HG.damageBarrels(from, flat, 6, 1) === true, 'a level shot hits it');
+  // a shot that passes over the top of it must miss
+  const b2 = HG.game.barrels.find((x) => x.alive) || b;
+  const hpBefore = b2.hp;
+  const high = { x: 1, y: 1.4, z: 0 };
+  const highLen = Math.hypot(high.x, high.z);
+  const overFrom = { x: b2.x - 4, y: floorY + 0.4, z: b2.z };
+  HG.damageBarrels(overFrom, { x: high.x / highLen, y: high.y / highLen, z: 0 }, 6, 1);
+  ok(b2.hp === hpBefore, 'a shot fired over it misses (' + hpBefore + ' -> ' + b2.hp + ')');
+  HG.game.barrels.length = 0;
+}
+
 console.log('\n== the drone ==');
 {
   const c = HG.companion;
@@ -1435,7 +1460,9 @@ HG.game.barrels.length = 0;
 HG.spawnBarrels();
 ok(HG.game.barrels.length > 0, 'barrels are placed (' + HG.game.barrels.length + ')');
 const b0 = HG.game.barrels[0];
-const origin = { x: b0.x - 5, y: 0, z: b0.z };
+// a barrel is a volume now, so the ray has to be at its height, not at y = 0
+const { floorHeightAt: floorOf } = await import('../play/src/level.js');
+const origin = { x: b0.x - 5, y: floorOf(HG.level, b0.x, b0.z) + 0.9, z: b0.z };
 const dir = { x: 1, y: 0, z: 0 };
 ok(HG.damageBarrels(origin, dir, 10, 10) === true, 'a shot along the ray hits a barrel');
 ok(b0.hp === 20, 'the barrel took the damage (' + b0.hp + ')');

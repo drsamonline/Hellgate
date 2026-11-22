@@ -984,6 +984,12 @@ function damageBarrels(origin, dir, maxDist, amount) {
     const px = origin.x + (dir.x / len) * t;
     const pz = origin.z + (dir.z / len) * t;
     if (Math.hypot(b.x - px, b.z - pz) > 0.55) continue;
+    // the barrel is 1.1 m tall and stands on the floor: a shot that passes over
+    // it, or into the ceiling above it, must miss. Without this you could set a
+    // barrel off by firing at the wall above it.
+    const floorY = floorHeightAt(level, b.x, b.z);
+    const rayY = origin.y + (dir.y / len) * t;
+    if (rayY < floorY - 0.1 || rayY > floorY + 1.25) continue;
     if (t < bestT) { bestT = t; best = b; }
   }
   if (!best) return false;
@@ -2143,7 +2149,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.86.0';
+const BUILD = '1.87.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
