@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v1.91.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v1.92.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 1.91.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 91, `v1.0.0` → `v1.91.0` |
+| Version | 1.92.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 92, `v1.0.0` → `v1.92.0` |
 | Modules | 37 in `play/src/`, ~11,600 lines |
 | Assertions | 885 across 4 suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
-| Draw calls | **43** at 1280×720, gate, wave 2 (was 68 before the joint merge) |
-| Roadmap | 50 shipped, 3 measured-and-rejected, 10 open of 63 |
+| Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
+| Roadmap | 51 shipped, 3 measured-and-rejected, 9 open of 63 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it

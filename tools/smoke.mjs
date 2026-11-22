@@ -231,12 +231,12 @@ const withWave = await page.evaluate(() => {
   }
   return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
 });
-// 8 rig bodies on top of the level, in front of a level camera. Each body is one
-// mesh per joint — 13 for an imp, 16 for a grunt — and costs about 14 calls when
-// it is in view, which is 13 joints plus its ground shadow. Measured on three
-// runs: 154, 173, 181. The 160 this replaces was measured with the bodies behind
-// the camera and passed on an empty frame (audit pass seventeen).
-ok('eight enemies stay under 220 draw calls', withWave.calls < 220, JSON.stringify(withWave));
+// 8 rig bodies on top of the level, in front of a level camera. Before bodies
+// were instanced this cost about 14 calls each — 154, 173 and 181 measured on
+// three runs. One instanced mesh per joint makes it per type instead of per
+// body: 78 and 85 measured across two runs, so the ceiling drops with it.
+// A ceiling that is never lowered is not a budget.
+ok('eight enemies stay under 120 draw calls', withWave.calls < 120, JSON.stringify(withWave));
 
 const bodySizes = await page.evaluate(() => {
   const HG = window.HG;

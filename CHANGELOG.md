@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.92.0 — 2026-11-23
+
+**Instanced enemy bodies — #45, and the measurement that had to be fixed first**
+
+A body is 13–16 meshes, one per joint, and every one of them was a draw call. Eight imps in view cost **154**.
+Now every body of a type writes its joint matrices into one `InstancedMesh` per joint, so the cost is per type
+instead of per enemy: **78**.
+
+| Frame, camera level, gate | Before | After |
+| --- | --- | --- |
+| The level alone | 47 | 56–63 |
+| Eight imps in front of the camera | 154–181 | **78–85** |
+| Sixteen imps | 266 | — |
+
+The joints still exist and still animate exactly as before; they simply stop being drawn. The hit flash moves
+from per-material `emissive` to per-instance colour — there is no per-instance emissive, and instance colour
+multiplies the diffuse, so a body pushed past white reads as white-hot at this art scale. The eyes keep their
+own instanced part and their emissive.
+
+A body that arrives after the capacity of 16 is full is drawn the old way, with its own meshes, so this can
+never render an enemy twice or drop one. A type with nothing alive sets `visible = false` and costs nothing.
+
+**And the measurement this depended on was broken.** `smoke.mjs` spawned its eight imps at `player.pos + (4, 4)`
+— behind the camera — and measured through whatever pitch the run started with. Both draw-call budgets were
+green against a frame containing no enemy body: 21 calls with eight imps "spawned", against 47 with the camera
+level and nothing spawned. The harness now levels the camera, spawns along the forward vector, and the ceiling
+drops 220 → **120**. See pass seventeen and eighteen in `documentation/audit.md`.
+
+Six assertions hold the instancing: bodies take slots, their own meshes stop drawing, the instance matrix is
+the joint's world matrix, the flash reaches the instance colour, and an empty type draws nothing.
+
 ## 1.91.0 — 2026-11-23
 
 **Audit pass sixteen — the eleven modules nobody had read**

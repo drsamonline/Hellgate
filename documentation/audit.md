@@ -423,3 +423,32 @@ focused — not in where the test puts them. **Not diagnosed, not fixed.** What 
 `renderer.info.render.calls` rises by at least one per visible body — then fix the cause, then re-baseline both
 ceilings in the same commit. A budget that cannot fail is worse than no budget, and this one has been green
 through two optimisation passes.
+
+## Pass eighteen — instanced bodies, and what the flash cost
+
+Roadmap #45, done against the measurement from pass seventeen.
+
+| Frame, camera level, gate | Before | After |
+| --- | --- | --- |
+| The level alone | 47 | 56–63 |
+| Eight imps in front | 154–181 | **78–85** |
+| Sixteen imps | 266 | — |
+
+One `InstancedMesh` per (type, joint, material), capacity 16, written from each body's joint
+`matrixWorld` once a frame after the joints animate. The bodies still exist and still animate; they stop being
+drawn. Two details that are not optional:
+
+- **The flash is per-instance colour, not emissive.** There is no per-instance emissive. Instance colour
+  multiplies the diffuse, so a body pushed to `(3.4, 1.5, 1.35)` reads as white-hot. The per-material emissive
+  path is kept because the pooled-body reset and the existing flash tests use it, and it costs nothing on an
+  invisible mesh.
+- **Membership is per set, not per body.** The first version guarded on `body.instanced`, so a body that had
+  been instanced before a scene change never joined the new set: it rendered nothing, and the enemy was
+  invisible. The guard is `body.set === set`.
+
+An empty type sets `visible = false` and costs no draw call; `count` follows the living bodies so empty slots
+draw nothing. A body past capacity 16 falls back to its own meshes, so this cannot double-draw or drop one.
+
+**The level-only number went up**, 47 → 56–63: the instanced sets exist as soon as a type has been built, and
+until every body of that type is released they are still in the pass. That is the honest shape of the trade —
+the cost is now paid once per type rather than once per enemy, and the eight-body frame is 50 % cheaper.

@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Fifty items shipped — marked **✓ shipped** below; the rest say what is left and why.
+Fifty-one items shipped — marked **✓ shipped** below; the rest say what is left and why.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -64,7 +64,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 42. **Bullet-hole decals with correct orientation on every surface** — ✓ shipped (floors and ceilings were degenerate under `lookAt`; they are set explicitly now) — already works on walls; verify floors and ceilings and cap by surface type. `effects.js` · S · medium
 43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each ene — ✓ shippedmy; makes them feel grounded without a shadow map. `enemies.js` · M · high
 44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high — ✓ shipped as `bloom.js`, a hand-written two-pass blur plus a colour grade
-45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high — half done: bodies are merged to one mesh per joint (`mergeJointMeshes`), 21→13 for an imp and 23→16 for a grunt, and total draw calls fell **68 → 43**. True instancing is still open and would need per-instance colour for the hit flash
+45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high — ✓ shipped at 1.92.0: one instanced mesh per (type, joint, material), capacity 16, written from each joint's `matrixWorld` once a frame. Measured with the camera level and bodies in front: eight imps went **154 → 78** draw calls, sixteen **266 → ~76**, and the hit flash moved to per-instance colour because there is no per-instance emissive. See pass eighteen in `documentation/audit.md`.
 
    **What true instancing needs, in the order it has to be done.** Scoped at 1.91.0, not started:
 
