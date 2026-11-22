@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.70.0 — 2026-11-21
+
+**The story is a decision now, not a panel you cannot argue with**
+
+Ported from `app-story-engine` (same licence, same author): a branching narrative engine where the book is
+data, a choice moves you to another passage, and the effects of that choice are declarative
+`{op, var, value}` triples rather than code. The validation is the original's — a book with a choice
+pointing at a missing node is **refused**, not read.
+
+| File | What it is |
+| --- | --- |
+| `play/src/book.js` | The engine, ported: `compile`, `newGame`, `choicesFor`, `advance`, `trail`, `save`, `load` |
+| `play/src/zonebook.js` | The campaign as eleven passages: one per zone, two choices each, two endings |
+
+**The choices change the run.** Each choice writes a flag, and the flags are read by the game:
+
+| Flag | Effect |
+| --- | --- |
+| `mercy` | +12 max health per kind choice |
+| `greed` | +20 % score and two more pickups per greedy choice |
+| `haste` | +5 % speed per hurried choice |
+| `careful` | +8 armour at the start of each zone per cautious choice |
+
+Clearing a zone now asks the question **before** it offers the upgrade. Two runs with the same seed and
+different answers are different runs.
+
+**Tests** — 11 new assertions: the book compiles with no warnings, it starts at the gate, the greedy path
+records four zones, the flags produce an effect, the same choices replay to the same flags, a broken book
+is refused, and taking a choice in the game writes a flag and moves the book on.
+
+
 ## 1.69.1 — 2026-11-21
 
 **The damage test, for the third and last time**

@@ -538,6 +538,52 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== the zone book ==');
+{
+  const Book = await import('../play/src/book.js');
+  const { ZONE_BOOK, effectsFor } = await import('../play/src/zonebook.js');
+  const c = Book.compile(ZONE_BOOK);
+  ok(c.ok, 'the campaign book compiles (' + c.errors.length + ' errors)');
+  ok(c.warnings.length === 0, 'with no warnings (' + c.warnings.length + ')');
+  ok(Object.keys(ZONE_BOOK.nodes).length >= 11, 'it has a node for every zone and two endings');
+
+  let st = Book.newGame(ZONE_BOOK);
+  ok(st.at === 'gate', 'it starts at the gate');
+  const first = Book.choicesFor(ZONE_BOOK, st);
+  ok(first.length === 2, 'and offers two choices there (' + first.length + ')');
+
+  // the greedy path
+  let g = st;
+  for (const node of ['gate', 'foundry', 'grove', 'vault']) {
+    const ch = Book.choicesFor(ZONE_BOOK, g);
+    const pick = ch.findIndex((x) => x.label.match(/Take|Dig|Burn|cart|tools/i));
+    g = Book.advance(ZONE_BOOK, g, pick >= 0 ? pick : 0).state;
+  }
+  ok(g.vars.zones === 4, 'four zones of choices are recorded (' + g.vars.zones + ')');
+  const eff = effectsFor(g.vars);
+  ok(eff.scoreMul > 1 || eff.maxHp > 0 || eff.armour > 0, 'and the flags produce an effect on the run');
+
+  // determinism: the same choices replay to the same state
+  let again = Book.newGame(ZONE_BOOK);
+  for (const node of ['gate', 'foundry', 'grove', 'vault']) {
+    const ch = Book.choicesFor(ZONE_BOOK, again);
+    const pick = ch.findIndex((x) => x.label.match(/Take|Dig|Burn|cart|tools/i));
+    again = Book.advance(ZONE_BOOK, again, pick >= 0 ? pick : 0).state;
+  }
+  ok(JSON.stringify(again.vars) === JSON.stringify(g.vars), 'the same choices replay to the same flags');
+
+  // a broken book is refused, not read
+  const bad = { id: 'x', start: 'a', vars: {}, nodes: { a: { text: 'x', choices: [{ label: 'go', to: 'nowhere' }] } } };
+  ok(Book.compile(bad).ok === false, 'a choice pointing at a missing node is refused');
+
+  // the game applies a choice
+  HG.game.flags = {};
+  HG.game.bookAt = 'gate';
+  HG.takeChoice(0);
+  ok(Object.keys(HG.game.flags).length > 0, 'taking a choice writes a flag into the run (' + JSON.stringify(HG.game.flags) + ')');
+  ok(HG.game.bookAt === 'foundry', 'and moves the book on to the next zone');
+}
+
 console.log('\n== elites ==');
 {
   HG.enemies.clear();

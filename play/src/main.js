@@ -11,6 +11,8 @@ import { Player } from './player.js';
 import { Weapons, WEAPONS } from './weapons.js';
 import { EnemyManager, poolStats, clearBodyPool, TYPES } from './enemies.js';
 import { loadModels, modelReport, installModel, uninstallModel } from './models.js';
+import { ZONE_BOOK, effectsFor } from './zonebook.js';
+import * as Book from './book.js';
 import { Projectiles } from './projectiles.js';
 import { Effects, glowSprite } from './effects.js';
 import { HUD } from './hud.js';
@@ -242,6 +244,8 @@ const game = {
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
   upgrades: {},
+  flags: {},            // what the story choices have made you
+  bookAt: null,         // where the zone book has got to
   weaponKills: {},
   trinkets: [],
   drops: [],
@@ -384,7 +388,7 @@ function buildRun(seed, zoneDef) {
     game.waveKills++;
     // an elite is worth more than the same body without the rim light
     const worth = e && e.elite ? 3 : 1;
-    game.score += 50 * worth * (game.wave || 1);
+    game.score += Math.round(50 * worth * (game.wave || 1) * effectsFor(game.flags).scoreMul);
     if (weaponName) {
       game.weaponKills[weaponName] = (game.weaponKills[weaponName] || 0) + 1;
     }
@@ -924,7 +928,8 @@ function damageBarrels(origin, dir, maxDist, amount) {
 
 function spawnPickups(wave) {
   const kinds = Object.keys(PICKUP_DEFS);
-  const count = 3 + Math.min(5, wave);
+  // a greedy run finds more on the floor
+  const count = 3 + Math.min(5, wave) + (effectsFor(game.flags).pickups || 0);
   for (let i = 0; i < count; i++) {
     const cell = randomCell(4);
     const kind = kinds[Math.floor(Math.random() * kinds.length)];
@@ -1535,6 +1540,46 @@ function zoneCleared() {
   if (epi) epi.textContent = epilogueFor(zone.id);
   showScreen('cleared');
   audio.play('wave');
+  renderChoice();
+}
+
+/**
+ * The story asks a question before it offers an upgrade. Two choices, both of
+ * which lead to the next zone: what changes is the run, not the route.
+ */
+function renderChoice() {
+  const wrap = document.getElementById('upgradeCards');
+  if (!wrap) return;
+  const node = ZONE_BOOK.nodes[game.bookAt || zone.id];
+  if (!node || node.ending || !node.choices) { renderUpgrades(); return; }
+  wrap.innerHTML = node.choices.map((c, i) => `
+    <button class="card upgradecard" data-choice="${i}">
+      <span class="n">CHOICE</span>
+      <h3>${escapeHtml(c.label)}</h3>
+      <p>${escapeHtml(node.text)}</p>
+    </button>`).join('');
+  wrap.querySelectorAll('[data-choice]').forEach((el) => {
+    el.addEventListener('click', () => takeChoice(Number(el.getAttribute('data-choice'))));
+  });
+}
+
+/** Take a book choice: apply its effects to the run's flags, then show upgrades. */
+function takeChoice(index) {
+  const node = ZONE_BOOK.nodes[game.bookAt || zone.id];
+  const choice = node && node.choices && node.choices[index];
+  if (!choice) { renderUpgrades(); return; }
+  game.flags = game.flags || {};
+  for (const e of choice.effects || []) {
+    if (e.op === 'add') game.flags[e.var] = (game.flags[e.var] || 0) + e.value;
+    else if (e.op === 'set') game.flags[e.var] = e.value;
+  }
+  game.bookAt = choice.to;
+  note('choice: ' + choice.label + ' -> ' + JSON.stringify(game.flags));
+  const eff = effectsFor(game.flags);
+  if (eff.maxHp) { player.maxHp += eff.maxHp; player.health = Math.min(player.maxHp, player.health + eff.maxHp); }
+  if (eff.armour) player.addArmor(eff.armour);
+  audio.play('pickup');
+  hud.toast(choice.label.toUpperCase(), 2);
   renderUpgrades();
 }
 
@@ -1919,7 +1964,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.69.1';
+const BUILD = '1.70.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2331,6 +2376,7 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
+  takeChoice, renderChoice, ZONE_BOOK,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this
