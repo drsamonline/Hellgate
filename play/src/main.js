@@ -2177,6 +2177,7 @@ function buildReport() {
     'state   ' + game.state + '  exitOpen ' + !!game.exitOpen + '  doors ' + !!(level && level.doorOpen),
     'player  ' + (player ? `hp ${player.health.toFixed(0)} pos ${player.pos.x.toFixed(1)},${player.pos.y.toFixed(1)},${player.pos.z.toFixed(1)}` : '-'),
     'enemies ' + (enemies ? enemies.list.length + ' (' + enemies.aliveCount + ' alive)' : '-'),
+    'bodies  ' + (enemies ? JSON.stringify(enemies.instances()) : '-'),
     'level   ' + (level ? `${level.W}x${level.H} rooms ${level.rooms.length} doors ${level.doors.length} reach ${level.reachCount}` : '-'),
     'render  ' + (rs.calls != null ? `calls ${rs.calls} tris ${rs.tris}` : '-'),
     'pool    ' + JSON.stringify(poolStats()),

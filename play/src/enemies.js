@@ -320,6 +320,132 @@ function proxyMat(color) {
 // per type and reused; a body is reset when it is taken back out, so nothing
 // carries over from the enemy that died in it.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Instanced bodies (#45)
+//
+// A body is 13-16 meshes, one per joint, and each of them was a draw call: about
+// fourteen per enemy in view (measured at 1.91.1 — 47 calls empty, 154 with
+// eight imps in front, 266 with sixteen). The joints still exist and still
+// animate exactly as before; what changes is that they are no longer drawn.
+// Every body of a type writes its joint matrices into one InstancedMesh per
+// joint, so eight imps cost thirteen draw calls between them instead of 112.
+//
+// The hit flash moves with it. `emissive` is a material property and there is no
+// per-instance emissive, so the flash is a per-instance colour: instance colour
+// multiplies the diffuse, and a body pushed past white reads as white-hot at
+// this art scale. The eyes keep their own instanced part and their emissive.
+//
+// A body that arrives after the capacity is full is drawn the old way — its own
+// meshes stay visible — so this can never render an enemy twice or drop one.
+// ---------------------------------------------------------------------------
+const INSTANCE_CAP = 16;
+const INSTANCE_SETS = new Map();
+let INSTANCE_SCENE = null;
+const INST_WHITE = new THREE.Color(1, 1, 1);
+const INST_FLASH = new THREE.Color(1, 1, 1);
+const INST_ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
+
+function dropInstances() {
+  for (const set of INSTANCE_SETS.values()) {
+    for (const part of set.parts) {
+      if (part.inst.parent) part.inst.parent.remove(part.inst);
+      if (part.inst.dispose) part.inst.dispose();
+      if (part.inst.material && part.inst.material.dispose) part.inst.material.dispose();
+    }
+  }
+  INSTANCE_SETS.clear();
+}
+
+function instanceSetFor(typeName, body, scene) {
+  if (INSTANCE_SCENE !== scene) { dropInstances(); INSTANCE_SCENE = scene; }
+  const have = INSTANCE_SETS.get(typeName);
+  if (have) return have;
+  // the prototype's meshes in traversal order; every body of a type is built by
+  // the same builder, so mesh k of one body is mesh k of another
+  const meshes = [];
+  body.group.traverse((o) => { if (o.isMesh) meshes.push(o); });
+  const parts = meshes.map((m) => {
+    const mat = m.material.clone();
+    mat.userData.shared = false;
+    const inst = new THREE.InstancedMesh(m.geometry, mat, INSTANCE_CAP);
+    inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    inst.frustumCulled = true;
+    inst.count = INSTANCE_CAP;
+    for (let i = 0; i < INSTANCE_CAP; i++) {
+      inst.setMatrixAt(i, INST_ZERO);
+      inst.setColorAt(i, INST_WHITE);
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    if (inst.instanceColor) inst.instanceColor.needsUpdate = true;
+    scene.add(inst);
+    return { inst };
+  });
+  const set = { parts, bodies: [], typeName };
+  INSTANCE_SETS.set(typeName, set);
+  return set;
+}
+
+/** Give a body a slot in its type's instances and hide its own meshes. */
+function attachBody(body, scene) {
+  if (!body || !body.group) return;
+  const set = instanceSetFor(body.typeName, body, scene);
+  // membership is per set, not per body: a body that was instanced before a scene
+  // change has to join the new set, or it renders nothing at all
+  if (body.set === set) return;
+  if (set.bodies.length >= INSTANCE_CAP) return;   // over capacity: draw it the old way
+  body.set = set;
+  body.instanced = true;
+  body.slot = set.bodies.length;
+  set.bodies.push(body);
+  body.instMeshes = [];
+  body.group.traverse((o) => { if (o.isMesh) body.instMeshes.push(o); });
+  for (const m of body.instMeshes) m.visible = false;
+}
+
+/**
+ * Copy every live body's joint matrices into its instance slots. Called once a
+ * frame from `EnemyManager.update`, after the joints have been animated.
+ */
+function syncEnemyInstances() {
+  for (const set of INSTANCE_SETS.values()) {
+    if (!set.bodies.length) continue;
+    let liveCount = 0;
+    for (const body of set.bodies) {
+      const live = body.live && body.group.visible && body.group.parent;
+      if (live) liveCount++;
+      if (live) {
+        // the enemy's own group is the parent: refresh the chain before reading
+        body.group.parent.updateMatrixWorld(true);
+      }
+      const k = body.flashK || 0;
+      if (k > 0) INST_FLASH.setRGB(1 + k * 2.4, 1 + k * 0.5, 1 + k * 0.35);
+      else INST_FLASH.setRGB(1, 1, 1);
+      for (let p = 0; p < set.parts.length; p++) {
+        const inst = set.parts[p].inst;
+        const mesh = body.instMeshes && body.instMeshes[p];
+        inst.setMatrixAt(body.slot, live && mesh ? mesh.matrixWorld : INST_ZERO);
+        inst.setColorAt(body.slot, INST_FLASH);
+      }
+    }
+    for (const part of set.parts) {
+      // a type with nothing alive on screen costs no draw call at all, and the
+      // instance count follows the living bodies so empty slots draw nothing
+      part.inst.visible = liveCount > 0;
+      part.inst.count = Math.max(1, liveCount);
+      part.inst.instanceMatrix.needsUpdate = true;
+      if (part.inst.instanceColor) part.inst.instanceColor.needsUpdate = true;
+      if (part.inst.computeBoundingSphere) part.inst.computeBoundingSphere();
+    }
+  }
+}
+
+/** How many bodies of each type are instanced, for the stats panel and the tests. */
+export function instanceReport() {
+  const out = {};
+  for (const [type, set] of INSTANCE_SETS) out[type] = { bodies: set.bodies.length, parts: set.parts.length };
+  return out;
+}
+
 const BODY_POOL = new Map();
 const POOL_CAP = 14;
 let BODIES_BUILT = 0;
@@ -379,6 +505,7 @@ function acquireBody(typeName) {
   const pool = BODY_POOL.get(typeName) || [];
   let body = pool.pop();
   if (!body) body = buildBody(typeName);
+  body.live = true;
   // reset: a body that died mid-wind-up must not come back glowing or folded
   body.group.visible = true;
   body.group.position.set(0, 0, 0);
@@ -399,6 +526,7 @@ function releaseBody(body) {
   if (!body) return;
   const pool = BODY_POOL.get(body.typeName) || [];
   if (pool.length >= POOL_CAP) return;      // the pool is capped; let the rest go
+  body.live = false;
   body.group.visible = false;
   pool.push(body);
   BODY_POOL.set(body.typeName, pool);
@@ -409,7 +537,16 @@ function releaseBody(body) {
  * model was installed for that type, the pool would keep handing out the old one.
  */
 export function clearBodyPool(type) {
-  if (type) BODY_POOL.delete(type);
+  if (type) {
+    BODY_POOL.delete(type);
+    const set = INSTANCE_SETS.get(type);
+    if (set) {
+      for (const part of set.parts) {
+        if (part.inst.parent) part.inst.parent.remove(part.inst);
+      }
+      INSTANCE_SETS.delete(type);
+    }
+  }
   else BODY_POOL.clear();
 }
 
@@ -434,6 +571,7 @@ export class Enemy {
     const built = acquireBody(typeName);
     this.bodyData = built;
     this.body = built.group;
+    attachBody(built, scene);
     this.mesh = new THREE.Group();
     this.mesh.add(this.body);
     this.parts = built.parts;
@@ -909,6 +1047,9 @@ export class Enemy {
     if (this.flash > 0) {
       this.flash = Math.max(0, this.flash - dt);
       const e = this.flash / 0.16;
+      // the instanced body reads this; the per-material emissive below is kept
+      // for the pooled-body reset and for the flash tests
+      if (this.bodyData) this.bodyData.flashK = e;
       for (const m of this.flashMats) m.emissive.setRGB(e * 0.85, e * 0.12, e * 0.08);
     } else if (this.charging > 0) {
       // the wind-up is the read: the body heats up over the telegraph, so a
@@ -919,6 +1060,7 @@ export class Enemy {
       this.charged = false;
       for (const m of this.flashMats) m.emissive.setRGB(0, 0, 0);
     }
+    if (this.bodyData && this.flash <= 0) this.bodyData.flashK = 0;
     const sp = this.moving ? 1 : 0;
     // a wisp floats: its tendrils move even when it is holding position
     this.walkPhase += dt * (this.moving ? 9 : (this.parts.tendrils ? 2.2 : 0));
@@ -1037,6 +1179,17 @@ export class EnemyManager {
 
   get aliveCount() {
     return this.list.filter((e) => e.alive).length;
+  }
+
+  /** How many bodies of each type are instanced, and into how many parts. */
+  instances() {
+    return instanceReport();
+  }
+
+  /** The instanced meshes for a type, in part order. */
+  instanceParts(type) {
+    const set = INSTANCE_SETS.get(type);
+    return set ? set.parts.map((p) => p.inst) : [];
   }
 
   clear() {
@@ -1194,6 +1347,8 @@ export class EnemyManager {
       },
     };
     for (const e of this.list) e.update(dt, ctx);
+    // every joint has moved: fold the bodies into their instance slots
+    syncEnemyInstances();
 
     // corpses stay, but not forever: the last MAX_CORPSES bodies, oldest first
     const dead = this.list.filter((e) => e.state === STATE.DEATH || !e.alive);

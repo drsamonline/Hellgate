@@ -83,6 +83,7 @@ export class Object3D {
     this.frustumCulled = true;
     this.parent = null;
     this.userData = {};
+    this.matrixWorld = new Matrix4();
   }
   traverse(fn) {
     fn(this);
@@ -98,7 +99,16 @@ export class Object3D {
     return this;
   }
   updateMatrix() {}
-  updateMatrixWorld() {}
+  updateMatrixWorld() {
+    // enough of the real thing for a test: translation and scale, no rotation
+    this.matrixWorld.elements = [
+      this.scale.x, 0, 0, this.position.x,
+      0, this.scale.y, 0, this.position.y,
+      0, 0, this.scale.z, this.position.z,
+      0, 0, 0, 1,
+    ];
+    for (const c of this.children) if (c.updateMatrixWorld) c.updateMatrixWorld();
+  }
   lookAt() {}
   rotateZ(a) { if (this.rotation) this.rotation.z = (this.rotation.z || 0) + a; return this; }
   rotateX(a) { if (this.rotation) this.rotation.x = (this.rotation.x || 0) + a; return this; }
@@ -278,11 +288,21 @@ export class InstancedMesh extends Object3D {
     };
   }
   setMatrixAt(i, m) {
+    const src = m && m.elements ? m.elements : m;
     if (this.instanceMatrix.array.length >= (i + 1) * 16) {
-      for (let k = 0; k < 16; k++) this.instanceMatrix.array[i * 16 + k] = m ? m[k] || 0 : 0;
+      for (let k = 0; k < 16; k++) this.instanceMatrix.array[i * 16 + k] = src ? src[k] || 0 : 0;
     }
   }
   getMatrixAt(i, out) { return out; }
+  setColorAt(i, c) {
+    if (!this.instanceColor) {
+      this.instanceColor = { array: new Float32Array(this.count * 3), needsUpdate: false };
+    }
+    this.instanceColor.array[i * 3] = c ? c.r : 1;
+    this.instanceColor.array[i * 3 + 1] = c ? c.g : 1;
+    this.instanceColor.array[i * 3 + 2] = c ? c.b : 1;
+  }
+  computeBoundingSphere() {}
 }
 
 export class Points extends Object3D {
@@ -369,6 +389,10 @@ export class Matrix4 {
   fromArray(a) { this.elements = a.slice(); return this; }
   clone() { const m = new Matrix4(); m.elements = this.elements.slice(); return m; }
   multiply(m) { return this; }
+  makeScale(x, y, z) {
+    this.elements = [x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1];
+    return this;
+  }
   compose() { return this; }
   identity() { return this; }
 }

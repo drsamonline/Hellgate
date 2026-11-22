@@ -1684,6 +1684,37 @@ ok(HG.props.grassMesh.visible === false, 'low quality hides the grass');
 HG.props.setQuality(1);
 ok(HG.props.grassMesh.visible === true, 'high quality restores it');
 
+console.log('\n== instanced bodies ==');
+{
+  const { instanceReport } = await import('../play/src/enemies.js');
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 3, HG.player.pos.z, 1);
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 5, HG.player.pos.z, 1);
+  frames(2);
+  const rep = instanceReport();
+  ok(rep.imp && rep.imp.bodies >= 2 && rep.imp.parts >= 1,
+    'imp bodies are instanced, one part per body mesh (' + JSON.stringify(rep.imp) + ')');
+  const e0 = HG.enemies.list[0];
+  ok(e0.bodyData.instanced === true && e0.bodyData.slot >= 0, 'a body takes an instance slot');
+  let ownVisible = 0;
+  e0.body.traverse((o) => { if (o.isMesh && o.visible) ownVisible++; });
+  ok(ownVisible === 0, 'the body stops drawing its own meshes (' + ownVisible + ' still visible)');
+  const sets = HG.enemies.instanceParts('imp');
+  ok(sets.length === rep.imp.parts, 'one instanced mesh per body mesh (' + sets.length + ')');
+  const first = sets[0];
+  const m = [];
+  for (let k = 0; k < 16; k++) m.push(first.instanceMatrix.array[e0.bodyData.slot * 16 + k]);
+  ok(Math.abs(m[15] - 1) < 1e-6 && m.some((v, i) => i !== 15 && Math.abs(v) > 1e-6),
+    'the instance matrix is the joint\'s world matrix, not the zero matrix');
+  e0.flash = 0.16;
+  frames(1);
+  const c = first.instanceColor ? first.instanceColor.array : [];
+  ok(c[e0.bodyData.slot * 3] > 1.5, 'a flashing body pushes its instance colour past white (' + (c[e0.bodyData.slot * 3] || 0).toFixed(2) + ')');
+  HG.enemies.clear();
+  frames(1);
+  ok(sets.every((x) => x.visible === false), 'an empty type draws nothing at all');
+}
+
 console.log('\n== lore terminals ==');
 ok(HG.lore && HG.lore.entries.length === 3, 'three terminals placed (' + (HG.lore ? HG.lore.entries.length : 0) + ')');
 const t0 = HG.lore.entries.find((e) => !HG.lore.read.has(e.entry.title)) || HG.lore.entries[0];
