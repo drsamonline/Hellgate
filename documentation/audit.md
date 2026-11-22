@@ -72,3 +72,20 @@ the nearest enemy and fires, swings the blade and throws grenades, then asserts 
 
 Result: four zones, 900 frames each, **all held**. Two real bugs so far from this audit; the invariant tool
 stays as the fourth browser gate.
+
+## Pass four — the story flags, and a claim that was not true
+
+Reading `applyClass` against the release notes for 1.70.0 found two things, and the second is worse than a bug.
+
+**A choice paid twice.** `takeChoice()` called `effectsFor(game.flags)`, which sums every flag the run has ever
+set, and granted the whole total on top of what the zone start had already given. Choosing mercy a second time
+paid for both mercies again.
+
+**A promise with no code behind it.** The 1.70.0 notes said *"haste gives speed, careful gives armour at zone
+start"*. The block that would have done it was written against a line that did not exist, so the patch matched
+nothing and shipped silently. Speed and armour never changed; only score and pickups did, because those were
+wired separately.
+
+Both are fixed in 1.78.0, with three tests that hold one flag each — speed, armour, max health — plus one that
+holds the single payment. The lesson is not "test the flags"; it is that a release note is a claim like any
+other, and this audit should have checked the claims it made last week, not only the code it read today.

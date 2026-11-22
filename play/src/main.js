@@ -557,6 +557,13 @@ function applyClass(classId) {
   player.health = player.maxHp;
   player.grenades = 3;
   player.armor = def.armor + 20 * (game.upgrades.armour || 0) + (player.startArmourBonus || 0);
+  // what the story choices have made you: a hurried run moves faster, a
+  // cautious one starts with armour, a kind one has more to lose
+  const fl = effectsFor(game.flags);
+  if (fl.speedMul !== 1) player.baseSpeed *= fl.speedMul;
+  if (fl.maxHp) player.maxHp += fl.maxHp;
+  player.health = player.maxHp;
+  if (fl.armour) player.armor += fl.armour;
   weapons.select(def.weapon, true);
   weapons.cd = 0;
   powers.equip(def);
@@ -1662,15 +1669,21 @@ function takeChoice(index) {
   const choice = node && node.choices && node.choices[index];
   if (!choice) { renderUpgrades(); return; }
   game.flags = game.flags || {};
+  // apply only what THIS choice changed. effectsFor() sums every flag the run
+  // has ever set, and beginZone() already granted that total at the start of the
+  // zone — applying the sum again here paid the player twice for one choice.
+  const before = effectsFor(game.flags);
   for (const e of choice.effects || []) {
     if (e.op === 'add') game.flags[e.var] = (game.flags[e.var] || 0) + e.value;
     else if (e.op === 'set') game.flags[e.var] = e.value;
   }
   game.bookAt = choice.to;
   note('choice: ' + choice.label + ' -> ' + JSON.stringify(game.flags));
-  const eff = effectsFor(game.flags);
-  if (eff.maxHp) { player.maxHp += eff.maxHp; player.health = Math.min(player.maxHp, player.health + eff.maxHp); }
-  if (eff.armour) player.addArmor(eff.armour);
+  const after = effectsFor(game.flags);
+  const dHp = after.maxHp - before.maxHp;
+  const dArmour = after.armour - before.armour;
+  if (dHp) { player.maxHp += dHp; player.health = Math.min(player.maxHp, player.health + dHp); }
+  if (dArmour) player.addArmor(dArmour);
   audio.play('pickup');
   hud.toast(choice.label.toUpperCase(), 2);
   renderUpgrades();
@@ -2096,7 +2109,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.77.0';
+const BUILD = '1.78.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

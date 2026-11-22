@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.78.0 — 2026-11-21
+
+**The story flags: one bug, and one claim that was never true**
+
+Reading `applyClass` against the 1.70.0 release notes found both.
+
+| Finding | What happened |
+| --- | --- |
+| A choice paid twice | `takeChoice()` granted `effectsFor(game.flags)` — the sum of every flag the run had set — on top of what the zone start had already given. A second mercy choice paid for both mercies again |
+| Speed and armour never changed | The 1.70.0 notes promised "haste gives speed, careful gives armour at zone start". The patch was written against a line that did not exist, matched nothing, and shipped silently. Only score and pickups were ever wired |
+
+**Correction to 1.70.0:** of the four flags, only `greed` (score and pickups) and `mercy` (max health, via the
+choice) did anything. `haste` and `careful` were inert for eight releases.
+
+Both are fixed: the flags are applied in `applyClass`, which is the one place a run's stats are set, and a
+choice applies only the delta it created. Four tests hold it — one per flag, and one that a choice is paid once.
+
+
 ## 1.77.0 — 2026-11-21
 
 **Two damage numbers on every hit, and a fourth gate**

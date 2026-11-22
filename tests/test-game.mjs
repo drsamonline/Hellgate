@@ -733,6 +733,29 @@ console.log('\n== the zone book ==');
   HG.takeChoice(0);
   ok(Object.keys(HG.game.flags).length > 0, 'taking a choice writes a flag into the run (' + JSON.stringify(HG.game.flags) + ')');
   ok(HG.game.bookAt === 'foundry', 'and moves the book on to the next zone');
+
+  // a choice pays for itself once: effectsFor() sums every flag the run has set,
+  // and the zone start already granted that total
+  HG.game.flags = { mercy: 2, zones: 2 };
+  HG.game.bookAt = 'gate';
+  const hpBefore = HG.player.maxHp;
+  HG.takeChoice(1);   // the mercy choice at the gate: +1 mercy
+  const gained = HG.player.maxHp - hpBefore;
+  ok(gained === 12, 'a mercy choice grants 12 max health, not the whole run total (' + gained + ')');
+  ok(HG.game.flags.mercy === 3, 'and the flag went from two to three (' + HG.game.flags.mercy + ')');
+
+  // every flag must actually reach the player when a zone starts. The first
+  // version of this shipped with the block missing: the release notes promised
+  // speed and armour that no line of code applied.
+  HG.game.flags = { haste: 2, careful: 2, mercy: 1, zones: 1 };
+  HG.chooseClass('marine');
+  const base = (await import('../play/src/classes.js')).getClass('marine');
+  ok(HG.player.baseSpeed > base.speed, 'haste raises the speed at zone start (' + base.speed + ' -> ' + HG.player.baseSpeed.toFixed(2) + ')');
+  ok(HG.player.armor > base.armor, 'careful raises the armour at zone start (' + base.armor + ' -> ' + HG.player.armor + ')');
+  ok(HG.player.maxHp > base.hp, 'mercy raises max health at zone start (' + base.hp + ' -> ' + HG.player.maxHp + ')');
+  HG.game.flags = {};
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
 }
 
 console.log('\n== elites ==');
