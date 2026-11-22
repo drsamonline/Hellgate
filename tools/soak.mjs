@@ -88,7 +88,9 @@ function play(seed, difficulty) {
       HG.input.move.x = 0;
       if (seen) {
         // close to 9 m, then hold and fire; back off under 3 m
-        HG.input.move.y = bestD > 9 ? -1 : bestD < 3.2 ? 1 : 0;
+        // close to 5 m: a shotgun at 9 m is a slow kill, and a bot that kills
+        // slowly never reaches a later wave, which is most of what a soak is for
+        HG.input.move.y = bestD > 5 ? -1 : bestD < 2.6 ? 1 : 0;
       } else {
         fieldT -= DT;
         if (fieldT <= 0 || !field) {
@@ -119,8 +121,23 @@ function play(seed, difficulty) {
       } else HG.input.fire = false;
     } else {
       HG.input.fire = false;
-      HG.input.move.x = 0;
-      HG.input.move.y = 0;
+      // no enemies left: the wave is clear, and the only way to the next one is
+      // the exit pad. A bot that stands still here soaks wave 1 for ninety
+      // seconds and never sees a later wave, which is most of what a soak is for.
+      const ex = HG.level.exit;
+      const dx = ex.x - p.pos.x;
+      const dz = ex.z - p.pos.z;
+      const d = Math.hypot(dx, dz);
+      // the pad triggers at 1.15 m, so stopping at 1.2 leaves the bot standing
+      // one tenth of a metre outside the door it is trying to open
+      if (d > 0.6) {
+        p.yaw = Math.atan2(-dx, -dz);
+        HG.input.move.x = 0;
+        HG.input.move.y = -1;
+      } else {
+        HG.input.move.x = 0;
+        HG.input.move.y = 0;
+      }
     }
     frames(1);
     if (p.health < lastHp) { hpLost += lastHp - p.health; lastHp = p.health; }

@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.86.0 — 2026-11-21
+
+**The soak bot never left wave one**
+
+The 90-second soak reported `waves 1` on every difficulty and every seed. The game was fine; the bot was
+standing still. It fought until the last enemy died and then held position — and in this game the next wave
+starts when you walk to the exit pad, not when the room is clear.
+
+| Change | Why |
+| --- | --- |
+| With no enemies alive, walk to `level.exit` | Otherwise the soak never sees a wave after the first |
+| Close to 5 m instead of holding at 9 m | A shotgun at 9 m is a slow kill, and a slow bot is a shallow soak |
+
+The first version of the exit walk stopped at 1.2 m. The pad triggers at 1.15 m, so the bot stood a tenth of a
+metre outside the door it was trying to open — the same off-by-a-limit shape as everything else in this audit,
+this time in the tool rather than the game.
+
+It reaches wave two on hard now instead of one everywhere. It is still a coarse proxy: it answers "did it fall
+over", not "is it balanced".
+
+
 ## 1.85.0 — 2026-11-21
 
 **The mobile fire button fired once per tap**
