@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.80.0 — 2026-11-21
+
+**No content table may be inert**
+
+The haste/careful bug generalised into a test. Every entry in every content table must move something a player
+can feel, and the suite now walks each one:
+
+| Table | Entries | What is asserted |
+| --- | --- | --- |
+| Trinkets | 6 | Each changes the stat it names — damage, hp, energy, speed, armour, leech |
+| Upgrades | 6 | Each changes something after `recomputeStats()` |
+| Modes | 7 + campaign | Each differs from campaign in a key that is not `name` or `blurb` |
+| Zones | 9 | Distinct seeds, at least three floor-plan shapes, at least three threat levels |
+| Classes | 3 | Distinct signatures across hp, armour, speed, damage, energy, weapon, powers |
+| Powers | 5 | Each changes something observable and goes on cooldown |
+
+Twenty-five new assertions, and all of them pass — which is the useful result: the tables were already honest,
+and the one table that was not, the story flags, was found by reading rather than by sweeping.
+
+Writing the test found two of my own mistakes before it found any of the game's: `sumEffects` takes trinket
+**ids**, not trinket objects, and two modes (`nightmare`, `hardcore`) change rules under keys my first check
+did not look at. Both were the test being wrong about the contract, which is worth knowing: a new test that
+fails on its first run is usually describing the code it assumed rather than the code that exists.
+
+
 ## 1.79.0 — 2026-11-21
 
 **Two powers drew no numbers, and the smoke test was blaming the game for the pod**
