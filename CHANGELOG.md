@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.81.0 — 2026-11-21
+
+**A resumed run was not the same run**
+
+`saveRun()` wrote the numbers a HUD shows and nothing else. A reload in zone three lost:
+
+| Lost on resume | What it cost the player |
+| --- | --- |
+| `game.upgrades` | Every upgrade taken between zones, silently |
+| `game.flags` | Every story choice's effect |
+| `game.bookAt` | Where the book had got to |
+| `game.killsByType` | The codex's kill counts |
+| Relic progress | How many relics were already collected |
+
+All five are saved and restored now, before `applyClass` runs, because that is the function that reads the flags.
+
+**A structural fault underneath it.** The story flags were applied in `applyClass` as *adjustments*
+(`baseSpeed *= f.speedMul`), while `recomputeStats()` was a pure *derivation* that overwrote them. Any later
+`recomputeStats()` — a trinket restored on resume, an upgrade taken — wiped the flags back to nothing.
+
+`recomputeStats()` now folds the flags into the derivation, so it can be called any number of times and the
+numbers come out the same. That is the invariant the stats system needed and did not have.
+
+Twelve new assertions: the save carries upgrades, flags, book position, codex counts and trinkets, resuming
+restores all of them, and the flags reach the stats on resume.
+
+
 ## 1.80.0 — 2026-11-21
 
 **No content table may be inert**

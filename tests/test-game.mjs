@@ -538,6 +538,42 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== a resumed run is the same run ==');
+{
+  HG.game.upgrades = { damage: 2, hp: 1 };
+  HG.game.flags = { mercy: 2, haste: 1, zones: 3 };
+  HG.game.bookAt = 'vault';
+  HG.game.killsByType = { imp: 4, grunt: 2 };
+  HG.game.score = 4242;
+  HG.game.kills = 17;
+  HG.game.trinkets = ['edge', 'hide'];
+  HG.saveRun();
+  const saved = HG.loadRun();
+  ok(saved && saved.upgrades.damage === 2, 'the save carries the upgrades');
+  ok(saved.flags && saved.flags.mercy === 2, 'and the story flags');
+  ok(saved.bookAt === 'vault', 'and where the book had got to');
+  ok(saved.killsByType.imp === 4, 'and the codex counts');
+
+  // now resume into a fresh state and check it all comes back
+  HG.game.upgrades = {};
+  HG.game.flags = {};
+  HG.game.bookAt = null;
+  HG.game.killsByType = {};
+  HG.resumeRun(saved);
+  ok(HG.game.upgrades.damage === 2, 'resuming restores the upgrades (' + JSON.stringify(HG.game.upgrades) + ')');
+  ok(HG.game.flags.mercy === 2, 'and the flags (' + JSON.stringify(HG.game.flags) + ')');
+  ok(HG.game.bookAt === 'vault', 'and the book position');
+  ok(HG.game.killsByType.imp === 4, 'and the codex counts');
+  ok(HG.game.trinkets.length === 2, 'and the trinkets');
+  ok(HG.player.baseSpeed > 1, 'and the flags reached the stats on resume (speed ' + HG.player.baseSpeed.toFixed(2) + ')');
+  HG.game.flags = {};
+  HG.game.upgrades = {};
+  HG.game.score = 0;
+  HG.game.kills = 0;
+  HG.game.trinkets = [];
+  HG.recomputeStats();
+}
+
 console.log('\n== no inert content ==');
 {
   const { TRINKETS } = await import('../play/src/loot.js');
@@ -569,8 +605,11 @@ console.log('\n== no inert content ==');
   for (const u of HG.UPGRADES) {
     HG.game.upgrades = { [u.id]: 1 };
     HG.recomputeStats();
-    const now = snapshot();
-    const moved = Object.keys(now).some((k) => Math.abs(now[k] - base[k]) > 1e-9);
+    const viaStats = snapshot();
+    HG.applyClass(HG.game.classId);   // armour and cooldowns land in the class apply
+    const now = { ...viaStats, armour: HG.player.startArmourBonus + HG.player.armor, cooldown: HG.powers.cdMul };
+    const baseWith = { ...base, armour: base.armour, cooldown: 1 };
+    const moved = Object.keys(now).some((k) => Math.abs((now[k] || 0) - (baseWith[k] || 0)) > 1e-9);
     ok(moved, 'the ' + u.name + ' upgrade changes something');
   }
   HG.game.upgrades = {};

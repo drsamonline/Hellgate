@@ -124,3 +124,26 @@ the player can feel.** The suite now walks each table and asserts the entry does
 
 All of them pass. That is the useful result of this pass: the tables were already honest, and the one table
 that was not — the story flags — was found by reading rather than by sweeping.
+
+## Pass seven — a resumed run was not the same run
+
+`saveRun()` wrote the numbers a HUD shows — zone, seed, wave, score, kills, class, health, armour, ammo,
+trinkets — and nothing else. `resumeRun()` restored exactly those. So a reload in zone three lost:
+
+| Lost on resume | What it cost the player |
+| --- | --- |
+| `game.upgrades` | Every upgrade taken between zones, silently |
+| `game.flags` | Every story choice's effect |
+| `game.bookAt` | Where the book had got to |
+| `game.killsByType` | The codex's kill counts |
+| relic progress | How many relics were already collected |
+
+All five are in the save now, and restored **before** `applyClass` runs, because that is the function that
+reads the flags.
+
+**And a structural fault underneath it.** The story flags were applied in `applyClass` as adjustments
+(`baseSpeed *= f.speedMul`), while `recomputeStats()` was a pure derivation that overwrote them. Any later
+`recomputeStats()` — a trinket restored on resume, an upgrade taken — wiped the flags back to nothing.
+
+`recomputeStats()` now folds the flags into the derivation, so it can be called any number of times and the
+numbers come out the same. That is the invariant the whole stats system needed and did not have.

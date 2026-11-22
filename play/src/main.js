@@ -118,6 +118,16 @@ function saveRun() {
       armor: Math.round(player.armor),
       ammo: { ...player.ammo },
       trinkets: game.trinkets.slice(),
+      // everything a resumed run needs to be the same run. The first version of
+      // this saved only the numbers a HUD shows, so a reload after zone two lost
+      // every upgrade, every story flag and the codex counts.
+      upgrades: { ...game.upgrades },
+      flags: { ...game.flags },
+      bookAt: game.bookAt,
+      killsByType: { ...game.killsByType },
+      relicsLeft: game.relics.length,
+      relicsTotal: game.relicsTotal,
+      sideDone: !!game.sideDone,
       ts: Date.now(),
     }));
   } catch (e) { /* private mode */ }
@@ -502,7 +512,21 @@ function resumeRun(save) {
   zone = zoneById(save.zoneId);
   game.zoneId = zone.id;
   buildRun(save.seed, zone);
+  // restore the run's memory before the stats are computed: applyClass reads
+  // game.flags, and a flag restored afterwards would do nothing until next zone
+  game.upgrades = (save.upgrades && typeof save.upgrades === 'object') ? { ...save.upgrades } : {};
+  game.flags = (save.flags && typeof save.flags === 'object') ? { ...save.flags } : {};
+  game.bookAt = typeof save.bookAt === 'string' ? save.bookAt : null;
+  game.killsByType = (save.killsByType && typeof save.killsByType === 'object') ? { ...save.killsByType } : {};
   applyClass(save.classId);
+  // relics are respawned by buildRun at fresh positions, so the count is what
+  // survives: take the excess back off the floor rather than let them be collected twice
+  if (Number.isFinite(save.relicsLeft) && save.relicsTotal === game.relicsTotal) {
+    while (game.relics.length > save.relicsLeft) {
+      const r = game.relics.pop();
+      dropMesh(r.mesh);
+    }
+  }
   game.score = save.score || 0;
   game.kills = save.kills || 0;
   player.health = Math.min(getClass(save.classId).hp, save.hp || getClass(save.classId).hp);
@@ -532,18 +556,28 @@ function syncHud() {
   hud.slotSig = '';
 }
 
+/**
+ * Derive every stat from class + upgrades + trinkets + the story flags.
+ *
+ * It is a pure derivation, not an adjustment: calling it twice gives the same
+ * numbers. That matters because it is called from several places, and an
+ * adjustment-style version drifted — a flag applied in `applyClass` was wiped by
+ * the next `recomputeStats`, so haste and careful silently stopped working after
+ * a resume.
+ */
 function recomputeStats() {
   const def = getClass(game.classId);
   const u = game.upgrades;
   const t = sumEffects(game.trinkets);
+  const f = effectsFor(game.flags);
   player.baseDamage = def.damage * (1 + 0.15 * (u.damage || 0)) * (1 + (t.damage || 0));
-  player.baseSpeed = def.speed * (1 + 0.1 * (u.speed || 0)) * (1 + (t.speed || 0));
-  player.maxHp = def.hp + 25 * (u.hp || 0) + (t.hp || 0);
+  player.baseSpeed = def.speed * (1 + 0.1 * (u.speed || 0)) * (1 + (t.speed || 0)) * f.speedMul;
+  player.maxHp = def.hp + 25 * (u.hp || 0) + (t.hp || 0) + f.maxHp;
   player.damageMul = player.baseDamage;
   player.speedMul = player.baseSpeed;
   powers.regenMul = (1 + 0.3 * (u.energy || 0)) * (1 + (t.energy || 0));
   powers.cdMul = Math.pow(0.85, u.cooldown || 0);
-  player.startArmourBonus = (t.armour || 0);
+  player.startArmourBonus = (t.armour || 0) + f.armour;
   player.leech = t.leech || 0;
   player.health = Math.min(player.health, player.maxHp);
 }
@@ -556,14 +590,10 @@ function applyClass(classId) {
   recomputeStats();
   player.health = player.maxHp;
   player.grenades = 3;
+  // recomputeStats already folded in the story flags: speed, max health and the
+  // armour bonus, which is where they belong and where they survive a resume
   player.armor = def.armor + 20 * (game.upgrades.armour || 0) + (player.startArmourBonus || 0);
-  // what the story choices have made you: a hurried run moves faster, a
-  // cautious one starts with armour, a kind one has more to lose
-  const fl = effectsFor(game.flags);
-  if (fl.speedMul !== 1) player.baseSpeed *= fl.speedMul;
-  if (fl.maxHp) player.maxHp += fl.maxHp;
   player.health = player.maxHp;
-  if (fl.armour) player.armor += fl.armour;
   weapons.select(def.weapon, true);
   weapons.cd = 0;
   powers.equip(def);
@@ -2109,7 +2139,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.80.0';
+const BUILD = '1.81.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2531,7 +2561,7 @@ window.HG = {
   // tools measure the post pass by switching it; nothing in the game reads this
   get bloom() { return bloom; },
   get perfState() { return { ratio: perf.ratio, bloomDropped: perf.bloomDropped }; },
-  takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
+  takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats, applyClass,
   // the simulation step, for tools that advance the game without a display
   update, effects, projectiles, level, enemies, scene,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
