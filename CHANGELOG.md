@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.68.0 — 2026-11-21
+
+**An eighth enemy: the Stalker**
+
+Every ranged enemy so far announced itself with a glow. The Stalker announces itself with a **line**: during
+its 0.95 s wind-up it draws a violet beam from its muzzle to your head, and then fires a hitscan that does
+22 damage.
+
+| Property | Value |
+| --- | --- |
+| Health | 30 — the softest ranged enemy |
+| Damage | 22, hitscan, wall-checked |
+| Telegraph | 0.95 s, drawn as a beam |
+| Behaviour | Backs off below 13 m, so it is a duel and not a rush |
+| Body | The humanoid rig, thin, hooded, one bright optic |
+| Appears | Wave 6 and later |
+
+The telegraph is the point: the beam tells you where the shot comes from and gives you a second to break
+the line. It reuses the tracer pool, so it costs no draw call.
+
+**Tests** — 6 new assertions: it spawns, it has a beam colour, it keeps its distance, it hits harder than
+an imp, its body is 23 parts, and it is a rig that walks.
+
+
 ## 1.67.0 — 2026-11-21
 
 **A ninth zone: The Spine**

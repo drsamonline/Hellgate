@@ -60,6 +60,14 @@ export const TYPES = {
     melee: false, sight: 26, color: 0x2f6a5e, label: 'SPITTER', pitch: 1.25,
     keepsDistance: 9, lob: true,
   },
+  stalker: {
+    // the one that punishes standing in the open: a long, bright telegraph and a
+    // hitscan that hurts. It backs off when you close, so it is a duel, not a rush.
+    hp: 30, speed: 2.8, radius: 0.5, height: 2.0, hitRadius: 0.55,
+    attackRange: 26, attackCd: 2.8, telegraph: 0.95, damage: 22,
+    melee: false, sight: 30, color: 0x6a2f8a, label: 'STALKER', pitch: 1.9,
+    keepsDistance: 13, beam: 0xb45cff,
+  },
 };
 
 // Geometry is cached and shared by every enemy of a type: 24 imps on screen
@@ -108,6 +116,9 @@ function mats() {
     return m;
   };
   MATS = {
+    stalkerBody: body(0x4a2266),
+    stalkerDark: body(0x2a1438),
+    stalkerEye: plain(0xd06cff, true),
     impBody: body(0x8a3524),
     impDark: body(0x5c2018),
     impEye: plain(0xffcf4d, true),
@@ -253,6 +264,19 @@ function makeSpitter() {
   const { group, parts } = humanoid({
     ...PROPORTIONS.spitter,
     mats: { body: M.spitterBody, dark: M.spitterDark, eye: M.spitterEye, sac: M.spitterSac },
+  });
+  return { group, parts };
+}
+
+function makeStalker() {
+  const M = mats();
+  // thin and upright, all shoulder and optic: it is a rifle that walks
+  const { group, parts } = humanoid({
+    ...PROPORTIONS.grunt,
+    torsoLen: 0.86, shoulderX: 0.28, chestR: 0.3, waistR: 0.2, hipR: 0.2,
+    armR: 0.07, upperArm: 0.44, lowerArm: 0.44, legR: 0.09,
+    lean: 0.1, eyes: true, pauldrons: true, pauldronR: 0.13,
+    mats: { body: M.stalkerBody, dark: M.stalkerDark, eye: M.stalkerEye, plate: M.stalkerDark },
   });
   return { group, parts };
 }
@@ -614,6 +638,16 @@ export class Enemy {
           }
           // a charger draws its lane on the floor: the wind-up says "this is
           // where I am going", and standing in it is a decision you can make
+          if (this.T.beam) {
+            // a line from the muzzle to the player: the shot is announced, and
+            // where to step out of is not a guess
+            const from = this.chestPos();
+            ctx.effects.tracer(
+              new THREE.Vector3(from.x, from.y, from.z),
+              new THREE.Vector3(playerEye.x, playerEye.y, playerEye.z),
+              this.T.beam
+            );
+          }
           if (this.T.charges && this.chargeLaneT == null) this.chargeLaneT = 0;
           if (this.T.charges) {
             this.chargeLaneT += dt;
@@ -733,7 +767,7 @@ export class Enemy {
         ctx.effects.tracer(
           new THREE.Vector3(from.x, from.y, from.z),
           new THREE.Vector3(playerEye.x, playerEye.y, playerEye.z),
-          0xff5522
+          this.T.beam || 0xff5522
         );
       }
       audio.play('enemyShoot', this.chestPos());
@@ -1014,7 +1048,8 @@ export class EnemyManager {
       const c = pool[Math.floor(Math.random() * pool.length)];
       // wave 2 brings grunts, wave 4 brings hounds; after that it is a mix
       let type = 'imp';
-      if (wave >= 5 && i % 9 === 8) type = 'brute';
+      if (wave >= 6 && i % 11 === 10) type = 'stalker';
+      else if (wave >= 5 && i % 9 === 8) type = 'brute';
       else if (wave >= 2 && i % 5 === 4) type = 'wisp';
       else if (wave >= 4 && i % 5 === 3) type = 'spitter';
       else if (wave >= 4 && i % 4 === 3) type = 'hound';

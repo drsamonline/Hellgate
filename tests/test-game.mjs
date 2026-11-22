@@ -538,6 +538,24 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== the stalker ==');
+{
+  HG.enemies.clear();
+  HG.player.health = 110;
+  const st = HG.enemies.spawnAt('stalker', HG.player.pos.x + 10, HG.player.pos.z, 3);
+  frames(1);
+  ok(!!st, 'the stalker spawns');
+  ok(st.T.beam != null, 'and has a beam colour for its telegraph');
+  ok(st.T.keepsDistance >= 12, 'it keeps its distance (' + st.T.keepsDistance + ' m)');
+  ok(st.T.damage > 20, 'and hits harder than an imp (' + st.T.damage + ' vs 15)');
+  let meshes = 0;
+  st.body.traverse((o) => { if (o.isMesh) meshes++; });
+  ok(meshes >= 15, 'its body is ' + meshes + ' parts');
+  ok(!!st.parts.elbowL && !!st.parts.kneeL, 'and it is a rig, so it walks');
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
+}
+
 console.log('\n== the body pool ==');
 {
   HG.enemies.clear();
