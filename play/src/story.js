@@ -70,6 +70,14 @@ export const ZONE_STORY = {
     ],
     epilogue: 'The fire goes out. The last door is warm.',
   },
+  spine: {
+    panels: [
+      { text: 'The spine runs under every room you have crossed.', hold: 3.4 },
+      { text: 'The walls here are closer than the plans say they should be.', hold: 3.4 },
+      { text: 'Something has been widening it. Not for you.', hold: 3.0 },
+    ],
+    epilogue: 'The corridor opens. The kiln is a room away and the heat comes through the floor.',
+  },
   throne: {
     panels: [
       { text: 'The last room. The warden has been waiting since before the gate was built.', hold: 3.6 },

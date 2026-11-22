@@ -222,8 +222,13 @@ ok('eight enemies stay under 240 draw calls', withWave.calls < 240, JSON.stringi
 // cleared screen for every later check. Put one back.
 await page.evaluate(() => {
   const HG = window.HG;
+  // clearing the enemies completed the wave, so put the run back where the rest
+  // of the checks expect it: playing, on the spawn, with a live enemy
   HG.enemies.clear();
-  HG.enemies.spawnAt('imp', HG.player.pos.x + 12, HG.player.pos.z + 12, 1);
+  HG.player.pos.set(HG.level.spawn.x, 0, HG.level.spawn.z);
+  HG.game.exitOpen = false;
+  HG.game.state = 'playing';
+  HG.enemies.spawnAt('imp', HG.level.spawn.x + 14, HG.level.spawn.z + 14, 1);
 });
 await new Promise((r) => setTimeout(r, 120));
 

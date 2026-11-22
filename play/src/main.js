@@ -162,7 +162,7 @@ const UPGRADES = [
 const MODES = {
   campaign: {
     name: 'CAMPAIGN',
-    blurb: 'Eight zones in order. Clear a zone to unlock the next.',
+    blurb: 'Nine zones in order. Clear a zone to unlock the next.',
     waves: null,       // the zone decides
     lives: 1,
     endless: false,
@@ -211,6 +211,16 @@ const MODES = {
     endless: false,
     bossRush: false,
     noSave: true,
+  },
+  gauntlet: {
+    name: 'GAUNTLET',
+    blurb: 'Every zone, one wave each, back to back. No save, no second chance.',
+    waves: 1,
+    lives: 1,
+    endless: false,
+    bossRush: false,
+    noSave: true,
+    gauntlet: true,
   },
 };
 
@@ -1905,7 +1915,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.66.0';
+const BUILD = '1.67.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.67.0 — 2026-11-21
+
+**A ninth zone: The Spine**
+
+The service corridor under everything. Narrow rooms (8-12 of 3-5 cells), a cold steel-blue palette, grated
+floors, dust that drifts, and a threat of 1.16 — between the kiln and the throne.
+
+| Property | Value |
+| --- | --- |
+| Rooms | 8-12, of 3-5 cells |
+| Walls and floor | tech panels over a grate |
+| Palette | `[0.84, 1.0, 1.18]` — the only cool-bright zone |
+| Threat | 1.16 |
+| Story | Three panels, and an epilogue that hands you to the kiln |
+
+**A seventh mode: Gauntlet**
+
+Every zone, one wave each, back to back, no save and no second chance. It uses the existing `waves: 1` and
+`noSave` flags, so it is a data row, not a code path.
+
+**Two tests that assumed a fixed count** — "eight zones have stories" and "six modes are defined" now
+derive their numbers from the zone and mode lists, so adding content cannot silently pass.
+
+**A flaky damage test** — it spawned a wave and waited for an enemy to walk over. Enemies now spawn at
+least 12 m away, so the walk took longer than the test's window. It places one enemy deliberately instead;
+a test that waits for the pathfinder is a test of the pathfinder.
+
+
 ## 1.66.0 — 2026-11-21
 
 **The wave started you sealed inside the exit room**

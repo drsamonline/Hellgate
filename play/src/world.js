@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 /**
- * The eight zones: seed, palette, props, objective.
+ * The nine zones: seed, palette, props, objective.
  */
 export const ZONES = [
   {
@@ -146,6 +146,25 @@ export const ZONES = [
     objective: 'Clear the arena',
     side: 'Break the three relics',
     relics: 3,
+  },
+  {
+    id: 'spine',
+    ambientFx: { color: 0xbfe4ff, rate: 2.6, life: 5, gravity: 0.2, speed: 0.25, spread: 9, height: 5.5 },
+    shape: { rooms: [8, 12], size: [3, 5], tall: 0.2 },
+    wallTint: [0.84, 1.0, 1.18],
+    grade: { tint: [0.94, 1.0, 1.1], saturation: 1.08, vignette: 0.4 },
+    name: 'THE SPINE',
+    seed: 'spine-64',
+    threat: 1.16,
+    blurb: 'The service corridor under everything. It does not end, it just narrows.',
+    sky: 0xa8c4dc,
+    ground: 0x3a4450,
+    fog: 0x2a343e,
+    ambient: 0.86,
+    wall: 1, floor: 2,
+    props: { trees: 0, rocks: 14, grass: 6, animals: 1 },
+    objective: 'Clear the spine',
+    side: 'A terminal halfway down, if the corridor lets you stop.',
   },
   {
     id: 'throne',

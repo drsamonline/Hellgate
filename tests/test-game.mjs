@@ -698,7 +698,7 @@ HG.cinematic.skip();
 ok(HG.cinematic.playing === false, 'skip stops it');
 
 console.log('\n== game modes ==');
-ok(Object.keys(HG.MODES).length === 6, 'six modes are defined');
+ok(Object.keys(HG.MODES).length === 7, 'seven modes are defined (' + Object.keys(HG.MODES).length + ')');
 ok(HG.mode === 'campaign', 'the default mode is campaign');
 for (const name of ['endless', 'bossrush', 'arena', 'nightmare', 'hardcore', 'campaign']) {
   HG.selectMode(name);
@@ -788,7 +788,10 @@ ok(HG.hud.promptText === 'READ' || HG.hud.promptText === 'V  READ', 'the prompt 
 console.log('\n== story per zone ==');
 const { panelsFor, epilogueFor, ZONE_STORY } = await import('../play/src/story.js');
 const zones = Object.keys(ZONE_STORY);
-ok(zones.length === 8, 'every zone has its own story (' + zones.length + ')');
+// the count comes from the zone list, not a typed number: a new zone without a
+// story is the bug this test exists to catch
+const { ZONES: ALL_ZONES } = await import('../play/src/world.js');
+ok(zones.length === ALL_ZONES.length, 'every zone has its own story (' + zones.length + ' of ' + ALL_ZONES.length + ')');
 ok(zones.every((z) => panelsFor(z).length >= 3), 'and every one of them is at least three panels');
 ok(panelsFor('gate').length >= 3, 'the gate has panels');
 ok(panelsFor('throne')[0].text !== panelsFor('gate')[0].text, 'zones do not share text');
@@ -1153,7 +1156,9 @@ HG.game.state = 'playing';
 console.log('\n== enemy AI damages the player ==');
 HG.game.wave = 1;
 HG.enemies.clear();
-HG.enemies.spawnWave(1, HG.player.pos);
+// one enemy, placed deliberately: spawnWave puts them 12 m away now, and a
+// test that waits for one to walk over is a test of the pathfinder, not of damage
+HG.enemies.spawnAt('imp', HG.player.pos.x + 8, HG.player.pos.z, 1);
 const near = HG.enemies.list[0];
 const spot2 = duelSpot(5);
 HG.player.pos.set(spot2.a.x, spot2.a.floor, spot2.a.z);
