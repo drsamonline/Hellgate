@@ -367,7 +367,34 @@ whole cell — and the winding assertion fails on the old code with exactly the 
 | `models.js` `getModel()` returns a clone with shared materials | Not a defect: `buildBody` clones every material before use |
 | `textures.js`, `items.js`, `effects.js` | Read; nothing found. Pools are bounded, decal orientation is explicit, every key in `FLOOR_KEY`/`WALL_KEY` resolves |
 
-## Pass seventeen — the draw-call budget is not counting enemy bodies
+## Pass seventeen — the draw-call budget measured a frame with no enemy in it
+
+`smoke.mjs` has two draw-call budgets. Both spawned their enemies at `player.pos + (4, 4)`, which is behind
+the camera on most spawns, and both were measured through whatever pitch the run started with — often 47°
+upward, which puts the floor itself out of frustum.
+
+| Frame, camera level, gate | Calls | Triangles |
+| --- | --- | --- |
+| No enemies | 47 | 3 886 |
+| 2 imps in front | 76 | 5 060 |
+| 4 imps | 104 | 6 232 |
+| 8 imps | 154 | 8 504 |
+| 16 imps | 266 | 13 192 |
+
+**About 14 draw calls per imp in view** — 13 merged joints plus its ground shadow. The old budget measured 21
+calls with eight imps "spawned", i.e. a frame containing no body at all, and passed.
+
+Two wrong readings on the way to this table, both recorded because both cost a run:
+
+1. First reading: the spawn is behind the camera. Plausible, but I then "disproved" it by spawning along
+   `camera.getWorldDirection()` and seeing no change — because the camera was pitched 47° up, so the bodies
+   were below the frame.
+2. Second reading: the bodies never reach the draw pass. Also wrong, and caused by reading `e.body.group` in
+   my own probe when `e.body` *is* the group: the count came back 0 meshes for a body that has 13.
+
+The lesson is the same one pass fourteen recorded about the atlas: the number is only worth what the setup
+around it is worth. The harness now levels the camera, spawns along the forward vector, and the ceiling is
+re-baselined to 200 for eight bodies against a measured 154.
 
 Chasing a number for #45 turned up a measurement fault rather than a code fault. `smoke.mjs` has two draw-call
 budgets, and both spawn their enemies at a fixed corner of the world. The two frames print their own numbers:

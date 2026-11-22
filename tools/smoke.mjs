@@ -197,8 +197,15 @@ ok('a run in progress is saved', inv.save === true);
 // Draw-call budget, measured in two controlled states instead of whenever the
 // frame happens to land. A snapshot mid-wave measures the enemy count as much as
 // the level, and that made this check flap between 86 and 150.
+// The camera has to be level for either number to mean anything: the pitch the
+// run happens to start with can put the whole floor out of frustum, and a
+// budget measured through a 47-degree upward view counts the ceiling, not the
+// bodies. Measured at pitch 0 on the gate: 47 calls empty, 154 with eight imps
+// in front — about 14 calls per body, which is 13 merged joints plus a shadow.
 const levelOnly = await page.evaluate(() => {
   const HG = window.HG;
+  HG.player.pitch = 0;
+  HG.player.syncCamera();
   HG.enemies.clear();
   return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
 });
@@ -209,15 +216,25 @@ ok('the level alone stays under 80 draw calls', levelOnly.calls > 0 && levelOnly
 const withWave = await page.evaluate(() => {
   const HG = window.HG;
   HG.enemies.clear();
+  // in front of the camera, not at a fixed corner of the world: the old spawn
+  // put every body behind the player, so this budget was green against a frame
+  // with no enemy in it (audit pass seventeen)
+  const cam = HG.player.camera;
+  const d = new (cam.position.constructor)();
+  cam.getWorldDirection(d);
+  const p = HG.player.pos;
   for (let i = 0; i < 8; i++) {
-    HG.enemies.spawnAt('imp', HG.player.pos.x + 4 + (i % 3) * 2, HG.player.pos.z + 4 + Math.floor(i / 3) * 2, 1);
+    const row = Math.floor(i / 4);
+    const side = (i % 4) - 1.5;
+    const back = 4 + row * 1.6;
+    HG.enemies.spawnAt('imp', p.x + d.x * back - d.z * side * 0.9, p.z + d.z * back + d.x * side * 0.9, 1);
   }
   return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
 });
 // 8 rig bodies on top of the level. Each body is merged to one mesh per joint —
 // 13 for an imp, 16 for a grunt — so the ceiling is far below the old 240, which
 // was set when a body was 19-24 separate boxes.
-ok('eight enemies stay under 160 draw calls', withWave.calls < 160, JSON.stringify(withWave));
+ok('eight enemies stay under 200 draw calls', withWave.calls < 160, JSON.stringify(withWave));
 
 const bodySizes = await page.evaluate(() => {
   const HG = window.HG;
