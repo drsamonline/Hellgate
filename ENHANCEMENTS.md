@@ -65,6 +65,27 @@ Cheap, low-risk, immediately noticeable. All `S`.
 43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each ene — ✓ shippedmy; makes them feel grounded without a shadow map. `enemies.js` · M · high
 44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high — ✓ shipped as `bloom.js`, a hand-written two-pass blur plus a colour grade
 45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high — half done: bodies are merged to one mesh per joint (`mergeJointMeshes`), 21→13 for an imp and 23→16 for a grunt, and total draw calls fell **68 → 43**. True instancing is still open and would need per-instance colour for the hit flash
+
+   **What true instancing needs, in the order it has to be done.** Scoped at 1.91.0, not started:
+
+   | Step | Why it is not optional |
+   | --- | --- |
+   | One `InstancedMesh` per (type, joint, material), capacity = `BODY_POOL` cap 14 | The joint hierarchy still has to exist and animate; only its rendering moves into the instance buffer |
+   | Each frame, write `joint.matrixWorld` into slot *i* of the instance for that enemy | The merged geometry is in joint space, so the world matrix is the whole transform — no extra multiplication, and no per-instance parenting |
+   | Per-instance colour for the hit flash (`setColorAt`), not `emissive` | `emissive` is a material property; there is no per-instance emissive. The flash becomes a brightened diffuse, which reads the same at this art scale |
+   | Keep the eyes as their own instanced set | They are the one mesh with a non-zero `emissive`; folding them in loses the glow |
+   | Re-point the corpse fade and the pool reset at the instance colour | `userData.baseColor` is per material today and would become per instance |
+   | Re-baseline the smoke budgets | `eight enemies under 160 calls` and `a merged body at most 18 meshes` both measure the thing being replaced |
+
+   **The tests that encode the current design, and will have to change with it:** "enemy owns cloned flash
+   materials", "flash materials are not the shared ones", "imps share one torso geometry", and the two smoke
+   budgets above. That is five assertions resting on per-body meshes.
+
+   **Measure before writing it.** The win is the draw calls an enemy body costs when it is in frustum, which is
+   not the same as 13 × the enemy count: at wave 2 on the gate the whole frame was **43 calls** with bodies at
+   13 (imp) and 16 (grunt) meshes each, so only a few bodies are in view at once in a room this size. A
+   trustworthy number needs `HG.renderStats.calls` sampled with 0, 2, 4, 8, 16 and 32 bodies placed directly
+   ahead of the camera — the same measurement that took the atlas from planned to rejected in twenty minutes.
 46. **Chunked level meshes** — split the merged geometry into 4×4-cell chunks so frustum cul — measured and rejected: 4×4 chunks cost 255 draw calls against 117 for one mesh per texture at 1280×720, because this arena is small enough that nearly every chunk is in the frustum. The code keeps a `CHUNK` constant, set to one chunk. A bigger level should re-measureling actually removes geometry. Trades 5 draw calls for ~25. `levelmesh.js` · M · medium
 47. **Texture atlas** — one 256×256 atlas for all surfaces, so the level is one draw call instead of five. `textures.js` · M · medium — measured and rejected: the whole level is **4 draw calls of 68** (`floor_tile`, `ceil`, `wall_brick`, `decor:wall_brick`), and an atlas cannot tile. Walls use a repeat of 2.4, which an atlas cell cannot express without either a `fract()` in a custom shader or subdividing every quad into tiles. Two calls saved, a shader introduced. The real cost is enemy bodies: 21–23 meshes each, ~170 meshes for eight enemies — that is #45's job, not the atlas's
 48. **Weapon sprites instead of meshes** — a 2D canvas sprite per weapon, Doom-style, with frames for idle/fire. Cheaper and more authentic than boxes. `weapons.js` · M · medium
