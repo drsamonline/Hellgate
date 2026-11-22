@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.61.0 — 2026-11-21
+
+**Every zone breathes**
+
+Eight zones had eight palettes, eight textures and eight floor plans, and all eight were perfectly still
+between waves. `effects.ambient()` spawns motes into the same particle pool the sparks use, so a zone's
+atmosphere costs no draw call and no allocation.
+
+| Zone | Motes |
+| --- | --- |
+| The Gate | dust drifting |
+| The Foundry | embers rising |
+| The Grove | spores floating |
+| The Vault | cold dust, barely moving |
+| Ashfall | ash falling |
+| The Cistern | water dripping from the ceiling |
+| The Kiln | embers rising fast |
+| The Throne | blood motes |
+
+The difference between embers and drips is the sign of gravity and the rate: the kiln spawns nine a second
+that rise, the cistern three a second that fall at 4.5 m/s². All eight colours are distinct, and a test
+asserts it.
+
+**Tests** — 4 new assertions: every zone has motes, no two share a colour, the kiln's rise while the
+cistern's fall, and the emitter actually puts particles in the pool.
+
+
 ## 1.60.1 — 2026-11-21
 
 **The draw-call budget was measuring the wrong thing**

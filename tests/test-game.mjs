@@ -408,6 +408,24 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== ambient particles per zone ==');
+{
+  const { ZONES } = await import('../play/src/world.js');
+  ok(ZONES.every((z) => z.ambientFx && z.ambientFx.color != null), 'every zone has its own ambient motes');
+  const colours = new Set(ZONES.map((z) => z.ambientFx.color));
+  ok(colours.size === ZONES.length, 'and no two zones share a colour (' + colours.size + ' distinct)');
+  // embers rise, drips fall: the sign of gravity is the difference
+  const kiln = ZONES.find((z) => z.id === 'kiln').ambientFx;
+  const cistern = ZONES.find((z) => z.id === 'cistern').ambientFx;
+  ok(kiln.gravity < 0 && cistern.gravity > 0, 'the kiln embers rise and the cistern drips fall');
+  // the emitter spawns into the existing pool, so it adds no draw call
+  const before = HG.effects.parts.filter((p) => p.life > 0).length;
+  HG.effects.ambient(1.0, HG.player, kiln);
+  frames(1);
+  const after = HG.effects.parts.filter((p) => p.life > 0).length;
+  ok(after > before, 'the emitter puts particles in the pool (' + before + ' -> ' + after + ')');
+}
+
 console.log('\n== the report ==');
 {
   HG.note('a test event');

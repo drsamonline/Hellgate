@@ -221,6 +221,31 @@ export class Effects {
     this.points.geometry.attributes.color.needsUpdate = true;
   }
 
+  /**
+   * Ambient motes for a zone: embers in the kiln, drips in the cistern, spores
+   * in the grove. It reuses the particle pool, so a zone's atmosphere costs no
+   * draw call and no allocation — the same Points object that draws the sparks.
+   *
+   * `fx` is `{ color, rate, count, life, gravity, speed, size, spread, height }`
+   * and `rate` is spawns per second.
+   */
+  ambient(dt, player, fx) {
+    if (!fx || !player) return;
+    this.ambT = (this.ambT || 0) + dt * fx.rate;
+    if (this.ambT < 1) return;
+    const n = Math.min(6, Math.floor(this.ambT));
+    this.ambT -= n;
+    const spread = fx.spread || 11;
+    const height = fx.height || 4.5;
+    const p = { x: 0, y: 0, z: 0 };
+    for (let i = 0; i < n; i++) {
+      p.x = player.pos.x + (Math.random() - 0.5) * 2 * spread;
+      p.z = player.pos.z + (Math.random() - 0.5) * 2 * spread;
+      p.y = player.pos.y + Math.random() * height;
+      this.burst(p, fx.color, fx.count || 1, fx.speed || 0.4, fx.life || 3.2, fx.gravity == null ? -0.6 : fx.gravity, fx.size || 1);
+    }
+  }
+
   tracer(a, b, color = 0xffd27f) {
     const t = this.tracers[this.tCursor];
     this.tCursor = (this.tCursor + 1) % MAX_TRACERS;

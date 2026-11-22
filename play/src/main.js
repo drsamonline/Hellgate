@@ -1892,7 +1892,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.60.1';
+const BUILD = '1.61.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2094,6 +2094,9 @@ function update(dt) {
   updateFillLight();
   checkLockedDoors(dt);
   checkStuckSpawn(dt);
+  // each zone breathes: embers, drips, spores. It is the same particle pool the
+  // sparks use, so it costs no draw call.
+  if (zone && zone.ambientFx) effects.ambient(dt, player, zone.ambientFx);
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {

@@ -9,6 +9,7 @@
 export const ZONES = [
   {
     id: 'gate',
+    ambientFx: { color: 0xd8c9a8, rate: 1.2, life: 5, gravity: -0.15, speed: 0.25, spread: 12 },
     shape: { rooms: [8, 11], size: [4, 7], tall: 0.25 },
     wallTint: [1.06, 1.0, 0.92],
     grade: { tint: [1.02, 1.0, 0.96], saturation: 1.05, vignette: 0.42 },
@@ -28,6 +29,7 @@ export const ZONES = [
   },
   {
     id: 'foundry',
+    ambientFx: { color: 0xff8a3c, rate: 6, life: 2.4, gravity: -1.6, speed: 0.5, spread: 10, height: 5 },
     shape: { rooms: [10, 14], size: [3, 6], tall: 0.5 },
     wallTint: [1.28, 0.92, 0.7],
     grade: { tint: [1.06, 1.0, 0.92], saturation: 1.1, vignette: 0.4 },
@@ -47,6 +49,7 @@ export const ZONES = [
   },
   {
     id: 'grove',
+    ambientFx: { color: 0xa8ff7a, rate: 2.2, life: 6, gravity: -0.1, speed: 0.3, spread: 12 },
     shape: { rooms: [6, 9], size: [6, 9], tall: 0.15 },
     wallTint: [0.8, 1.12, 0.82],
     grade: { tint: [0.96, 1.04, 0.98], saturation: 1.12, vignette: 0.36 },
@@ -66,6 +69,7 @@ export const ZONES = [
   },
   {
     id: 'vault',
+    ambientFx: { color: 0x9fc4ff, rate: 1.6, life: 6, gravity: 0.1, speed: 0.2, spread: 12 },
     shape: { rooms: [11, 15], size: [3, 5], tall: 0.2 },
     wallTint: [0.86, 0.98, 1.16],
     grade: { tint: [0.99, 1.0, 1.05], saturation: 0.92, vignette: 0.48 },
@@ -85,6 +89,7 @@ export const ZONES = [
   },
   {
     id: 'ashfall',
+    ambientFx: { color: 0xc9b8a4, rate: 5, life: 5, gravity: 0.5, speed: 0.35, spread: 12, height: 6 },
     shape: { rooms: [5, 8], size: [7, 10], tall: 0.6 },
     wallTint: [1.1, 1.02, 0.94],
     grade: { tint: [1.04, 0.99, 0.94], saturation: 0.86, vignette: 0.46 },
@@ -104,6 +109,7 @@ export const ZONES = [
   },
   {
     id: 'cistern',
+    ambientFx: { color: 0x7fd8ff, rate: 3, life: 2.2, gravity: 4.5, speed: 0.3, spread: 10, height: 5.2 },
     shape: { rooms: [9, 13], size: [3, 5], tall: 0.1 },
     wallTint: [0.72, 1.02, 1.2],
     grade: { tint: [0.92, 1.02, 1.08], saturation: 0.95, vignette: 0.42 },
@@ -123,6 +129,7 @@ export const ZONES = [
   },
   {
     id: 'kiln',
+    ambientFx: { color: 0xff6a2a, rate: 9, life: 2.2, gravity: -2.2, speed: 0.7, spread: 9, height: 5 },
     shape: { rooms: [7, 10], size: [5, 8], tall: 0.45 },
     wallTint: [1.36, 0.84, 0.66],
     grade: { tint: [1.1, 0.94, 0.88], saturation: 1.16, vignette: 0.44 },
@@ -142,6 +149,7 @@ export const ZONES = [
   },
   {
     id: 'throne',
+    ambientFx: { color: 0xff3b52, rate: 3.4, life: 4.5, gravity: -0.9, speed: 0.4, spread: 11 },
     shape: { rooms: [6, 9], size: [7, 10], tall: 0.7 },
     wallTint: [1.3, 0.7, 0.7],
     grade: { tint: [1.08, 0.9, 0.9], saturation: 1.2, vignette: 0.5 },
