@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.68.1 — 2026-11-21
+
+**A damage test that depended on the level**
+
+`enemies dealt damage` spawned a wave and waited for an imp's fireball to land from a random duel spot.
+Whether it landed depended on line of sight, so it failed roughly one run in eight. It spawns a hound
+instead: melee, adjacent, deterministic. Ten clean runs.
+
+
 ## 1.68.0 — 2026-11-21
 
 **An eighth enemy: the Stalker**

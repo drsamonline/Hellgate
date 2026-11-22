@@ -1174,9 +1174,10 @@ HG.game.state = 'playing';
 console.log('\n== enemy AI damages the player ==');
 HG.game.wave = 1;
 HG.enemies.clear();
-// one enemy, placed deliberately: spawnWave puts them 12 m away now, and a
-// test that waits for one to walk over is a test of the pathfinder, not of damage
-HG.enemies.spawnAt('imp', HG.player.pos.x + 8, HG.player.pos.z, 1);
+// A hound, placed deliberately. The test used to spawn a wave and wait for an
+// imp's fireball to land, which depends on line of sight from a random duel
+// spot — that is a test of the level, not of damage. A hound bites.
+HG.enemies.spawnAt('hound', HG.player.pos.x + 8, HG.player.pos.z, 1);
 const near = HG.enemies.list[0];
 const spot2 = duelSpot(5);
 HG.player.pos.set(spot2.a.x, spot2.a.floor, spot2.a.z);
