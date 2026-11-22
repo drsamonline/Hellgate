@@ -42,3 +42,33 @@ The browser flow audit crashed the page twice while switching six screens in one
 session under the software rasteriser. Run with a fresh page per panel it is clean,
 13 steps, no console errors. That is the sandbox's WebGL, not the game's — but the
 tool now gives each panel its own page, which is better test design anyway.
+
+## Pass two — reading the damage path
+
+Reading `weapons.js` against `enemies.js` rather than sweeping them found the kind of bug a script cannot:
+**every hit drew two damage numbers.**
+
+`Enemy.hurt()` draws the number, because it is the one place every damage source passes through. `weapons.js`
+drew it again after calling `hurt()`, in both the hitscan path and the blade. So a shotgun blast showed two
+numbers per pellet, and a blade swing showed two for one hit.
+
+Fixed by deleting the two calls in `weapons.js`, with a test that counts the pool cursor: one hit, one number.
+
+## Pass three — invariants over 900 frames
+
+`tools/audit-invariants.mjs` (new) runs the game for 900 simulated frames per zone with input that aims at
+the nearest enemy and fires, swings the blade and throws grenades, then asserts what must always be true:
+
+| Invariant | Checked |
+| --- | --- |
+| Player position finite | `Number.isFinite` on x, y, z |
+| Health and armour in range | `0 <= health <= maxHp`, `armour >= 0` |
+| Ammo non-negative | Every weapon |
+| Player inside the grid | Cell within the level's own bounds, with 2 cells of slack |
+| Enemy positions finite, hp in range | Every living enemy |
+| No enemy under the floor | Against the cell's own floor height |
+| Pools bounded | Particles ≤ 700, decals ≤ 60, projectiles ≤ 120 |
+| No orphan enemy mesh | Scene traverse against the enemy list |
+
+Result: four zones, 900 frames each, **all held**. Two real bugs so far from this audit; the invariant tool
+stays as the fourth browser gate.

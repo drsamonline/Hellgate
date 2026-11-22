@@ -2519,6 +2519,8 @@ window.HG = {
   get bloom() { return bloom; },
   get perfState() { return { ratio: perf.ratio, bloomDropped: perf.bloomDropped }; },
   takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats,
+  // the simulation step, for tools that advance the game without a display
+  update, effects, projectiles, level, enemies, scene,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
   runStats, topRuns, recordRun, gameOver,
   openLore, closeLore, resolveChoice, get lore() { return lore; },

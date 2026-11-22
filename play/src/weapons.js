@@ -261,9 +261,8 @@ export class Weapons {
           onKill: ctx.onKill,
           weapon: w.name,   // so the kill feed can name what killed it
         }, dir);
-        if (ctx.hud && ctx.hud.damageNumber) {
-          ctx.hud.damageNumber(eh.point, dmg, this.camera, dmg >= 60);
-        }
+        // the number is drawn by Enemy.hurt(), which every damage source goes
+        // through; drawing it here as well put two numbers on every hit
         this.effects.tracer(muzzle, eh.point, 0xffe0a0);
         this.effects.burst(eh.point, 0xaa1010, 4, 3, 0.4, 14);
         this.effects.impact(eh.point, 0.34);
@@ -341,9 +340,7 @@ export class Weapons {
         onKill: ctx.onKill, weapon: 'BLADE',
       }, { x: dx / (d || 1), y: 0, z: dz / (d || 1) });
       this.effects.blood({ x: e.pos.x, y: e.pos.y + 1, z: e.pos.z });
-      if (ctx.hud && ctx.hud.damageNumber) {
-        ctx.hud.damageNumber(e.chestPos(), dmg, this.camera, true);
-      }
+      // the number comes from Enemy.hurt(), like every other damage source
       hitAny = true;
     }
 

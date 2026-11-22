@@ -1205,6 +1205,26 @@ HG.hud.damageNumber({ x: 1, y: 1, z: 0 }, 7, HG.player.camera, true);
 ok(nums.some((el) => el.classList.contains('kill')), 'a killing blow reads differently');
 ok(HG.hud.dmgCursor > 0 && HG.hud.dmgPool.length === 10,
   'and the cursor advances through the pool rather than making nodes (' + HG.hud.dmgCursor + ')');
+
+// one number per hit: the drawing lives in Enemy.hurt(), which every damage
+// source goes through, and it used to be drawn again in weapons.js
+{
+  HG.enemies.clear();
+  HG.hud.dmgPool.forEach((el) => el.classList.remove('on'));
+  const target = HG.enemies.spawnAt('brute', HG.player.pos.x + 4, HG.player.pos.z, 1);
+  frames(1);
+  const cursorBefore = HG.hud.dmgCursor;
+  target.hurt(11, {
+    level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio,
+    projectiles: HG.projectiles, hud: HG.hud, camera: HG.camera, onKill: HG.enemies.onKill,
+  }, { x: 0, y: 0, z: 1 });
+  const advanced = (HG.hud.dmgCursor - cursorBefore + 10) % 10;
+  ok(advanced === 1, 'a hit draws exactly one number (' + advanced + ' drawn)');
+  // leave a live enemy: clearing them completes the wave and clears pickups
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
+  HG.game.exitOpen = false;
+}
 HG.hud.damageNumbers = false;
 const n2 = document.body.children.length;
 HG.hud.damageNumber({ project() {}, clone() { return this; } }, 42, HG.player.camera, false);
