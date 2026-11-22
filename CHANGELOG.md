@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.62.1 — 2026-11-21
+
+**A pickup test that walked away from its own pickup**
+
+It passed locally and failed in CI. The cause is the fixed-step loop: a slow CI frame lets the accumulator
+catch up, so three frames can simulate a quarter of a second and the player walks out of the 1.1 m pickup
+radius between the assertion that places it and the one that expects it eaten.
+
+It now zeroes the velocity, releases every key, re-places the player on the cell and runs a single frame.
+
+
 ## 1.62.0 — 2026-11-21
 
 **Damage numbers**

@@ -1254,8 +1254,13 @@ const fakeMesh = {
 HG.game.pickups.push({ kind: 'health', mesh: fakeMesh, x: cell.wx, z: cell.wz, baseY: 1, t: 0 });
 frames(3);
 ok(HG.game.pickups.length === before2 + 1, 'full-health pickup is left on the floor');
+// hold still: a slow CI frame lets the fixed-step accumulator catch up, and the
+// player walks out of the pickup radius between the two assertions
 HG.player.health = 40;
-frames(3);
+HG.player.pos.set(cell.wx, 0, cell.wz);
+if (HG.player.vel && HG.player.vel.set) HG.player.vel.set(0, 0, 0);
+for (const k of Object.keys(HG.input.keys || {})) HG.input.keys[k] = false;
+frames(1);
 ok(HG.game.pickups.length === before2, 'damaged player picks it up');
 
 console.log('\n== seed in the URL (roadmap 9) ==');
