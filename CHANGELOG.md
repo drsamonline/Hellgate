@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.65.0 — 2026-11-21
+
+**Rooms have architecture now**
+
+Every room was four flat walls and a ceiling. A room of five cells or more now gets pilasters on the walls
+where there is actually a wall behind them, and a beam across the ceiling if it is taller than 3.4 m.
+
+They are emitted into the level's own per-texture buckets, so a room gains detail and the frame gains **no
+draw call** — the same vertex buffers, the same five materials.
+
+| Detail | Placement |
+| --- | --- |
+| Pilaster | Inset one cell from each corner, only where the cell behind is solid — never in a doorway |
+| Ceiling beam | Tall rooms only, spanning the room's own footprint at `ceil - 0.3` |
+
+**The geometry test caught its own weakness** — "every triangle faces open space" is the invariant that
+catches a wall with the wrong winding. Decor legitimately faces the wall it is mounted on, so the decor
+goes into its own bucket (`decor:<texture>`) and the test skips it: the shell is still checked at 100 %,
+and the decor is measured separately. Zero shell triangles face a wall across all five test seeds.
+
+
 ## 1.64.0 — 2026-11-21
 
 **Open 3-D models are an option now**

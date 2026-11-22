@@ -172,6 +172,67 @@ export function buildLevelMeshes(level, mats, zone) {
     }
   }
 
+  // ---- decor ------------------------------------------------------------
+  // Pilasters on a room's walls and a beam across a tall room's ceiling. They
+  // are emitted into the same per-texture buckets as the walls, so the room
+  // gains detail and the frame gains no draw call.
+  {
+    const solidAt2 = (x, z) => {
+      if (x < 0 || z < 0 || x >= level.W || z >= level.H) return true;
+      return level.cells[z * level.W + x].solid;
+    };
+    // one box, four sides, no bottom: it stands on the floor
+    // the 'decor:' prefix is stripped when the material is looked up; it exists
+    // so the geometry test can check the shell and skip the detail
+    const dkey = (k) => 'decor:' + k;
+    const boxQuads = (key, cx, cz, hw, hd, y0, y1, shade) => {
+      const v = (y1 - y0) / CELL;
+      quad(dkey(key), [cx - hw, y0, cz + hd], [cx + hw, y0, cz + hd], [cx + hw, y1, cz + hd], [cx - hw, y1, cz + hd], 0.4, v, [shade, shade, shade * 0.9, shade * 0.9]);
+      quad(dkey(key), [cx + hw, y0, cz - hd], [cx - hw, y0, cz - hd], [cx - hw, y1, cz - hd], [cx + hw, y1, cz - hd], 0.4, v, [shade * 0.9, shade * 0.9, shade * 0.8, shade * 0.8]);
+      quad(dkey(key), [cx + hw, y0, cz + hd], [cx + hw, y0, cz - hd], [cx + hw, y1, cz - hd], [cx + hw, y1, cz + hd], 0.4, v, [shade, shade, shade * 0.9, shade * 0.9]);
+      quad(dkey(key), [cx - hw, y0, cz - hd], [cx - hw, y0, cz + hd], [cx - hw, y1, cz + hd], [cx - hw, y1, cz - hd], 0.4, v, [shade * 0.9, shade * 0.9, shade * 0.8, shade * 0.8]);
+    };
+
+    for (const r of level.rooms || []) {
+      if (r.w < 5 || r.h < 5) continue;
+      const mid = level.cells[r.cz * level.W + r.cx];
+      if (!mid) continue;
+      const key = WALL_KEY[mid.wall] || WALL_KEY[0];
+      const y0 = mid.floor;
+      const y1 = Math.min(mid.ceil, mid.floor + 2.6);
+      if (y1 - y0 < 1.2) continue;
+
+      // pilasters only where there is actually a wall behind them, inset one
+      // cell from each corner so they never sit in a doorway
+      const spots = [];
+      for (let x = r.x + 1; x < r.x + r.w - 1; x += Math.max(2, r.w >> 1)) {
+        if (solidAt2(x, r.z - 1)) spots.push([x, r.z, 'z', -1]);
+        if (solidAt2(x, r.z + r.h)) spots.push([x, r.z + r.h - 1, 'z', 1]);
+      }
+      for (let z = r.z + 1; z < r.z + r.h - 1; z += Math.max(2, r.h >> 1)) {
+        if (solidAt2(r.x - 1, z)) spots.push([r.x, z, 'x', -1]);
+        if (solidAt2(r.x + r.w, z)) spots.push([r.x + r.w - 1, z, 'x', 1]);
+      }
+      for (const [cx, cz, axis, dir] of spots) {
+        const wx = cx * CELL + (axis === 'x' ? dir * (CELL * 0.5 - 0.16) : 0);
+        const wz = cz * CELL + (axis === 'z' ? dir * (CELL * 0.5 - 0.16) : 0);
+        boxQuads(key, wx, wz, axis === 'x' ? 0.16 : 0.26, axis === 'x' ? 0.26 : 0.16, y0, y1, 0.96);
+      }
+
+      // a beam across the ceiling of a tall room, inside its own footprint
+      if (mid.ceil - mid.floor > 3.4 && r.w >= 5) {
+        const by = mid.ceil - 0.3;
+        const x0 = (r.x - 0.5) * CELL + 0.3;
+        const x1 = (r.x + r.w - 0.5) * CELL - 0.3;
+        const z = (r.z + Math.floor(r.h / 2)) * CELL;
+        const v = 0.28 / CELL;
+        quad(dkey(key), [x0, by, z - 0.22], [x1, by, z - 0.22], [x1, by + 0.28, z - 0.22], [x0, by + 0.28, z - 0.22], 3, v, [0.82, 0.82, 0.74, 0.74]);
+        quad(dkey(key), [x1, by, z + 0.22], [x0, by, z + 0.22], [x0, by + 0.28, z + 0.22], [x1, by + 0.28, z + 0.22], 3, v, [0.82, 0.82, 0.74, 0.74]);
+        quad(dkey(key), [x0, by, z + 0.22], [x1, by, z + 0.22], [x1, by, z - 0.22], [x0, by, z - 0.22], 3, 0.22, [0.72, 0.72, 0.66, 0.66]);
+      }
+    }
+  }
+
   for (const key of Object.keys(buckets)) {
     const bk = buckets[key];
     if (!bk.i.length) continue;
@@ -182,7 +243,7 @@ export function buildLevelMeshes(level, mats, zone) {
     g.setAttribute('color', new THREE.Float32BufferAttribute(bk.c, 3));
     g.setIndex(bk.i);
     g.computeBoundingSphere();
-    const mesh = new THREE.Mesh(g, mats[bk.key]);
+    const mesh = new THREE.Mesh(g, mats[bk.key.replace('decor:', '')]);
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
     mesh.userData.merged = true;
