@@ -132,6 +132,7 @@ play/src/rig.js       a parametric humanoid: joints, not boxes
 play/src/glb.js       a 200-line reader for glTF 2.0 binary models
 play/src/book.js      a branching narrative engine: the book is data
 play/src/zonebook.js  the campaign as eleven passages with two choices each
+play/src/pixel.js     median-cut quantise and Bayer dither for the textures
 play/src/models.js    optional open-3-D bodies from assets/models/<type>.glb
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted

@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.72.0 — 2026-11-21
+
+**The textures are pixel art now, not photographic mush**
+
+Every surface was drawn with gradients, noise and grain, which reads as fuzz at close range. `pixel.js`
+(ported from `art-kit`, same licence) quantises each finished texture to twelve colours by **median cut**
+and then applies a **4x4 Bayer dither** before it becomes a texture.
+
+| Step | What it does |
+| --- | --- |
+| Median cut | Splits the box with the widest channel range until twelve colours remain, then averages each box |
+| Bayer dither | Adds a 4x4 ordered threshold before the nearest-colour lookup, so a gradient becomes two flat tones in a pattern |
+
+The result keeps the brick's variation and loses the fuzz: the surfaces read as deliberately pixel art, and
+the dither pattern is what makes a 64-pixel texture hold up when it is repeated across a wall.
+
+**Tests** — 3 new assertions: median cut finds four colours in a grey ramp and orders them, a dithered image
+uses only its palette, and the Bayer matrix is 4x4.
+
+
 ## 1.71.0 — 2026-11-21
 
 **Every zone has a sound now**

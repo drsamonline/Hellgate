@@ -5,6 +5,8 @@
 
 import * as THREE from 'three';
 
+import { pixelise } from './pixel.js';
+
 const S = 64;
 
 function ctx2d() {
@@ -17,6 +19,9 @@ function ctx2d() {
 }
 
 function toTex(ctx, repeat = 1) {
+  // quantise and dither before it becomes a texture: the same drawing reads as
+  // pixel art with a fixed palette instead of photographic mush at close range
+  try { pixelise(ctx, 12, 24); } catch (e) { /* no 2d context in a stub */ }
   const t = new THREE.CanvasTexture(ctx.canvas);
   t.magFilter = THREE.NearestFilter;
   t.minFilter = THREE.LinearMipmapLinearFilter;

@@ -538,6 +538,23 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== pixel art ==');
+{
+  const { quantize, ditherTo, BAYER4 } = await import('../play/src/pixel.js');
+  // a grey ramp: 256 pixels from black to white
+  const px = new Uint8ClampedArray(256 * 4);
+  for (let i = 0; i < 256; i++) { px[i * 4] = px[i * 4 + 1] = px[i * 4 + 2] = i; px[i * 4 + 3] = 255; }
+  const pal = quantize(px, 4);
+  ok(pal.length === 4, 'median cut finds four colours in a grey ramp (' + pal.length + ')');
+  ok(pal[0].r < pal[pal.length - 1].r, 'and they are ordered dark to light');
+  const img = { data: Uint8ClampedArray.from(px), width: 16, height: 16 };
+  ditherTo(img, pal, 40);
+  const seen = new Set();
+  for (let i = 0; i < img.data.length; i += 4) seen.add(img.data[i]);
+  ok(seen.size <= 4, 'the dithered image uses only the palette (' + seen.size + ' values)');
+  ok(BAYER4.length === 4 && BAYER4[0].length === 4, 'the Bayer matrix is 4x4');
+}
+
 console.log('\n== ambient beds and the master limiter ==');
 {
   const { ZONES } = await import('../play/src/world.js');
