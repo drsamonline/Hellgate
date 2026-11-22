@@ -480,6 +480,7 @@ function buildLevel(seed, opts = {}) {
     spawn,
     exit: { x: exitCell.x * CELL, z: exitCell.z * CELL, cx: exitCell.x, cz: exitCell.z },
     exitRoom: exitRoomIdx,
+    spawnRoom: 0,
     doors: doorCells,
     door: doorCells.length ? doorCells[0] : null,
     doorOpen: false,

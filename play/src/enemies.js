@@ -994,11 +994,19 @@ export class EnemyManager {
     const bossWave = !!opts.boss && wave >= (opts.waves || 3);
     const base = bossWave ? 3 : 4 + wave * 2;
     const count = Math.max(2, Math.min(30, Math.round(base * diff.count)));
+    // The rule: nothing spawns in the room you start in, and nothing spawns
+    // within 12 m of you. A wave that begins with an enemy already on top of the
+    // player is not a wave, it is an ambush in a doorway.
+    const spawnRoom = this.level.spawnRoom != null ? this.level.spawnRoom : 0;
+    const spawnX = this.level.spawn.x;
+    const spawnZ = this.level.spawn.z;
     const cells = (this.level.reachableCells || this.level.openCells).filter((c) => {
       if (c.room < 0) return false;
+      if (c.room === spawnRoom) return false;
       if (c.x === this.level.exit.cx && c.z === this.level.exit.cz) return false;
       const d = Math.hypot(c.wx - playerPos.x, c.wz - playerPos.z);
-      return d > 9;
+      if (d <= 12) return false;
+      return Math.hypot(c.wx - spawnX, c.wz - spawnZ) > 12;
     });
     const pool = cells.length ? cells : (this.level.reachableCells || this.level.openCells);
 

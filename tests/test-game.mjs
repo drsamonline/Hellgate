@@ -464,6 +464,29 @@ console.log('\n== open 3-D models ==');
   ok(!getModel('imp'), 'and it can be removed again, which the procedural body needs');
 }
 
+console.log('\n== no enemy spawns in the start room ==');
+{
+  const lvl = HG.level;
+  let inSpawnRoom = 0;
+  let tooClose = 0;
+  for (let w = 1; w <= 6; w++) {
+    HG.enemies.clear();
+    HG.enemies.spawnWave(w, HG.player.pos, { waves: 99 });
+    frames(1);
+    for (const e of HG.enemies.list) {
+      const cx = Math.round(e.pos.x / 2);
+      const cz = Math.round(e.pos.z / 2);
+      const c = lvl.cells[cz * lvl.W + cx];
+      if (c && c.room === lvl.spawnRoom) inSpawnRoom++;
+      if (Math.hypot(e.pos.x - lvl.spawn.x, e.pos.z - lvl.spawn.z) <= 12) tooClose++;
+    }
+  }
+  ok(inSpawnRoom === 0, 'no enemy spawned in the start room across six waves (' + inSpawnRoom + ')');
+  ok(tooClose === 0, 'and none within 12 m of the spawn point (' + tooClose + ')');
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
+}
+
 console.log('\n== the charge lane ==');
 {
   HG.enemies.clear();

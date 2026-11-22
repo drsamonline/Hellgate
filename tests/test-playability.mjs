@@ -54,6 +54,10 @@ for (const zone of ZONES) {
     const L = HG.level;
     const tag = zone.id + '/' + s;
 
+    // ---- the start room is empty, by rule
+    ok(L.spawnRoom === 0, tag + ': the spawn room is room 0');
+    ok(L.exitRoom !== L.spawnRoom, tag + ': the exit is never the room you start in');
+
     // ---- the spawn is somewhere you can stand, and somewhere you can leave
     ok(!isBlocked(L, L.spawn.x, L.spawn.z), tag + ': the spawn is on open floor');
     // a room whose only exits are doors is a room you cannot leave

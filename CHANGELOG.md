@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.66.0 — 2026-11-21
+
+**The wave started you sealed inside the exit room**
+
+The exit pad is in the exit room. Clearing a wave opens the doors; you walk in; you step on the pad; the
+next wave starts — and `startWave` closed every door behind you. The player was then inside a sealed room
+with the enemies outside it, no way to reach them and no way to leave. That is the screenshot: wave 3,
+seven left, both doors shut, red lamps.
+
+A wave now returns you to the spawn if you are standing in the exit room or within 3.5 m of the pad when
+it starts, and says so in the report events.
+
+**The rule you asked for: nothing spawns in the room you start in**
+
+| Rule | Before | After |
+| --- | --- | --- |
+| Enemies in the start room | allowed | **none, ever** |
+| Enemies within 12 m of you | allowed | **none** |
+| Enemies within 12 m of the spawn point | allowed | **none** |
+
+Six waves are checked in the test suite, counting enemies in the spawn room and near the spawn point.
+
+**Also asserted** — the exit room is never the spawn room, and the spawn room index is exposed on the
+level so a caller does not have to guess it.
+
+
 ## 1.65.0 — 2026-11-21
 
 **Rooms have architecture now**

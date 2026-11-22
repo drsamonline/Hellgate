@@ -630,6 +630,18 @@ function updateRelics(dt) {
 function startWave(n) {
   note('wave ' + game.wave + ' start');
 
+  // The pad is inside the exit room, so stepping on it to start the next wave
+  // re-locked the doors with the player already inside: sealed in a room with
+  // the enemies outside and no way to reach them. A wave now always starts you
+  // where the level started you.
+  const cellNow = level.cells[Math.round(player.pos.z / CELL) * level.W + Math.round(player.pos.x / CELL)];
+  const nearPad = Math.hypot(player.pos.x - level.exit.x, player.pos.z - level.exit.z) < 3.5;
+  if ((cellNow && cellNow.room === level.exitRoom) || nearPad) {
+    player.pos.set(level.spawn.x, 0, level.spawn.z);
+    if (player.vel && player.vel.set) player.vel.set(0, 0, 0);
+    note('wave start: player was in the exit room, returned to the spawn');
+  }
+
   game.wave = n;
   game.waveKills = 0;
   game.waveStart = elapsed;
@@ -1893,7 +1905,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.65.0';
+const BUILD = '1.66.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2304,7 +2316,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
-  poolStats, buildReport, note, modelReport, installModel, uninstallModel,
+  poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this
