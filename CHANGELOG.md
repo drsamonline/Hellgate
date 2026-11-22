@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.63.1 — 2026-11-21
+
+**A budget set from one measurement**
+
+The level-alone draw-call budget was 60, measured on one seed. CI ran a different seed with more props and
+hit 66. The budget is a ceiling that catches a regression, not the number of the day: it is 80 for the
+level and 240 for the level plus eight rig bodies, with the measured range (55-66) written beside it.
+
+
 ## 1.63.0 — 2026-11-21
 
 **A charger draws its lane on the floor**
