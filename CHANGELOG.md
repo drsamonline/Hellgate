@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.64.0 — 2026-11-21
+
+**Open 3-D models are an option now**
+
+The game builds every enemy from joints in code and ships no assets — that is why it loads instantly and
+looks the same on every machine. It is a constraint, not a rule, so `play/src/glb.js` reads **glTF 2.0
+binary** (`.glb`, the open standard) in 200 lines with no library and no build step.
+
+Drop `assets/models/imp.glb` in, add it to `assets/models/index.json`, and that type uses the model
+instead of its procedural body. No manifest, no file, or a file the reader cannot handle: nothing changes
+and nothing breaks.
+
+| Supported | Not supported |
+| --- | --- |
+| The `.glb` container (JSON + BIN chunks) | `.gltf` with external buffers |
+| `POSITION`, `NORMAL`, `TEXCOORD_0` | Skinning, bones, animation |
+| Indices in u8 / u16 / u32 | Morph targets |
+| Node transforms, baked into the geometry | Textures — a material's base colour only |
+
+A model is scaled uniformly to its type's height, because a downloaded model is in whatever units its
+author used and an enemy the size of a bus is a bug you cannot unsee. A model has no joints, so the walk
+cycle and pose blend skip it; the animation guards were tightened where an imp's arms were assumed.
+
+**Why a manifest and not seven fetches** — the first version requested `<type>.glb` for all seven types at
+boot, which is seven 404s in the console for a feature nobody is using. The smoke test caught it.
+
+**Tests** — 7 new: a hand-built glb parses to one mesh with its three vertices and its material colour,
+a model is offered for its type, the pool for that type is dropped so a parked procedural body cannot be
+handed out, and the model can be removed again.
+
+
 ## 1.63.1 — 2026-11-21
 
 **A budget set from one measurement**

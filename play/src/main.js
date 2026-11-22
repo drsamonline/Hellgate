@@ -9,7 +9,8 @@ import { buildLevelMeshes } from './levelmesh.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
 import { Player } from './player.js';
 import { Weapons, WEAPONS } from './weapons.js';
-import { EnemyManager, poolStats } from './enemies.js';
+import { EnemyManager, poolStats, clearBodyPool, TYPES } from './enemies.js';
+import { loadModels, modelReport, installModel, uninstallModel } from './models.js';
 import { Projectiles } from './projectiles.js';
 import { Effects, glowSprite } from './effects.js';
 import { HUD } from './hud.js';
@@ -1892,7 +1893,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.63.1';
+const BUILD = '1.64.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2248,6 +2249,18 @@ function applyUrlOverrides() {
 
 // --------------------------------------------------------------------- boot
 
+// optional open-3-D bodies: assets/models/<type>.glb, if anyone drops them in.
+// It never blocks the game and a failure is silent by design.
+loadModels(Object.keys(TYPES), {
+  heights: Object.fromEntries(Object.entries(TYPES).map(([k, t]) => [k, t.height])),
+}).then((rep) => {
+  // a parked procedural body would keep being handed out for a type that now
+  // has a model, so the pool for those types is dropped
+  for (const t of rep.loaded) clearBodyPool(t);
+  if (rep.loaded.length) note('models loaded: ' + rep.loaded.join(','));
+  if (rep.failed.length) note('models failed: ' + rep.failed.join(', '));
+}).catch(() => {});
+
 refreshBest();
 document.getElementById('seedInput').value = 'hellgate';
 {
@@ -2291,7 +2304,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
-  poolStats, buildReport, note,
+  poolStats, buildReport, note, modelReport, installModel, uninstallModel,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this

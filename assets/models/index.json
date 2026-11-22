@@ -1,0 +1,4 @@
+{
+  "note": "Models the game should load. Add a filename here and put the file beside this one. Empty means every enemy uses its procedural body.",
+  "models": {}
+}

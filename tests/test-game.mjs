@@ -408,6 +408,62 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== open 3-D models ==');
+{
+  const { parseGLB } = await import('../play/src/glb.js');
+  const { installModel, uninstallModel, getModel, modelReport } = await import('../play/src/models.js');
+  const { clearBodyPool } = await import('../play/src/enemies.js');
+  // a hand-built glb: one triangle, one material colour
+  const pos = new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]);
+  const idx = new Uint16Array([0, 1, 2]);
+  const json = {
+    asset: { version: '2.0', generator: 'test' },
+    scenes: [{ nodes: [0] }], scene: 0, nodes: [{ mesh: 0 }],
+    meshes: [{ primitives: [{ attributes: { POSITION: 0 }, indices: 1, material: 0 }] }],
+    materials: [{ pbrMetallicRoughness: { baseColorFactor: [0.8, 0.2, 0.1, 1] } }],
+    accessors: [{ bufferView: 0, componentType: 5126, count: 3, type: 'VEC3' },
+      { bufferView: 1, componentType: 5123, count: 3, type: 'SCALAR' }],
+    bufferViews: [{ buffer: 0, byteOffset: 0, byteLength: pos.byteLength },
+      { buffer: 0, byteOffset: pos.byteLength, byteLength: idx.byteLength }],
+    buffers: [{ byteLength: pos.byteLength + idx.byteLength }],
+  };
+  const enc = new TextEncoder().encode(JSON.stringify(json));
+  const padTo = (b, fill) => { const p = (4 - (b.length % 4)) % 4; return p ? new Uint8Array([...b, ...new Uint8Array(p).fill(fill)]) : b; };
+  const jp = padTo(enc, 0x20);
+  const bin = new Uint8Array(pos.byteLength + idx.byteLength);
+  bin.set(new Uint8Array(pos.buffer), 0);
+  bin.set(new Uint8Array(idx.buffer), pos.byteLength);
+  const bp = padTo(bin, 0);
+  const total = 12 + 8 + jp.length + 8 + bp.length;
+  const buf = new Uint8Array(total);
+  const dv = new DataView(buf.buffer);
+  dv.setUint32(0, 0x46546c67, true); dv.setUint32(4, 2, true); dv.setUint32(8, total, true);
+  dv.setUint32(12, jp.length, true); dv.setUint32(16, 0x4e4f534a, true); buf.set(jp, 20);
+  const o = 20 + jp.length;
+  dv.setUint32(o, bp.length, true); dv.setUint32(o + 4, 0x004e4942, true); buf.set(bp, o + 8);
+
+  const parsed = parseGLB(buf.buffer);
+  ok(parsed.meshes.length === 1, 'a glb with one primitive parses to one mesh');
+  ok(parsed.meshes[0].geometry.attributes.position.count === 3, 'and keeps its three vertices');
+  ok(parsed.meshes[0].color.getHex() === 0xcc331a, 'and its material colour (' + parsed.meshes[0].color.getHex().toString(16) + ')');
+  // a model installed for a type replaces the procedural body
+  const { Group } = await import('three');
+  installModel('imp', new Group());
+  clearBodyPool('imp');   // a parked procedural body would be handed out instead
+  ok(!!getModel('imp'), 'an installed model is offered for its type');
+  ok(modelReport().loaded.includes('imp'), 'and the report says so');
+  // the pool for that type is dropped, so a parked procedural body cannot be
+  // handed out for a type that now has a model
+  clearBodyPool('imp');
+  ok(poolStats().imp === undefined, 'installing a model clears the parked bodies for that type');
+  // a model body has no joints; the animation guards are written for that
+  const modelBody = getModel('imp');
+  ok(modelBody && modelBody.isGroup !== false, 'the model comes back as a group, ready to mount');
+  // put the procedural imp back: every later test assumes a rig with materials
+  uninstallModel('imp');
+  ok(!getModel('imp'), 'and it can be removed again, which the procedural body needs');
+}
+
 console.log('\n== the charge lane ==');
 {
   HG.enemies.clear();

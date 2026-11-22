@@ -129,6 +129,8 @@ play/src/music.js     generated music: a scale, a tempo and a rule for the next 
 play/src/items.js     the things on the floor, built to look like the thing they are
 play/src/cinematic.js the letterboxed boss entrance
 play/src/rig.js       a parametric humanoid: joints, not boxes
+play/src/glb.js       a 200-line reader for glTF 2.0 binary models
+play/src/models.js    optional open-3-D bodies from assets/models/<type>.glb
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG

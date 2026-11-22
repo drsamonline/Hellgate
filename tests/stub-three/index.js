@@ -40,7 +40,9 @@ export class Vector3 {
 }
 
 export class Color {
-  constructor(hex = 0xffffff) { this.setHex(hex); }
+  constructor(hex = 0xffffff, g, b) {
+    if (g != null) { this.r = hex; this.g = g; this.b = b; } else this.setHex(hex);
+  }
   clone() { const c = new Color(); c.r = this.r; c.g = this.g; c.b = this.b; return c; }
   copy(o) { this.r = o.r; this.g = o.g; this.b = o.b; return this; }
   getHex() {
@@ -190,7 +192,10 @@ export class DirectionalLight extends Light {}
 export class PointLight extends Light {}
 
 export class BufferAttribute {
-  constructor(array, itemSize) { this.array = array; this.itemSize = itemSize; this.needsUpdate = false; }
+  constructor(array, itemSize) {
+    this.array = array; this.itemSize = itemSize; this.needsUpdate = false;
+    this.count = array ? Math.floor(array.length / itemSize) : 0;
+  }
 }
 export class Float32BufferAttribute extends BufferAttribute {}
 
@@ -198,6 +203,8 @@ export class BufferGeometry {
   constructor() { this.attributes = {}; this.index = null; this.userData = {}; }
   setAttribute(name, attr) { this.attributes[name] = attr; return this; }
   setIndex(i) { this.index = i; return this; }
+  applyMatrix4() { return this; }
+  translate() { return this; }
   computeBoundingSphere() {}
   dispose() {}
 }
@@ -205,6 +212,9 @@ export class BufferGeometry {
 class Primitive extends BufferGeometry {
   constructor(...args) { super(); this.kind = this.constructor.name; this.parameters = { args }; }
   translate() { return this; }
+  applyMatrix4() { return this; }
+  setAttribute(name, attr) { (this.attributes || (this.attributes = {}))[name] = attr; return this; }
+  setIndex(i) { this.index = i; return this; }
 }
 export class BoxGeometry extends Primitive {
   constructor(w = 1, h = 1, d = 1, ...rest) {
@@ -351,4 +361,18 @@ export class Clock {
   constructor() { this.t = 0; }
   getDelta() { return globalThis.__FAKE_DT || 0.016; }
   getElapsedTime() { return this.t; }
+}
+
+// ---- matrices and bounds, for the glb reader -------------------------------
+export class Matrix4 {
+  constructor() { this.elements = [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]; }
+  fromArray(a) { this.elements = a.slice(); return this; }
+  clone() { const m = new Matrix4(); m.elements = this.elements.slice(); return m; }
+  multiply(m) { return this; }
+  compose() { return this; }
+  identity() { return this; }
+}
+export class Box3 {
+  setFromObject() { this.min = new Vector3(0, 0, 0); this.max = new Vector3(1, 1, 1); return this; }
+  getSize(v) { if (v) { v.x = 1; v.y = 1; v.z = 1; } return v || new Vector3(1, 1, 1); }
 }

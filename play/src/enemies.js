@@ -5,11 +5,18 @@
 
 import * as THREE from 'three';
 import { humanoid, quadruped, PROPORTIONS, rigMat } from './rig.js';
+import { getModel } from './models.js';
 import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
 
 const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DEATH: 'DEATH' };
 
-const TYPES = {
+/**
+ * Every enemy type: its stats, its colour, and how it behaves.
+ *
+ * `telegraph` is the wind-up in seconds, `charges` marks the two that close the
+ * distance, `laneColor` is the colour of the warning it draws on the floor.
+ */
+export const TYPES = {
   imp: {
     hp: 55, speed: 2.5, radius: 0.62, height: 1.85, hitRadius: 0.62,
     attackRange: 14, attackCd: 2.1, telegraph: 0.55, damage: 15,
@@ -295,6 +302,22 @@ let BODIES_BUILT = 0;
 
 function buildBody(typeName) {
   BODIES_BUILT++;
+  // an open model, if one was dropped into assets/models/<type>.glb, replaces
+  // the procedural body. It has no joints, so the animation guards skip it.
+  const model = getModel(typeName);
+  if (model) {
+    const flashMats = [];
+    model.traverse((o) => {
+      if (!o.isMesh || !o.material) return;
+      const m = o.material.clone();
+      m.userData.shared = false;
+      m.userData.flashable = true;
+      m.userData.baseColor = m.color && m.color.clone ? m.color.clone() : null;
+      o.material = m;
+      flashMats.push(m);
+    });
+    return { group: model, parts: {}, flashMats, typeName };
+  }
   const built = typeName === 'imp' ? makeImp()
     : typeName === 'hound' ? makeHound()
     : typeName === 'warden' ? makeWarden()
@@ -351,6 +374,15 @@ function releaseBody(body) {
   body.group.visible = false;
   pool.push(body);
   BODY_POOL.set(body.typeName, pool);
+}
+
+/**
+ * Drop the parked bodies for a type. A pooled body is the procedural rig; if a
+ * model was installed for that type, the pool would keep handing out the old one.
+ */
+export function clearBodyPool(type) {
+  if (type) BODY_POOL.delete(type);
+  else BODY_POOL.clear();
 }
 
 /** How many bodies are parked per type — for the tests and the stats screen. */
@@ -893,7 +925,7 @@ export class Enemy {
     if (this.parts.head) this.parts.head.rotation.x = a * 0.1 - pn * 0.35;
     if (this.parts.legBL) this.parts.legBL.rotation.x = -swing;
     if (this.parts.legBR) this.parts.legBR.rotation.x = swing;
-    if (this.type === 'imp') {
+    if (this.type === 'imp' && this.parts.armL) {
       this.parts.armL.rotation.x = -swing * 0.7;
       this.parts.armR.rotation.x = swing * 0.7;
       this.parts.armR.rotation.x -= this.state === STATE.ATTACK ? 1.6 : 0;
