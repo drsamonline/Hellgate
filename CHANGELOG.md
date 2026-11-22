@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.60.0 — 2026-11-21
+
+**Copy report, on the pause screen**
+
+Every bug report so far has been a sentence and a screenshot, and every one has cost a round trip to find
+out which build, which seed, which wave — and several turned out to be a cached page. The pause screen now
+has **Copy report**, which assembles one block and puts it on the clipboard:
+
+| Line | What it answers |
+| --- | --- |
+| `build` | Which version is actually running |
+| `url`, `seed` | Exactly which level, reproducible |
+| `zone`, `wave`, `mode`, `class` | Where in the run |
+| `state`, `exitOpen`, `doors` | Whether a door is meant to be locked |
+| `player` | Health and position — "stuck in a room" is a position |
+| `enemies` | How many are alive, which explains a wave that will not clear |
+| `level` | Grid size, rooms, doors, and **reachable cells** — the number that was wrong |
+| `render` | Draw calls and triangles |
+| `pool` | Bodies parked per type |
+| `events` | The last 40 notable events with timestamps |
+
+Events are recorded for: wave start, zone cleared, game over, a locked door touched, the stuck-spawn
+fail-safe firing, and every trinket drop.
+
+If the clipboard is blocked, the same block is shown in a selectable panel under the buttons.
+
+**Tests** — 7 new assertions on the report: it names the build, the seed, the zone, the reachability, and
+carries the events.
+
+
 ## 1.59.0 — 2026-11-21
 
 **Enemy bodies are pooled**

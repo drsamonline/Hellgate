@@ -408,6 +408,19 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== the report ==');
+{
+  HG.note('a test event');
+  const rep = HG.buildReport();
+  ok(rep.startsWith('HELLGATE report'), 'a report starts with the game name');
+  ok(rep.includes('build   ' + '1.'), 'and carries the build');
+  ok(/seed\s+\S/.test(rep), 'and the seed');
+  ok(rep.includes('zone    '), 'and the zone');
+  ok(rep.includes('a test event'), 'and the events recorded since boot');
+  ok(rep.includes('reach '), 'and the level reachability, which is the number that was wrong');
+  ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
+}
+
 console.log('\n== the body pool ==');
 {
   HG.enemies.clear();

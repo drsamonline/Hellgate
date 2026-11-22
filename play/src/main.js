@@ -564,6 +564,7 @@ function updateDoors(dt) {
 }
 
 function dropTrinket(id, pos) {
+  note('drop ' + id);
   const t = trinketById(id);
   if (!t) return;
   // a coin, a ring or a compass, so a drop looks like something you would pick up
@@ -626,6 +627,8 @@ function updateRelics(dt) {
 }
 
 function startWave(n) {
+  note('wave ' + game.wave + ' start');
+
   game.wave = n;
   game.waveKills = 0;
   game.waveStart = elapsed;
@@ -1330,6 +1333,7 @@ function checkStuckSpawn(dt) {
       if (m.userData.lamp) m.userData.lamp.material.color.setHex(0x39ff9a);
     }
     hud.toast('DOORS OPEN \u00b7 THE PAD STILL NEEDS A CLEAR WAVE', 2.6);
+    note('stuck-spawn fail-safe fired, doors opened');
     stuckT = 0;
   }
 }
@@ -1348,6 +1352,7 @@ function checkLockedDoors(dt) {
     const dz = player.pos.z - d.z * CELL;
     if (dx * dx + dz * dz < 9) {
       hud.toast('LOCKED \u00b7 CLEAR THE WAVE', 1.8);
+      note('locked door at ' + d.x + ',' + d.z + ' wave ' + game.wave);
       lockedDoorT = 3;
       audio.play('door');
       return;
@@ -1485,6 +1490,8 @@ function renderInventory() {
 }
 
 function zoneCleared() {
+  note('zone cleared: ' + (zone && zone.id));
+
   if (audio) audio.stopDrone();
   game.state = 'cleared';
   releaseLock();
@@ -1591,6 +1598,8 @@ function recordRun(st) {
 }
 
 function gameOver() {
+  note('game over at wave ' + game.wave);
+
   if (game.state !== 'playing') return;
   game.state = 'dead';
   if (audio) audio.stopDrone();
@@ -1883,7 +1892,63 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.59.0';
+const BUILD = '1.60.0';
+
+// ---------------------------------------------------------------------------
+// REPORT
+//
+// Every bug report so far has been a sentence and a screenshot, and every one
+// has cost a round trip to find out which build, which seed, which wave. This
+// keeps the last 40 notable events and assembles them into a block the player
+// can copy in one tap.
+// ---------------------------------------------------------------------------
+const EVENTS = [];
+function note(what) {
+  EVENTS.push(`[${(performance.now() / 1000).toFixed(1)}s] ${what}`);
+  if (EVENTS.length > 40) EVENTS.shift();
+}
+
+function buildReport() {
+  const rs = lastRenderStats || {};
+  const lines = [
+    'HELLGATE report',
+    'build   ' + BUILD,
+    'url     ' + location.href,
+    'seed    ' + (game.seed || '-'),
+    'zone    ' + (zone ? zone.id + ' (' + zone.name + ')' : '-'),
+    'wave    ' + game.wave + '  mode ' + gameMode + '  class ' + (game.classId || '-'),
+    'state   ' + game.state + '  exitOpen ' + !!game.exitOpen + '  doors ' + !!(level && level.doorOpen),
+    'player  ' + (player ? `hp ${player.health.toFixed(0)} pos ${player.pos.x.toFixed(1)},${player.pos.y.toFixed(1)},${player.pos.z.toFixed(1)}` : '-'),
+    'enemies ' + (enemies ? enemies.list.length + ' (' + enemies.aliveCount + ' alive)' : '-'),
+    'level   ' + (level ? `${level.W}x${level.H} rooms ${level.rooms.length} doors ${level.doors.length} reach ${level.reachCount}` : '-'),
+    'render  ' + (rs.calls != null ? `calls ${rs.calls} tris ${rs.tris}` : '-'),
+    'pool    ' + JSON.stringify(poolStats()),
+    'gpu     ' + (game.gpu || '-'),
+    '',
+    'events  (oldest first)',
+    ...EVENTS,
+  ];
+  return lines.join('\n');
+}
+
+async function copyReport() {
+  const text = buildReport();
+  const out = document.getElementById('reportOut');
+  if (out) {
+    out.textContent = text;
+    out.classList.add('on');
+  }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      hud.toast('REPORT COPIED \u00b7 PASTE IT WITH THE BUG', 2.4);
+      return;
+    }
+  } catch (e) {
+    // clipboard blocked: the panel above is the fallback, and it is selectable
+  }
+  hud.toast('CLIPBOARD BLOCKED \u00b7 SELECT THE TEXT ABOVE', 2.6);
+}
 
 function stampBuild() {
   const el = document.getElementById('build');
@@ -1896,6 +1961,7 @@ document.getElementById('settingsBtnTitle').addEventListener('click', () => open
 document.getElementById('journalBtn')?.addEventListener('click', () => { game.state = 'paused'; showDiary(); });
 document.getElementById('invBtn')?.addEventListener('click', () => { game.state = 'paused'; toggleInventory(); });
 document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
+document.getElementById('reportBtn')?.addEventListener('click', () => { copyReport(); });
 // bound by id, not by a class query: the test double can find an id and cannot
 // find a selector, and a mode you cannot test is a mode that breaks quietly
 const modeButtons = Object.keys(MODES).map((k) => [k, document.getElementById('mode' + k[0].toUpperCase() + k.slice(1))]);
@@ -2221,7 +2287,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
-  poolStats,
+  poolStats, buildReport, note,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this
