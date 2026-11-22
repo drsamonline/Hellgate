@@ -244,6 +244,9 @@ export class Player {
     this.lungeSpeed = speed;
   }
 
-  heal(n) { this.health = Math.min(100, this.health + n); }
+  // heal to the player's own ceiling, not to a hardcoded 100: a run with 135 max
+  // health could never be healed past 100, so every health upgrade past the
+  // starting value was worth less than it said
+  heal(n) { this.health = Math.min(this.maxHp, this.health + n); }
   addArmor(n) { this.armor = Math.min(100, this.armor + n); }
 }

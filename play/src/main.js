@@ -529,7 +529,9 @@ function resumeRun(save) {
   }
   game.score = save.score || 0;
   game.kills = save.kills || 0;
-  player.health = Math.min(getClass(save.classId).hp, save.hp || getClass(save.classId).hp);
+  // clamp to the run's own ceiling, which includes upgrades, trinkets and flags —
+  // the class's base hp is only the floor of that
+  player.health = Math.min(player.maxHp, save.hp || player.maxHp);
   player.armor = save.armor || 0;
   if (save.ammo) Object.assign(player.ammo, save.ammo);
   if (Array.isArray(save.trinkets)) {
@@ -592,7 +594,9 @@ function applyClass(classId) {
   player.grenades = 3;
   // recomputeStats already folded in the story flags: speed, max health and the
   // armour bonus, which is where they belong and where they survive a resume
-  player.armor = def.armor + 20 * (game.upgrades.armour || 0) + (player.startArmourBonus || 0);
+  // addArmor() caps armour at 100, so the starting armour has to be capped the
+  // same way: six PLATE upgrades used to start a run at 145
+  player.armor = Math.min(100, def.armor + 20 * (game.upgrades.armour || 0) + (player.startArmourBonus || 0));
   player.health = player.maxHp;
   weapons.select(def.weapon, true);
   weapons.cd = 0;
@@ -2139,7 +2143,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.81.0';
+const BUILD = '1.82.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

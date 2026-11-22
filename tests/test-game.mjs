@@ -538,6 +538,34 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== health and armour have one ceiling ==');
+{
+  // healing goes to the player's own maximum, not to a hardcoded 100
+  HG.game.upgrades = { hp: 2 };
+  HG.game.trinkets = ['hide'];
+  HG.recomputeStats();
+  ok(HG.player.maxHp > 150, 'the run has more than 150 max health (' + HG.player.maxHp + ')');
+  HG.player.health = 90;
+  HG.player.heal(25);
+  ok(HG.player.health === 115, 'a medkit heals past 100 (' + HG.player.health + ')');
+  HG.player.heal(999);
+  ok(HG.player.health === HG.player.maxHp, 'and healing stops at the maximum, not at 100 (' + HG.player.health + ')');
+
+  // armour has one ceiling too: addArmor caps at 100, so the start must as well
+  HG.game.upgrades = { armour: 6 };
+  HG.game.trinkets = ['plate'];
+  HG.applyClass('marine');
+  ok(HG.player.armor <= 100, 'starting armour is capped at 100 (' + HG.player.armor + ')');
+  HG.player.addArmor(50);
+  ok(HG.player.armor === 100, 'and so is armour from a power (' + HG.player.armor + ')');
+
+  HG.game.upgrades = {};
+  HG.game.trinkets = [];
+  HG.recomputeStats();
+  HG.player.health = HG.player.maxHp;
+  HG.player.armor = 0;
+}
+
 console.log('\n== a resumed run is the same run ==');
 {
   HG.game.upgrades = { damage: 2, hp: 1 };

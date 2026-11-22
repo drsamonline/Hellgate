@@ -147,3 +147,20 @@ reads the flags.
 
 `recomputeStats()` now folds the flags into the derivation, so it can be called any number of times and the
 numbers come out the same. That is the invariant the whole stats system needed and did not have.
+
+## Pass eight — the ceilings that disagreed
+
+Following the "two owners of one value" pattern into `player.js` found two hardcoded numbers where the run's
+own maximum belonged.
+
+| Finding | Where | What a player saw |
+| --- | --- | --- |
+| `heal(n)` capped health at a literal **100** | `player.js` | A run with 175 max health could never be healed past 100. Every health upgrade past the starting value was worth less than its card said, and the Ember trinket's "heal 2 on every kill" stopped mattering |
+| `applyClass` set starting armour with **no cap**, while `addArmor` caps at 100 | `main.js` | Six PLATE upgrades started a run at 145 armour, and the next `addArmor` dropped it back to 100 |
+| `resumeRun` clamped saved health to the **class's base hp** | `main.js` | Resuming a 175-health run restored at most 110 |
+
+All three now use the run's own numbers: `Math.min(this.maxHp, …)` for health, `Math.min(100, …)` in both
+armour paths, and `Math.min(player.maxHp, …)` on resume. Four assertions hold the ceilings.
+
+The count of this defect class is now four: damage numbers, the zone counter, the stats derivation, and these
+two ceilings. Every one of them was a value written in two places that disagreed about its own limit.

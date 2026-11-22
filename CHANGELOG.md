@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.82.0 — 2026-11-21
+
+**The ceilings that disagreed with the run**
+
+Three hardcoded limits where the run's own numbers belonged:
+
+| Finding | Where | What a player saw |
+| --- | --- | --- |
+| `heal(n)` capped health at a literal **100** | `player.js` | A run with 175 max health could never be healed past 100. Every health upgrade past the starting value was worth less than its card said, and the Ember trinket's "heal 2 on every kill" stopped mattering |
+| Starting armour had **no cap**, while `addArmor` caps at 100 | `main.js` | Six PLATE upgrades started a run at 145 armour, and the next `addArmor` dropped it back to 100 |
+| Resume clamped saved health to the **class's base hp** | `main.js` | Resuming a 175-health run restored at most 110 |
+
+All three use the run's own numbers now: `Math.min(this.maxHp, …)` for health, `Math.min(100, …)` in both
+armour paths, `Math.min(player.maxHp, …)` on resume. Four assertions hold the ceilings.
+
+
 ## 1.81.0 — 2026-11-21
 
 **A resumed run was not the same run**
