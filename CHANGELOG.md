@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.69.1 — 2026-11-21
+
+**The damage test, for the third and last time**
+
+Each version of it placed the enemy somewhere and waited: a wave spawn, then a fireball from a random duel
+spot, then a hound walking across a room. All three were tests of the level's geometry, not of damage.
+
+It now finds an open cell 1.2-2.2 m from the player, stands the player there, and puts a hound inside its
+own melee range. Twelve clean runs.
+
+
 ## 1.69.0 — 2026-11-21
 
 **Elites: the same enemy, harder, and you can see it coming**

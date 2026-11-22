@@ -1919,7 +1919,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.69.0';
+const BUILD = '1.69.1';
 
 // ---------------------------------------------------------------------------
 // REPORT

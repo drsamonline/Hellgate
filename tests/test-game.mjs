@@ -1195,18 +1195,21 @@ HG.game.state = 'playing';
 console.log('\n== enemy AI damages the player ==');
 HG.game.wave = 1;
 HG.enemies.clear();
-// A hound, placed deliberately. The test used to spawn a wave and wait for an
-// imp's fireball to land, which depends on line of sight from a random duel
-// spot — that is a test of the level, not of damage. A hound bites.
-HG.enemies.spawnAt('hound', HG.player.pos.x + 8, HG.player.pos.z, 1);
-const near = HG.enemies.list[0];
-const spot2 = duelSpot(5);
-HG.player.pos.set(spot2.a.x, spot2.a.floor, spot2.a.z);
-near.pos.set(spot2.b.x, spot2.b.floor, spot2.b.z);
+// A hound, adjacent. Every earlier version of this test placed the enemy
+// somewhere and waited: a wave spawn, then a fireball from a random duel spot,
+// then a walk across a room. Each was a test of the level, not of damage. This
+// one puts a biting enemy inside its own melee range.
+HG.enemies.clear();
+const cellNear = HG.level.openCells.find((c) =>
+  Math.hypot(c.wx - HG.player.pos.x, c.wz - HG.player.pos.z) > 1.2 &&
+  Math.hypot(c.wx - HG.player.pos.x, c.wz - HG.player.pos.z) < 2.2) || HG.level.openCells[0];
+HG.player.pos.set(cellNear.wx, 0, cellNear.wz);
+const near = HG.enemies.spawnAt('hound', cellNear.wx + 1.4, cellNear.wz, 1);
+near.pos.set(cellNear.wx + 1.4, cellNear.floor, cellNear.wz);
 HG.player.health = 100;
 HG.player.armor = 0;
 let minHp = 100;
-for (let i = 0; i < 260; i++) {
+for (let i = 0; i < 200; i++) {
   frames(1);
   minHp = Math.min(minHp, HG.player.health);
   if (!HG.player.alive) { HG.player.alive = true; HG.player.health = 100; HG.game.state = 'playing'; }
