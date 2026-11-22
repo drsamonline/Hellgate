@@ -4,7 +4,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { humanoid, quadruped, PROPORTIONS, rigMat } from './rig.js';
+import { humanoid, quadruped, PROPORTIONS, rigMat, mergeJointMeshes } from './rig.js';
 import { getModel } from './models.js';
 import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
 
@@ -368,6 +368,10 @@ function buildBody(typeName) {
     }
     o.material = m;
   });
+  // one mesh per joint instead of one per box: a grunt is 23 meshes across 13
+  // joints, and each was a draw call. Materials are not merged, so the eyes keep
+  // their own emissive mesh.
+  mergeJointMeshes(built.group);
   return { group: built.group, parts: built.parts, flashMats, typeName };
 }
 

@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.89.0 — 2026-11-21
+
+**One mesh per joint: 68 draw calls down to 43**
+
+The atlas was the wrong target — the level is 4 draw calls of 68, and enemy bodies are 21–23 meshes each. So the
+optimisation went where the meshes are.
+
+A joint's own children never move relative to each other; the joint animates as a unit. So the boxes inside a
+joint merge without touching the animation. Materials are not merged, so the emissive eyes stay their own mesh.
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Imp body | 21 meshes | **13** |
+| Grunt body | 23 meshes | **16** |
+| Draw calls, gate, wave 2, 1280×720 | **68** | **43** |
+
+A 37 % cut, and the bodies render identically — checked in a screenshot before shipping, because a merge that
+loses a transform looks like a body missing an arm, not like a failed test.
+
+**The budgets were tightened to match**: eight enemies under 160 calls (was 240), a merged body at most 18
+meshes. A ceiling that is never lowered is not a budget.
+
+Roadmap #45 is half done: bodies are merged, true instancing is still open and would need per-instance colour for
+the hit flash.
+
+
 ## 1.88.0 — 2026-11-21
 
 **The texture atlas was measured, and rejected**

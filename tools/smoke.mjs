@@ -214,9 +214,23 @@ const withWave = await page.evaluate(() => {
   }
   return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
 });
-// 8 rig bodies on top of the level: a body is 19-24 parts, so this bounds the
-// per-enemy cost at about 17 calls each
-ok('eight enemies stay under 240 draw calls', withWave.calls < 240, JSON.stringify(withWave));
+// 8 rig bodies on top of the level. Each body is merged to one mesh per joint —
+// 13 for an imp, 16 for a grunt — so the ceiling is far below the old 240, which
+// was set when a body was 19-24 separate boxes.
+ok('eight enemies stay under 160 draw calls', withWave.calls < 160, JSON.stringify(withWave));
+
+const bodySizes = await page.evaluate(() => {
+  const HG = window.HG;
+  const out = {};
+  for (const e of HG.enemies.list) {
+    let n = 0;
+    e.body.traverse((o) => { if (o.isMesh) n++; });
+    out[e.type] = Math.max(out[e.type] || 0, n);
+  }
+  return out;
+});
+const biggest = Math.max(0, ...Object.values(bodySizes));
+ok('a merged body is at most 18 meshes', biggest > 0 && biggest <= 18, JSON.stringify(bodySizes));
 
 // clearing the enemies completed the wave, which would leave the game on the
 // cleared screen for every later check. Put one back.

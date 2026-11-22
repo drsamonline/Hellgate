@@ -286,3 +286,24 @@ person does not spend the day on it.
 `clampSettings` validated sensitivity, fov, volume, muted, reducedMotion, quality and difficulty — and not
 `classId`. `getClass()` falls back to the first class, so it never crashed, but a stored setting could hold a
 value the game cannot use. It is validated against `CLASS_IDS` now, with six assertions.
+
+## Pass fifteen — the win the measurement pointed at
+
+The atlas was the wrong target: the level is 4 draw calls of 68, and enemy bodies are 21–23 meshes each. So the
+optimisation went where the meshes are.
+
+**One mesh per joint.** A joint's own children never move relative to each other — the joint animates as a unit —
+so the boxes inside a joint can be merged without touching the animation. Materials are not merged, so the
+emissive eyes stay their own mesh.
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Imp body | 21 meshes | **13** |
+| Grunt body | 23 meshes | **16** |
+| Draw calls, gate, wave 2, 1280×720 | **68** | **43** |
+
+A 37 % cut in draw calls, and the bodies render identically — checked in a screenshot before shipping, because a
+merge that silently loses a transform looks like a body that is missing an arm, not like a failed test.
+
+The smoke budgets were tightened to match: eight enemies under **160** calls (was 240) and a merged body at most
+**18** meshes. A ceiling that is never lowered is not a budget.

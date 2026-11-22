@@ -361,3 +361,82 @@ export const PROPORTIONS = {
     core: true, coreR: 0.26,
   },
 };
+
+/**
+ * Merge the direct mesh children of a joint that share a material into one mesh.
+ *
+ * A grunt body is 23 meshes across 13 joints, and every one of those is a draw
+ * call. A joint's own children never move relative to each other — the joint
+ * animates as a unit — so merging them per joint keeps the animation and drops
+ * the calls. Materials are not merged: the emissive eyes stay their own mesh.
+ *
+ * Returns the number of meshes removed. Any geometry without positions (a stub,
+ * or a primitive the merge cannot read) is left alone rather than corrupted.
+ */
+export function mergeJointMeshes(root) {
+  let removed = 0;
+  const joints = [];
+  root.traverse((o) => { if (o.isGroup) joints.push(o); });
+  for (const j of joints) {
+    const byMat = new Map();
+    for (const c of j.children) {
+      if (!c.isMesh || c.isSkinnedMesh) continue;
+      const list = byMat.get(c.material) || [];
+      list.push(c);
+      byMat.set(c.material, list);
+    }
+    for (const [mat, list] of byMat) {
+      if (list.length < 2) continue;
+      const merged = mergeMeshList(list);
+      if (!merged) continue;
+      const mesh = new THREE.Mesh(merged, mat);
+      mesh.userData.shared = true;
+      mesh.userData.mergedJoint = true;
+      for (const m of list) j.remove(m);
+      j.add(mesh);
+      removed += list.length - 1;
+    }
+  }
+  return removed;
+}
+
+/** Concatenate meshes into one geometry, baking each mesh's local transform. */
+function mergeMeshList(list) {
+  const pos = [];
+  const nor = [];
+  const uv = [];
+  const idx = [];
+  let base = 0;
+  try {
+    for (const m of list) {
+      m.updateMatrix();
+      const g = m.geometry;
+      const p = g && g.attributes && g.attributes.position;
+      if (!p) return null;               // nothing readable to merge
+      const n = g.attributes.normal;
+      const u = g.attributes.uv;
+      const v = new THREE.Vector3();
+      for (let i = 0; i < p.count; i++) {
+        v.fromBufferAttribute(p, i).applyMatrix4(m.matrix);
+        pos.push(v.x, v.y, v.z);
+        if (n) nor.push(n.getX(i), n.getY(i), n.getZ(i));
+        else nor.push(0, 1, 0);
+        if (u) uv.push(u.getX(i), u.getY(i));
+        else uv.push(0, 0);
+      }
+      if (g.index) for (let i = 0; i < g.index.count; i++) idx.push(base + g.index.getX(i));
+      else for (let i = 0; i < p.count; i++) idx.push(base + i);
+      base += p.count;
+    }
+  } catch (e) {
+    return null;                         // a stub without buffer attributes
+  }
+  if (!pos.length) return null;
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  out.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  out.setIndex(idx);
+  out.computeBoundingSphere();
+  return out;
+}
