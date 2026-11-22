@@ -136,6 +136,7 @@ play/src/pixel.js     median-cut quantise and Bayer dither for the textures
 play/src/search.js    a ranked inverted index: tf-idf, prefix and fuzzy matching
 play/src/codex.js     every enemy, trinket and zone, searchable on C
 play/src/achievements.js  fifteen things worth keeping across runs
+play/src/daily.js     one run a day, seeded from the date
 play/src/models.js    optional open-3-D bodies from assets/models/<type>.glb
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted

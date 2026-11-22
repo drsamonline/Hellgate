@@ -555,6 +555,8 @@
     font-size:10px;line-height:1.6;letter-spacing:.04em;color:#9d8f7c;background:rgba(0,0,0,.45);
     border:1px solid rgba(255,180,84,.18);border-radius:3px;padding:10px 12px;display:none;white-space:pre-wrap}
   .reportout.on{display:block}
+  .dailyl{margin:8px 0 0;font-size:11px;letter-spacing:.18em;color:#8d7f6c;text-transform:uppercase}
+  .dailyl b{color:var(--amber)}
   .build{margin:10px 0 0;font-size:10px;letter-spacing:.18em;color:#4f4738}
   .keys{margin:16px 0 0;font-size:11px;letter-spacing:.16em;color:#6f6455;line-height:1.9;max-width:640px}
   #best,#stats{font-size:12px;letter-spacing:.2em;color:#8d7f6c;line-height:2;text-transform:uppercase}
@@ -635,6 +637,7 @@
         <button class="mode" id="modeNightmare" data-mode="nightmare">NIGHTMARE</button>
         <button class="mode" id="modeHardcore" data-mode="hardcore">HARDCORE</button>
         <button class="mode" id="modeGauntlet" data-mode="gauntlet">GAUNTLET</button>
+        <button class="mode" id="modeDaily" data-mode="daily">DAILY</button>
       </div>
       <p id="modeBlurb" class="modeblurb">Nine zones in order. Clear a zone to unlock the next.</p>
       <div class="row">
@@ -643,6 +646,7 @@
         <button id="settingsBtnTitle" class="ghost">Settings</button>
       </div>
       <div id="best"></div>
+      <p id="dailyline" class="dailyl"></p>
       <p id="build" class="build"></p>
       <p class="keys">
         WASD move · SHIFT sprint · SPACE jump · MOUSE look · LMB fire<br />

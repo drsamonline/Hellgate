@@ -538,6 +538,40 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== the daily ==');
+{
+  const D = await import('../play/src/daily.js');
+  const a = new Date(2026, 10, 22);
+  const b = new Date(2026, 10, 23);
+  ok(D.dailySeed(a) === D.dailySeed(a), 'the daily seed is the same for everyone on the same day');
+  ok(D.dailySeed(a) !== D.dailySeed(b), 'and different the next day');
+  ok(/^daily-2026-11-22-/.test(D.dailySeed(a)), 'and carries the date (' + D.dailySeed(a) + ')');
+  ok(D.dayKey(a) === '2026-11-22', 'the day key is the local date');
+  ok(D.hash('a') !== D.hash('b'), 'the hash separates two strings');
+  // the record repairs itself and only counts today
+  const store = { _v: null, getItem() { return this._v; }, setItem(k, v) { this._v = v; } };
+  const empty = D.loadDaily(store);
+  ok(empty.day === D.dayKey() && empty.best === 0, 'a fresh day starts at nothing');
+  const rec = D.recordDaily(1200, 4, 30, store);
+  ok(rec.best === 1200 && rec.beat === true, 'a score becomes the best');
+  const worse = D.recordDaily(50, 1, 2, store);
+  ok(worse.best === 1200 && worse.beat === false, 'and a worse one does not replace it');
+  store._v = '{ not json';
+  ok(D.loadDaily(store).best === 0, 'a corrupt daily record is replaced, not trusted');
+
+  // pausing and dying must not count as clearing a zone
+  const zonesBefore = HG.history.zones;
+  HG.game.state = 'playing';
+  HG.pauseGame();
+  ok(HG.history.zones === zonesBefore, 'pausing does not count as clearing a zone');
+  HG.game.state = 'playing';
+  HG.gameOver();
+  ok(HG.history.zones === zonesBefore, 'and neither does dying (' + HG.history.zones + ')');
+  // gameOver() clears the run save, which later tests expect to exist
+  HG.game.state = 'playing';
+  HG.saveRun();
+}
+
 console.log('\n== achievements ==');
 {
   const A = await import('../play/src/achievements.js');
@@ -900,7 +934,7 @@ HG.cinematic.skip();
 ok(HG.cinematic.playing === false, 'skip stops it');
 
 console.log('\n== game modes ==');
-ok(Object.keys(HG.MODES).length === 7, 'seven modes are defined (' + Object.keys(HG.MODES).length + ')');
+ok(Object.keys(HG.MODES).length === 8, 'eight modes are defined (' + Object.keys(HG.MODES).length + ')');
 ok(HG.mode === 'campaign', 'the default mode is campaign');
 for (const name of ['endless', 'bossrush', 'arena', 'nightmare', 'hardcore', 'campaign']) {
   HG.selectMode(name);

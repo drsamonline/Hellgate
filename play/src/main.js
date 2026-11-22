@@ -13,6 +13,7 @@ import { EnemyManager, poolStats, clearBodyPool, TYPES } from './enemies.js';
 import { loadModels, modelReport, installModel, uninstallModel } from './models.js';
 import { ZONE_BOOK, effectsFor } from './zonebook.js';
 import { buildCodex } from './codex.js';
+import { dailySeed, loadDaily, recordDaily } from './daily.js';
 import { ACHIEVEMENTS, loadHistory, saveHistory, check as checkAchievements, achievementName, progressOf } from './achievements.js';
 import * as Book from './book.js';
 import { Projectiles } from './projectiles.js';
@@ -216,6 +217,15 @@ const MODES = {
     endless: false,
     bossRush: false,
     noSave: true,
+  },
+  daily: {
+    name: 'DAILY',
+    blurb: 'One run a day, the same seed for everyone. The best of the day is kept.',
+    waves: null,
+    lives: 1,
+    endless: false,
+    bossRush: false,
+    daily: true,
   },
   gauntlet: {
     name: 'GAUNTLET',
@@ -1706,11 +1716,6 @@ function startGame(seed, opts = {}) {
 
 function pauseGame() {
   if (audio) { audio.stopDrone(); audio.stopBed(); }
-  record.zones++;
-  record.zonesCleared = Math.max(record.zonesCleared, (progress.cleared || []).length + 1);
-  record.best = Math.max(record.best || 0, game.score);
-  saveHistory(record);
-  awardFor();
   if (game.state !== 'playing') return;
   game.state = 'paused';
   input.fire = false;
@@ -1763,11 +1768,13 @@ function gameOver() {
   if (game.state !== 'playing') return;
   game.state = 'dead';
   if (audio) { audio.stopDrone(); audio.stopBed(); }
-  record.zones++;
-  record.zonesCleared = Math.max(record.zonesCleared, (progress.cleared || []).length + 1);
+  // dying is not clearing a zone: the record only counts the zone when it is
+  // cleared, in zoneCleared()
   record.best = Math.max(record.best || 0, game.score);
   saveHistory(record);
-  awardFor();
+  awardFor({ survived: false });
+  if (MODES[gameMode] && MODES[gameMode].daily) recordDaily(game.score, game.wave, game.kills);
+  refreshDaily();
   clearRun();
   input.fire = false;
   audio.play('dead');
@@ -1838,6 +1845,7 @@ function toMenu() {
   hud.setVisible(false);
   showScreen('title');
   refreshBest();
+  refreshDaily();
 }
 
 function showScreen(id) {
@@ -1846,6 +1854,16 @@ function showScreen(id) {
 
 function hideScreens() {
   for (const el of document.querySelectorAll('.screen')) el.classList.remove('on');
+}
+
+/** The daily line under the best run: today's seed and today's best. */
+function refreshDaily() {
+  const el = document.getElementById('dailyline');
+  if (!el) return;
+  const rec = loadDaily();
+  const seed = dailySeed();
+  el.innerHTML = `DAILY <b>${escapeHtml(seed.replace('daily-', ''))}</b> · BEST <b>${rec.best || 0}</b>` +
+    (rec.runs ? ` · ${rec.runs} RUN${rec.runs === 1 ? '' : 'S'}` : '');
 }
 
 function refreshBest() {
@@ -2023,6 +2041,14 @@ window.addEventListener('keyup', (e) => {
 });
 
 document.getElementById('startBtn').addEventListener('click', () => {
+  // the daily overrides the seed box: a daily you can reseed is not a daily
+  if (MODES[gameMode] && MODES[gameMode].daily) {
+    const seed = dailySeed();
+    const input = document.getElementById('seedInput');
+    if (input) input.value = seed;
+    beginZone({ ...zone, seed });
+    return;
+  }
   const typed = document.getElementById('seedInput').value.trim();
   const z = typed && typed !== zone.seed ? { ...zone, seed: typed } : zone;
   beginZone(z);
@@ -2058,7 +2084,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.74.0';
+const BUILD = '1.75.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

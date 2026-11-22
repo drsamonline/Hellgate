@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.75.0 — 2026-11-21
+
+**A daily: one run a day, the same seed for everyone**
+
+The seed is the date, hashed with FNV-1a: no server, no account, and two people playing on the same day
+get the same level, the same waves and the same spawns. The best score for the day is kept beside it.
+
+| Detail | Why |
+| --- | --- |
+| `dayKey()` is the **local** date, not UTC | A player's day is their own |
+| The hash is in the seed | Two consecutive days are not adjacent seeds |
+| The daily overrides the seed box | A daily you can reseed is not a daily |
+| A corrupt record is replaced | Same rule as every other store in the game |
+
+The title screen shows the day's seed and best; the DAILY mode button starts it.
+
+**Two miscounted zones, found while wiring it.** A patch meant for `zoneCleared()` had also landed in
+`pauseGame()` and `gameOver()`, so pausing and dying each counted as clearing a zone. The record now counts
+a zone only when the zone is cleared, and two tests hold that.
+
+**Tests** — 11 new assertions: the seed is stable per day and different across days, the day key is local,
+the record repairs itself, a worse score does not replace the best, pausing and dying do not count as
+clearing a zone.
+
+
 ## 1.74.0 — 2026-11-21
 
 **Fifteen things worth keeping**
