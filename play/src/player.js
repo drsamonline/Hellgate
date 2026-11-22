@@ -20,6 +20,9 @@ const PITCH_LIMIT = 1.45;
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 
+/** How much of each kind a player can carry. */
+const AMMO_CAP = { bullets: 200, shells: 60, rockets: 20 };
+
 /**
  * The player: movement, look, collision, health, armour, ammo and the class multipliers.
  */
@@ -248,5 +251,17 @@ export class Player {
   // health could never be healed past 100, so every health upgrade past the
   // starting value was worth less than it said
   heal(n) { this.health = Math.min(this.maxHp, this.health + n); }
+
+  /**
+   * Ammo has a ceiling per kind. Without one, a long run turns every pickup into
+   * a number that keeps climbing, and the scarcity the weapon design assumes
+   * stops existing — by wave twenty you cannot run out of rockets.
+   */
+  addAmmo(kind, n) {
+    const cap = AMMO_CAP[kind];
+    if (!cap) return this.ammo[kind] || 0;
+    this.ammo[kind] = Math.min(cap, (this.ammo[kind] || 0) + n);
+    return this.ammo[kind];
+  }
   addArmor(n) { this.armor = Math.min(100, this.armor + n); }
 }

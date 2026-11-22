@@ -538,6 +538,25 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== ammo has a ceiling ==');
+{
+  HG.player.ammo = { bullets: 60, shells: 16, rockets: 3 };
+  const added = HG.player.addAmmo('rockets', 2);
+  ok(added === 5, 'a rocket pickup adds two (' + added + ')');
+  HG.player.addAmmo('rockets', 500);
+  ok(HG.player.ammo.rockets === 20, 'and the rockets stop at the carry limit (' + HG.player.ammo.rockets + ')');
+  HG.player.ammo.bullets = 195;
+  HG.player.addAmmo('bullets', 20);
+  ok(HG.player.ammo.bullets === 200, 'bullets stop at 200 (' + HG.player.ammo.bullets + ')');
+  // the pickup table must go through addAmmo, not around it
+  const { PICKUP_DEFS } = HG;
+  ok(!!PICKUP_DEFS, 'the pickup table is reachable for the test');
+  HG.player.ammo.shells = 58;
+  PICKUP_DEFS.shells.apply(HG.player);
+  ok(HG.player.ammo.shells === 60, 'a shell pickup obeys the ceiling too (' + HG.player.ammo.shells + ')');
+  HG.player.ammo = { bullets: 60, shells: 16, rockets: 3 };
+}
+
 console.log('\n== health and armour have one ceiling ==');
 {
   // healing goes to the player's own maximum, not to a hardcoded 100
@@ -1820,7 +1839,9 @@ HG.enemies.clear();
   HG.enemies.spawnAt('imp', far.wx, far.wz, 1);
   ok(HG.enemies.list.length === 1, 'the isolation enemy spawned, so the wave cannot clear');
 }
-HG.player.health = 100;
+// "full health" means the run's own maximum, which is not 100 once upgrades,
+// trinkets or story flags have raised it
+HG.player.health = HG.player.maxHp;
 const before2 = HG.game.pickups.length;
 // a cell far from the exit pad: teleporting onto the pad completes the wave,
 // and a wave change clears every pickup, which is not what this test is about

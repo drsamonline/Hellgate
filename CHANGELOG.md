@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.83.0 — 2026-11-21
+
+**Ammo had no ceiling at all**
+
+Health and armour each had a hardcoded ceiling. Ammo had none: `p.ammo.rockets += 2` on every rocket pickup,
+for ever. By wave twenty a long run carries hundreds of rockets, and the scarcity the four weapons are designed
+around stops existing.
+
+| Kind | Carry limit |
+| --- | --- |
+| Bullets | 200 |
+| Shells | 60 |
+| Rockets | 20 |
+
+`player.addAmmo(kind, n)` clamps to those, and all three pickup definitions go through it — with a test that
+the pickup table itself cannot go around the ceiling.
+
+**And a flaky test, fixed at the cause.** The pickup test set `health = 100` and called that full health. Once
+upgrades, trinkets or story flags raise `maxHp` above 100, 100 is not full, so the pickup was consumed when the
+test expected it left on the floor. It uses `player.maxHp` now.
+
+
 ## 1.82.0 — 2026-11-21
 
 **The ceilings that disagreed with the run**

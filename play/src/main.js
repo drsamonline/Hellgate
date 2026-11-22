@@ -859,9 +859,9 @@ const PICKUP_DEFS = {
   // every pickup is a model of the thing it is, not a coloured octahedron
   health: { color: 0xff2f55, build: Items.medkit, toast: 'HEALTH +25', apply: (p) => p.heal(25) },
   armor: { color: 0x3fa9ff, build: Items.armourVest, toast: 'ARMOR +25', apply: (p) => p.addArmor(25) },
-  bullets: { color: 0xffd24a, build: () => Items.ammoBox(false), toast: '+20 BULLETS', apply: (p) => { p.ammo.bullets += 20; } },
-  shells: { color: 0xff8a3c, build: () => Items.shellPickup(), toast: '+6 SHELLS', apply: (p) => { p.ammo.shells += 6; } },
-  rockets: { color: 0x8fe04a, build: Items.rocket, toast: '+2 ROCKETS', apply: (p) => { p.ammo.rockets += 2; } },
+  bullets: { color: 0xffd24a, build: () => Items.ammoBox(false), toast: '+20 BULLETS', apply: (p) => { p.addAmmo('bullets', 20); } },
+  shells: { color: 0xff8a3c, build: () => Items.shellPickup(), toast: '+6 SHELLS', apply: (p) => { p.addAmmo('shells', 6); } },
+  rockets: { color: 0x8fe04a, build: Items.rocket, toast: '+2 ROCKETS', apply: (p) => { p.addAmmo('rockets', 2); } },
 };
 
 function randomCell(minDist = 0, roomsOnly = true) {
@@ -2143,7 +2143,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.82.0';
+const BUILD = '1.83.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2565,7 +2565,7 @@ window.HG = {
   // tools measure the post pass by switching it; nothing in the game reads this
   get bloom() { return bloom; },
   get perfState() { return { ratio: perf.ratio, bloomDropped: perf.bloomDropped }; },
-  takeUpgrade, UPGRADES, TRINKETS, dropTrinket, recomputeStats, applyClass,
+  takeUpgrade, UPGRADES, TRINKETS, PICKUP_DEFS, dropTrinket, recomputeStats, applyClass,
   // the simulation step, for tools that advance the game without a display
   update, effects, projectiles, level, enemies, scene,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,

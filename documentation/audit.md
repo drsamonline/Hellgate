@@ -164,3 +164,17 @@ armour paths, and `Math.min(player.maxHp, …)` on resume. Four assertions hold 
 
 The count of this defect class is now four: damage numbers, the zone counter, the stats derivation, and these
 two ceilings. Every one of them was a value written in two places that disagreed about its own limit.
+
+## Pass nine — the value with no ceiling at all
+
+Health and armour each had a hardcoded ceiling. Ammo had **none**: `p.ammo.rockets += 2` on every rocket
+pickup, for ever. By wave twenty a long run carries hundreds of rockets, and the scarcity the four weapons are
+designed around stops existing.
+
+`player.addAmmo(kind, n)` now clamps to a carry limit — 200 bullets, 60 shells, 20 rockets — and all three
+pickup definitions go through it. Three assertions hold the ceiling, including one that the pickup table itself
+cannot go around it.
+
+**And the pickup test was flaky for a related reason.** It set `health = 100` and called that full health. Once
+upgrades, trinkets or story flags raise `maxHp` above 100, 100 is not full, so the pickup was consumed when the
+test expected it left on the floor. It uses `player.maxHp` now. Five clean runs.
