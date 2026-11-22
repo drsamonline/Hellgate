@@ -72,6 +72,10 @@ for (const [name, open, close] of [
   ['codex', 'showCodex', 'closeCodex'],
   ['map', 'showZoneMap', null],
 ]) {
+  // a fresh page per panel: the panels are independent, and accumulating WebGL
+  // state across six screen switches crashed the software rasteriser
+  await page.goto('http://127.0.0.1:9301/play/?auto=1&seed=flow', { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction('window.HG && window.HG.game.state === "playing"', { timeout: 20000 });
   await step('panel: ' + name, async () => {
     await page.evaluate((f) => window.HG[f](), open);
     await wait(150);

@@ -2511,7 +2511,7 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
-  takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex,
+  takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex, hideScreens, showScreen,
   history: record, awardFor, achievementProgress: () => progressOf(record),
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
