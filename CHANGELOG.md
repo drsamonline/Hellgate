@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.85.0 — 2026-11-21
+
+**The mobile fire button fired once per tap**
+
+```js
+input.fire = true;
+weapons.tryFire(fireCtx());
+setTimeout(() => { input.fire = false; }, 120);
+```
+
+Three problems in three lines. The game loop already reads `input.fire` every frame, so a tap produced one shot
+and then a flag that stayed true for 120 ms doing nothing. Holding the button did not give automatic fire, which
+is what every mobile shooter does. And every tap scheduled its own timer, so tapping quickly stacked them.
+
+It is a held button now: `pointerdown` sets the flag and fires immediately; `pointerup`, `pointercancel` and
+`pointerleave` clear it. Same shape as the mouse.
+
+**The smoke test holds the button** in an emulated phone viewport, on the real element, and checks the flag is
+true mid-hold and false after release.
+
+
 ## 1.84.0 — 2026-11-21
 
 **The drone: a guard that never ran, and kills that did not count**

@@ -2143,7 +2143,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.84.0';
+const BUILD = '1.85.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2541,12 +2541,12 @@ if (TOUCH) {
     melee: () => swingBlade(),
     read: () => openLore(),
     jump: () => { input.jumpQueued = true; },
-    fire: () => {
+    fireDown: () => {
       if (game.state !== 'playing') return;
       input.fire = true;
       weapons.tryFire(fireCtx());
-      setTimeout(() => { input.fire = false; }, 120);
     },
+    fireUp: () => { input.fire = false; },
     power: (i) => castPower(i),
     weapon: () => weapons.next(1),
   });

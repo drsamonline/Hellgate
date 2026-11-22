@@ -129,6 +129,15 @@ export function initTouch(input, handlers) {
   look.addEventListener('pointerup', onLookUp);
   look.addEventListener('pointercancel', () => { lookId = null; });
 
+  const bindHold = (id, down, up) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); down(); }, { passive: false });
+    el.addEventListener('pointerup', (e) => { e.preventDefault(); up(); }, { passive: false });
+    el.addEventListener('pointercancel', () => up());
+    el.addEventListener('pointerleave', () => up());
+  };
+
   const bind = (id, fn) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -140,7 +149,11 @@ export function initTouch(input, handlers) {
   };
 
   bind('tJump', handlers.jump);
-  bind('tFire', handlers.fire);
+  // fire is a held button, not a tap: the game loop reads input.fire every frame,
+  // so holding it gives automatic fire the way the mouse does. The old wiring
+  // fired once per tap and reset the flag with a setTimeout, which stacked timers
+  // when the button was tapped quickly.
+  bindHold('tFire', handlers.fireDown, handlers.fireUp);
   bind('tP1', () => handlers.power(0));
   bind('tP2', () => handlers.power(1));
   bind('tP3', () => handlers.power(2));

@@ -416,6 +416,21 @@ await mp.tap('[data-class="marine"]');
 await mp.waitForFunction('window.HG.game.state === "playing"', { timeout: 20000 });
 await new Promise((r) => setTimeout(r, 500));
 
+// the fire button is held, not tapped: a mobile player who holds it gets
+// automatic fire, and letting go stops it
+{
+  const el = await mp.$('#tFire');
+  const box = await el.boundingBox();
+  await mp.touchscreen.touchStart(box.x + box.width / 2, box.y + box.height / 2);
+  await new Promise((r) => setTimeout(r, 220));
+  const held = await mp.evaluate(() => window.HG.input.fire);
+  await mp.touchscreen.touchEnd();
+  await new Promise((r) => setTimeout(r, 120));
+  const released = await mp.evaluate(() => window.HG.input.fire);
+  ok('the fire button fires while held', held === true);
+  ok('and stops when released', released === false);
+}
+
 const touch = await mp.evaluate(() => {
   const box = (id) => {
     const el = document.getElementById(id);
