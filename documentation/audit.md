@@ -252,3 +252,37 @@ Two existing barrel tests had to be corrected: both fired from `y = 0`, which wa
 matter. They now fire from the barrel's own floor height. That is the second time in this audit that a correct
 fix broke a test that had encoded the wrong assumption — and both times the test was the thing that had to
 change, not the fix.
+
+## Pass fourteen — optimisation, measured before written
+
+The plan was a texture atlas (roadmap #47): one material for every surface, five draw calls down to one. The
+measurement said no.
+
+| Measurement | Value |
+| --- | --- |
+| Total draw calls, gate, wave 2 | **68** |
+| Level meshes | **4** — `floor_tile`, `ceil`, `wall_brick`, `decor:wall_brick` |
+| Meshes per enemy body | **21–23** (imp 21, grunt 23, wisp 7) |
+| Visible meshes in the scene | 218 of 281 |
+
+An atlas would save at most two calls of sixty-eight, and it cannot tile: walls use a UV repeat of 2.4, which an
+atlas cell cannot express without a `fract()` in a custom shader or subdividing every quad into tiles. Two calls
+saved, a shader introduced, the brick pattern broken until the shader is right.
+
+**The real cost is enemy bodies.** Eight enemies at 21–23 meshes is ~170 meshes, and that is roadmap #45
+(instancing), not the atlas. Recorded as measured-and-rejected in `ENHANCEMENTS.md` with the numbers, so the next
+person does not spend the day on it.
+
+### What was actually optimised
+
+| Change | Why |
+| --- | --- |
+| The drone's two per-frame `Vector3` allocations hoisted to module scope | 120 objects a second into the young generation for nothing |
+| `Player.forward` getter removed | Dead code that allocated a `Vector3` on every access and nothing called |
+| `classId` validated in `clampSettings` | Every other setting was validated; a stale or edited one carried a class name no class has into the run |
+
+### And a settings bug found on the way
+
+`clampSettings` validated sensitivity, fov, volume, muted, reducedMotion, quality and difficulty — and not
+`classId`. `getClass()` falls back to the first class, so it never crashed, but a stored setting could hold a
+value the game cannot use. It is validated against `CLASS_IDS` now, with six assertions.

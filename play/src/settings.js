@@ -24,6 +24,9 @@ export const DEFAULTS = {
  */
 export const DIFFICULTIES = ['easy', 'normal', 'hard'];
 
+/** The class ids, kept here so a stored setting can be validated against them. */
+export const CLASS_IDS = ['marine', 'ranger', 'warden'];
+
 /**
  * Read settings from localStorage, falling back to the default for any key that is missing or the wrong type.
  */
@@ -62,5 +65,9 @@ export function clampSettings(s) {
   s.reducedMotion = !!s.reducedMotion;
   s.quality = ['performance', 'balanced', 'pretty'].includes(s.quality) ? s.quality : 'balanced';
   if (!DIFFICULTIES.includes(s.difficulty)) s.difficulty = 'normal';
+  // every other field is validated here; classId was not, so a stale or edited
+  // setting carried a name no class has into the run. getClass() falls back, but
+  // the setting itself should never hold a value the game cannot use.
+  s.classId = CLASS_IDS.includes(s.classId) ? s.classId : DEFAULTS.classId;
   return s;
 }

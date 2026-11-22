@@ -538,6 +538,20 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== settings are validated on read ==');
+{
+  const { clampSettings, DEFAULTS, CLASS_IDS } = await import('../play/src/settings.js');
+  const { CLASSES } = await import('../play/src/classes.js');
+  ok(CLASS_IDS.length === CLASSES.length, 'the class id list matches the class table');
+  const bad = clampSettings({ ...DEFAULTS, classId: 'wizard', fov: 999, volume: 5, difficulty: 'insane', quality: 'ultra' });
+  ok(bad.classId === DEFAULTS.classId, 'an unknown class id falls back to the default (' + bad.classId + ')');
+  ok(bad.fov === 100, 'and fov is clamped (' + bad.fov + ')');
+  ok(bad.volume === 1, 'and volume (' + bad.volume + ')');
+  ok(bad.difficulty === 'normal' && bad.quality === 'balanced', 'and the two enums');
+  const good = clampSettings({ ...DEFAULTS, classId: 'warden' });
+  ok(good.classId === 'warden', 'a real class id survives the clamp');
+}
+
 console.log('\n== barrels are a volume, not a circle ==');
 {
   const cell = HG.level.openCells.find((c) =>

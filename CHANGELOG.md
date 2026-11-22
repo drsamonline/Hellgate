@@ -1,5 +1,34 @@
 # Changelog
 
+## 1.88.0 — 2026-11-21
+
+**The texture atlas was measured, and rejected**
+
+The plan was roadmap #47: one material for every surface, five draw calls down to one. The measurement said no.
+
+| Measurement | Value |
+| --- | --- |
+| Total draw calls, gate, wave 2 | **68** |
+| Level meshes | **4** — `floor_tile`, `ceil`, `wall_brick`, `decor:wall_brick` |
+| Meshes per enemy body | **21–23** (imp 21, grunt 23, wisp 7) |
+
+An atlas saves at most two calls of sixty-eight and cannot tile: walls use a UV repeat of 2.4, which an atlas
+cell cannot express without a `fract()` in a custom shader or subdividing every quad. Two calls saved, a shader
+introduced. The real cost is enemy bodies — eight enemies at 21–23 meshes is ~170 meshes — and that is roadmap
+#45's job. Recorded in `ENHANCEMENTS.md` with the numbers.
+
+**What was optimised instead**
+
+| Change | Why |
+| --- | --- |
+| The drone's two per-frame `Vector3` allocations hoisted to module scope | 120 objects a second into the young generation |
+| `Player.forward` getter removed | Dead code that allocated on every access and nothing called |
+| `classId` validated in `clampSettings` | The one setting that was not validated |
+
+**A settings bug on the way**: `clampSettings` validated seven fields and not `classId`, so a stale or edited
+setting could carry a class name no class has into the run. Six assertions hold it now.
+
+
 ## 1.87.0 — 2026-11-21
 
 **A barrel was a circle, not a volume**

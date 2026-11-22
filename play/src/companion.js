@@ -8,6 +8,12 @@
 import * as THREE from 'three';
 import { hasLineOfSight } from './level.js';
 
+// Two vectors reused every frame instead of allocated: the drone updates 60 times
+// a second and this was two objects per update, which is a steady drip into the
+// young generation for no reason.
+const _target = new THREE.Vector3();
+const _pull = new THREE.Vector3();
+
 const FOLLOW_NEAR = 2.6;
 const FOLLOW_FAR = 4.2;
 const ENGAGE_RANGE = 15;
@@ -76,7 +82,7 @@ export class Companion {
 
     // hover toward a point behind and above the player
     // sits behind and above the shoulder, far enough not to fill the screen
-    const target = new THREE.Vector3(
+    const target = _target.set(
       player.pos.x + Math.sin(player.yaw) * 2.1,
       player.pos.y + 2.05,
       player.pos.z + Math.cos(player.yaw) * 2.1
@@ -86,7 +92,8 @@ export class Companion {
 
     if (!this.dormant) {
       const pull = Math.min(1, Math.max(0, (d - FOLLOW_NEAR) / (FOLLOW_FAR - FOLLOW_NEAR)));
-      this.vel.lerp(target.clone().sub(this.pos).normalize().multiplyScalar(6.5 * pull), 1 - Math.exp(-6 * dt));
+      _pull.copy(target).sub(this.pos).normalize().multiplyScalar(6.5 * pull);
+      this.vel.lerp(_pull, 1 - Math.exp(-6 * dt));
     } else {
       this.vel.multiplyScalar(0.9);
     }

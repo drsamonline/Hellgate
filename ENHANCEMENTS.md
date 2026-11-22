@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Seventeen items shipped — marked **✓ shipped** below.
+Fifty items shipped — marked **✓ shipped** below; the rest say what is left and why.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -63,14 +63,14 @@ Cheap, low-risk, immediately noticeable. All `S`.
 41. **Blood pools on the floor** — a decal at the death position, oriented to the floor norma — ✓ shippedl. `effects.js` · S · medium
 42. **Bullet-hole decals with correct orientation on every surface** — ✓ shipped (floors and ceilings were degenerate under `lookAt`; they are set explicitly now) — already works on walls; verify floors and ceilings and cap by surface type. `effects.js` · S · medium
 43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each ene — ✓ shippedmy; makes them feel grounded without a shadow map. `enemies.js` · M · high
-44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high
+44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high — ✓ shipped as `bloom.js`, a hand-written two-pass blur plus a colour grade
 45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high
 46. **Chunked level meshes** — split the merged geometry into 4×4-cell chunks so frustum cul — measured and rejected: 4×4 chunks cost 255 draw calls against 117 for one mesh per texture at 1280×720, because this arena is small enough that nearly every chunk is in the frustum. The code keeps a `CHUNK` constant, set to one chunk. A bigger level should re-measureling actually removes geometry. Trades 5 draw calls for ~25. `levelmesh.js` · M · medium
-47. **Texture atlas** — one 256×256 atlas for all surfaces, so the level is one draw call instead of five. `textures.js` · M · medium
+47. **Texture atlas** — one 256×256 atlas for all surfaces, so the level is one draw call instead of five. `textures.js` · M · medium — measured and rejected: the whole level is **4 draw calls of 68** (`floor_tile`, `ceil`, `wall_brick`, `decor:wall_brick`), and an atlas cannot tile. Walls use a repeat of 2.4, which an atlas cell cannot express without either a `fract()` in a custom shader or subdividing every quad into tiles. Two calls saved, a shader introduced. The real cost is enemy bodies: 21–23 meshes each, ~170 meshes for eight enemies — that is #45's job, not the atlas's
 48. **Weapon sprites instead of meshes** — a 2D canvas sprite per weapon, Doom-style, with frames for idle/fire. Cheaper and more authentic than boxes. `weapons.js` · M · medium
 49. **Better enemy models** — same box budget, more silhouette: hunched imps, a grunt with a visible backpack and muzzle. Cheap art direction. `enemies.js` · M · medium
 50. **Animated doors and lifts as sectors** — a lift that moves between floor heights on a trigger. `level.js` · L · medium
-51. **Save/resume a run** — serialise the wave, seed, player state and remaining enemies. Nice for long sessions. `main.js` · L · low
+51. **Save/resume a run** — serialise the wave, seed, player state and remaining enemies. Nice for long sessions. `main.js` · L · low — ✓ shipped; the save carries upgrades, story flags, book position, codex counts and relic count too
 
 ## Tier 3 — Large (architectural)
 
@@ -79,7 +79,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 54. **Collision broadphase** — a uniform grid or BVH for enemies and projectiles instead of scanning the list. Only matters past ~50 enemies, but that is where this is headed. `enemies.js` · L · medium
 55. **Object pooling for enemies** — ✓ shipped (body pool per type, capped at 14 each; measured 16 bodies built for 36 enemies over five waves) — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
 56. **Deterministic replay** — record the input stream + seed, replay a run exactly. Turns bug reports into test cases and enables ghost runs. `main.js` · L · medium
-57. **Split the game loop from the renderer** — fixed-timestep simulation with an interpolated render. Removes the dt-dependent behaviour that makes 30 fps and 144 fps feel different. `main.js` · L · medium
+57. **Split the game loop from the renderer** — fixed-timestep simulation with an interpolated render. Removes the dt-dependent behaviour that makes 30 fps and 144 fps feel different. `main.js` · L · medium — ✓ shipped; `FIXED = 1/60`, `MAX_STEPS = 4`, backlog dropped rather than spiralled
 58. **Mobile/touch controls** — a virtual stick and a look area. Pointer lock does not exist on touch, and the fallback path is already there. `main.js` · L · medium — ✓ shipped
 
 ## Tier 4 — Research / stretch

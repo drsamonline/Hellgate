@@ -215,12 +215,6 @@ export class Player {
     this.camera.rotation.set(this.pitch, this.yaw, this.roll, 'YXZ');
   }
 
-  get forward() {
-    const v = new THREE.Vector3();
-    this.camera.getWorldDirection(v);
-    return v;
-  }
-
   damage(amount, sourcePos) {
     if (!this.alive) return 0;
     if (this.invuln > 0) return 0;
