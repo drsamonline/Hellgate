@@ -9,6 +9,7 @@
 export const ZONES = [
   {
     id: 'gate',
+    bed: 'wind',
     ambientFx: { color: 0xd8c9a8, rate: 1.2, life: 5, gravity: -0.15, speed: 0.25, spread: 12 },
     shape: { rooms: [8, 11], size: [4, 7], tall: 0.25 },
     wallTint: [1.06, 1.0, 0.92],
@@ -29,6 +30,7 @@ export const ZONES = [
   },
   {
     id: 'foundry',
+    bed: 'fire',
     ambientFx: { color: 0xff8a3c, rate: 6, life: 2.4, gravity: -1.6, speed: 0.5, spread: 10, height: 5 },
     shape: { rooms: [10, 14], size: [3, 6], tall: 0.5 },
     wallTint: [1.28, 0.92, 0.7],
@@ -49,6 +51,7 @@ export const ZONES = [
   },
   {
     id: 'grove',
+    bed: 'rain',
     ambientFx: { color: 0xa8ff7a, rate: 2.2, life: 6, gravity: -0.1, speed: 0.3, spread: 12 },
     shape: { rooms: [6, 9], size: [6, 9], tall: 0.15 },
     wallTint: [0.8, 1.12, 0.82],
@@ -69,6 +72,7 @@ export const ZONES = [
   },
   {
     id: 'vault',
+    bed: 'hum',
     ambientFx: { color: 0x9fc4ff, rate: 1.6, life: 6, gravity: 0.1, speed: 0.2, spread: 12 },
     shape: { rooms: [11, 15], size: [3, 5], tall: 0.2 },
     wallTint: [0.86, 0.98, 1.16],
@@ -89,6 +93,7 @@ export const ZONES = [
   },
   {
     id: 'ashfall',
+    bed: 'wind',
     ambientFx: { color: 0xc9b8a4, rate: 5, life: 5, gravity: 0.5, speed: 0.35, spread: 12, height: 6 },
     shape: { rooms: [5, 8], size: [7, 10], tall: 0.6 },
     wallTint: [1.1, 1.02, 0.94],
@@ -109,6 +114,7 @@ export const ZONES = [
   },
   {
     id: 'cistern',
+    bed: 'stream',
     ambientFx: { color: 0x7fd8ff, rate: 3, life: 2.2, gravity: 4.5, speed: 0.3, spread: 10, height: 5.2 },
     shape: { rooms: [9, 13], size: [3, 5], tall: 0.1 },
     wallTint: [0.72, 1.02, 1.2],
@@ -129,6 +135,7 @@ export const ZONES = [
   },
   {
     id: 'kiln',
+    bed: 'fire',
     ambientFx: { color: 0xff6a2a, rate: 9, life: 2.2, gravity: -2.2, speed: 0.7, spread: 9, height: 5 },
     shape: { rooms: [7, 10], size: [5, 8], tall: 0.45 },
     wallTint: [1.36, 0.84, 0.66],
@@ -149,6 +156,7 @@ export const ZONES = [
   },
   {
     id: 'spine',
+    bed: 'wind',
     ambientFx: { color: 0xbfe4ff, rate: 2.6, life: 5, gravity: 0.2, speed: 0.25, spread: 9, height: 5.5 },
     shape: { rooms: [8, 12], size: [3, 5], tall: 0.2 },
     wallTint: [0.84, 1.0, 1.18],
@@ -168,6 +176,7 @@ export const ZONES = [
   },
   {
     id: 'throne',
+    bed: 'ocean',
     ambientFx: { color: 0xff3b52, rate: 3.4, life: 4.5, gravity: -0.9, speed: 0.4, spread: 11 },
     shape: { rooms: [6, 9], size: [7, 10], tall: 0.7 },
     wallTint: [1.3, 0.7, 0.7],

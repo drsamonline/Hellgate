@@ -23,6 +23,26 @@ export function panGain(at, listener, range = 26) {
 /**
  * The synthesiser. Every sound in the game is built here from oscillators and noise buffers.
  */
+/**
+ * Ambient beds, in the manner of audio-kit's textures: a filtered noise loop
+ * with a slow LFO on the cutoff and sparse events on top. `events` is how many
+ * one-shots a second the bed scatters.
+ */
+export const BEDS = {
+  fire:   { level: 0.16, lp: 2200, hp: 90, events: 5, decay: 0.06 },
+  wind:   { level: 0.14, lp: 1400, hp: 120, lfo: [0.07, 900] },
+  stream: { level: 0.12, lp: 4200, hp: 500, lfo: [0.3, 300], events: 2, decay: 0.09 },
+  hum:    { level: 0.1, lp: 300, hp: 40 },
+  vinyl:  { level: 0.1, lp: 9000, hp: 700, events: 2, decay: 0.05 },
+  ocean:  { level: 0.13, lp: 900, hp: 60, lfo: [0.045, 600] },
+  rain:   { level: 0.12, lp: 5200, hp: 420, events: 4, decay: 0.09 },
+};
+
+/**
+ * Every sound the game makes: synthesised voices, a positional path, a drone, a
+ * per-zone ambient bed, and a limiter on the master so a stack of explosions
+ * cannot clip.
+ */
 export class Sfx {
   constructor() {
     this.ctx = null;
@@ -90,7 +110,22 @@ export class Sfx {
     this.ctx = new AC();
     this.master = this.ctx.createGain();
     this.master.gain.value = this.muted ? 0 : this.volume;
-    this.master.connect(this.ctx.destination);
+    // A limiter on the master, not a hope: twelve explosions at once stack to a
+    // clip, and a clipped master is the one thing a player hears as "broken".
+    // Ported from audio-kit's honest mastering helpers.
+    if (typeof this.ctx.createDynamicsCompressor === 'function') {
+      const lim = this.ctx.createDynamicsCompressor();
+      lim.threshold.value = -6;
+      lim.knee.value = 2;
+      lim.ratio.value = 18;
+      lim.attack.value = 0.003;
+      lim.release.value = 0.18;
+      this.master.connect(lim);
+      lim.connect(this.ctx.destination);
+      this.limiter = lim;
+    } else {
+      this.master.connect(this.ctx.destination);
+    }
 
     const len = Math.floor(this.ctx.sampleRate * 0.6);
     const buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -109,6 +144,21 @@ export class Sfx {
     src.buffer = this.noiseBuf;
     src.loop = true;
     return src;
+  }
+
+  /** A white-noise buffer of `seconds`, cached per length: the beds loop it. */
+  noiseBuffer(seconds = 1) {
+    if (!this.ctx) return null;
+    this.noiseCache = this.noiseCache || new Map();
+    const key = Math.round(seconds * 10) / 10;
+    let buf = this.noiseCache.get(key);
+    if (buf) return buf;
+    const len = Math.max(1, Math.floor(this.ctx.sampleRate * key));
+    buf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    this.noiseCache.set(key, buf);
+    return buf;
   }
 
   noise(dur = 0.12, gain = 0.1, type, f0, f1) {
@@ -194,6 +244,79 @@ export class Sfx {
     d.lp.frequency.setTargetAtTime(300 + v * 780, now, 0.6);
     d.out.gain.cancelScheduledValues(now);
     d.out.gain.setTargetAtTime(0.026 + v * 0.032, now, 0.8);
+  }
+
+  /**
+   * A zone's ambient bed: filtered noise with a slow LFO and sparse events, in
+   * the manner of audio-kit's textures. It loops for as long as the zone lasts,
+   * so the kiln hisses and the cistern drips between waves.
+   *
+   * `kind` is one of BEDS; a zone names its own.
+   */
+  startBed(kind, level = 1) {
+    if (!this.ctx) return;
+    this.stopBed();
+    const spec = BEDS[kind] || BEDS.hum;
+    const ctx = this.ctx;
+    const out = ctx.createGain();
+    out.gain.value = 0;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer(3);
+    src.loop = true;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = spec.lp;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = spec.hp;
+    src.connect(lp); lp.connect(hp); hp.connect(out); out.connect(this.master);
+    const peak = spec.level * level;
+    out.gain.linearRampToValueAtTime(peak, ctx.currentTime + 1.6);
+    let lfo = null;
+    if (spec.lfo) {
+      lfo = ctx.createOscillator();
+      const depth = ctx.createGain();
+      lfo.frequency.value = spec.lfo[0];
+      depth.gain.value = spec.lfo[1];
+      lfo.connect(depth); depth.connect(lp.frequency);
+      lfo.start();
+    }
+    src.start();
+    this.bed = { kind, out, src, lfo, peak, spec, nextEvent: ctx.currentTime + 1 };
+  }
+
+  /** Sparse one-shots inside the bed: a crackle, a drip, a tick. */
+  updateBed() {
+    const b = this.bed;
+    if (!b || !this.ctx || !b.spec.events) return;
+    const ctx = this.ctx;
+    if (ctx.currentTime < b.nextEvent) return;
+    b.nextEvent = ctx.currentTime + 0.15 + Math.random() * (1.4 / b.spec.events);
+    const at = ctx.currentTime + 0.02;
+    const g = ctx.createGain();
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 900 + Math.random() * 3200;
+    bp.Q.value = 2 + Math.random() * 4;
+    g.gain.setValueAtTime(0, at);
+    g.gain.linearRampToValueAtTime(b.peak * (0.5 + Math.random() * 0.8), at + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + b.spec.decay + Math.random() * 0.12);
+    const n = ctx.createBufferSource();
+    n.buffer = this.noiseBuffer(0.2);
+    n.connect(bp); bp.connect(g); g.connect(b.out);
+    n.start(at); n.stop(at + 0.3);
+  }
+
+  stopBed() {
+    const b = this.bed;
+    if (!b || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    b.out.gain.cancelScheduledValues(t);
+    b.out.gain.setValueAtTime(b.out.gain.value, t);
+    b.out.gain.linearRampToValueAtTime(0, t + 1.2);
+    try { b.src.stop(t + 1.3); } catch (e) { /* already stopped */ }
+    if (b.lfo) { try { b.lfo.stop(t + 1.3); } catch (e) { /* already stopped */ } }
+    this.bed = null;
   }
 
   stopDrone() {

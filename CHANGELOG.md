@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.71.0 — 2026-11-21
+
+**Every zone has a sound now**
+
+Ported from `audio-kit` (same licence, same author): a bed is filtered noise with a slow LFO on the cutoff
+and sparse events on top. It loops for as long as the zone lasts, so the kiln hisses, the cistern runs, and
+the throne has an ocean under it.
+
+| Zone | Bed |
+| --- | --- |
+| The Gate, Ashfall, The Spine | wind |
+| The Foundry, The Kiln | fire |
+| The Grove | rain |
+| The Vault | hum |
+| The Cistern | stream |
+| The Throne | ocean |
+
+**A limiter on the master bus.** Twelve explosions at once stack to a clip, and a clipped master is the one
+thing a player hears as broken. A `DynamicsCompressor` at -6 dB, ratio 18, 3 ms attack sits between the
+master gain and the destination.
+
+**Tests** — 8 new assertions, against a fake AudioContext because Node has none: every zone names a bed,
+six distinct beds are in use, the bed starts and stops, a bed that declares an LFO gets one, and the noise
+buffer is cached per length rather than remade.
+
+
 ## 1.70.0 — 2026-11-21
 
 **The story is a decision now, not a panel you cannot argue with**

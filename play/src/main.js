@@ -491,6 +491,7 @@ function resumeRun(save) {
   startWave(Math.max(1, save.wave || 1));
   game.state = 'playing';
   audio.startDrone();
+  if (zone && zone.bed) audio.startBed(zone.bed);
   hud.setVisible(true);
   hideScreens();
   requestLock();
@@ -1198,6 +1199,7 @@ function chooseClass(id) {
   applyClass(id);
   game.state = 'playing';
   audio.startDrone();
+  if (zone && zone.bed) audio.startBed(zone.bed);
   hud.setVisible(true);
   hideScreens();
   requestLock();
@@ -1524,7 +1526,7 @@ function renderInventory() {
 function zoneCleared() {
   note('zone cleared: ' + (zone && zone.id));
 
-  if (audio) audio.stopDrone();
+  if (audio) { audio.stopDrone(); audio.stopBed(); }
   game.state = 'cleared';
   releaseLock();
   clearZone(progress, zone.id, game.score);
@@ -1615,6 +1617,7 @@ function startGame(seed, opts = {}) {
   buildRun(seed);
   game.state = 'playing';
   audio.startDrone();
+  if (zone && zone.bed) audio.startBed(zone.bed);
   hud.setVisible(true);
   hideScreens();
   if (!opts.auto) requestLock();
@@ -1622,7 +1625,7 @@ function startGame(seed, opts = {}) {
 }
 
 function pauseGame() {
-  if (audio) audio.stopDrone();
+  if (audio) { audio.stopDrone(); audio.stopBed(); }
   if (game.state !== 'playing') return;
   game.state = 'paused';
   input.fire = false;
@@ -1674,7 +1677,7 @@ function gameOver() {
 
   if (game.state !== 'playing') return;
   game.state = 'dead';
-  if (audio) audio.stopDrone();
+  if (audio) { audio.stopDrone(); audio.stopBed(); }
   clearRun();
   input.fire = false;
   audio.play('dead');
@@ -1964,7 +1967,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.70.0';
+const BUILD = '1.71.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2170,6 +2173,7 @@ function update(dt) {
   // each zone breathes: embers, drips, spores. It is the same particle pool the
   // sparks use, so it costs no draw call.
   if (zone && zone.ambientFx) effects.ambient(dt, player, zone.ambientFx);
+  audio.updateBed();
   if (minimap) {
     minimap.acc += dt;
     if (minimap.acc > 0.1) {

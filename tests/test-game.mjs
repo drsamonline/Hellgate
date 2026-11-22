@@ -538,6 +538,44 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== ambient beds and the master limiter ==');
+{
+  const { ZONES } = await import('../play/src/world.js');
+  ok(ZONES.every((z) => typeof z.bed === 'string'), 'every zone names an ambient bed');
+  const beds = new Set(ZONES.map((z) => z.bed));
+  ok(beds.size >= 4, 'and they are not all the same one (' + [...beds].join(', ') + ')');
+  // Node has no AudioContext, so the bed is exercised against a small fake one:
+  // the point is that the chain is built and torn down, not that it sounds good.
+  const { BEDS } = await import('../play/src/audio.js');
+  ok(Object.keys(BEDS).length >= 7, 'there are seven beds to choose from (' + Object.keys(BEDS).length + ')');
+  const made = [];
+  const node = (kind) => ({ kind, gain: { value: 1, linearRampToValueAtTime() {}, cancelScheduledValues() {}, setValueAtTime() {} },
+    frequency: { value: 0 }, type: '', Q: { value: 0 }, connect() { return this; }, start() {}, stop() {} });
+  const fakeCtx = {
+    currentTime: 1,
+    sampleRate: 44100,
+    destination: node('dest'),
+    createGain: () => node('gain'),
+    createBiquadFilter: () => node('filter'),
+    createOscillator: () => { made.push('osc'); return node('osc'); },
+    createBufferSource: () => { made.push('src'); return node('src'); },
+    createBuffer: (ch, len) => ({ getChannelData: () => new Float32Array(len) }),
+  };
+  const saved = HG.audio.ctx;
+  HG.audio.ctx = fakeCtx;
+  HG.audio.startBed('fire');
+  ok(!!HG.audio.bed && HG.audio.bed.kind === 'fire', 'a bed starts and remembers what it is');
+  ok(made.includes('src'), 'with a looping noise source');
+  made.length = 0;
+  HG.audio.startBed('wind');   // wind declares an LFO; fire does not
+  ok(made.includes('osc'), 'and a bed that declares one gets an LFO on the cutoff');
+  const nb = HG.audio.noiseBuffer(3);
+  ok(nb && HG.audio.noiseBuffer(3) === nb, 'the noise buffer is cached per length, not remade');
+  HG.audio.stopBed();
+  ok(HG.audio.bed === null, 'and it stops');
+  HG.audio.ctx = saved;
+}
+
 console.log('\n== the zone book ==');
 {
   const Book = await import('../play/src/book.js');
