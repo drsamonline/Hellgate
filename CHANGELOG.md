@@ -1,5 +1,32 @@
 # Changelog
 
+## 1.77.0 — 2026-11-21
+
+**Two damage numbers on every hit, and a fourth gate**
+
+Reading `weapons.js` against `enemies.js` found what a script cannot: **every hit drew two damage numbers**.
+`Enemy.hurt()` draws the number, because it is the one place every damage source passes through — and
+`weapons.js` drew it again after calling `hurt()`, in both the hitscan path and the blade. A shotgun blast
+showed two numbers per pellet; a blade swing showed two for one hit.
+
+The two calls are gone, and a test counts the pool cursor: one hit, one number.
+
+**`tools/audit-invariants.mjs`** runs 900 simulated frames per zone with input that aims at the nearest
+enemy and fires, swings the blade and throws grenades, then asserts what must always be true:
+
+| Invariant | Check |
+| --- | --- |
+| Positions finite | Player and every living enemy |
+| Health and armour in range | `0 <= health <= maxHp`, `armour >= 0` |
+| Ammo non-negative | Every weapon |
+| Player inside the grid | Within the level's own bounds |
+| No enemy under the floor | Against the cell's floor height |
+| Pools bounded | Particles ≤ 700, decals ≤ 60, projectiles ≤ 120 |
+| No orphan enemy mesh | Scene traverse against the enemy list |
+
+Four zones, 900 frames each, all held.
+
+
 ## 1.76.0 — 2026-11-21
 
 **A full audit of all 37 modules, and five real bugs**
