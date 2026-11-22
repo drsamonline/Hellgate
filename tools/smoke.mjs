@@ -194,11 +194,36 @@ ok('tab opens the status panel', inv.state === 'inventory' && inv.len > 100, JSO
 ok('tab closes it again', inv.after === 'playing');
 ok('a run in progress is saved', inv.save === true);
 
-// draw-call budget: the arena view has been 117-125 calls since the level moved
-// to one mesh per texture. Chunking measured 255 and was rejected; this keeps
-// anyone from re-introducing it by accident.
-const budget = await page.evaluate(() => window.HG.renderStats);
-ok('draw calls stay under 140', budget.calls > 0 && budget.calls < 140, JSON.stringify(budget));
+// Draw-call budget, measured in two controlled states instead of whenever the
+// frame happens to land. A snapshot mid-wave measures the enemy count as much as
+// the level, and that made this check flap between 86 and 150.
+const levelOnly = await page.evaluate(() => {
+  const HG = window.HG;
+  HG.enemies.clear();
+  return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
+});
+ok('the level alone stays under 60 draw calls', levelOnly.calls > 0 && levelOnly.calls < 60, JSON.stringify(levelOnly));
+
+const withWave = await page.evaluate(() => {
+  const HG = window.HG;
+  HG.enemies.clear();
+  for (let i = 0; i < 8; i++) {
+    HG.enemies.spawnAt('imp', HG.player.pos.x + 4 + (i % 3) * 2, HG.player.pos.z + 4 + Math.floor(i / 3) * 2, 1);
+  }
+  return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
+});
+// 8 rig bodies on top of the level: a body is 19-24 parts, so this bounds the
+// per-enemy cost at about 17 calls each
+ok('eight enemies stay under 200 draw calls', withWave.calls < 200, JSON.stringify(withWave));
+
+// clearing the enemies completed the wave, which would leave the game on the
+// cleared screen for every later check. Put one back.
+await page.evaluate(() => {
+  const HG = window.HG;
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 12, HG.player.pos.z + 12, 1);
+});
+await new Promise((r) => setTimeout(r, 120));
 
 // the game itself must wire the footstep callback, not just the player class
 const wired = await page.evaluate(() => ({

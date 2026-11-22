@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.60.1 — 2026-11-21
+
+**The draw-call budget was measuring the wrong thing**
+
+It took a snapshot of `renderStats` whenever the frame happened to land, so it measured the enemy count
+as much as the level, and flapped between 86 and 150 calls against a fixed 140. It failed in CI on a wave
+that happened to be busier than the one measured locally.
+
+It now measures two controlled states:
+
+| State | Budget |
+| --- | --- |
+| The level alone, enemies cleared | under 60 calls |
+| The level plus eight rig bodies | under 200 calls |
+
+The second bounds the per-enemy cost at about 17 calls. It also restores an enemy afterwards, because
+clearing them completes the wave and left every later check on the cleared screen.
+
+
 ## 1.60.0 — 2026-11-21
 
 **Copy report, on the pause screen**
