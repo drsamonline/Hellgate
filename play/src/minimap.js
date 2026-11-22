@@ -38,7 +38,8 @@ export class Minimap {
     g.fillRect(0, 0, c.width, c.height);
 
     for (const cell of L.cells) {
-      if (cell.solid && !cell.secretWall) continue; // solid rock is the background
+      // solid rock is the background; a secret wall is solid too, and drawing it
+      // would give the room away
       if (cell.solid) continue;
       const x = px(cell.x * CELL);
       const z = pz(cell.z * CELL);

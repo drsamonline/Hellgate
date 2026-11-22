@@ -78,6 +78,51 @@ for (const seed of ['geom1', 'geom2', 'geom3', 'hellgate', 'doom']) {
     }
   }
 
+  // ---- stair bands -------------------------------------------------------
+  // The one surface in the level that is not axis-flat, and the one the shell
+  // check above cannot see: a tread facing down still has open space under it.
+  // Treads must face up, risers must face the low side, and the treads must
+  // climb the whole cell.
+  {
+    const stairCells = L.cells.filter((c) => c.stair);
+    if (stairCells.length) {
+      const perCell = new Map();
+      for (const mesh of out.group.children) {
+        if (!mesh.userData || !mesh.userData.merged) continue;
+        if (String(mesh.userData.bucket || '').startsWith('decor:')) continue;
+        const pos = mesh.geometry.attributes.position.array;
+        const nor = mesh.geometry.attributes.normal.array;
+        const idx = mesh.geometry.index.array || mesh.geometry.index;
+        for (let t = 0; t < idx.length / 3; t++) {
+          const i0 = idx[t * 3] * 3, i1 = idx[t * 3 + 1] * 3, i2 = idx[t * 3 + 2] * 3;
+          const mx = (pos[i0] + pos[i1] + pos[i2]) / 3;
+          const my = (pos[i0 + 1] + pos[i1 + 1] + pos[i2 + 1]) / 3;
+          const mz = (pos[i0 + 2] + pos[i1 + 2] + pos[i2 + 2]) / 3;
+          const c = cellAt(L, mx, mz);
+          if (!c || !c.stair) continue;
+          if (my > c.ceil - 0.05) continue;   // the ceiling of the cell faces down by design
+          const sny = nor[i0 + 1];
+          let rec = perCell.get(c);
+          if (!rec) { rec = { up: 0, down: 0, side: 0, minY: 1e9, maxY: -1e9 }; perCell.set(c, rec); }
+          if (sny > 0.9) { rec.up++; rec.minY = Math.min(rec.minY, my); rec.maxY = Math.max(rec.maxY, my); }
+          else if (sny < -0.9) rec.down++;
+          else if (Math.abs(sny) < 0.2) rec.side++;
+        }
+      }
+      let flat = 0, open = 0, rising = 0;
+      for (const c of stairCells) {
+        const rec = perCell.get(c);
+        if (!rec) { open++; continue; }
+        if (rec.down > 0) flat++;
+        if (rec.up < 3 || rec.side < 2) open++;
+        if (rec.maxY - rec.minY < 0.5 * Math.abs(c.stairHigh - c.stairLow)) rising++;
+      }
+      ok(flat === 0, seed + ': no stair tread faces down (' + flat + ' of ' + stairCells.length + ')');
+      ok(open === 0, seed + ': every stair band has three treads and its risers (' + open + ' incomplete)');
+      ok(rising === 0, seed + ': every stair band climbs its whole cell (' + rising + ' too flat)');
+    }
+  }
+
   // Decor (pilasters, ceiling beams) stands inside a room and its back faces
   // point at the wall it is mounted on. A small, bounded number of those is
   // correct; a wall with the wrong winding produces hundreds.

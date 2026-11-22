@@ -172,7 +172,10 @@ ok(target.hp < hp0, 'pistol damaged the imp (' + hp0 + ' -> ' + target.hp + ')')
 ok(target.flashMats && target.flashMats.length > 0, 'enemy owns cloned flash materials (' + (target.flashMats || []).length + ')');
 ok(target.flashMats.every((m) => m.userData.shared === false), 'flash materials are not the shared ones');
 ok(target.flash > 0 && target.flashMats[0].emissive.r > 0, 'enemy flashes white-hot on a hit');
-frames(24);
+// Let the flash finish rather than assuming a frame count is enough: a fixed
+// 24 frames is a claim about dt, and dt is the harness's, not the game's. The
+// assertion is that it ends, so wait for the end.
+for (let i = 0; i < 90 && target.flash > 0; i++) frames(1);
 // the emissive channel is shared with the wind-up glow, so "black" is the wrong
 // assertion: the flash ends, and anything left is the charge colour, which has no blue
 const emissiveAfter = target.flashMats[0].emissive;
@@ -1533,6 +1536,7 @@ ok(HG.player.crouch < 0.2, 'releasing it stands back up');
 
 // the numbers live in a pool inside #dmgnums: a DOM node per hit would be a
 // garbage problem in a game that fires ten times a second
+const curBefore = HG.hud.dmgCursor;
 HG.hud.damageNumber({ x: 1, y: 1, z: 0 }, 42, HG.player.camera, false);
 const nums = HG.hud.dmgPool;
 ok(nums.length === 10, 'the damage numbers are a pool of ten, made once');
@@ -1540,8 +1544,11 @@ ok(nums.some((el) => el.textContent === '42'), 'a hit puts its damage on screen'
 ok(nums.some((el) => el.classList.contains('on')), 'and animates it');
 HG.hud.damageNumber({ x: 1, y: 1, z: 0 }, 7, HG.player.camera, true);
 ok(nums.some((el) => el.classList.contains('kill')), 'a killing blow reads differently');
-ok(HG.hud.dmgCursor > 0 && HG.hud.dmgPool.length === 10,
-  'and the cursor advances through the pool rather than making nodes (' + HG.hud.dmgCursor + ')');
+// the delta, not the absolute value: the cursor is shared with every earlier hit
+// in this file, and "greater than zero" failed the run where it happened to wrap
+const curAfter = HG.hud.dmgCursor;
+ok((curAfter - curBefore + 10) % 10 === 2 && HG.hud.dmgPool.length === 10,
+  'and the cursor advances through the pool rather than making nodes (' + curBefore + ' -> ' + curAfter + ')');
 
 // one number per hit: the drawing lives in Enemy.hurt(), which every damage
 // source goes through, and it used to be drawn again in weapons.js
@@ -1563,9 +1570,12 @@ ok(HG.hud.dmgCursor > 0 && HG.hud.dmgPool.length === 10,
   HG.game.exitOpen = false;
 }
 HG.hud.damageNumbers = false;
-const n2 = document.body.children.length;
-HG.hud.damageNumber({ project() {}, clone() { return this; } }, 42, HG.player.camera, false);
-ok(document.body.children.length === n2, 'turning damage numbers off stops them');
+// measure the pool cursor, not document.body: the numbers live in #dmgnums, so
+// counting body children could not fail either way
+const curOff = HG.hud.dmgCursor;
+HG.hud.damageNumber(new THREE.Vector3(1, 1, 0), 42, HG.player.camera, false);
+ok(HG.hud.dmgCursor === curOff, 'turning damage numbers off stops them');
+HG.hud.damageNumbers = true;
 
 console.log('\n== weapon attribution ==');
 HG.game.weaponKills = {};
@@ -1693,6 +1703,40 @@ HG.openLore();
 frames(1);
 ok(HG.game.score === s1, 're-reading pays nothing');
 HG.closeLore();
+
+// terminals are drawn without replacement: two with the same title were one
+// terminal as far as `read` was concerned, and two in one room sat on top of
+// each other with only the nearer one reachable
+const termTitles = HG.lore.entries.map((e) => e.entry.title);
+ok(new Set(termTitles).size === termTitles.length, 'no two terminals share a title (' + termTitles.length + ' placed)');
+let tooClose = 0;
+for (let i = 0; i < HG.lore.entries.length; i++) {
+  for (let j = i + 1; j < HG.lore.entries.length; j++) {
+    const a = HG.lore.entries[i];
+    const b = HG.lore.entries[j];
+    if (Math.hypot(a.x - b.x, a.z - b.z) < 1.5) tooClose++;
+  }
+}
+ok(tooClose === 0, 'no two terminals stand on the same spot (' + tooClose + ')');
+ok(HG.lore.entries.filter((e) => e.entry.choice).length === 1, 'exactly one terminal asks a question');
+
+// a saved record with no `best` used to throw on the next zone clear
+{
+  const { loadProgress, clearZone } = await import('../play/src/world.js');
+  const savedLS = globalThis.localStorage;
+  const store2 = new Map([['hellgate.progress', JSON.stringify({ unlocked: 3, cleared: ['gate'] })]]);
+  globalThis.localStorage = {
+    getItem: (k) => (store2.has(k) ? store2.get(k) : null),
+    setItem: (k, v) => store2.set(k, String(v)),
+    removeItem: (k) => store2.delete(k),
+  };
+  const prog = loadProgress();
+  ok(prog.best && typeof prog.best === 'object', 'a saved record without best is repaired on load');
+  let threw = null;
+  try { clearZone(prog, 'foundry', 1200); } catch (e) { threw = e.message; }
+  ok(threw === null, 'clearing a zone on a repaired record does not throw' + (threw ? ' (' + threw + ')' : ''));
+  globalThis.localStorage = savedLS;
+}
 
 console.log('\n== timed buffs ==');
 HG.game.buffs.damage = 0;

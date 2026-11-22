@@ -207,7 +207,13 @@ export function loadProgress() {
   try {
     const raw = localStorage.getItem(KEY);
     const p = raw ? JSON.parse(raw) : null;
-    if (p && typeof p.unlocked === 'number' && Array.isArray(p.cleared)) return p;
+    // `best` is read by clearZone() with no guard of its own, so a record that
+    // carries unlocked and cleared but no best — an older version's, or one
+    // edited by hand — threw on the next zone clear instead of starting over
+    if (p && typeof p.unlocked === 'number' && Array.isArray(p.cleared)) {
+      if (!p.best || typeof p.best !== 'object' || Array.isArray(p.best)) p.best = {};
+      return p;
+    }
   } catch (e) { /* ignore */ }
   return { unlocked: 1, cleared: [], best: {} };
 }

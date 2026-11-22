@@ -68,26 +68,6 @@ export class HUD {
     this.drawFace(100);
   }
 
-  /** A number that floats up from where the hit landed and fades. */
-  damageNumber(worldPos, amount, camera, crit = false) {
-    if (!this.damageNumbers || !worldPos || !camera) return;
-    // needs a Vector3: a plain {x,y,z} has nothing to project with
-    if (typeof worldPos.project !== 'function' && typeof worldPos.clone !== 'function') return;
-    const v = worldPos.clone ? worldPos.clone() : worldPos;
-    if (typeof v.project !== 'function') return;
-    v.project(camera);
-    if (v.z > 1) return; // behind the camera
-    const x = (v.x * 0.5 + 0.5) * window.innerWidth;
-    const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
-    const el = document.createElement('div');
-    el.className = 'dmgnum' + (crit ? ' crit' : '');
-    el.textContent = String(Math.max(1, Math.round(amount)));
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 700);
-  }
-
   /** One line in the corner: who died, and to what. */
   feed(what, how) {
     if (!this.elFeed) return;
@@ -308,6 +288,10 @@ export class HUD {
    * position out — no sprite, no draw call, and the animation is CSS.
    */
   damageNumber(pos, amount, camera, kill = false) {
+    // The reduced-motion toggle turns these off. This guard used to live in a
+    // second copy of the method further up the class — the copy that never ran,
+    // because the later definition wins — so the setting did nothing.
+    if (!this.damageNumbers) return;
     if (!this.dmgWrap || !camera || !(amount > 0)) return;
     if (!this.dmgPool.length) {
       for (let i = 0; i < 10; i++) {

@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { CELL } from './level.js';
+import { CELL, floorHeightAt } from './level.js';
 
 const WALL_KEY = ['wall_brick', 'wall_tech', 'wall_rust', 'wall_moss', 'wall_stained'];
 const FLOOR_KEY = ['floor_tile', 'floor_plate', 'floor_grate'];
@@ -96,33 +96,51 @@ export function buildLevelMeshes(level, mats, zone) {
 
       // floor (+Y): lit from above, softened into the wall bases
       if (c.stair) {
-        // three steps across the cell, so a height change reads as stairs
+        // Three steps across the cell, and every height sampled from
+        // floorHeightAt: the visible stair and the collision ramp are then the
+        // same surface. Two bugs lived here. The treads and risers were built in
+        // descending order on a z band, so their normals pointed into the floor
+        // and away from the player; and the step heights were computed from
+        // stairLow/stairHigh directly, which ignored `flip` — a band that climbed
+        // towards -x was drawn climbing towards +x.
         const steps = 3;
+        const hAt = (t) => (c.stair === 'z'
+          ? floorHeightAt(level, x * CELL, z0 + (z1 - z0) * t)
+          : floorHeightAt(level, x0 + (x1 - x0) * t, z * CELL));
+        // treads, then a riser at every band boundary — including the two cell
+        // edges, so nothing is left open between the ramp and the floors it joins
         for (let sIdx = 0; sIdx < steps; sIdx++) {
           const t0 = sIdx / steps;
           const t1 = (sIdx + 1) / steps;
-          const h = c.stairLow + (c.stairHigh - c.stairLow) * ((sIdx + 0.5) / steps);
+          const h = hAt((t0 + t1) / 2);
           if (c.stair === 'z') {
             const za = z0 + (z1 - z0) * t0;
             const zb = z0 + (z1 - z0) * t1;
-            quad(FLOOR_KEY[c.floorTex], [x0, h, za], [x1, h, za], [x1, h, zb], [x0, h, zb], 1, 1,
-              [fNW, fNE, fSE, fSW]);
-            // riser up to the next step
-            if (sIdx < steps - 1) {
-              const h2 = c.stairLow + (c.stairHigh - c.stairLow) * ((sIdx + 1.5) / steps);
-              quad(WALL_KEY[c.wall], [x0, h, za], [x1, h, za], [x1, h2, za], [x0, h2, za], 1, 1,
-                [0.6, 0.6, 0.7, 0.7]);
-            }
+            quad(FLOOR_KEY[c.floorTex], [x0, h, za], [x0, h, zb], [x1, h, zb], [x1, h, za], 1, 1,
+              [fNW, fSW, fSE, fNE]);
           } else {
             const xa = x0 + (x1 - x0) * t0;
             const xb = x0 + (x1 - x0) * t1;
             quad(FLOOR_KEY[c.floorTex], [xa, h, z1], [xb, h, z1], [xb, h, z0], [xa, h, z0], 1, 1,
               [fNW, fNE, fSE, fSW]);
-            if (sIdx < steps - 1) {
-              const h2 = c.stairLow + (c.stairHigh - c.stairLow) * ((sIdx + 1.5) / steps);
-              quad(WALL_KEY[c.wall], [xb, h, z0], [xb, h, z1], [xb, h2, z1], [xb, h2, z0], 1, 1,
-                [0.6, 0.6, 0.7, 0.7]);
-            }
+          }
+        }
+        for (let bIdx = 0; bIdx <= steps; bIdx++) {
+          const tb = bIdx / steps;
+          const hL = bIdx > 0 ? hAt(tb - 1 / (steps * 2)) : hAt(tb);
+          const hR = bIdx < steps ? hAt(tb + 1 / (steps * 2)) : hAt(tb);
+          const lo = Math.min(hL, hR);
+          const hi = Math.max(hL, hR);
+          if (hi - lo < 0.01) continue;
+          const rises = hR > hL;   // the ramp climbs towards +axis
+          if (c.stair === 'z') {
+            const zb = z0 + (z1 - z0) * tb;
+            if (rises) quad(WALL_KEY[c.wall], [x0, lo, zb], [x0, hi, zb], [x1, hi, zb], [x1, lo, zb], 1, 1, [0.6, 0.6, 0.7, 0.7]);
+            else quad(WALL_KEY[c.wall], [x0, hi, zb], [x1, hi, zb], [x1, lo, zb], [x0, lo, zb], 1, 1, [0.6, 0.6, 0.7, 0.7]);
+          } else {
+            const xb = x0 + (x1 - x0) * tb;
+            if (rises) quad(WALL_KEY[c.wall], [xb, lo, z0], [xb, lo, z1], [xb, hi, z1], [xb, hi, z0], 1, 1, [0.6, 0.6, 0.7, 0.7]);
+            else quad(WALL_KEY[c.wall], [xb, hi, z0], [xb, hi, z1], [xb, lo, z1], [xb, lo, z0], 1, 1, [0.6, 0.6, 0.7, 0.7]);
           }
         }
       } else {
@@ -142,11 +160,20 @@ export function buildLevelMeshes(level, mats, zone) {
         const inBounds = nx2 >= 0 && nz2 >= 0 && nx2 < level.W && nz2 < level.H;
         const ncell = inBounds ? level.cells[nz2 * level.W + nx2] : null;
 
+        // The floor at a shared edge, not at the cell's centre: a stair band's
+        // floor varies across the cell, and using the centre value drew a
+        // full-height wall across the top of every band — a staircase you could
+        // walk up but not see over.
+        const ex = d === 0 ? x1 : d === 1 ? x0 : x * CELL;
+        const ez = d === 2 ? z1 : d === 3 ? z0 : z * CELL;
+        const hC = c.stair ? floorHeightAt(level, ex, ez) : c.floor;
+        const hN = ncell && ncell.stair ? floorHeightAt(level, ex, ez) : (ncell ? ncell.floor : 0);
+
         const spans = [];
         if (!ncell || ncell.solid) {
-          spans.push([c.floor, c.ceil]);
+          spans.push([hC, c.ceil]);
         } else {
-          if (ncell.floor > c.floor + 1e-4) spans.push([c.floor, ncell.floor]);
+          if (hN > hC + 1e-4) spans.push([hC, hN]);
           if (ncell.ceil < c.ceil - 1e-4) spans.push([ncell.ceil, c.ceil]);
         }
 

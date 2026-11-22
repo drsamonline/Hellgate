@@ -103,14 +103,27 @@ export class Lore {
 
     // one terminal in every level asks a question: the mechanic should never be
     // something a player can miss by luck of the draw
+    // Drawn without replacement, by title and by room. Two terminals with the
+    // same title were one terminal as far as `read` was concerned — the second
+    // paid nothing and showed as already read — and two in the same room sat on
+    // top of each other, with only the nearer one reachable. About half of all
+    // levels drew a duplicate title.
     const withChoice = TERMINALS.filter((t) => t.choice);
-    const sequence = [
-      withChoice[(this.rng.next() * withChoice.length) | 0],
-      ...Array.from({ length: Math.max(0, count - 1) }, () => TERMINALS[(this.rng.next() * TERMINALS.length) | 0]),
-    ];
+    const sequence = [];
+    const usedTitles = new Set();
+    const first = withChoice[(this.rng.next() * withChoice.length) | 0];
+    if (first) { sequence.push(first); usedTitles.add(first.title); }
+    const spare = TERMINALS.filter((t) => !usedTitles.has(t.title));
+    while (sequence.length < count && spare.length) {
+      const i = (this.rng.next() * spare.length) | 0;
+      sequence.push(spare.splice(i, 1)[0]);
+    }
+    const roomsLeft = pool.slice();
 
     for (let i = 0; i < count; i++) {
-      const room = pool[Math.floor(this.rng.next() * pool.length)];
+      const room = roomsLeft.length
+        ? roomsLeft.splice((this.rng.next() * roomsLeft.length) | 0, 1)[0]
+        : pool[i % pool.length];
       const entry = sequence[i] || TERMINALS[0];
       const x = room.cx * CELL + (this.rng.next() - 0.5) * 2;
       const z = room.cz * CELL + (this.rng.next() - 0.5) * 2;

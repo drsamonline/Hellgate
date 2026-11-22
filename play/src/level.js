@@ -253,6 +253,15 @@ function buildLevel(seed, opts = {}) {
     if (to - from < 2) return;
     const band = along ? from : from;
 
+    // A dais is one clean rise. A 0.5 m ledge already standing in this room would
+    // put the platform half a metre above the top of the band, so the band would
+    // climb more than three MAX_STEPs and leave a seam at the platform. The room
+    // is levelled to its own floor first; the snapshot above puts it back if the
+    // platform seals the level.
+    for (let z = r.z; z < r.z + r.h; z++) {
+      for (let x = r.x; x < r.x + r.w; x++) cells[idx(x, z)].floor = r.floor;
+    }
+
     for (let z = r.z; z < r.z + r.h; z++) {
       for (let x = r.x; x < r.x + r.w; x++) {
         const c = cells[idx(x, z)];
@@ -260,8 +269,13 @@ function buildLevel(seed, opts = {}) {
         if (coord === band) {
           c.stair = along ? 'z' : 'x';
           c.stairLow = c.floor;
-          c.stairHigh = c.floor + rise;
-          c.floor = c.floor; // the surface is computed by floorHeightAt
+          // The floor the band actually joins: the cell one step up the climb,
+          // with the same rise applied. `c.floor + rise` put the top of the ramp
+          // 0.5 m below the platform whenever that cell already stood on a
+          // raised ledge — a seam exactly MAX_STEP tall, and over it once the
+          // ramp was half a cell short.
+          const ahead = along ? cells[idx(x, z + 1)] : cells[idx(x + 1, z)];
+          c.stairHigh = (ahead ? ahead.floor : c.floor) + rise;
           stairs.push({ x, z, along, low: c.stairLow, high: c.stairHigh });
         } else if (coord > band) {
           c.floor = c.floor + rise;
@@ -350,18 +364,24 @@ function buildLevel(seed, opts = {}) {
     const candidates = [];
     for (const [i, r] of rooms.entries()) {
       if (i === exitRoomIdx) continue;
-      for (let z = r.z; z < r.z + r.h; z++) {
-        for (const [x, dx, dz] of [[r.x, -1, 0], [r.x + r.w - 1, 1, 0], [r.x, 0, -1], [r.x + r.w - 1, 0, 1]]) {
-          const sx = x + dx;
-          const sz = z + dz;
-          if (sx < 2 || sz < 2 || sx >= W - 2 || sz >= H - 2) continue;
-          const c = cells[idx(sx, sz)];
-          const behind = cells[idx(sx + dx, sz + dz)];
-          if (!c.solid || !behind.solid) continue;
-          // the alcove has to be free of any other room or corridor
-          if (behind.room !== -1) continue;
-          candidates.push({ sx, sz, bx: sx + dx, bz: sz + dz, room: i, dx, dz });
-        }
+      // Every wall cell of the room, walked along the axis the wall runs on. The
+      // old version held x fixed for the north and south walls and iterated z,
+      // so those two walls offered only the room's corners — 4 walls' worth of
+      // candidates became 2 walls plus 2 corner cells, and a secret on the south
+      // wall was never offered at all.
+      const edges = [];
+      for (let z = r.z; z < r.z + r.h; z++) edges.push([r.x - 1, z, -1, 0]);
+      for (let z = r.z; z < r.z + r.h; z++) edges.push([r.x + r.w, z, 1, 0]);
+      for (let x = r.x; x < r.x + r.w; x++) edges.push([x, r.z - 1, 0, -1]);
+      for (let x = r.x; x < r.x + r.w; x++) edges.push([x, r.z + r.h, 0, 1]);
+      for (const [sx, sz, dx, dz] of edges) {
+        if (sx < 2 || sz < 2 || sx >= W - 2 || sz >= H - 2) continue;
+        const c = cells[idx(sx, sz)];
+        const behind = cells[idx(sx + dx, sz + dz)];
+        if (!c.solid || !behind.solid) continue;
+        // the alcove has to be free of any other room or corridor
+        if (behind.room !== -1) continue;
+        candidates.push({ sx, sz, bx: sx + dx, bz: sz + dz, room: i, dx, dz });
       }
     }
     const pick = candidates.length ? candidates[rng.int(0, candidates.length - 1)] : null;
@@ -557,10 +577,14 @@ export function floorHeightAt(level, x, z) {
   const c = cellAt(level, x, z);
   if (!c) return 0;
   if (!c.stair) return c.floor;
-  // interpolate across the cell: the band is a ramp made of three steps
+  // Interpolate across the whole cell: the band is a ramp made of three steps,
+  // and a cell spans half a cell either side of its own centre. Without the
+  // half-cell offset the ramp only climbed over the far half, so the last step
+  // was `rise / 2` tall — up to 0.7 m, past MAX_STEP — and the foot height
+  // trailed the visible treads by half a cell.
   const t = c.stair === 'z'
-    ? (z - (c.z * CELL)) / CELL
-    : (x - (c.x * CELL)) / CELL;
+    ? (z - (c.z * CELL)) / CELL + 0.5
+    : (x - (c.x * CELL)) / CELL + 0.5;
   let k = Math.min(1, Math.max(0, t));
   if (c.flip) k = 1 - k;
   return c.stairLow + (c.stairHigh - c.stairLow) * k;
@@ -704,6 +728,10 @@ export function buildFlowField(level, tx, tz) {
       const c = level.cells[nk];
       if (c.solid) continue;
       if (c.door && !level.doorOpen) continue;
+      // a crate blocks like a wall until it is shot apart, and the field used to
+      // route enemies straight through every crate on the level: they walked
+      // into it and ground against it, the same stall #17 fixed for walls
+      if (c.crate && !(level.broken && level.broken.has(nk))) continue;
       // a stair cell bridges the two levels: stepping onto it is always allowed,
       // and from it you can reach the platform it climbs to
       if (c.stair || from.stair) {

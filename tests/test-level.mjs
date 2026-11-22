@@ -91,6 +91,27 @@ for (const seed of seeds) {
     if (c.stair) {
       const rise = c.stairHigh - c.stairLow;
       if (rise / 3 > MAX_STEP + 1e-6) bad(seed, 'stair band rises too far in one step');
+      // The ramp must climb the whole cell and land on the floor it joins. It
+      // used to interpolate over the far half only, so the last step was rise/2
+      // — past MAX_STEP for any band taller than a metre, i.e. a wall to walk up.
+      const N = 20;
+      let prev = null;
+      let worst = 0;
+      for (let i = 0; i <= N; i++) {
+        const t = i / N;
+        const wx = c.stair === 'x' ? (c.x - 0.5 + t) * CELL : c.x * CELL;
+        const wz = c.stair === 'z' ? (c.z - 0.5 + t) * CELL : c.z * CELL;
+        const h = floorHeightAt(L, wx, wz);
+        if (prev !== null) worst = Math.max(worst, Math.abs(h - prev));
+        prev = h;
+      }
+      if (worst > MAX_STEP + 1e-6) bad(seed, 'stair ramp steps ' + worst.toFixed(2) + ' m in one sample');
+      for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const n = L.cells[(c.z + dz) * L.W + (c.x + dx)];
+        if (!n || n.solid || !n.platform) continue;
+        const h = floorHeightAt(L, (c.x + dx * 0.5) * CELL, (c.z + dz * 0.5) * CELL);
+        if (Math.abs(h - n.floor) > 0.05) bad(seed, 'stair does not meet the platform it climbs to');
+      }
       continue;
     }
     if (c.floor > MAX_STEP + 1e-6) bad(seed, 'floor above max step');
@@ -137,11 +158,16 @@ for (const seed of seeds) {
   for (let i = 0; i < L.cells.length; i++) {
     const c = L.cells[i];
     if (c.solid || c.door) continue;
+    if (c.crate) continue;   // a crate blocks like a wall until it is shot apart
     if (c.secret) continue; // the alcove behind a secret wall is sealed on purpose
     openCells++;
     if (field[i] < 0) unreached++;
   }
   if (unreached > 0) bad(seed, unreached + ' open cells have no path from the spawn');
+  // and the field must not route enemies through a crate: they walk into it and
+  // grind, which is the stall the flow field was introduced to remove
+  const cratesOnField = L.cells.filter((c) => c.crate && field[c.z * L.W + c.x] >= 0).length;
+  if (cratesOnField > 0) bad(seed, cratesOnField + ' crates are on the flow field');
 
   // and the secret really is sealed until broken, then reachable
   for (const sec of L.secrets) {
@@ -155,7 +181,10 @@ for (const seed of seeds) {
 
   for (let t = 0; t < 12; t++) {
     // the sealed secret alcove is open floor but unreachable until broken
-    const walkable = L.openCells.filter((o) => !L.cells[o.z * L.W + o.x].secret);
+    const walkable = L.openCells.filter((o) => {
+      const c = L.cells[o.z * L.W + o.x];
+      return !c.secret && !c.crate;
+    });
     const c = walkable[Math.floor((t / 12) * walkable.length)];
     let x = c.wx;
     let z = c.wz;
