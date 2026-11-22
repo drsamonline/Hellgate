@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.62.0 — 2026-11-21
+
+**Damage numbers**
+
+The hit marker said *something* landed. It did not say what. `hud.damageNumber()` projects the point that
+was hit to the screen and floats the number up over the body, which is the clearest feedback a shooter has
+and the thing that tells you whether the shotgun was worth the walk.
+
+| Detail | Why |
+| --- | --- |
+| A pool of ten DOM elements | A node per hit is a garbage problem at ten shots a second |
+| CSS animation | The float is a keyframe, not a per-frame transform write |
+| A killing blow shows `✕` in red and a size larger | The kill and the hit read differently at a glance |
+| Off-screen or behind the camera is dropped | A number at the edge of the screen is noise |
+
+No draw call: it is DOM, like the compass and the waypoint.
+
+**A test double that was lying** — `className = 'a b'` did not update `classList`, because the stub backed
+`classList` with a `Set` that `className` never wrote to. It is a real property now, so a class set one way
+and read the other agrees.
+
+**Tests** — 5 assertions: the pool is ten and made once, a hit puts its damage on screen, it animates, a
+killing blow reads differently, and the cursor advances through the pool.
+
+
 ## 1.61.0 — 2026-11-21
 
 **Every zone breathes**

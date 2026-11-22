@@ -439,6 +439,11 @@ export class Enemy {
     this.flash = 0.16;
     const c = this.chestPos();
     ctx.effects.blood(c, fromDir);
+    // the number over the body is the clearest feedback in a shooter: it says
+    // what landed, and whether the shotgun was worth the walk
+    if (ctx.hud && ctx.hud.damageNumber && ctx.camera) {
+      ctx.hud.damageNumber(c, amount, ctx.camera, this.hp <= 0);
+    }
     if (this.hp <= 0) {
       this.die(ctx);
       return true;

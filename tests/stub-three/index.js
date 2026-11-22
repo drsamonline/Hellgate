@@ -13,6 +13,14 @@ export class Vector3 {
   set(x, y, z) { this.x = x; this.y = y; this.z = z; return this; }
   copy(v) { this.x = v.x; this.y = v.y; this.z = v.z; return this; }
   clone() { return new Vector3(this.x, this.y, this.z); }
+  // a camera stub with an identity projection: the tests only need it to be finite
+  project(cam) {
+    if (!cam) return this;
+    this.x = this.x * 0.1;
+    this.y = this.y * 0.1;
+    this.z = 0.5;
+    return this;
+  }
   add(v) { this.x += v.x; this.y += v.y; this.z += v.z; return this; }
   addScaledVector(v, s) { this.x += v.x * s; this.y += v.y * s; this.z += v.z * s; return this; }
   sub(v) { this.x -= v.x; this.y -= v.y; this.z -= v.z; return this; }

@@ -856,10 +856,17 @@ HG.input.keys['ControlLeft'] = false;
 frames(30);
 ok(HG.player.crouch < 0.2, 'releasing it stands back up');
 
-const kidsBefore = document.body.children.length;
-HG.hud.damageNumbers = true;
-HG.hud.damageNumber({ project() { this.z = 0.5; }, clone() { return { x: 0, y: 0, z: 0, project() { this.z = 0.5; } }; } }, 42, HG.player.camera, false);
-ok(document.body.children.length > kidsBefore, 'a damage number is added to the page');
+// the numbers live in a pool inside #dmgnums: a DOM node per hit would be a
+// garbage problem in a game that fires ten times a second
+HG.hud.damageNumber({ x: 1, y: 1, z: 0 }, 42, HG.player.camera, false);
+const nums = HG.hud.dmgPool;
+ok(nums.length === 10, 'the damage numbers are a pool of ten, made once');
+ok(nums.some((el) => el.textContent === '42'), 'a hit puts its damage on screen');
+ok(nums.some((el) => el.classList.contains('on')), 'and animates it');
+HG.hud.damageNumber({ x: 1, y: 1, z: 0 }, 7, HG.player.camera, true);
+ok(nums.some((el) => el.classList.contains('kill')), 'a killing blow reads differently');
+ok(HG.hud.dmgCursor > 0 && HG.hud.dmgPool.length === 10,
+  'and the cursor advances through the pool rather than making nodes (' + HG.hud.dmgCursor + ')');
 HG.hud.damageNumbers = false;
 const n2 = document.body.children.length;
 HG.hud.damageNumber({ project() {}, clone() { return this; } }, 42, HG.player.camera, false);

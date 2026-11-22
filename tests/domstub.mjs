@@ -8,7 +8,7 @@ function makeCtx(canvas) {
     putImageData(){}, drawImage(){} };
 }
 function makeEl(id='',tag='div'){
-  return { id, tagName: tag, className:'', textContent:'', innerHTML:'', value:'', width:0, height:0,
+  const el = { id, tagName: tag, textContent:'', innerHTML:'', value:'', width:0, height:0,
     children:[], dataset:{}, _listeners:{},
     style:{ setProperty(){}, removeProperty(){}, getPropertyValue(){ return ''; } },
     classList:{_s:new Set(),add(c){this._s.add(c);},remove(c){this._s.delete(c);},contains(c){return this._s.has(c);},
@@ -24,6 +24,18 @@ function makeEl(id='',tag='div'){
     requestPointerLock(){ document.pointerLockElement = this; },
     requestFullscreen(){ document.fullscreenElement = this; },
     getContext(){ return (this._ctx || (this._ctx = makeCtx(this))); } };
+  // className and classList must agree: the game sets className directly to
+  // reset a CSS animation, and a Set that ignores it lies to every test
+  let _cn = '';
+  Object.defineProperty(el, 'className', {
+    get() { return [...el.classList._s].join(' '); },
+    set(v) {
+      el.classList._s.clear();
+      for (const c of String(v || '').split(/\s+/)) if (c) el.classList._s.add(c);
+      _cn = v;
+    },
+  });
+  return el;
 }
 const els = new Map();
 const document = {

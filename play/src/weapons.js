@@ -255,6 +255,8 @@ export class Weapons {
         let dmg = w.damage * (player.damageMul || 1);
         if (w.falloff) dmg *= Math.max(0.35, 1 - eh.dist / w.range);
         const killed = eh.enemy.hurt(dmg, {
+          hud: ctx.hud,
+          camera: ctx.camera,
           level, player, effects: this.effects, audio: this.audio, projectiles,
           onKill: ctx.onKill,
           weapon: w.name,   // so the kill feed can name what killed it
@@ -333,6 +335,8 @@ export class Weapons {
       if (facing < MELEE.arc) continue;
       const dmg = MELEE.damage * (player.damageMul || 1);
       e.hurt(dmg, {
+        hud: ctx.hud,
+        camera: ctx.camera,
         level, player, effects: this.effects, audio: this.audio, projectiles: ctx.projectiles,
         onKill: ctx.onKill, weapon: 'BLADE',
       }, { x: dx / (d || 1), y: 0, z: dz / (d || 1) });

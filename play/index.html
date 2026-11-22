@@ -57,6 +57,17 @@
   #crosshair span:nth-child(4){top:50%;right:0;height:2px;width:8px;margin-top:-1px}
   #crosshair.hit span{background:#ff5a3c;opacity:1}
 
+  #dmgnums{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+  .dmgnum{position:absolute;font-size:15px;font-weight:700;letter-spacing:.04em;color:#fff0d8;
+    text-shadow:0 2px 4px rgba(0,0,0,.9),0 0 10px rgba(255,120,40,.5);transform:translate(-50%,-50%);
+    will-change:transform,opacity;opacity:0}
+  .dmgnum.kill{color:#ff6a4a;font-size:19px}
+  .dmgnum.on{animation:dmgfloat .75s ease-out forwards}
+  @keyframes dmgfloat{
+    0%{opacity:1;transform:translate(-50%,-50%) scale(.85)}
+    18%{opacity:1;transform:translate(-50%,-62%) scale(1.12)}
+    100%{opacity:0;transform:translate(-50%,-140%) scale(1)}
+  }
   #hitmarker{
     position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;
     opacity:0;transition:opacity .08s;
@@ -556,6 +567,7 @@
     <div id="compass"></div>
     <div id="crosshair"><span></span><span></span><span></span><span></span></div>
     <div id="hitmarker"></div>
+    <div id="dmgnums"></div>
     <div id="vignette"></div>
     <div id="dmgdir"></div>
     <div id="bossbar">

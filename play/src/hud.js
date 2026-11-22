@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 
 const _fwd = new THREE.Vector3();
+const _v3 = new THREE.Vector3();
 
 /**
  * The DOM overlay: counters, face, crosshair, compass, energy and power slots, boss bar, prompts, toasts.
@@ -46,6 +47,11 @@ export class HUD {
     this.keyHeld = null;
     this.crosshair = document.getElementById('crosshair');
     this.hitEl = document.getElementById('hitmarker');
+    this.dmgWrap = document.getElementById('dmgnums');
+    // A small pool of number elements: a DOM node per hit would be a garbage
+    // problem in a game that fires ten times a second.
+    this.dmgPool = [];
+    this.dmgCursor = 0;
     this.vignette = document.getElementById('vignette');
     this.dmgLayer = document.getElementById('dmgdir');
     this.toastEl = document.getElementById('toast');
@@ -292,6 +298,39 @@ export class HUD {
       this.toastT -= dt;
       if (this.toastT <= 0) this.toastEl.classList.remove('on');
     }
+  }
+
+  /**
+   * A damage number over the thing that was hit. World position in, screen
+   * position out — no sprite, no draw call, and the animation is CSS.
+   */
+  damageNumber(pos, amount, camera, kill = false) {
+    if (!this.dmgWrap || !camera || !(amount > 0)) return;
+    if (!this.dmgPool.length) {
+      for (let i = 0; i < 10; i++) {
+        const el = document.createElement('div');
+        el.className = 'dmgnum';
+        this.dmgWrap.appendChild(el);
+        this.dmgPool.push(el);
+      }
+    }
+    const el = this.dmgPool[this.dmgCursor];
+    this.dmgCursor = (this.dmgCursor + 1) % this.dmgPool.length;
+    _v3.copy(pos).project(camera);
+    if (_v3.z > 1) return;                       // behind the camera
+    const w = this.dmgWrap.clientWidth || 1;
+    const h = this.dmgWrap.clientHeight || 1;
+    const x = (_v3.x * 0.5 + 0.5) * w;
+    const y = (-_v3.y * 0.5 + 0.5) * h;
+    if (x < 0 || y < 0 || x > w || y > h) return; // off screen
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.textContent = kill ? '\u2715' : String(Math.round(amount));
+    el.className = kill ? 'dmgnum kill' : 'dmgnum';
+    // restart the animation: removing the class and forcing a reflow is the
+    // only reliable way in every browser
+    void el.offsetWidth;
+    el.classList.add('on');
   }
 
   hitmarker() {
