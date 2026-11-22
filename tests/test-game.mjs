@@ -538,6 +538,66 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== no inert content ==');
+{
+  const { TRINKETS } = await import('../play/src/loot.js');
+  const { CLASSES } = await import('../play/src/classes.js');
+
+  // every trinket must move the stat it names. This is the test that would have
+  // caught haste and careful being wired to nothing for eight releases.
+  const snapshot = () => ({
+    damage: HG.player.baseDamage,
+    speed: HG.player.baseSpeed,
+    hp: HG.player.maxHp,
+    energy: HG.powers.regenMul,
+    armour: HG.player.startArmourBonus,
+    leech: HG.player.leech,
+  });
+  const base = (() => { HG.game.trinkets = []; HG.recomputeStats(); return snapshot(); })();
+  for (const t of TRINKETS) {
+    HG.game.trinkets = [t.id];   // the run stores ids; sumEffects resolves them
+    HG.recomputeStats();
+    const now = snapshot();
+    const key = Object.keys(t.effect)[0];
+    const moved = Object.keys(now).some((k) => Math.abs(now[k] - base[k]) > 1e-9);
+    ok(moved, 'the ' + t.name + ' trinket changes ' + key + ' (' + base[key] + ' -> ' + now[key] + ')');
+  }
+  HG.game.trinkets = [];
+  HG.recomputeStats();
+
+  // every upgrade must move something too
+  for (const u of HG.UPGRADES) {
+    HG.game.upgrades = { [u.id]: 1 };
+    HG.recomputeStats();
+    const now = snapshot();
+    const moved = Object.keys(now).some((k) => Math.abs(now[k] - base[k]) > 1e-9);
+    ok(moved, 'the ' + u.name + ' upgrade changes something');
+  }
+  HG.game.upgrades = {};
+  HG.recomputeStats();
+
+  // every mode must change a rule, not just a label
+  const camp = HG.MODES.campaign;
+  for (const [key, m] of Object.entries(HG.MODES)) {
+    if (key === 'campaign') continue;
+    // any key that is not a label and differs from campaign is a rule change
+    const differs = Object.keys(m).some((k) =>
+      !['name', 'blurb'].includes(k) && JSON.stringify(m[k]) !== JSON.stringify(camp[k]));
+    ok(differs, 'the ' + m.name + ' mode changes a rule, not just a name');
+  }
+
+  // every zone must be its own place: seed, palette and shape
+  const { ZONES } = await import('../play/src/world.js');
+  ok(new Set(ZONES.map((z) => z.seed)).size === ZONES.length, 'every zone has its own seed');
+  ok(new Set(ZONES.map((z) => z.shape)).size >= 3, 'the zones use at least three floor-plan shapes');
+  ok(new Set(ZONES.map((z) => z.threat)).size >= 3, 'and at least three threat levels');
+
+  // every class must differ from every other in stats, weapon or powers
+  const sig = (c) => [c.hp, c.armor, c.speed, c.damage, c.energy, c.weapon, c.powers.join('+')].join('|');
+  const sigs = new Set(CLASSES.map(sig));
+  ok(sigs.size === CLASSES.length, 'all ' + CLASSES.length + ' classes play differently (' + sigs.size + ' distinct)');
+}
+
 console.log('\n== every power does something ==');
 {
   const { POWERS } = await import('../play/src/powers.js');

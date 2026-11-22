@@ -107,3 +107,20 @@ notice a power being silently inert.
 mobile page, so two live WebGL contexts ran under the software rasteriser at once and the renderer was killed.
 The failure read as `Target closed` at the touch step. The desktop page is closed before the mobile one opens,
 and the run is clean.
+
+## Pass six — nothing in a table may be inert
+
+The haste/careful finding generalised into a test: **every entry in every content table must move something
+the player can feel.** The suite now walks each table and asserts the entry does its job.
+
+| Table | Entries | Assertion |
+| --- | --- | --- |
+| Trinkets | 6 | Each one changes the stat it names — damage, hp, energy, speed, armour, leech |
+| Upgrades | 6 | Each one changes something after `recomputeStats()` |
+| Modes | 7 + campaign | Each differs from campaign in at least one key that is not `name` or `blurb` |
+| Zones | 9 | Distinct seeds, at least three floor-plan shapes, at least three threat levels |
+| Classes | 3 | Distinct signatures across hp, armour, speed, damage, energy, weapon and powers |
+| Powers | 5 | Each changes something observable and goes on cooldown |
+
+All of them pass. That is the useful result of this pass: the tables were already honest, and the one table
+that was not — the story flags — was found by reading rather than by sweeping.
