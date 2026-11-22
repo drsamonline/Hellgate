@@ -58,8 +58,6 @@ export class Companion {
     this.dormant = false;
     this.pos.set(player.pos.x - 1.4, player.pos.y + 1.9, player.pos.z - 1.4);
     this.group.position.copy(this.pos);
-    // never let it sit on top of the camera
-    this.group.visible = this.pos.distanceTo(player.pos) > 1.1;
     this.group.visible = true;
   }
 
@@ -95,7 +93,9 @@ export class Companion {
     this.pos.addScaledVector(this.vel, dt);
     this.pos.y += Math.sin(this.t * 2.2) * 0.004;
     this.group.position.copy(this.pos);
-    // never let it sit on top of the camera
+    // never let it sit on top of the camera. This was written twice: the guard
+    // was immediately overwritten by `visible = true`, so the drone could fill
+    // the screen.
     this.group.visible = this.pos.distanceTo(player.pos) > 1.1;
     this.core.rotation.y += dt * 3;
     this.ring.rotation.z += dt * 1.4;
@@ -124,7 +124,10 @@ export class Companion {
           effects: this.effects,
           audio: this.audio,
           projectiles: null,
-          onKill: null,
+          hud: this.hud || null,
+          camera: this.camera || null,
+          onKill: this.onKill || null,
+          weapon: 'DRONE',
         }, new THREE.Vector3(chest.x - this.pos.x, 0, chest.z - this.pos.z).normalize());
         if (killed) this.kills++;
         this.audio.play('pistol', { x: this.pos.x, z: this.pos.z });

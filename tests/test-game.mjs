@@ -538,6 +538,44 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== the drone ==');
+{
+  const c = HG.companion;
+  ok(!!c, 'the companion exists');
+  HG.game.state = 'playing';
+  c.spawn(HG.player);
+  ok(c.active === true, 'it spawns');
+  // it must never sit on the camera
+  c.pos.set(HG.player.pos.x, HG.player.pos.y, HG.player.pos.z);
+  c.update(1 / 60, HG.player, HG.enemies);
+  ok(c.group.visible === false, 'it hides when it would fill the screen');
+  c.pos.set(HG.player.pos.x + 6, HG.player.pos.y + 2, HG.player.pos.z + 6);
+  c.update(1 / 60, HG.player, HG.enemies);
+  ok(c.group.visible === true, 'and shows when it is clear of it');
+
+  // a drone kill counts for the run
+  HG.enemies.clear();
+  // The drone's kill credit is a wiring question, not a geometry one: whether it
+  // can see a target depends on the level, and a test that waits for a random
+  // sightline is a test of the level. One real update frame wires it, then the
+  // context it passes is checked directly.
+  HG.update(1 / 60);
+  ok(c.onKill === HG.enemies.onKill, 'the drone is wired to the run\'s kill handler');
+  ok(c.hud === HG.hud && c.camera === HG.camera, 'and to the hud and camera, so its hits draw numbers');
+
+  HG.enemies.clear();
+  const near = HG.enemies.spawnAt('grunt', HG.player.pos.x + 2, HG.player.pos.z, 1);
+  near.hp = 1;
+  const killsBefore = HG.game.kills;
+  near.hurt(7, {
+    level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio,
+    projectiles: null, hud: c.hud, camera: c.camera, onKill: c.onKill, weapon: 'DRONE',
+  }, { x: 1, y: 0, z: 0 });
+  ok(HG.game.kills > killsBefore, 'a kill through the drone\'s context counts for the run (' + HG.game.kills + ')');
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
+}
+
 console.log('\n== ammo has a ceiling ==');
 {
   HG.player.ammo = { bullets: 60, shells: 16, rockets: 3 };

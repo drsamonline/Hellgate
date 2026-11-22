@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.84.0 — 2026-11-21
+
+**The drone: a guard that never ran, and kills that did not count**
+
+Two findings in `companion.js`, both the same defect class as the rest of this audit.
+
+| Finding | What a player saw |
+| --- | --- |
+| The visibility guard was written twice — `visible = dist > 1.1` followed immediately by `visible = true` | The drone could fill the screen when it drifted onto the camera |
+| The drone's `hurt()` passed `onKill: null`, no `hud`, no `camera`, no `weapon` | A kill the drone made did not increase the run's kills, did not score, drew no damage number and never appeared in the kill feed |
+
+`main.js` now wires `onKill`, `hud` and `camera` onto the drone before its update, and the hurt context names
+`DRONE`.
+
+**The test is worth describing.** Its first version waited for the drone to find a target it could see — which
+depends on where the player happens to spawn. It failed three runs in five. It now asserts the wiring after one
+real update frame and drives the kill through the drone's own context: deterministic, and it tests the thing
+that changed rather than the level's geometry.
+
+
 ## 1.83.0 — 2026-11-21
 
 **Ammo had no ceiling at all**

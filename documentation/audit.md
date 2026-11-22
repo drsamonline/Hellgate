@@ -178,3 +178,21 @@ cannot go around it.
 **And the pickup test was flaky for a related reason.** It set `health = 100` and called that full health. Once
 upgrades, trinkets or story flags raise `maxHp` above 100, 100 is not full, so the pickup was consumed when the
 test expected it left on the floor. It uses `player.maxHp` now. Five clean runs.
+
+## Pass ten — the drone
+
+Two findings in `companion.js`, both the same defect class as the rest of this audit.
+
+**The visibility guard was written twice.** `update()` set
+`group.visible = this.pos.distanceTo(player.pos) > 1.1` — the guard that stops the drone filling the screen —
+and the next line set `group.visible = true`. The guard never took effect. `spawn()` had the same two lines.
+
+**The drone's kills did not count.** Its `hurt()` call passed `onKill: null` and no `hud`, `camera` or `weapon`,
+so a kill the drone made did not increase `game.kills`, did not score, did not appear in the kill feed and drew
+no damage number. The drone is a companion that helps; a kill it makes is a kill the run made. `main.js` now
+wires `onKill`, `hud` and `camera` onto the drone before its update, and the hurt context names `DRONE`.
+
+**A note on the test.** The first version of the drone-kill test waited for the drone to find a target it could
+see, which depends on where the player happens to spawn. It failed three runs in five. It now asserts the wiring
+(one real update frame, then check `onKill === enemies.onKill`) and drives the kill through the drone's own
+context — deterministic, and it tests the thing that changed rather than the level's geometry.
