@@ -87,7 +87,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 59. **WebGPU renderer** — Three.js ships a WebGPU backend; the geometry is simple enough that a port is mostly a renderer swap. Measure before committing. `main.js` · XL · low
 60. **Co-op over WebRTC** — two players, one arena, host-authoritative enemies. Huge scope, big payoff. `main.js` · XL · medium
 61. **A campaign of hand-tuned seeds** — ten seeds with verified, escalating layouts, plus a  — ✓ shipped as chosen seeds: five scored by `tools/pick-seeds.mjs`level-select screen. Cheap to produce once the generator is frozen. `level.js` · M · medium
-62. **Procedural audio** — generate the ambient bed and enemy barks from a small grammar instead of hard-coded calls. `audio.js` · L · low
+62. **Procedural audio** — generate the ambient bed and enemy barks from a small grammar instead of hard-coded calls. `audio.js` · L · low — partly shipped: the ambient bed per zone (audio-kit textures), and every enemy type now has its own `voice` pitch, so an imp and a brute no longer fire the same blip. A full bark grammar is still open
 63. **A level editor** — the sector model is a grid; a paint-the-cells editor that exports a seed-independent map is a week of work and makes the project a platform. `tools/` · XL · medium
 
 ---

@@ -335,6 +335,9 @@ export class Sfx {
     if (!this.ctx || this.muted) return;
     const ctx = this.ctx;   // the switch cases build nodes directly
     this._pitch = 0.94 + Math.random() * 0.12; // no two plays are identical
+    // a voice, not a sample: the caller can shift the whole sound so an imp and a
+    // brute do not fire the same 620 Hz blip
+    if (opts.pitch) this._pitch *= opts.pitch;
     if (at) {
       const out = this.spatialOut(at);
       if (!out) return;

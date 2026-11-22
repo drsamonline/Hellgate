@@ -20,29 +20,29 @@ export const TYPES = {
   imp: {
     hp: 55, speed: 2.5, radius: 0.62, height: 1.85, hitRadius: 0.62,
     attackRange: 14, attackCd: 2.1, telegraph: 0.55, damage: 15,
-    melee: false, sight: 22, color: 0x8a3524, label: 'IMP', pitch: 1.0,
+    melee: false, sight: 22, color: 0x8a3524, label: 'IMP', pitch: 1.0, voice: 1.45,
   },
   warden: {
     hp: 620, speed: 1.9, radius: 1.05, height: 3.0, hitRadius: 1.45,
     attackRange: 20, attackCd: 2.3, telegraph: 0.7, damage: 18,
-    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN', pitch: 0.55,
+    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN', pitch: 0.55, voice: 0.5,
     boss: true,
   },
   hound: {
     hp: 22, speed: 4.4, radius: 0.64, height: 1.05, hitRadius: 0.45,
     attackRange: 2.4, attackCd: 0.9, telegraph: 0.25, damage: 9,
-    melee: true, meleeRange: 1.9, meleeDamage: 11, sight: 26, color: 0x8a1f6a, label: 'HOUND', pitch: 1.45,
+    melee: true, meleeRange: 1.9, meleeDamage: 11, sight: 26, color: 0x8a1f6a, label: 'HOUND', pitch: 1.45, voice: 1.25,
   },
   grunt: {
     hp: 40, speed: 3.3, radius: 0.52, height: 1.7, hitRadius: 0.55,
     attackRange: 16, attackCd: 1.4, telegraph: 0.4, damage: 8,
-    melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT', pitch: 0.8,
+    melee: true, meleeRange: 2.4, meleeDamage: 12, sight: 24, color: 0x53603c, label: 'GRUNT', pitch: 0.8, voice: 1.0,
   },
   brute: {
     // slow until it sees you, then it does not stop
     hp: 140, speed: 1.7, chargeSpeed: 5.2, radius: 0.78, height: 2.5, hitRadius: 0.9,
     attackRange: 2.8, attackCd: 1.6, telegraph: 0.6, damage: 10,
-    melee: true, meleeRange: 2.6, meleeDamage: 24, sight: 26, color: 0x3d4a63, label: 'BRUTE', pitch: 0.65,
+    melee: true, meleeRange: 2.6, meleeDamage: 24, sight: 26, color: 0x3d4a63, label: 'BRUTE', pitch: 0.65, voice: 0.62,
     charges: true,
     laneColor: 0xff4422,
   },
@@ -50,14 +50,14 @@ export const TYPES = {
     // floats, so it ignores stairs and looks wrong doing it
     hp: 18, speed: 3.6, radius: 0.42, height: 1.2, hitRadius: 0.55,
     attackRange: 15, attackCd: 2.4, telegraph: 0.5, damage: 9,
-    melee: false, sight: 24, color: 0x4fd8e8, label: 'WISP', pitch: 1.7,
+    melee: false, sight: 24, color: 0x4fd8e8, label: 'WISP', pitch: 1.7, voice: 1.8,
     hover: 1.15,
   },
   spitter: {
     // holds its distance and lobs: the only enemy that punishes standing still
     hp: 34, speed: 2.0, radius: 0.55, height: 1.95, hitRadius: 0.6,
     attackRange: 18, attackCd: 2.6, telegraph: 0.75, damage: 14,
-    melee: false, sight: 26, color: 0x2f6a5e, label: 'SPITTER', pitch: 1.25,
+    melee: false, sight: 26, color: 0x2f6a5e, label: 'SPITTER', pitch: 1.25, voice: 1.1,
     keepsDistance: 9, lob: true,
   },
   stalker: {
@@ -65,7 +65,7 @@ export const TYPES = {
     // hitscan that hurts. It backs off when you close, so it is a duel, not a rush.
     hp: 30, speed: 2.8, radius: 0.5, height: 2.0, hitRadius: 0.55,
     attackRange: 26, attackCd: 2.8, telegraph: 0.95, damage: 22,
-    melee: false, sight: 30, color: 0x6a2f8a, label: 'STALKER', pitch: 1.9,
+    melee: false, sight: 30, color: 0x6a2f8a, label: 'STALKER', pitch: 1.9, voice: 1.3,
     keepsDistance: 13, beam: 0xb45cff,
   },
 };
@@ -526,7 +526,7 @@ export class Enemy {
       this.die(ctx);
       return true;
     }
-    ctx.audio.play('pain', this.chestPos());
+    ctx.audio.play('pain', this.chestPos(), { pitch: this.T.voice || 1 });
     if (Math.random() < 0.55) this.setState(STATE.PAIN);
     return false;
   }
@@ -542,7 +542,7 @@ export class Enemy {
     this.deadT = 0;
     const c = this.chestPos();
     ctx.effects.gibs(c);
-    ctx.audio.play('enemyDie', this.chestPos());
+    ctx.audio.play('enemyDie', this.chestPos(), { pitch: this.T.voice || 1 });
     if (ctx.onKill) ctx.onKill(this, ctx.weapon || null);
   }
 
@@ -773,7 +773,7 @@ export class Enemy {
       const inMelee = dist < this.T.meleeRange;
       if (inMelee) {
         player.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
-        audio.play('enemyShoot', this.chestPos());
+        audio.play('meleeHit', this.chestPos(), { pitch: this.T.voice || 1 });
         return;
       }
       if (!canSee) return;
@@ -791,7 +791,7 @@ export class Enemy {
           this.T.beam || 0xff5522
         );
       }
-      audio.play('enemyShoot', this.chestPos());
+      audio.play('enemyShoot', this.chestPos(), { pitch: this.T.voice || 1 });
     }
   }
 

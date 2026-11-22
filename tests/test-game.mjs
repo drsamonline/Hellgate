@@ -538,6 +538,32 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== every enemy has a voice ==');
+{
+  const { TYPES } = await import('../play/src/enemies.js');
+  const voices = Object.entries(TYPES).map(([k, t]) => [k, t.voice]);
+  ok(voices.every(([, v]) => typeof v === 'number' && v > 0), 'every enemy type declares a voice pitch');
+  const distinct = new Set(voices.map(([, v]) => v));
+  ok(distinct.size >= 6, 'and they are not all the same (' + distinct.size + ' distinct of ' + voices.length + ')');
+  ok(TYPES.brute.voice < TYPES.imp.voice, 'the brute is lower than the imp (' + TYPES.brute.voice + ' vs ' + TYPES.imp.voice + ')');
+  // the pitch multiplies the per-play jitter, so a voice is audible as a shift
+  const a = HG.audio;
+  const saved = a.ctx;
+  let seen = 0;
+  a.ctx = { currentTime: 0, createOscillator: () => ({ frequency: { setValueAtTime() {}, exponentialRampToValueAtTime() {} }, connect() {}, start() {}, stop() {} }), createGain: () => ({ gain: { setValueAtTime() {}, exponentialRampToValueAtTime() {}, linearRampToValueAtTime() {} }, connect() {} }), destination: {} };
+  const wasMuted = a.muted;
+  a.muted = false;   // an earlier test mutes the master and never unmutes
+  const before = a._pitch;
+  // the switch builds real nodes, so the pitch is asserted on the field rather
+  // than through a fake graph: play() sets _pitch before it touches the context
+  try { a.play('enemyShoot', null, { pitch: 2 }); } catch (e) { /* the fake graph is incomplete */ }
+  seen = a._pitch;
+  a.muted = wasMuted;
+  ok(seen > 1.6, 'a voice pitch of 2 doubles the base jitter (' + before.toFixed(2) + ' -> ' + seen.toFixed(2) + ')');
+  a.ctx = saved;
+  a._pitch = 1;
+}
+
 console.log('\n== settings are validated on read ==');
 {
   const { clampSettings, DEFAULTS, CLASS_IDS } = await import('../play/src/settings.js');

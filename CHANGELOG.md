@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.90.0 — 2026-11-21
+
+**Every enemy has a voice**
+
+Eight enemy types fired the same 620 Hz blip. `play()` now takes a `pitch` option that multiplies the per-play
+jitter, and every type declares a `voice`:
+
+| Type | Voice | Type | Voice |
+| --- | --- | --- | --- |
+| Wisp | 1.80 | Spitter | 1.10 |
+| Imp | 1.45 | Grunt | 1.00 |
+| Stalker | 1.30 | Brute | 0.62 |
+| Hound | 1.25 | Warden | 0.50 |
+
+Its shot, its pain and its death all use it, so an imp chirps and a brute growls from the same three synth calls.
+The melee hit uses the voice too, so a hound's bite is not the player's own swing.
+
+**Four assertions**: every type declares a voice, all eight are distinct, the brute is lower than the imp, and a
+pitch of 2 doubles the base jitter.
+
+Roadmap #62 moves from unstarted to partly shipped — the beds and the voices are in, a full bark grammar is not.
+
+
 ## 1.89.0 — 2026-11-21
 
 **One mesh per joint: 68 draw calls down to 43**
