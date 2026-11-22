@@ -397,6 +397,10 @@ ok('unmute restores it', a1.restored > 0, String(a1.restored));
 // Emulated phone: the overlay must appear only while playing, and every control
 // must be inside the viewport.
 console.log('\ntouch');
+// close the desktop page first: two live WebGL contexts under the software
+// rasteriser run the renderer out of memory, and the crash reads as a test
+// failure rather than as the environment it is
+await page.close();
 const mp = await browser.newPage();
 await mp.setViewport({ width: 390, height: 844, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
 await mp.goto(`http://127.0.0.1:${PORT}/play/?touch=1`, { waitUntil: 'domcontentloaded' });

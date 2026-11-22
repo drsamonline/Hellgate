@@ -121,7 +121,8 @@ export class Powers {
         audio.play('boom');
         enemies.damageSphere(c, 6, 45, {
           level, player, effects, audio, projectiles,
-          onKill: ctx.onKill,
+          hud: ctx.hud, camera: ctx.camera,
+          onKill: ctx.onKill, weapon: 'SHOCKWAVE',
         });
         break;
       }
@@ -146,7 +147,11 @@ export class Powers {
           const maxD = wallHit ? wallHit.dist : 60;
           const eh = enemies.raycast(origin, dir, maxD);
           if (eh) {
-            eh.enemy.hurt(14 * player.damageMul, { level, player, effects, audio, projectiles, onKill: ctx.onKill }, dir);
+            eh.enemy.hurt(14 * player.damageMul, {
+              level, player, effects, audio, projectiles,
+              hud: ctx.hud, camera: ctx.camera,
+              onKill: ctx.onKill, weapon: 'VOLLEY',
+            }, dir);
             effects.tracer(origin, eh.point, 0xaaffcc);
           }
         }

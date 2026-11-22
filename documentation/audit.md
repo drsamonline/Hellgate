@@ -89,3 +89,21 @@ wired separately.
 Both are fixed in 1.78.0, with three tests that hold one flag each — speed, armour, max health — plus one that
 holds the single payment. The lesson is not "test the flags"; it is that a release note is a claim like any
 other, and this audit should have checked the claims it made last week, not only the code it read today.
+
+## Pass five — the powers, and a smoke test that lied about the environment
+
+Reading `powers.js` found two powers passing a thinner context than every other damage source:
+
+| Power | What was missing | Effect |
+| --- | --- | --- |
+| `shockwave` | `hud`, `camera` | No damage numbers for a power that hits everything within 6 m |
+| `volley` | `hud`, `camera`, `weapon` | No numbers, and the kill feed said `DOWN` instead of `VOLLEY` |
+
+Both now pass the same context as the shotgun. A test casts **all five powers across all three classes** and
+asserts each one changes something observable and goes on cooldown — the first test in the suite that would
+notice a power being silently inert.
+
+**And the smoke test was blaming the game for the pod.** It kept the desktop page open while opening a second
+mobile page, so two live WebGL contexts ran under the software rasteriser at once and the renderer was killed.
+The failure read as `Target closed` at the touch step. The desktop page is closed before the mobile one opens,
+and the run is clean.

@@ -538,6 +538,69 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== every power does something ==');
+{
+  const { POWERS } = await import('../play/src/powers.js');
+  const { CLASSES, getClass } = await import('../play/src/classes.js');
+  const ids = Object.keys(POWERS);
+  ok(ids.length === 5, 'five powers are defined (' + ids.length + ')');
+  // every class's three slots, so all five powers are cast at least once
+  const slots = [];
+  for (const c of CLASSES) for (const pid of c.powers) slots.push({ cls: c.id, pid });
+  const cast = new Set();
+  for (const { cls, pid } of slots) {
+    const id = pid;
+    HG.powers.equip(getClass(cls));
+    HG.enemies.clear();
+    // volley fires from the camera, so the target goes where the camera looks;
+    // the other four are centred on the player, and 3 m is inside every radius
+    const THREE = await import('three');
+    const camDir = HG.camera.getWorldDirection(new THREE.Vector3());
+    const flat = Math.hypot(camDir.x, camDir.z) || 1;
+    const tx = HG.player.pos.x + (camDir.x / flat) * 3;
+    const tz = HG.player.pos.z + (camDir.z / flat) * 3;
+    const target = HG.enemies.spawnAt('grunt', tx, tz, 1);
+    frames(1);
+    HG.powers.energy = 100;
+    HG.powers.cd[id] = 0;   // an empty map reads undefined <= 0, which is false
+    HG.player.health = 40;
+    HG.player.armor = 0;
+    const before = {
+      hp: target.hp,
+      playerHp: HG.player.health,
+      armour: HG.player.armor,
+      vx: HG.player.vel.x,
+      vz: HG.player.vel.z,
+      invuln: HG.powers.invuln,
+      guard: HG.powers.guard,
+      tracers: HG.effects.tCursor,
+    };
+    const slot = getClass(cls).powers.indexOf(id);
+    HG.castPower(slot);
+    cast.add(id);
+    const after = {
+      hp: target.hp,
+      playerHp: HG.player.health,
+      armour: HG.player.armor,
+      vx: HG.player.vel.x,
+      vz: HG.player.vel.z,
+      invuln: HG.powers.invuln,
+      guard: HG.powers.guard,
+    };
+    // volley fires six rays from the camera; whether one connects depends on where
+    // the camera is looking, so what it must always do is draw the tracers
+    const changed = after.hp < before.hp || after.playerHp > before.playerHp ||
+      after.armour > before.armour || after.invuln > before.invuln || after.guard > before.guard ||
+      after.tracers !== before.tracers ||
+      Math.hypot(after.vx - before.vx, after.vz - before.vz) > 1;
+    ok(changed, 'the ' + id + ' power changes something');
+    ok(HG.powers.cd[id] > 0, 'and it goes on cooldown (' + (HG.powers.cd[id] || 0).toFixed(1) + 's)');
+  }
+  ok(cast.size === 5, 'all five powers were cast (' + [...cast].join(', ') + ')');
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
+}
+
 console.log('\n== the daily ==');
 {
   const D = await import('../play/src/daily.js');

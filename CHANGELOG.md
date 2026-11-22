@@ -1,5 +1,28 @@
 # Changelog
 
+## 1.79.0 — 2026-11-21
+
+**Two powers drew no numbers, and the smoke test was blaming the game for the pod**
+
+Reading `powers.js` against `weapons.js` found two powers passing a thinner context than every other damage
+source:
+
+| Power | Missing | What a player saw |
+| --- | --- | --- |
+| `shockwave` | `hud`, `camera` | No damage numbers, for a power that hits everything within 6 m |
+| `volley` | `hud`, `camera`, `weapon` | No numbers, and the kill feed said `DOWN` instead of `VOLLEY` |
+
+Both pass the same context as the shotgun now.
+
+**A test that would have caught it**: the suite casts all five powers across all three classes and asserts
+each one changes something observable and goes on cooldown. Nine new assertions, and the first test in the
+suite that would notice a power being silently inert.
+
+**The smoke test kept the desktop page open while opening a mobile one**, so two live WebGL contexts ran under
+the software rasteriser and the renderer was killed. The failure read as `Target closed` at the touch step and
+looked like a game bug for three runs. The desktop page closes first now.
+
+
 ## 1.78.0 — 2026-11-21
 
 **The story flags: one bug, and one claim that was never true**
