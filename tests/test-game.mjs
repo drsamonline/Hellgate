@@ -406,6 +406,18 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== decals on every surface ==');
+HG.effects.decal({ x: 0, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, 'scorch', 0.5);   // floor
+const floorDecal = HG.effects.decals[(HG.effects.dCursor + HG.effects.decals.length - 1) % HG.effects.decals.length];
+ok(Number.isFinite(floorDecal.mesh.rotation.x) && Math.abs(Math.abs(floorDecal.mesh.rotation.x) - Math.PI / 2) < 0.01,
+  'a floor decal lies flat (' + floorDecal.mesh.rotation.x.toFixed(2) + ' rad)');
+HG.effects.decal({ x: 0, y: 0, z: 0 }, { x: 0, y: -1, z: 0 }, 'scorch', 0.5);  // ceiling
+const ceilDecal = HG.effects.decals[(HG.effects.dCursor + HG.effects.decals.length - 1) % HG.effects.decals.length];
+ok(Math.abs(Math.abs(ceilDecal.mesh.rotation.x) - Math.PI / 2) < 0.01, 'a ceiling decal faces down');
+HG.effects.decal({ x: 0, y: 0, z: 0 }, { x: 1, y: 0, z: 0 }, 'scorch', 0.5);   // wall
+const wallDecal = HG.effects.decals[(HG.effects.dCursor + HG.effects.decals.length - 1) % HG.effects.decals.length];
+ok(Number.isFinite(wallDecal.mesh.rotation.z), 'a wall decal gets a finite roll');
+
 console.log('\n== the spitter and the wisp ==');
 HG.enemies.clear();
 HG.enemies.spawnAt('spitter', HG.player.pos.x + 7, HG.player.pos.z, 2);

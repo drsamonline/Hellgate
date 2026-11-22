@@ -61,7 +61,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 39. **Door animation** — doors currently pop out of existence. Slide them up over 400 ms with — ✓ shipped a sound. `levelmesh.js` · M · high
 40. **Enemy corpses persist** — leave the last N bodies instead of sinking them all. Needs pe — ✓ shipped (12 kept, oldest cleared)r-enemy material cloning for a fade (already half-done for the hit flash). `enemies.js` · M · medium
 41. **Blood pools on the floor** — a decal at the death position, oriented to the floor norma — ✓ shippedl. `effects.js` · S · medium
-42. **Bullet-hole decals with correct orientation on every surface** — already works on walls; verify floors and ceilings and cap by surface type. `effects.js` · S · medium
+42. **Bullet-hole decals with correct orientation on every surface** — ✓ shipped (floors and ceilings were degenerate under `lookAt`; they are set explicitly now) — already works on walls; verify floors and ceilings and cap by surface type. `effects.js` · S · medium
 43. **Shadow or fake contact shadow under enemies** — a dark blob decal that follows each ene — ✓ shippedmy; makes them feel grounded without a shadow map. `enemies.js` · M · high
 44. **Post-processing** — a cheap bloom for muzzle flashes and explosions, plus a slight vignette and colour grade. UnrealBloomPass needs the addons build; a hand-written single-pass bloom is lighter. `main.js` · L · high
 45. **Instanced enemies** — one `InstancedMesh` per body part across all enemies, with per-instance matrices and colours. Would cut ~12 draw calls per enemy to 12 per *wave*. `enemies.js` · L · high

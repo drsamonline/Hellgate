@@ -88,6 +88,9 @@ export class Object3D {
   updateMatrix() {}
   updateMatrixWorld() {}
   lookAt() {}
+  rotateZ(a) { if (this.rotation) this.rotation.z = (this.rotation.z || 0) + a; return this; }
+  rotateX(a) { if (this.rotation) this.rotation.x = (this.rotation.x || 0) + a; return this; }
+  rotateY(a) { if (this.rotation) this.rotation.y = (this.rotation.y || 0) + a; return this; }
   clone() {
     const c = new this.constructor(this.geometry, this.material);
     c.position.copy(this.position);

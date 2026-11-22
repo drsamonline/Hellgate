@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.58.0 — 2026-11-21
+
+**Decals on floors and ceilings were misoriented**
+
+`lookAt(point + normal)` orients a decal correctly on a wall and is degenerate on a floor or a ceiling:
+the plane's up vector is parallel to the look direction, so there is no roll to resolve and the rotation
+is undefined. Blood and scorch marks on the floor were therefore randomly spun, and a ceiling decal could
+end up edge-on.
+
+| Surface | How it is set now |
+| --- | --- |
+| Floor (`normal.y > 0.9`) | `rotation.x = -PI/2`, random spin |
+| Ceiling (`normal.y < -0.9`) | `rotation.x = +PI/2`, random spin |
+| Wall | `lookAt`, then a random roll |
+
+Three new assertions: a floor decal lies flat, a ceiling decal faces down, and a wall decal gets a finite
+roll.
+
+**Not done, and why** — the texture atlas (roadmap 47) is the obvious next draw-call win, but the level
+geometry tiles every surface with UV repeats. An atlas cannot tile: a quad whose UVs run 0-2 to repeat a
+brick twice would sample the neighbouring tile. It needs a `sampler2DArray` or a per-material repeat,
+which is a different change from the one the roadmap describes. Recorded rather than attempted.
+
+
 ## 1.57.0 — 2026-11-21
 
 **The last two enemies without joints**

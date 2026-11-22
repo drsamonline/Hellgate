@@ -256,7 +256,15 @@ export class Effects {
     d.mesh.material.needsUpdate = true;
     d.mesh.scale.set(size, size, size);
     d.mesh.position.set(point.x + normal.x * 0.03, point.y + normal.y * 0.03, point.z + normal.z * 0.03);
-    d.mesh.lookAt(point.x + normal.x, point.y + normal.y, point.z + normal.z);
+    // lookAt is degenerate when the target is directly above or below — a decal
+    // on the floor or the ceiling has no roll to resolve from the up vector, and
+    // three.js leaves it undefined. Floors and ceilings are set explicitly.
+    if (Math.abs(normal.y) > 0.9) {
+      d.mesh.rotation.set(normal.y > 0 ? -Math.PI / 2 : Math.PI / 2, 0, Math.random() * Math.PI * 2);
+    } else {
+      d.mesh.lookAt(point.x + normal.x, point.y + normal.y, point.z + normal.z);
+      d.mesh.rotateZ(Math.random() * Math.PI * 2);
+    }
     d.mesh.visible = true;
     d.life = d.max;
   }
