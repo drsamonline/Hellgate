@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.69.0 — 2026-11-21
+
+**Elites: the same enemy, harder, and you can see it coming**
+
+From wave 4, one spawn in eight is an elite. It is not a ninth type to model and animate — it is the same
+body with a harder one:
+
+| Change | Value |
+| --- | --- |
+| Health | x2.2 |
+| Damage | x1.35 |
+| Scale | x1.16 |
+| Rim light | A gold translucent shell, so it reads as one across the room |
+| Score | x3 |
+| Drop | Always leaves a trinket |
+
+The kill feed says `ELITE GRUNT`, so the thing that took four shotgun blasts is named.
+
+Never on a boss wave: the warden does not need a rim light to be understood.
+
+**Tests** — 5 new assertions: an elite is marked, it carries a harder body, it hits harder, it wears the
+rim, and a late wave produces them (measured 51 over 40 waves at a 12.5 % roll).
+
+
 ## 1.68.1 — 2026-11-21
 
 **A damage test that depended on the level**

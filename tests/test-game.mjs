@@ -538,6 +538,27 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== elites ==');
+{
+  HG.enemies.clear();
+  const plain = HG.enemies.spawnAt('grunt', HG.player.pos.x + 20, HG.player.pos.z, 5);
+  const elite = HG.enemies.spawnAt('grunt', HG.player.pos.x + 24, HG.player.pos.z, 5, { elite: true });
+  ok(elite.elite === true && plain.elite === false, 'an elite is marked as one');
+  ok(elite.maxHp > plain.maxHp * 1.8, 'and carries a harder body (' + plain.maxHp + ' -> ' + elite.maxHp + ')');
+  ok(elite.damage > plain.damage, 'and hits harder (' + plain.damage.toFixed(1) + ' -> ' + elite.damage.toFixed(1) + ')');
+  ok(!!elite.eliteRim, 'and wears a rim light you can see across the room');
+  // a wave from wave 4 can roll one, and never on a boss wave
+  let seen = 0;
+  for (let i = 0; i < 40; i++) {
+    HG.enemies.clear();
+    HG.enemies.spawnWave(6, HG.player.pos, { waves: 99 });
+    seen += HG.enemies.list.filter((e) => e.elite).length;
+  }
+  ok(seen > 0, 'a late wave produces elites (' + seen + ' over 40 waves)');
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
+}
+
 console.log('\n== the stalker ==');
 {
   HG.enemies.clear();

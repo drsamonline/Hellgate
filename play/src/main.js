@@ -382,18 +382,22 @@ function buildRun(seed, zoneDef) {
   enemies.onKill = (e, weaponName) => {
     game.kills++;
     game.waveKills++;
+    // an elite is worth more than the same body without the rim light
+    const worth = e && e.elite ? 3 : 1;
+    game.score += 50 * worth * (game.wave || 1);
     if (weaponName) {
       game.weaponKills[weaponName] = (game.weaponKills[weaponName] || 0) + 1;
     }
     if (hud && e && e.T) {
       hud.feed(
-        String(e.T.label || e.type || 'ENEMY').toUpperCase(),
+        (e.elite ? 'ELITE ' : '') + String(e.T.label || e.type || 'ENEMY').toUpperCase(),
         weaponName || 'DOWN'
       );
     }
     if (player.leech > 0) player.heal(player.leech);
     const id = rollDrop(Math.random);
-    if (id && e) dropTrinket(id, e.pos);
+    // an elite always leaves something behind
+    if (e && (id || e.elite)) dropTrinket(id || 'edge', e.pos);
   };
 
   game.secretMeshes = (levelMeshes && levelMeshes.secretMeshes) || [];
@@ -1915,7 +1919,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.68.1';
+const BUILD = '1.69.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

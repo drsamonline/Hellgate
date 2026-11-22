@@ -452,11 +452,28 @@ export class Enemy {
     scene.add(this.mesh);
 
     const diff = opts.diff || { hp: 1, dmg: 1, count: 1 };
-    const scale = (1 + 0.1 * (wave - 1)) * diff.hp;
+    // an elite is the same enemy with a harder body, a rim light and a bigger
+    // drop: variety without a ninth type to model and animate
+    this.elite = !!opts.elite;
+    const eliteHp = this.elite ? 2.2 : 1;
+    const eliteDmg = this.elite ? 1.35 : 1;
+    const scale = (1 + 0.1 * (wave - 1)) * diff.hp * eliteHp;
     this.maxHp = Math.max(1, Math.round(T.hp * scale));
     this.hp = this.maxHp;
     this.speed = T.speed * Math.min(1.45, 1 + 0.03 * (wave - 1));
-    this.damage = T.damage * Math.min(2.2, 1 + 0.06 * (wave - 1)) * diff.dmg;
+    this.damage = T.damage * Math.min(2.2, 1 + 0.06 * (wave - 1)) * diff.dmg * eliteDmg;
+    if (this.elite) {
+      this.mesh.scale.setScalar(1.16);
+      // a rim glow so an elite reads as one from across the room
+      const rim = new THREE.Mesh(
+        new THREE.SphereGeometry(T.radius * 0.95, 8, 6),
+        new THREE.MeshBasicMaterial({ color: 0xffcc33, transparent: true, opacity: 0.16, depthWrite: false })
+      );
+      rim.scale.set(1, T.height / (T.radius * 1.9), 1);
+      rim.position.y = T.height * 0.45;
+      this.mesh.add(rim);
+      this.eliteRim = rim;
+    }
 
     this.pos = worldPos.clone();
     this.state = STATE.IDLE;
@@ -1063,7 +1080,11 @@ export class EnemyManager {
         0,
         c.wz + (Math.random() - 0.5) * jitter
       );
-      const e = new Enemy(type, pos, wave, this.scene, { diff });
+      // from wave 4, one in eight is an elite: a harder body, a rim light, a
+      // bigger drop. It is the same type, so there is nothing new to learn —
+      // only something new to be afraid of.
+      const elite = wave >= 4 && !bossWave && Math.random() < 0.125;
+      const e = new Enemy(type, pos, wave, this.scene, { diff, elite });
       e.pos.y = floorHeightAt(this.level, pos.x, pos.z);
       e.mesh.position.y = e.pos.y;
       this.list.push(e);
@@ -1093,8 +1114,8 @@ export class EnemyManager {
   }
 
   /** Put one enemy of a type at a world position, mid-wave. */
-  spawnAt(type, x, z, wave) {
-    const e = new Enemy(type, new THREE.Vector3(x, 0, z), wave, this.scene, { diff: this.diff });
+  spawnAt(type, x, z, wave, opts = {}) {
+    const e = new Enemy(type, new THREE.Vector3(x, 0, z), wave, this.scene, { diff: this.diff, elite: !!opts.elite });
     e.pos.y = floorHeightAt(this.level, x, z);
     e.mesh.position.y = e.pos.y;
     this.list.push(e);
