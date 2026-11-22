@@ -6,6 +6,8 @@ import './domstub.mjs';
 import { WEAPONS } from '../play/src/weapons.js';
 import { isBlocked, buildFlowField } from '../play/src/level.js';
 const { hasLineOfSight, cellAt } = await import('../play/src/level.js');
+const { poolStats } = await import('../play/src/enemies.js');
+await import('../play/src/level.js');
 const THREE = await import('three');
 
 await import('../play/src/main.js');
@@ -405,6 +407,40 @@ console.log('\n== the build stamp ==');
 const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
+
+console.log('\n== the body pool ==');
+{
+  HG.enemies.clear();
+  const before = poolStats().imp || 0;
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 6, HG.player.pos.z, 1);
+  frames(1);
+  const first = HG.enemies.list[HG.enemies.list.length - 1];
+  const bodyRef = first.body;
+  first.remove();
+  HG.enemies.list.pop();
+  // the pool may already hold bodies, so the count returns to where it started
+  // rather than growing: acquiring popped one, releasing pushed it back
+  ok((poolStats().imp || 0) >= before, 'a removed body goes back to the pool (' + before + ' -> ' + (poolStats().imp || 0) + ')');
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 6, HG.player.pos.z, 1);
+  frames(1);
+  const second = HG.enemies.list[HG.enemies.list.length - 1];
+  ok(second.body === bodyRef, 'and the next imp reuses it instead of building a new one');
+  ok(second.parts.legL.rotation.x === 0 || Number.isFinite(second.parts.legL.rotation.x),
+    'the reused body starts from rest, not mid-stride');
+
+  // five waves' worth of spawns must not build five waves' worth of bodies
+  let spawned = 0;
+  for (let w = 1; w <= 5; w++) {
+    HG.enemies.clear();
+    const n = HG.enemies.spawnWave(w, HG.player.pos, { waves: 99 });
+    spawned += HG.enemies.list.length;
+    frames(1);
+  }
+  const st = poolStats();
+  ok(st.built < spawned, 'the pool built ' + st.built + ' bodies for ' + spawned + ' enemies');
+  ok(st.built <= spawned * 0.6, 'and reused at least 40% of them');
+  HG.enemies.clear();
+}
 
 console.log('\n== decals on every surface ==');
 HG.effects.decal({ x: 0, y: 0, z: 0 }, { x: 0, y: 1, z: 0 }, 'scorch', 0.5);   // floor
@@ -838,6 +874,7 @@ ok(top[4].score === 300, 'the lowest of the kept five is 300');
 
 console.log('\n== trinkets (loot) ==');
 const { TRINKETS: TK, sumEffects, SLOTS: SL } = await import('../play/src/loot.js');
+
 ok(TK.length === 6, 'six trinkets defined');
 ok(SL === 3, 'the belt holds three');
 HG.game.trinkets = [];

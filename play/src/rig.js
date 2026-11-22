@@ -51,6 +51,7 @@ export function rigMat(color, flash = true) {
     m = new THREE.MeshLambertMaterial({ color });
     m.userData.shared = true;
     m.userData.flashable = flash;
+    m.userData.baseColor = m.color.clone();
     MAT.set(k, m);
   }
   return m;
@@ -64,6 +65,10 @@ export function rigMat(color, flash = true) {
 function joint(parent, x, y, z) {
   const g = new THREE.Group();
   g.position.set(x, y, z);
+  // the rest rotation, so a pooled body can be reset to it
+  g.userData.restX = 0;
+  g.userData.restY = 0;
+  g.userData.restZ = 0;
   parent.add(g);
   return g;
 }
@@ -99,6 +104,7 @@ export function humanoid(p) {
   chest.position.y = p.torsoLen * 0.7;
   spine.add(chest);
   spine.rotation.x = p.lean || 0;
+  spine.userData.restX = p.lean || 0;
   spine.userData.lean = p.lean || 0; // the pose blend needs the rest value
 
   // shoulders and head ride the spine so a lean carries them
@@ -247,6 +253,7 @@ export function quadruped(p) {
   neckMesh.position.y = p.neckLen * 0.4;
   neck.add(neckMesh);
   neck.rotation.x = -0.9;
+  neck.userData.restX = -0.9;
 
   const head = joint(neck, 0, p.neckLen * 0.85, 0);
   const skull = new THREE.Mesh(box(p.bodyR * 1.1, p.bodyR * 0.85, p.bodyR * 1.9), M.dark || M.body);
@@ -277,6 +284,7 @@ export function quadruped(p) {
   tailMesh.position.y = -p.tailLen * 0.4;
   tail.add(tailMesh);
   tail.rotation.x = 0.9;
+  tail.userData.restX = 0.9;
   parts.tail = tail;
 
   // ---- four legs, each with a knee --------------------------------------

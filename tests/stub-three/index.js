@@ -33,6 +33,8 @@ export class Vector3 {
 
 export class Color {
   constructor(hex = 0xffffff) { this.setHex(hex); }
+  clone() { const c = new Color(); c.r = this.r; c.g = this.g; c.b = this.b; return c; }
+  copy(o) { this.r = o.r; this.g = o.g; this.b = o.b; return this; }
   getHex() {
     const c = (v) => Math.round(v * 255) & 255;
     return (c(this.r) << 16) | (c(this.g) << 8) | c(this.b);

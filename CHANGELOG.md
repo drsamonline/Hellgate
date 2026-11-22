@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.59.0 — 2026-11-21
+
+**Enemy bodies are pooled**
+
+A rig body is 19-24 meshes. A wave of twelve enemies built and disposed about 250 meshes, mid-fight, which
+is a hitch on a phone and garbage for the collector to sweep.
+
+`BODY_POOL` keeps bodies per type, capped at 14 each. A body is reset when it is taken back out — joint
+rotations to their rest values, materials to their base colour, scale and visibility — so nothing carries
+over from the enemy that died in it. The cloned flash materials travel with the body, so a hit still
+flashes only the enemy that was hit.
+
+**Measured, not assumed** — five waves spawning 4 + 6 + 7 + 9 + 10 = 36 enemies built **16 bodies**, and
+reused the other 20. The test asserts the reuse rate, not just that a pool exists.
+
+**Tests** — 3 new assertions: a removed body returns to the pool, the next enemy of that type reuses the
+same object, and the reused body starts from rest rather than mid-stride.
+
+
 ## 1.58.0 — 2026-11-21
 
 **Decals on floors and ceilings were misoriented**

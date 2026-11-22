@@ -280,6 +280,86 @@ function proxyMat(color) {
   return m;
 }
 
+// ---------------------------------------------------------------------------
+// BODY POOL
+//
+// A rig body is 19-24 meshes. A wave of twelve enemies builds and disposes about
+// 250 meshes, and doing that mid-fight is a hitch on a phone. Bodies are kept
+// per type and reused; a body is reset when it is taken back out, so nothing
+// carries over from the enemy that died in it.
+// ---------------------------------------------------------------------------
+const BODY_POOL = new Map();
+const POOL_CAP = 14;
+let BODIES_BUILT = 0;
+
+function buildBody(typeName) {
+  BODIES_BUILT++;
+  const built = typeName === 'imp' ? makeImp()
+    : typeName === 'hound' ? makeHound()
+    : typeName === 'warden' ? makeWarden()
+    : typeName === 'spitter' ? makeSpitter()
+    : typeName === 'brute' ? makeBrute()
+    : typeName === 'wisp' ? makeWisp()
+    : makeGrunt();
+  // the materials are cloned once per body and reused with it; the hit flash
+  // writes to these clones and never to the shared originals
+  const flashMats = [];
+  const remap = new Map();
+  built.group.traverse((o) => {
+    if (!o.isMesh || !o.material) return;
+    const src = o.material;
+    if (!src.userData || !src.userData.flashable) return;
+    let m = remap.get(src);
+    if (!m) {
+      m = src.clone();
+      m.userData.shared = false;
+      m.userData.flashable = true;
+      m.userData.baseColor = m.color.clone();
+      remap.set(src, m);
+      flashMats.push(m);
+    }
+    o.material = m;
+  });
+  return { group: built.group, parts: built.parts, flashMats, typeName };
+}
+
+function acquireBody(typeName) {
+  const pool = BODY_POOL.get(typeName) || [];
+  let body = pool.pop();
+  if (!body) body = buildBody(typeName);
+  // reset: a body that died mid-wind-up must not come back glowing or folded
+  body.group.visible = true;
+  body.group.position.set(0, 0, 0);
+  body.group.rotation.set(0, 0, 0);
+  body.group.scale.set(1, 1, 1);
+  body.group.traverse((o) => {
+    if (o.rotation) o.rotation.set(o.userData.restX || 0, o.userData.restY || 0, o.userData.restZ || 0);
+    if (o.isMesh && o.material && o.material.emissive && o.material.userData.flashable) {
+      o.material.emissive.setHex(0x000000);
+      o.material.emissiveIntensity = 0;
+      if (o.material.color) o.material.color.copy(o.material.userData.baseColor || o.material.color);
+    }
+  });
+  return body;
+}
+
+function releaseBody(body) {
+  if (!body) return;
+  const pool = BODY_POOL.get(body.typeName) || [];
+  if (pool.length >= POOL_CAP) return;      // the pool is capped; let the rest go
+  body.group.visible = false;
+  pool.push(body);
+  BODY_POOL.set(body.typeName, pool);
+}
+
+/** How many bodies are parked per type — for the tests and the stats screen. */
+export function poolStats() {
+  const out = {};
+  for (const [k, v] of BODY_POOL) out[k] = v.length;
+  out.built = BODIES_BUILT;
+  return out;
+}
+
 /**
  * One enemy: mesh, state machine, health. Geometry is shared per type; body materials are cloned for the hit flash.
  */
@@ -290,38 +370,19 @@ export class Enemy {
     this.T = T;
     this.scene = scene;
 
-    const built = typeName === 'imp' ? makeImp()
-      : typeName === 'hound' ? makeHound()
-      : typeName === 'warden' ? makeWarden()
-      : typeName === 'spitter' ? makeSpitter()
-      : typeName === 'brute' ? makeBrute()
-      : typeName === 'wisp' ? makeWisp()
-      : makeGrunt();
+    const built = acquireBody(typeName);
+    this.bodyData = built;
     this.body = built.group;
     this.mesh = new THREE.Group();
     this.mesh.add(this.body);
     this.parts = built.parts;
 
-    // clone the body materials for this enemy only, so a hit can flash it
-    // without lighting up every other enemy on the map
-    this.flashMats = [];
+    // the body owns its cloned materials, so a hit flashes this enemy and no
+    // other; they travel with the body through the pool
+    this.flashMats = built.flashMats;
     this.flash = 0;
     this.charging = 0;   // 0..1 through the wind-up
     this.charged = false; // true while a wind-up glow needs clearing
-    const remap = new Map();
-    this.mesh.traverse((o) => {
-      if (!o.isMesh || !o.material) return;
-      const src = o.material;
-      if (!src.userData || !src.userData.flashable) return;
-      let m = remap.get(src);
-      if (!m) {
-        m = src.clone();
-        m.userData.shared = false;
-        remap.set(src, m);
-        this.flashMats.push(m);
-      }
-      o.material = m;
-    });
 
     // a single-slab stand-in, shown only when the enemy is far away
     this.proxy = new THREE.Mesh(PROXY_GEO, proxyMat(T.color));
@@ -828,8 +889,13 @@ export class Enemy {
       this.shadow.material.dispose();
       this.shadow = null;
     }
-    for (const m of this.flashMats) m.dispose();
-    this.flashMats.length = 0;
+    // the body goes back to the pool instead of the bin: its materials live on
+    if (this.bodyData) {
+      this.mesh.remove(this.body);
+      releaseBody(this.bodyData);
+      this.bodyData = null;
+      this.flashMats = [];
+    }
     this.removed = true;
   }
 

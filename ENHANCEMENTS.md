@@ -77,7 +77,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 52. **Real-time shadows** — a single directional shadow map with tight bounds, or baked vertex AO. The current lighting is flat ambient, which is why rooms read as boxes. `main.js` · XL · high
 53. **Lightmap / baked lighting per sector** — a per-cell light value baked at generation and written into vertex colours; the cheapest way to get contrast and mood. `levelmesh.js` · L · high — ✓ shipped
 54. **Collision broadphase** — a uniform grid or BVH for enemies and projectiles instead of scanning the list. Only matters past ~50 enemies, but that is where this is headed. `enemies.js` · L · medium
-55. **Object pooling for enemies** — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
+55. **Object pooling for enemies** — ✓ shipped (body pool per type, capped at 14 each; measured 16 bodies built for 36 enemies over five waves) — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
 56. **Deterministic replay** — record the input stream + seed, replay a run exactly. Turns bug reports into test cases and enables ghost runs. `main.js` · L · medium
 57. **Split the game loop from the renderer** — fixed-timestep simulation with an interpolated render. Removes the dt-dependent behaviour that makes 30 fps and 144 fps feel different. `main.js` · L · medium
 58. **Mobile/touch controls** — a virtual stick and a look area. Pointer lock does not exist on touch, and the fallback path is already there. `main.js` · L · medium — ✓ shipped

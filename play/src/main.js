@@ -9,7 +9,7 @@ import { buildLevelMeshes } from './levelmesh.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
 import { Player } from './player.js';
 import { Weapons, WEAPONS } from './weapons.js';
-import { EnemyManager } from './enemies.js';
+import { EnemyManager, poolStats } from './enemies.js';
 import { Projectiles } from './projectiles.js';
 import { Effects, glowSprite } from './effects.js';
 import { HUD } from './hud.js';
@@ -1883,7 +1883,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.58.0';
+const BUILD = '1.59.0';
 
 function stampBuild() {
   const el = document.getElementById('build');
@@ -2221,6 +2221,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
+  poolStats,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this
