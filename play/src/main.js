@@ -1231,6 +1231,7 @@ function chooseClass(id) {
   clock.getDelta();
 }
 
+let mapReturn = 'playing';
 function showZoneMap() {
   // the map is the "what now" screen: every zone, its state, and the one line
   // that says what the next action is
@@ -2028,9 +2029,11 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
   if (e.code === 'KeyJ') showDiary();
   if (e.code === 'KeyC') showCodex();
-  if (e.code === 'KeyM' && game.state === 'playing') { pauseGame(); showZoneMap(); }
+  if (e.code === 'KeyM' && game.state === 'playing') { mapReturn = 'playing'; pauseGame(); showZoneMap(); }
   if (e.code === 'F11') { toggleFullscreen(); e.preventDefault(); }
-  if (e.code === 'KeyM') {
+  // M is the map. It used to be mute as well, and both handlers fired on the
+  // same press: opening the map silenced the game.
+  if (e.code === 'KeyN') {
     changeSetting('muted', !settings.muted);
     hud.toast(settings.muted ? 'MUTED' : 'SOUND ON');
   }
@@ -2055,8 +2058,17 @@ document.getElementById('startBtn').addEventListener('click', () => {
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
 document.getElementById('loreClose')?.addEventListener('click', closeLore);
-document.getElementById('mapBtn')?.addEventListener('click', showZoneMap);
-document.getElementById('mapFromCleared')?.addEventListener('click', showZoneMap);
+document.getElementById('mapBtn')?.addEventListener('click', () => { mapReturn = game.state === 'cleared' ? 'cleared' : 'playing'; showZoneMap(); });
+document.getElementById('mapBack')?.addEventListener('click', () => {
+  // the map's Back button had no listener at all: a player on the map could not
+  // leave it without picking a zone, which restarts the run
+  if (mapReturn === 'cleared') { showScreen('cleared'); return; }
+  hideScreens();
+  if (game.state === 'map') game.state = 'playing';
+  requestLock();
+  clock.getDelta();
+});
+document.getElementById('mapFromCleared')?.addEventListener('click', () => { mapReturn = 'cleared'; showZoneMap(); });
 document.getElementById('clearedNext')?.addEventListener('click', () => {
   const i = ZONES.findIndex((z) => z.id === zone.id);
   beginZone(ZONES[Math.min(ZONES.length - 1, i + 1)]);

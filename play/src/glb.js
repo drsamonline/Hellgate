@@ -34,7 +34,16 @@ export function parseGLB(buffer) {
     const len = dv.getUint32(offset, true);
     const type = dv.getUint32(offset + 4, true);
     const start = offset + 8;
-    if (type === 0x4e4f534a) json = JSON.parse(new TextDecoder().decode(new Uint8Array(buffer, start, len)));
+    if (type === 0x4e4f534a) {
+      // a corrupt JSON chunk must be a readable error, not a parse exception from
+      // three frames deep in a loader
+      const text = new TextDecoder().decode(new Uint8Array(buffer, start, len));
+      try {
+        json = JSON.parse(text);
+      } catch (e) {
+        throw new Error('glb JSON chunk is not readable: ' + String((e && e.message) || e));
+      }
+    }
     else if (type === 0x004e4942) bin = new Uint8Array(buffer, start, len);
     offset = start + len + ((4 - (len % 4)) % 4);
   }

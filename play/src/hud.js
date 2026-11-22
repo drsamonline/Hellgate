@@ -93,7 +93,10 @@ export class HUD {
     if (!this.elFeed) return;
     const row = document.createElement('div');
     row.className = 'feedrow';
-    row.innerHTML = `<b>${what}</b><i>${how}</i>`;
+    // both are internal strings, but an innerHTML that trusts its caller is the
+    // habit that produces the bug later
+    const esc = (x) => String(x).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    row.innerHTML = `<b>${esc(what)}</b><i>${esc(how)}</i>`;
     // prepend, with an append fallback: the test DOM has no prepend
     if (this.elFeed.prepend) this.elFeed.prepend(row);
     else this.elFeed.appendChild(row);

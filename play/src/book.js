@@ -29,7 +29,16 @@ var EFFECT = {
   sub: function (a, b) { return a - b; }
 };
 
-function clone(v) { return JSON.parse(JSON.stringify(v)); }
+// A deep clone that cannot throw: structuredClone where it exists, a JSON round
+// trip otherwise, and the original value if even that fails. The book is data,
+// so a clone that throws would take the reader's place down with it.
+function clone(v) {
+  if (v === null || typeof v !== "object") return v;
+  if (typeof structuredClone === "function") {
+    try { return structuredClone(v); } catch (e) { /* fall through */ }
+  }
+  try { return JSON.parse(JSON.stringify(v)); } catch (e) { return v; }
+}
 
 function isObj(v) { return v !== null && typeof v === "object" && !Array.isArray(v); }
 
