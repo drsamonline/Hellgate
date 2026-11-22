@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.63.0 — 2026-11-21
+
+**A charger draws its lane on the floor**
+
+The brute and the warden wind up before they commit. The only warning was a scale pulse and a glow, which
+says "something is coming" and not "it is coming *here*". During the telegraph a charger now lays sparks
+along the floor from itself to its target — five points, every 70 ms, fading in a third of a second.
+
+It reuses the particle pool, so the warning costs no draw call. Standing in the lane is now a decision.
+
+**A pickup test that teleported onto the exit pad**
+
+The flake that survived three fixes: the test placed its pickup at `openCells[0]`, and when that cell was
+the exit pad, the teleport completed the wave, the wave change cleared every pickup, and both assertions
+failed. It now picks a cell more than 10 m from the exit and clears `exitOpen` first. Ten clean runs.
+
+
 ## 1.62.1 — 2026-11-21
 
 **A pickup test that walked away from its own pickup**

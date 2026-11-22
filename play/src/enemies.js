@@ -37,6 +37,7 @@ const TYPES = {
     attackRange: 2.8, attackCd: 1.6, telegraph: 0.6, damage: 10,
     melee: true, meleeRange: 2.6, meleeDamage: 24, sight: 26, color: 0x3d4a63, label: 'BRUTE', pitch: 0.65,
     charges: true,
+    laneColor: 0xff4422,
   },
   wisp: {
     // floats, so it ignores stairs and looks wrong doing it
@@ -579,9 +580,29 @@ export class Enemy {
             const c = this.chestPos();
             ctx.effects.burst({ x: c.x, y: c.y + 0.3, z: c.z }, 0xff7a22, 1, 1.2, 0.35, -2);
           }
+          // a charger draws its lane on the floor: the wind-up says "this is
+          // where I am going", and standing in it is a decision you can make
+          if (this.T.charges && this.chargeLaneT == null) this.chargeLaneT = 0;
+          if (this.T.charges) {
+            this.chargeLaneT += dt;
+            if (this.chargeLaneT > 0.07) {
+              this.chargeLaneT = 0;
+              const reach = Math.min(9, dist + 1.5);
+              const len = Math.hypot(dx, dz) || 1;
+              const nx = dx / len, nz = dz / len;
+              for (let i = 1; i <= 5; i++) {
+                const t = (i / 6) * reach;
+                ctx.effects.burst(
+                  { x: this.pos.x + nx * t, y: this.pos.y + 0.12, z: this.pos.z + nz * t },
+                  this.T.laneColor || 0xff5522, 1, 0.05, 0.3, 0
+                );
+              }
+            }
+          }
         } else if (!this.fired) {
           this.fired = true;
           this.charging = 0;
+          this.chargeLaneT = null;
           this.mesh.scale.set(1, 1, 1);
           this.doAttack(ctx, dist, dx, dz, canSee, playerEye);
         } else if (this.stateT > tg + 0.35) {

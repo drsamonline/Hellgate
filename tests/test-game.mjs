@@ -408,6 +408,26 @@ const stamp = document.getElementById('build');
 ok(!!stamp, 'the title screen has a build stamp');
 ok(/BUILD \d+\.\d+\.\d+/.test(stamp.textContent), 'and it names the version: ' + stamp.textContent);
 
+console.log('\n== the charge lane ==');
+{
+  HG.enemies.clear();
+  HG.player.health = 110;
+  const brute = HG.enemies.spawnAt('brute', HG.player.pos.x + 6, HG.player.pos.z, 1);
+  frames(1);
+  brute.setState('ATTACK');
+  brute.stateT = 0.05;
+  // count spawns, not living particles: the ones from the last test expire
+  const before = HG.effects.spawned || 0;
+  frames(8);
+  const after = HG.effects.spawned || 0;
+  ok(after > before, 'a charging brute lays sparks on the floor (' + (after - before) + ' particles)');
+  ok(brute.T.laneColor != null, 'and the lane has its own colour');
+  // leave a live enemy: clearing them completes the wave, opens the exit and
+  // turns every door lamp green, which is the next test's subject
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', HG.player.pos.x + 9, HG.player.pos.z, 1);
+}
+
 console.log('\n== ambient particles per zone ==');
 {
   const { ZONES } = await import('../play/src/world.js');
@@ -1245,7 +1265,11 @@ HG.enemies.clear();
 }
 HG.player.health = 100;
 const before2 = HG.game.pickups.length;
-const cell = HG.level.openCells[0];
+// a cell far from the exit pad: teleporting onto the pad completes the wave,
+// and a wave change clears every pickup, which is not what this test is about
+const cell = HG.level.openCells.find((c) =>
+  Math.hypot(c.wx - HG.level.exit.x, c.wz - HG.level.exit.z) > 10) || HG.level.openCells[0];
+HG.game.exitOpen = false;
 HG.player.pos.set(cell.wx, 0, cell.wz);
 const fakeMesh = {
   visible: true, rotation: { y: 0 }, position: { y: 0 },

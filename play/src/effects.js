@@ -193,6 +193,7 @@ export class Effects {
 
   burst(pos, color, count = 10, speed = 4, life = 0.7, gravity = 14, size = 1) {
     const c = new THREE.Color(color);
+    this.spawned = (this.spawned || 0) + count;   // a counter the tests can trust
     for (let i = 0; i < count; i++) {
       const p = this.parts[this.pCursor];
       const idx = this.pCursor;
