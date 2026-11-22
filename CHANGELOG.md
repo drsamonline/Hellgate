@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.76.0 — 2026-11-21
+
+**A full audit of all 37 modules, and five real bugs**
+
+Three scripted sweeps plus a browser walk of the entire UI journey
+(`tools/audit-flow.mjs`, new). The record is in `documentation/audit.md`.
+
+| Finding | Severity | Fix |
+| --- | --- | --- |
+| `M` opened the map **and** toggled mute — the mute handler was never removed when the map took the key | high | Mute is `N` |
+| The map's Back button had **no listener at all** — a player on the map could only leave by picking a zone, which restarts the run | high | `#mapBack` returns to where the map was opened from |
+| `JSON.parse` on a glb chunk threw from three frames inside a loader | medium | A readable error |
+| `clone()` in the book engine threw on values JSON cannot represent | medium | `structuredClone`, then JSON, then the original |
+| The kill feed built `innerHTML` from two unescaped strings | medium | Escaped |
+
+**Checked and deliberately left alone** — six functions over 90 lines (each one job with a long body), six
+`== null` (which catch `undefined` too, unlike `=== null`), a `parseInt` that has a radix, three boot-time
+canvas allocations, six screen states that are shown rather than branched on, and two `index - 1` loop
+bounds. Each with its reason in the audit file.
+
+**The flow audit is the new gate**: title → intro → class → play → journal, inventory, codex, map → the map
+key → pause and resume → copy report → cleared, choice, upgrade, map → death. Thirteen steps, and it found
+the two high-severity bugs on its first run.
+
+
 ## 1.75.0 — 2026-11-21
 
 **A daily: one run a day, the same seed for everyone**
