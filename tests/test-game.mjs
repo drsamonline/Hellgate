@@ -538,6 +538,36 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== achievements ==');
+{
+  const A = await import('../play/src/achievements.js');
+  ok(A.ACHIEVEMENTS.length >= 14, 'there are ' + A.ACHIEVEMENTS.length + ' achievements');
+  const h = A.emptyHistory();
+  ok(A.check({ kills: 0, wave: 1 }, h).length === 0, 'a fresh run unlocks nothing');
+  // the predicate reads the history, not the run: "kill 100 imps" is a lifetime
+  // number, "clear a zone without dying" is a run
+  h.kills = 1;
+  const fresh = A.check({ kills: 1, wave: 1 }, h);
+  ok(fresh.includes('first'), 'the first kill unlocks FIRST BLOOD');
+  ok(A.check({ kills: 1, wave: 1 }, h).length === 0, 'and it is only awarded once');
+  h.kills = 60;
+  const more = A.check({ kills: 3, wave: 11, score: 0 }, h);
+  ok(more.includes('fifty') && more.includes('wave10'), 'history unlocks the cumulative ones (' + more.join(', ') + ')');
+
+  // a corrupt save is repaired, not trusted
+  const bad = { kills: 'lots', unlocked: 'nope', byType: 7, best: NaN };
+  const store = { getItem: () => JSON.stringify(bad), setItem() {} };
+  const savedLS = globalThis.localStorage;
+  globalThis.localStorage = store;
+  const repaired = A.loadHistory();
+  ok(repaired.kills === 0 && Array.isArray(repaired.unlocked) && repaired.best === 0,
+    'a corrupt history is repaired field by field, not read as-is');
+  globalThis.localStorage = savedLS;
+
+  ok(A.progressOf({ unlocked: ['first', 'gate'] }).done === 2, 'progress counts what is unlocked');
+  ok(A.achievementName('first') === 'FIRST BLOOD', 'and names can be looked up for a toast');
+}
+
 console.log('\n== the codex ==');
 {
   const { buildCodex } = await import('../play/src/codex.js');

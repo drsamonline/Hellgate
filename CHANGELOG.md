@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.74.0 — 2026-11-21
+
+**Fifteen things worth keeping**
+
+Every number in this game belonged to one run and died with it. `play/src/achievements.js` keeps the small
+set worth keeping: a table of predicates over the player's history, checked at the moments that can change
+them, stored beside the zone progress.
+
+| Kind | Examples |
+| --- | --- |
+| Cumulative | 50 kills, 500 kills, 25 elites, every enemy type at least once |
+| Campaign | clear the first zone, clear five, clear all nine in one run |
+| In a run | reach wave 10, reach wave 20, score 10,000, collect every relic in a zone, finish without dying |
+
+A predicate reads `(run, history)`, and the split is the design: "kill 500 enemies" is a lifetime number,
+"clear a zone without dying" is a run. An unlocked achievement stays unlocked even if the predicate would
+now be false.
+
+They appear in the **codex** as `DONE` and `GOAL` entries, so they are searchable like everything else, and
+an unlock says so once with a toast.
+
+**A corrupt history is repaired, not trusted** — every field is type-checked on load, because this file is
+written mid-run and an interrupted write is the likeliest corruption in the game.
+
+**A shadowed global** — the history variable was first called `history`, which shadows `window.history` and
+broke `history.replaceState` in `startGame`. The seed stopped reaching the URL. The suite caught it; the
+variable is `record` now.
+
+**Tests** — 8 new assertions, including the corrupt-history repair.
+
+
 ## 1.73.0 — 2026-11-21
 
 **The codex: what the run has taught you, searchable on C**

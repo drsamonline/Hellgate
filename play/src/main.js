@@ -13,6 +13,7 @@ import { EnemyManager, poolStats, clearBodyPool, TYPES } from './enemies.js';
 import { loadModels, modelReport, installModel, uninstallModel } from './models.js';
 import { ZONE_BOOK, effectsFor } from './zonebook.js';
 import { buildCodex } from './codex.js';
+import { ACHIEVEMENTS, loadHistory, saveHistory, check as checkAchievements, achievementName, progressOf } from './achievements.js';
 import * as Book from './book.js';
 import { Projectiles } from './projectiles.js';
 import { Effects, glowSprite } from './effects.js';
@@ -96,6 +97,7 @@ let weapons = null;
 
 const settings = clampSettings(loadSettings());
 const progress = loadProgress();
+const record = loadHistory();
 window.__THREE = THREE; // for tools that measure the scene
 
 // A run in progress: written at the start of every wave, cleared on death or on
@@ -391,6 +393,12 @@ function buildRun(seed, zoneDef) {
     if (e && e.type) {
       game.killsByType = game.killsByType || {};
       game.killsByType[e.type] = (game.killsByType[e.type] || 0) + 1;
+      record.byType[e.type] = (record.byType[e.type] || 0) + 1;
+      record.kills++;
+      if (e.elite) record.elites++;
+      if (weaponName === 'BLADE') record.blade++;
+      record.types = Object.keys(record.byType).length;
+      awardFor();
     }
     // an elite is worth more than the same body without the rim light
     const worth = e && e.elite ? 3 : 1;
@@ -1474,7 +1482,7 @@ function showCodex() {
   game.state = 'codex';
   const el = document.getElementById('codexBody');
   const input = document.getElementById('codexSearch');
-  codexState = buildCodex({ TYPES, TRINKETS, ZONES, kills: game.killsByType || {} });
+  codexState = buildCodex({ TYPES, TRINKETS, ZONES, kills: game.killsByType || {}, achievements: { table: ACHIEVEMENTS, hist: record } });
   if (input) input.value = '';
   renderCodex('');
   showScreen('codex');
@@ -1563,10 +1571,42 @@ function renderInventory() {
     </div>`;
 }
 
+/**
+ * Check the achievement table against the live run, say what was unlocked, and
+ * keep the history. Called at every moment that can change it.
+ */
+function awardFor(extra = {}) {
+  const run = {
+    kills: game.kills,
+    wave: game.wave,
+    zone: zone && zone.id,
+    score: game.score,
+    elite: false,
+    relic: game.relicsTotal > 0 && game.relics.length >= game.relicsTotal,
+    survived: game.state !== 'dead',
+    ...extra,
+  };
+  const fresh = checkAchievements(run, record);
+  if (fresh.length) {
+    saveHistory(record);
+    for (const id of fresh) {
+      hud.toast('UNLOCKED \u00b7 ' + achievementName(id), 2.6);
+      audio.play('key');
+      note('achievement: ' + id);
+    }
+  }
+  return fresh;
+}
+
 function zoneCleared() {
   note('zone cleared: ' + (zone && zone.id));
 
   if (audio) { audio.stopDrone(); audio.stopBed(); }
+  record.zones++;
+  record.zonesCleared = Math.max(record.zonesCleared, (progress.cleared || []).length + 1);
+  record.best = Math.max(record.best || 0, game.score);
+  saveHistory(record);
+  awardFor();
   game.state = 'cleared';
   releaseLock();
   clearZone(progress, zone.id, game.score);
@@ -1666,6 +1706,11 @@ function startGame(seed, opts = {}) {
 
 function pauseGame() {
   if (audio) { audio.stopDrone(); audio.stopBed(); }
+  record.zones++;
+  record.zonesCleared = Math.max(record.zonesCleared, (progress.cleared || []).length + 1);
+  record.best = Math.max(record.best || 0, game.score);
+  saveHistory(record);
+  awardFor();
   if (game.state !== 'playing') return;
   game.state = 'paused';
   input.fire = false;
@@ -1718,6 +1763,11 @@ function gameOver() {
   if (game.state !== 'playing') return;
   game.state = 'dead';
   if (audio) { audio.stopDrone(); audio.stopBed(); }
+  record.zones++;
+  record.zonesCleared = Math.max(record.zonesCleared, (progress.cleared || []).length + 1);
+  record.best = Math.max(record.best || 0, game.score);
+  saveHistory(record);
+  awardFor();
   clearRun();
   input.fire = false;
   audio.play('dead');
@@ -2008,7 +2058,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.73.0';
+const BUILD = '1.74.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2424,6 +2474,7 @@ window.HG = {
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
   takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex,
+  history: record, awardFor, achievementProgress: () => progressOf(record),
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this

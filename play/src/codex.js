@@ -68,6 +68,20 @@ export function entries(tables) {
       search: [z.id, z.name, z.blurb, z.objective, z.bed, 'zone'].join(' '),
     });
   }
+  // achievements: the only entries that are about you rather than the world
+  const ach = tables.achievements;
+  if (ach && ach.table) {
+    const done = new Set((ach.hist && ach.hist.unlocked) || []);
+    for (const a of ach.table) {
+      out.push({
+        kind: done.has(a.id) ? 'DONE' : 'GOAL',
+        name: a.name,
+        text: a.desc,
+        note: done.has(a.id) ? 'unlocked' : 'locked',
+        search: [a.id, a.name, a.desc, 'achievement'].join(' '),
+      });
+    }
+  }
   return out;
 }
 
