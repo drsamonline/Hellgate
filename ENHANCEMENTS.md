@@ -81,7 +81,11 @@ Cheap, low-risk, immediately noticeable. All `S`.
    materials", "flash materials are not the shared ones", "imps share one torso geometry", and the two smoke
    budgets above. That is five assertions resting on per-body meshes.
 
-   **Measure before writing it.** The win is the draw calls an enemy body costs when it is in frustum, which is
+   **Measure before writing it — and the harness cannot measure it yet.** `smoke.mjs` spawns its eight imps
+   behind the camera, so the level-alone frame (20 calls, 3 382 triangles) and the eight-enemy frame (21 calls,
+   3 384 triangles) differ by nothing that could be a body: the budget has been passing on an empty view (see
+   pass seventeen in `documentation/audit.md`). Spawn along the camera's forward vector first. The win is the
+   draw calls an enemy body costs when it is in frustum, which is
    not the same as 13 × the enemy count: at wave 2 on the gate the whole frame was **43 calls** with bodies at
    13 (imp) and 16 (grunt) meshes each, so only a few bodies are in view at once in a room this size. A
    trustworthy number needs `HG.renderStats.calls` sampled with 0, 2, 4, 8, 16 and 32 bodies placed directly

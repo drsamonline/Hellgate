@@ -367,3 +367,25 @@ whole cell — and the winding assertion fails on the old code with exactly the 
 | `models.js` `getModel()` returns a clone with shared materials | Not a defect: `buildBody` clones every material before use |
 | `textures.js`, `items.js`, `effects.js` | Read; nothing found. Pools are bounded, decal orientation is explicit, every key in `FLOOR_KEY`/`WALL_KEY` resolves |
 
+## Pass seventeen — the draw-call budget was measuring an empty view
+
+Chasing a number for #45 turned up a measurement fault rather than a code fault. `smoke.mjs` has two draw-call
+budgets, and both spawn their enemies at `player.pos.x + 4 … z + 4` — a fixed corner of the world, which is
+behind the camera on most spawns. The two frames print their own numbers:
+
+| Frame | Calls | Triangles |
+| --- | --- | --- |
+| The level alone | 20 | 3 382 |
+| Eight imps spawned by the budget check | 21 | 3 384 |
+
+Eight imp bodies at 13 meshes each cannot fit in **one draw call and two triangles**. Those enemies were not
+drawn at all: the budget has been passing by measuring a frame with no enemy in it.
+
+**What this means for the roadmap.** The 43-draw-call figure carried through passes fourteen and fifteen, and
+the "eight enemies under 160 calls" ceiling, were taken with bodies out of frustum. #45 (instancing) cannot be
+measured, let alone justified, until the harness places enemies in view: spawn along
+`camera.getWorldDirection()` at 3–10 m, then sample `HG.renderStats.calls` at 0, 2, 4, 8, 16 and 32 bodies.
+
+**Not fixed here.** Correcting the spawn direction changes what the budget asserts, and the ceiling has to be
+re-baselined from the new measurement in the same commit — a two-number change that should be made once, with
+a trustworthy sample in hand. Recorded so the next person does not inherit a budget that cannot fail.
