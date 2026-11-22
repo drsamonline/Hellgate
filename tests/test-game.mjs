@@ -538,6 +538,38 @@ console.log('\n== the report ==');
   ok(rep.split('\n').length > 10, 'and is long enough to be useful (' + rep.split('\n').length + ' lines)');
 }
 
+console.log('\n== the codex ==');
+{
+  const { buildCodex } = await import('../play/src/codex.js');
+  const { TYPES } = await import('../play/src/enemies.js');
+  const { TRINKETS } = await import('../play/src/loot.js');
+  const { ZONES } = await import('../play/src/world.js');
+  const cx = buildCodex({ TYPES, TRINKETS, ZONES, kills: { imp: 7 } });
+  const total = Object.keys(TYPES).length + TRINKETS.length + ZONES.length;
+  ok(cx.entries.length === total, 'the codex has an entry for every enemy, trinket and zone (' + cx.entries.length + ')');
+  ok(cx.entries.some((e) => e.note === '7 killed'), 'and counts the kills you have made');
+
+  const kiln = cx.search('kiln');
+  ok(kiln.length > 0 && /KILN/.test(kiln[0].item.name), 'searching a zone name finds the zone (' + (kiln[0] && kiln[0].item.name) + ')');
+  const typo = cx.search('kilm');
+  ok(typo.length > 0 && /KILN/.test(typo[0].item.name), 'and a typo still finds it');
+  const fire = cx.search('fire');
+  ok(fire.length > 0, 'searching an effect finds entries (' + fire.length + ')');
+  ok(cx.search('').length > 10, 'an empty query lists everything');
+  ok(cx.search('zzzz').length === 0, 'and nonsense finds nothing');
+
+  // the screen itself
+  HG.game.state = 'playing';
+  HG.showCodex();
+  ok(HG.game.state === 'codex', 'C opens the codex');
+  const body = document.getElementById('codexBody').innerHTML;
+  ok(body.length > 200 && body.includes('codexentry'), 'and it renders entries');
+  HG.renderCodex('imp');
+  ok(document.getElementById('codexBody').innerHTML.includes('IMP'), 'the search box filters it');
+  HG.closeCodex();
+  ok(HG.game.state === 'playing', 'and it closes back to the run');
+}
+
 console.log('\n== pixel art ==');
 {
   const { quantize, ditherTo, BAYER4 } = await import('../play/src/pixel.js');

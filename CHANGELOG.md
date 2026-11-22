@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.73.0 — 2026-11-21
+
+**The codex: what the run has taught you, searchable on C**
+
+Twenty-three entries, generated from the live tables so the codex can never disagree with the game:
+
+| Kind | What it shows |
+| --- | --- |
+| Enemy (8) | Real health, damage, telegraph time, how it behaves, and your kill count against it |
+| Trinket (6) | What it actually does, and that it is found on a kill |
+| Zone (9) | The blurb, the threat scalar and the ambient bed |
+
+The search is `play/src/search.js`, ported from **`search-kit`** (same licence): a tf-idf inverted index
+with prefix matching and a Levenshtein fallback, so "kiln fire" ranks the kiln first and a typed "kilm"
+still finds it.
+
+`game.killsByType` is now counted on every kill, which is what turns the enemy entries from a stat sheet
+into a record of the run.
+
+**Tests** — 11 new assertions: the entry count matches the tables, a kill count shows, a zone name finds
+the zone, a typo still finds it, an effect word finds entries, nonsense finds nothing, C opens the codex,
+it renders, the search box filters it, and it closes back to the run.
+
+
 ## 1.72.0 — 2026-11-21
 
 **The textures are pixel art now, not photographic mush**

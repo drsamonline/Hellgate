@@ -540,6 +540,17 @@
   .screen{padding:28px 20px}
   /* the small print under every screen */
   .screen .keys{color:var(--ink-ghost)}
+  .codexsearch{width:min(520px,86vw);margin:0 0 4px;padding:10px 12px;background:rgba(0,0,0,.55);
+    border:1px solid var(--amber-dim);border-radius:var(--r);color:var(--ink);font-family:inherit;
+    font-size:12px;letter-spacing:.14em;text-transform:uppercase;text-align:center}
+  .codexsearch:focus{outline:none;border-color:var(--amber);box-shadow:0 0 0 2px var(--amber-faint)}
+  .codexbody{display:block;max-height:52vh;overflow:auto;width:min(760px,94vw)}
+  .codexbody .codexentry{margin:0 0 6px}
+  .codexentry{display:flex;gap:10px;align-items:baseline;justify-content:space-between;
+    border:1px solid var(--amber-faint);border-radius:var(--r);padding:7px 10px;font-size:11px;
+    letter-spacing:.08em;color:var(--ink-dim)}
+  .codexentry b{color:var(--amber);font-weight:600;flex:0 0 auto}
+  .codexentry span{text-align:right;color:var(--ink-faint)}
   .reportout{margin:12px 0 0;max-width:min(680px,90vw);max-height:30vh;overflow:auto;text-align:left;
     font-size:10px;line-height:1.6;letter-spacing:.04em;color:#9d8f7c;background:rgba(0,0,0,.45);
     border:1px solid rgba(255,180,84,.18);border-radius:3px;padding:10px 12px;display:none;white-space:pre-wrap}
@@ -654,6 +665,13 @@
       <h2>STATUS</h2>
       <p class="sub">tab or esc to close</p>
       <div id="invBody" class="invgrid"></div>
+    </section>
+
+    <section id="codex" class="screen">
+      <h2>CODEX</h2>
+      <p class="sub">c or esc to close · type to search</p>
+      <input id="codexSearch" class="codexsearch" placeholder="search the codex" autocomplete="off" spellcheck="false" />
+      <div id="codexBody" class="invgrid codexbody"></div>
     </section>
 
     <section id="lore" class="screen">

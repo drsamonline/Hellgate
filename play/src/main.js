@@ -12,6 +12,7 @@ import { Weapons, WEAPONS } from './weapons.js';
 import { EnemyManager, poolStats, clearBodyPool, TYPES } from './enemies.js';
 import { loadModels, modelReport, installModel, uninstallModel } from './models.js';
 import { ZONE_BOOK, effectsFor } from './zonebook.js';
+import { buildCodex } from './codex.js';
 import * as Book from './book.js';
 import { Projectiles } from './projectiles.js';
 import { Effects, glowSprite } from './effects.js';
@@ -244,6 +245,7 @@ const game = {
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
   upgrades: {},
+  killsByType: {},      // what the codex counts
   flags: {},            // what the story choices have made you
   bookAt: null,         // where the zone book has got to
   weaponKills: {},
@@ -386,6 +388,10 @@ function buildRun(seed, zoneDef) {
   enemies.onKill = (e, weaponName) => {
     game.kills++;
     game.waveKills++;
+    if (e && e.type) {
+      game.killsByType = game.killsByType || {};
+      game.killsByType[e.type] = (game.killsByType[e.type] || 0) + 1;
+    }
     // an elite is worth more than the same body without the rim light
     const worth = e && e.elite ? 3 : 1;
     game.score += Math.round(50 * worth * (game.wave || 1) * effectsFor(game.flags).scoreMul);
@@ -1458,6 +1464,40 @@ function showDiary() {
   releaseLock();
 }
 
+/**
+ * The codex: every enemy, trinket and zone the run knows about, searchable.
+ * It is built from the live tables each time it opens, so it cannot go stale.
+ */
+let codexState = null;
+function showCodex() {
+  if (game.state !== 'playing') return;
+  game.state = 'codex';
+  const el = document.getElementById('codexBody');
+  const input = document.getElementById('codexSearch');
+  codexState = buildCodex({ TYPES, TRINKETS, ZONES, kills: game.killsByType || {} });
+  if (input) input.value = '';
+  renderCodex('');
+  showScreen('codex');
+  if (input && input.focus) input.focus();
+}
+
+function renderCodex(q) {
+  const el = document.getElementById('codexBody');
+  if (!el || !codexState) return;
+  const rows = codexState.search(q, 40);
+  el.innerHTML = rows.length
+    ? rows.map((r) => `<div class="codexentry"><b>${escapeHtml(r.item.kind)} · ${escapeHtml(r.item.name)}</b><span>${escapeHtml(r.item.text)}${r.item.note ? ' — ' + escapeHtml(r.item.note) : ''}</span></div>`).join('')
+    : '<div class="codexentry"><b>NOTHING</b><span>no entry matches that</span></div>';
+}
+
+function closeCodex() {
+  if (game.state !== 'codex') return;
+  game.state = 'playing';
+  hideScreens();
+  requestLock();
+  clock.getDelta();
+}
+
 function closeDiary() {
   if (game.state !== 'diary') return;
   game.state = 'playing';
@@ -1919,6 +1959,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyF') swingBlade();
   if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
   if (e.code === 'KeyJ') showDiary();
+  if (e.code === 'KeyC') showCodex();
   if (e.code === 'KeyM' && game.state === 'playing') { pauseGame(); showZoneMap(); }
   if (e.code === 'F11') { toggleFullscreen(); e.preventDefault(); }
   if (e.code === 'KeyM') {
@@ -1967,7 +2008,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.72.0';
+const BUILD = '1.73.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2037,6 +2078,8 @@ document.getElementById('journalBtn')?.addEventListener('click', () => { game.st
 document.getElementById('invBtn')?.addEventListener('click', () => { game.state = 'paused'; toggleInventory(); });
 document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
 document.getElementById('reportBtn')?.addEventListener('click', () => { copyReport(); });
+document.getElementById('codexSearch')?.addEventListener('input', (e) => renderCodex(e.target.value));
+document.getElementById('codexSearch')?.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeCodex(); e.stopPropagation(); });
 // bound by id, not by a class query: the test double can find an id and cannot
 // find a selector, and a mode you cannot test is a mode that breaks quietly
 const modeButtons = Object.keys(MODES).map((k) => [k, document.getElementById('mode' + k[0].toUpperCase() + k.slice(1))]);
@@ -2380,7 +2423,7 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
-  takeChoice, renderChoice, ZONE_BOOK,
+  takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex,
   showDiary, closeDiary, objectiveLine,
   get renderStats() { return lastRenderStats; },
   // tools measure the post pass by switching it; nothing in the game reads this
