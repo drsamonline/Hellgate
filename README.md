@@ -175,6 +175,8 @@ which is how the game was checked against the current release and not only again
 
 ## Documentation
 
+- **[HANDOVER.md](HANDOVER.md)** — the whole project in one file: state, gates, release process, the traps, and what is left. Read this first.
+
 - [Getting started](documentation/getting-started.md) — clone to first run in five minutes
 - [Architecture](documentation/architecture.md) — modules, data flow, render loop
 - [Balance](documentation/balance.md) — the curve, the dials, and what is not measured

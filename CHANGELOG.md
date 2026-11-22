@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.90.1 — 2026-11-22
+
+**`HANDOVER.md` — the project in one file**
+
+State, the gates and their order, the release process, the module map, the traps that cost a failed attempt
+each, the defect class this codebase keeps producing, what is left on the roadmap, what was measured and
+rejected, and how to work on it.
+
+Written so a person or an agent can pick this up cold. Linked from the README.
+
+
 ## 1.90.0 — 2026-11-21
 
 **Every enemy has a voice**
