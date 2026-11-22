@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v1.91.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,15 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 1.90.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 90, `v1.0.0` → `v1.90.0` |
+| Version | 1.91.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 91, `v1.0.0` → `v1.91.0` |
 | Modules | 37 in `play/src/`, ~11,600 lines |
 | Assertions | 885 across 4 suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **43** at 1280×720, gate, wave 2 (was 68 before the joint merge) |
 | Roadmap | 50 shipped, 3 measured-and-rejected, 10 open of 63 |
+| Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
 
@@ -189,11 +190,20 @@ restored *before* `applyClass`, which is what reads them.
 | Texture atlas | The whole level is **4 draw calls of 43**, and an atlas cannot tile — walls repeat UV 2.4, which needs a `fract()` shader or subdivided quads |
 | Collision broadphase | Not needed at the current enemy counts; the list scan is not the bottleneck |
 
-### Audit tail — modules not yet read line by line
+### Audit tail — closed at 1.91.0
 
-`world.js`, `lore.js`, `items.js`, `props.js`, `minimap.js`, `models.js`, `textures.js`, `level.js`,
-`levelmesh.js`, `cinematic.js`, `effects.js`. The audit found a real bug in every module it read closely, so
-these are worth the read.
+All 37 modules have now been read line by line. The last eleven (`world.js`, `lore.js`, `items.js`,
+`props.js`, `minimap.js`, `models.js`, `textures.js`, `level.js`, `levelmesh.js`, `cinematic.js`,
+`effects.js`) produced nine findings in six modules — pass sixteen in `documentation/audit.md`, with the
+measurements. The pattern held: every module read closely had something in it.
+
+Two of those findings are worth remembering as traps:
+
+- **A stair band's floor is a function of position, not a number.** `floorHeightAt` is the single source of
+  truth for it, and `levelmesh` now samples that function rather than recomputing heights from
+  `stairLow`/`stairHigh`. Recomputing is how the mesh ended up inside out on one axis and flipped on another.
+- **`test-geometry.mjs` cannot see a surface that faces into its own open cell.** A tread facing down has open
+  space under it, so the shell check passes. Stairs have their own assertions now.
 
 ## 7. How to work on it
 

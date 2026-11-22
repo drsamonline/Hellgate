@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.91.0 — 2026-11-23
+
+**Audit pass sixteen — the eleven modules nobody had read**
+
+The audit had found a real bug in every module it read closely. It read the last eleven and found nine more,
+plus one test that could not fail and two that measured the world instead of the code.
+
+| Finding | Module | What a player saw |
+| --- | --- | --- |
+| The stair ramp interpolated over the far half of its cell | `level.js` | The last step was `rise/2` — up to 0.7 m, past `MAX_STEP`. A dais taller than a metre was a wall |
+| z-band treads and risers were built inside out | `levelmesh.js` | 13 of 20 bands on a test level were see-through from above: every tread faced the void |
+| Stair heights ignored `flip` | `levelmesh.js` | 55 of 282 bands rendered climbing the opposite way to the ramp you walked up |
+| A full-height wall was drawn at the top of every band | `levelmesh.js` | A staircase you could climb but not see over |
+| The dais ignored a 0.5 m ledge already in the room | `level.js` | A seam exactly `MAX_STEP` tall at the platform, and over it once the ramp was short |
+| The flow field routed enemies through crates | `level.js` | Enemies walked into a crate and ground against it — the stall #17 fixed for walls |
+| Terminals were drawn with replacement | `lore.js` | ~52 % of levels had two terminals with one title; the second paid nothing and read as already read |
+| Secret rooms were only offered on the west and east walls | `level.js` | The south wall never held one, and the north wall only at a corner |
+| `HUD.damageNumber` was defined twice | `hud.js` | The reduced-motion toggle for damage numbers was in the copy that never ran, so it did nothing |
+| `loadProgress` did not validate `best` | `world.js` | A saved record without it threw on the next zone clear |
+| The minimap's secret-wall branch was dead | `minimap.js` | Nothing — but two `continue`s where one was meant is how the next bug starts |
+
+**The tests were part of the finding.** The stair normals were invisible to the shell check, because a tread
+facing down still has open space under it; the geometry suite now reads every stair cell and requires three
+upward treads, its risers, and a ramp that climbs the whole cell. The reduced-motion assertion counted
+`document.body.children`, and the numbers live in `#dmgnums`, so it passed either way; it reads the pool
+cursor now. The damage-number cursor assertion compared an absolute value against a pool that earlier tests
+also advance; it compares the delta. The hit-flash assertion waited a fixed 24 frames and called that "decays
+to nothing"; it waits for the decay.
+
+Twelve assertions hold all of it, and the winding one fails on the old code: 13 of 20, 22 of 36 and 10 of 31
+bands, exactly the z-band counts.
+
 ## 1.90.1 — 2026-11-22
 
 **`HANDOVER.md` — the project in one file**

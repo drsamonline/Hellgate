@@ -307,3 +307,63 @@ merge that silently loses a transform looks like a body that is missing an arm, 
 
 The smoke budgets were tightened to match: eight enemies under **160** calls (was 240) and a merged body at most
 **18** meshes. A ceiling that is never lowered is not a budget.
+
+## Pass sixteen — the last eleven modules, and a surface no test could see
+
+The audit tail was `world.js`, `lore.js`, `items.js`, `props.js`, `minimap.js`, `models.js`, `textures.js`,
+`level.js`, `levelmesh.js`, `cinematic.js`, `effects.js`. Read line by line, nine findings, six modules.
+
+| Finding | Module | Severity | Fix |
+| --- | --- | --- | --- |
+| The stair ramp interpolated over the far half of its cell | `level.js` | high | `t + 0.5`: a cell spans half a cell either side of its centre |
+| z-band treads and risers were built in descending order | `levelmesh.js` | high | Winding derived from the two heights |
+| Stair heights were computed from `stairLow/High`, ignoring `flip` | `levelmesh.js` | high | Every height sampled from `floorHeightAt` |
+| A full-height wall at the top of every band | `levelmesh.js` | high | Neighbour spans read the floor at the shared edge |
+| The dais ignored a 0.5 m ledge in the room | `level.js` | medium | The room is levelled to its own floor first |
+| The flow field routed enemies through crates | `level.js` | high | A crate is skipped until it is in `level.broken` |
+| Terminals drawn with replacement, by title and by room | `lore.js` | medium | Drawn without replacement, `read` keyed by title |
+| Secret candidates held `x` fixed on the north and south walls | `level.js` | medium | Each wall walked along its own axis |
+| `damageNumber` defined twice; the toggle in the dead copy | `hud.js` | medium | One definition, guard on the live one |
+| `loadProgress` did not validate `best` | `world.js` | low | Repaired on load |
+| The minimap's secret-wall branch was dead code | `minimap.js` | low | One `continue`, with the reason |
+
+### The numbers
+
+Measured before and after, over the nine zone seeds:
+
+| Measurement | Before | After |
+| --- | --- | --- |
+| Stair cells on the nine zones | 282 | 282 |
+| Bands whose ramp missed the platform at the shared edge | 223 | **0** |
+| Worst height change between two samples 0.1 m apart | **1.19 m** | **0.07 m** |
+| z-band treads facing the void, geom1 | 13 of 20 | **0** |
+| Bands rendered against `flip`, nine zones | 55 | **0** |
+| Crate cells the flow field routed through | 14 of 14 | **0** |
+| Levels with two terminals of one title | ~52 % | **0** |
+
+### Why the shell test could not see it
+
+`test-geometry.mjs` checks that a point just off each triangle, along its normal, is in open space. A tread
+facing down at the floor of an open cell passes that: the space under the tread is the same open cell. The
+suite now reads every stair cell directly — three upward treads, risers present, and a ramp that climbs the
+whole cell — and the winding assertion fails on the old code with exactly the z-band counts (13 of 20,
+22 of 36, 10 of 31), which is the proof that it was the z branch and nothing else.
+
+### Two tests that could not fail, and one that measured the harness
+
+| Test | Why it could not fail | Now |
+| --- | --- | --- |
+| "turning damage numbers off stops them" | Counted `document.body.children`; the numbers live in `#dmgnums` | Reads the pool cursor |
+| "the cursor advances through the pool" | `dmgCursor > 0` against a cursor earlier tests also advance — it failed the one run where it wrapped to 0 | Compares the delta |
+| "the hit flash decays to nothing" | Waited a fixed 24 frames, which is a claim about `dt` | Waits for the decay, bounded |
+
+### Checked and left alone
+
+| Finding | Verdict |
+| --- | --- |
+| `props.js` animals are six meshes each with three materials per animal | Real, and it is a draw-call cost, not a bug: a grove pays ~6 calls per animal. Belongs with #45's work, measured there |
+| `props.pick()` draws with replacement | Two trees can share a cell. Cosmetic, and fixing it would thin the grove |
+| `cinematic.js` slash/arc geometry | The `-PI/2` at construction is overwritten by `slash()`; the arc is meant to face the swing |
+| `models.js` `getModel()` returns a clone with shared materials | Not a defect: `buildBody` clones every material before use |
+| `textures.js`, `items.js`, `effects.js` | Read; nothing found. Pools are bounded, decal orientation is explicit, every key in `FLOOR_KEY`/`WALL_KEY` resolves |
+
