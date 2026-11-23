@@ -74,6 +74,15 @@ export class Minimap {
       g.stroke();
     }
 
+    // a lift is one cell in one room and the player has no way to find it: mark it
+    const lifts = this.level.lifts || [];
+    for (const l of lifts) {
+      const lx = px(l.x * CELL), lz = pz(l.z * CELL);
+      g.strokeStyle = '#8fd0ff';
+      g.lineWidth = 1.5 * this.dpr;
+      g.strokeRect(lx - 2.5 * this.dpr, lz - 2.5 * this.dpr, 5 * this.dpr, 5 * this.dpr);
+    }
+
     for (const e of enemies) {
       if (!e.alive) continue;
       g.fillStyle = e.T && e.T.boss ? '#ff3b30' : '#e0432f';
