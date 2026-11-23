@@ -2,6 +2,7 @@
 // Verifies movement, look, weapons, damage, wave flow, keycard gate, death,
 // restart, pause, and a 2000-frame random-input soak.
 
+import fs from 'node:fs';
 import './domstub.mjs';
 import { WEAPONS } from '../play/src/weapons.js';
 import { isBlocked, buildFlowField } from '../play/src/level.js';
@@ -400,13 +401,16 @@ HG.enemies.clear();
 HG.enemies.spawnAt('imp', HG.player.pos.x + 4, HG.player.pos.z, 1);
 frames(2);
 const posed = HG.enemies.list[HG.enemies.list.length - 1];
+// driven by an explicit dt, not by rAF: the blend is dt-scaled, so six frames on
+// a fast runner is a different amount of blend than six frames on a slow one,
+// and this assertion failed on CI at 0.07 while passing locally at 0.6
 posed.setState('ATTACK');
 posed.stateT = 0.1;
-frames(6);
+for (let i = 0; i < 6; i++) posed.animate(0.05);
 ok(posed.blend.attack > 0.2, 'an attacking enemy blends toward the attack pose (' + posed.blend.attack.toFixed(2) + ')');
 const armUp = posed.parts.shoulderR.rotation.x;
 posed.setState('IDLE');
-frames(20);
+for (let i = 0; i < 20; i++) posed.animate(0.05);
 ok(posed.blend.attack < 0.2, 'and lets it go when it stops');
 ok(posed.parts.shoulderR.rotation.x !== armUp, 'the arm moves back');
 
@@ -524,7 +528,11 @@ console.log('\n== ambient particles per zone ==');
   const kiln = ZONES.find((z) => z.id === 'kiln').ambientFx;
   const cistern = ZONES.find((z) => z.id === 'cistern').ambientFx;
   ok(kiln.gravity < 0 && cistern.gravity > 0, 'the kiln embers rise and the cistern drips fall');
-  // the emitter spawns into the existing pool, so it adds no draw call
+  // the emitter spawns into the existing pool, so it adds no draw call.
+  // The pool is capped at 600 and earlier sections fill it, so a full pool
+  // evicts as it emits and the count can fall: start from empty and the
+  // assertion measures the emitter rather than the cap.
+  for (const p of HG.effects.parts) p.life = 0;
   const before = HG.effects.parts.filter((p) => p.life > 0).length;
   HG.effects.ambient(1.0, HG.player, kiln);
   frames(1);
@@ -537,7 +545,10 @@ console.log('\n== the report ==');
   HG.note('a test event');
   const rep = HG.buildReport();
   ok(rep.startsWith('HELLGATE report'), 'a report starts with the game name');
-  ok(rep.includes('build   ' + '1.'), 'and carries the build');
+  // the build number is read, not hardcoded: this assertion said '1.' and would
+  // have gone red on 2.0.0 for no reason at all
+  const buildStamp = fs.readFileSync(new URL('../VERSION', import.meta.url), 'utf8').trim();
+  ok(rep.includes('build   ' + buildStamp), 'and carries the build (' + buildStamp + ')');
   ok(/seed\s+\S/.test(rep), 'and the seed');
   ok(rep.includes('zone    '), 'and the zone');
   ok(rep.includes('a test event'), 'and the events recorded since boot');
@@ -1475,6 +1486,9 @@ HG.game.exitOpen = false;
 HG.level.doorOpen = false;
 HG.spawnRelics(0);
 ok(HG.game.relicsTotal === 0 && HG.game.relics.length === 0, 'the relics are cleared again for the next section');
+// the bursts above are in the shared particle pool, and a later assertion counts
+// what is in it: hand the pool back empty rather than leave it at its cap
+for (const part of HG.effects.parts) part.life = 0;
 
 console.log('\n== enemy level of detail ==');
 HG.enemies.clear();
