@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.99.0 — 2026-11-23
+
+**From a player's report, after six zones**
+
+Nine issues, reported in the player's own words and recorded in
+`documentation/player-report.md`. This release fixes five of them.
+
+| Report | What it was |
+| --- | --- |
+| "Enemies teleport to rooms randomly" | `depenetrate` snapped a body to the nearest open cell centre from a two-cell search — up to 2 m in one frame. It steps out at 0.35 m a time from a one-cell search now |
+| "Some walls are pass-through" | the catwalk rim was drawn from the neighbour's floor up to the deck on a cell that is open at ground level. It is a thin lip now, so from below the deck is a slab edge above your head |
+| "There is no game save and reload" | the save existed and the title screen read it, but nothing wrote one on demand. **Save & quit** is in the pause menu |
+| "I can't find lift" | one cell in one room with nothing pointing at it. A hollow blue square on the minimap |
+| "Check all buttons settings and control" | `tools/audit-controls.mjs` presses every bound key and reports which one does nothing: all of them work but 3 and 4, which select weapons the marine does not carry |
+
+**Two harness faults found on the way**, both of which had been hiding the truth:
+
+- The DOM stub answered `querySelectorAll('.screen')` with a hard-coded four screens, so `showScreen('inventory')` and `showScreen('diary')` could not turn those panels on in the harness at all. Every panel assertion tested `game.state` and nothing else. The stub now creates the twelve screens the page ships, and a new block asserts both panels are actually on screen with content.
+- `depenetrate`'s test held the old one-frame snap, which is the bug.
+
+**Still open from the report:** the journal and inventory need one observation from the player (does the game freeze, or does nothing happen), the LOD proxy boxes need the pickup tests understood first, and "a bit boring by zone 6" is a design decision.
+
 ## 1.98.0 — 2026-11-23
 
 **Lifts — #50, on the sector model**
