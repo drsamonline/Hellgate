@@ -130,6 +130,7 @@ play/src/music.js     generated music: a scale, a tempo and a rule for the next 
 play/src/items.js     the things on the floor, built to look like the thing they are
 play/src/cinematic.js the letterboxed boss entrance, and a camera that walks the level
 play/src/campath.js  the cutscene camera's path: the flow field, the floor, a rounded corner
+play/src/dialogue.js the story written down: scenes of speaker and line, letterboxed and skippable
 play/src/rig.js       a parametric humanoid: joints, not boxes
 play/src/glb.js       a 200-line reader for glTF 2.0 binary models
 play/src/book.js      a branching narrative engine: the book is data

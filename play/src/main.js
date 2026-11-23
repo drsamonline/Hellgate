@@ -37,6 +37,7 @@ import { Bloom } from './bloom.js';
 import { Music } from './music.js';
 import * as Items from './items.js';
 import { Cinematic } from './cinematic.js';
+import { Dialogue, sceneFor } from './dialogue.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -178,6 +179,13 @@ let exitBeacon = null;
 let bloom = null;
 const music = new Music(audio);
 const cinematic = new Cinematic(camera, {
+  root: document.getElementById('letterbox'),
+  name: document.getElementById('cineName'),
+  line: document.getElementById('cineLine'),
+});
+// the same letterbox, used as a caption instead of a camera: the story is
+// written down and shown, not left on a wall for the player to walk past
+const dialogue = new Dialogue({
   root: document.getElementById('letterbox'),
   name: document.getElementById('cineName'),
   line: document.getElementById('cineLine'),
@@ -1442,9 +1450,36 @@ function chooseClass(id) {
   if (zone && zone.bed) audio.startBed(zone.bed);
   hud.setVisible(true);
   hideScreens();
-  requestLock();
   hud.toast(getClass(id).name + '  ·  ' + zone.name, 2.4);
   clock.getDelta();
+  // a story level opens with its scene, and control waits for it: a caption you
+  // are being shot through is not a cutscene. A zone played outside the level
+  // table has no scene and starts at once, which is how 1.x shipped.
+  const intro = dialogueFor('intro');
+  if (intro && dialogue.play(intro, {
+    onDone: () => {
+      game.state = 'playing';
+      requestLock();
+      clock.getDelta();
+    },
+  })) {
+    game.state = 'cinematic';
+    return;
+  }
+  requestLock();
+}
+
+/**
+ * The written scene for the level being played, or null.
+ *
+ * Only the campaign table has scenes: the nine-zone campaign predates it and
+ * keeps its terminals, so a zone run starts and ends with no caption at all.
+ * @param {string} kind `intro` or `outro`.
+ * @returns {{who:string,text:string}[]|null} The lines.
+ */
+function dialogueFor(kind) {
+  if (!game.storyLevel) return null;
+  return sceneFor(storyLevel(game.storyLevel), kind);
 }
 
 let mapReturn = 'playing';
@@ -1977,6 +2012,9 @@ function zoneCleared() {
   showScreen('cleared');
   audio.play('wave');
   renderChoice();
+  // the level's last line, over the screen that says the level is done
+  const outro = dialogueFor('outro');
+  if (outro) dialogue.play(outro);
 }
 
 /**
@@ -2325,6 +2363,9 @@ function toggleFullscreen() {
 }
 
 canvas.addEventListener('mousedown', (e) => {
+  // a click moves the caption on, and skips a cutscene that has no caption
+  if (dialogue.playing) { dialogue.advance(); return; }
+  if (cinematic.playing) { cinematic.skip(); return; }
   if (e.button === 2) { throwGrenade(); return; }   // right-click: lob a grenade
   if (e.button === 1) { swingBlade(); e.preventDefault(); return; } // middle: swing
   if (e.button !== 0) return;
@@ -2337,6 +2378,19 @@ window.addEventListener('mouseup', () => { input.fire = false; });
 window.addEventListener('blur', () => { input.fire = false; input.keys = Object.create(null); });
 
 window.addEventListener('keydown', (e) => {
+  // any key advances the caption; with no caption, any key skips the cut. The
+  // cinematic has documented itself as skippable on any key since 1.x and nothing
+  // ever called skip() except the tests, which is how that stayed true for so long
+  if (dialogue.playing) {
+    dialogue.advance();
+    e.preventDefault();
+    return;
+  }
+  if (cinematic.playing) {
+    cinematic.skip();
+    e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape' && document.getElementById('settings').classList.contains('on')) {
     closeSettings();
     e.preventDefault();
@@ -2784,9 +2838,12 @@ function loop() {
     updateDoors(frameDt); // finish opening even if a screen is up
     if (game.state === 'intro') story.update(frameDt, level);
     if (game.state === 'cinematic') {
-      cinematic.update(frameDt);
+      if (dialogue.playing) dialogue.update(frameDt);
+      else cinematic.update(frameDt);
       if (effects) effects.applyShake(camera);
     }
+    // a caption over the cleared screen is not a game state of its own
+    if (dialogue.playing && game.state !== 'cinematic') dialogue.update(frameDt);
   }
   if (touchCleanup && touchCleanup.setVisible) touchCleanup.setVisible(game.state === 'playing');
   render();
@@ -2803,21 +2860,11 @@ function loop() {
 function applyUrlOverrides() {
   const p = new URLSearchParams(location.search);
 
-  // ?seed=name without auto just prefills the title screen, so the landing page
-  // can hand a seed over to the game.
-  if (!p.has('auto')) {
-    if (p.has('seed')) {
-      const el = document.getElementById('seedInput');
-      if (el) el.value = p.get('seed').slice(0, 24);
-    }
-    return false;
-  }
-
-  const z = p.has('zone') ? zoneById(p.get('zone')) : zone;
-  if (z) zone = z;
   // ?level=N dresses a campaign row on top of its zone: the same palette and
   // props, the row's seed, shape and objective. The zone id stays, so unlocks and
-  // the save format do not learn a second kind of key.
+  // the save format do not learn a second kind of key. It is resolved before the
+  // early return below, because ?level= has to work on the title screen too —
+  // it did not, and a deep link to level 4 started the gate instead.
   const lv = parseInt(p.get('level') || '', 10);
   if (Number.isFinite(lv) && lv >= 1 && lv <= STORY_LEVELS.length) {
     const row = storyLevel(lv);
@@ -2827,6 +2874,24 @@ function applyUrlOverrides() {
       game.storyLevel = lv;
     }
   }
+
+  // ?seed=name without auto just prefills the title screen, so the landing page
+  // can hand a seed over to the game.
+  if (!p.has('auto')) {
+    const el = document.getElementById('seedInput');
+    if (el) {
+      if (p.has('seed')) el.value = p.get('seed').slice(0, 24);
+      // a level brings its own seed, and a player who starts from the title
+      // screen must get the level's map rather than whatever was in the box
+      else if (game.storyLevel) el.value = zone.seed.slice(0, 24);
+    }
+    return false;
+  }
+
+  // a zone named on the URL wins over the level's own zone, but keeps the
+  // level's objective and seed
+  const z = p.has('zone') ? zoneById(p.get('zone')) : zone;
+  if (z) zone = z;
   const seed = p.get('seed') || zone.seed;
   game.zoneId = zone.id;
   startGame(seed, { auto: true });
@@ -2906,7 +2971,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
-  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, openExit,
+  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
   takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex, hideScreens, showScreen,
   history: record, awardFor, achievementProgress: () => progressOf(record),

@@ -251,6 +251,11 @@
   #letterbox .caption{position:absolute;left:0;right:0;bottom:calc(var(--bar,28%) + 22px);text-align:center}
   #cineName{font-size:30px;letter-spacing:.3em;color:#ff3b30;text-shadow:0 4px 24px rgba(255,59,48,.45)}
   #cineLine{font-size:11px;letter-spacing:.24em;color:#cbbda8;margin-top:8px}
+  /* the same caption, used for dialogue: a name and a line you have to read */
+  #letterbox.talking .caption{bottom:calc(var(--bar,18%) + 30px);padding:0 8vw}
+  #letterbox.talking #cineName{font-size:13px;letter-spacing:.28em;color:#ffd24a}
+  #letterbox.talking #cineLine{font-size:clamp(14px,1.7vw,19px);letter-spacing:.03em;color:#f2e7d4;
+    line-height:1.65;max-width:820px;margin:10px auto 0;min-height:3.3em}
 
   .screen.cinema{background:linear-gradient(180deg,rgba(4,4,6,.15),rgba(4,4,6,.85));justify-content:flex-end;padding-bottom:12vh}
   #storyText{

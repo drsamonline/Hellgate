@@ -1336,6 +1336,60 @@ console.log('\n== the cutscene camera walks ==');
   ok(none === false && refused === true, 'a walk with no path hands control back immediately');
 }
 
+// ---- written dialogue ------------------------------------------------------
+console.log('\n== written dialogue ==');
+{
+  const { sceneFor } = await import('../play/src/dialogue.js');
+  const { STORY_LEVELS } = await import('../play/src/story-levels.js');
+  ok(!!HG.dialogue, 'the dialogue player exists');
+  const missing = STORY_LEVELS.filter((r) => !sceneFor(r, 'intro'));
+  ok(missing.length === 0, 'every one of the 32 levels opens with a written scene (' + missing.length + ' missing)');
+  ok(STORY_LEVELS.every((r) => { const o = sceneFor(r, 'outro'); return !o || o.every((l) => l.who && l.text); }),
+    'and every outro that exists is speaker + line');
+
+  const scene = sceneFor(STORY_LEVELS[3], 'intro');   // Broken Idols
+  ok(scene.length >= 2 && scene.every((l) => l.who && l.text), 'a scene is a speaker and a line');
+  let ended = 0;
+  HG.dialogue.play(scene, { onDone: () => { ended++; } });
+  ok(HG.dialogue.playing === true, 'a scene plays');
+  ok(document.getElementById('letterbox').classList.contains('on'), 'and the letterbox is up for it');
+  ok(document.getElementById('letterbox').classList.contains('talking'), 'in its dialogue style');
+  HG.dialogue.update(0.05);
+  ok(document.getElementById('cineName').textContent === scene[0].who, 'the speaker is named: ' + document.getElementById('cineName').textContent);
+  const typed = document.getElementById('cineLine').textContent.length;
+  ok(typed > 0 && typed < scene[0].text.length, 'the line types out (' + typed + ' of ' + scene[0].text.length + ')');
+  HG.dialogue.advance();
+  ok(document.getElementById('cineLine').textContent === scene[0].text, 'a click finishes the line');
+  HG.dialogue.advance();
+  ok(HG.dialogue.i === 1, 'and the next click moves to the next line');
+  HG.dialogue.skip();
+  ok(HG.dialogue.playing === false && ended === 1, 'skipping ends the scene and hands control back once');
+  ok(!document.getElementById('letterbox').classList.contains('on'), 'and the letterbox comes down');
+
+  // a line that is out moves on by itself, so a scene is not 32 clicks
+  HG.dialogue.play(scene, {});
+  HG.dialogue.update(30);
+  HG.dialogue.update(30);
+  ok(HG.dialogue.i > 0 || HG.dialogue.playing === false, 'a finished line advances itself');
+  HG.dialogue.skip();
+  ok(HG.dialogue.playing === false, 'and the scene can still be skipped');
+
+  // the wiring: a story level opens in its scene, and control waits for it
+  const savedLevel = HG.game.storyLevel;
+  HG.game.storyLevel = 4;
+  HG.chooseClass('marine');
+  ok(HG.game.state === 'cinematic', 'a story level opens in a cutscene, not in play');
+  ok(HG.dialogue.playing === true, 'with that level own dialogue');
+  HG.dialogue.skip();
+  frames(1);
+  ok(HG.game.state === 'playing', 'and hands control back when it is done');
+  // a zone played outside the table still starts at once, as it did in 1.x
+  HG.game.storyLevel = 0;
+  HG.chooseClass('marine');
+  ok(HG.game.state === 'playing' && HG.dialogue.playing === false, 'a zone with no scene starts immediately');
+  HG.game.storyLevel = savedLevel;
+}
+
 console.log('\n== game modes ==');
 ok(Object.keys(HG.MODES).length === 8, 'eight modes are defined (' + Object.keys(HG.MODES).length + ')');
 ok(HG.mode === 'campaign', 'the default mode is campaign');
