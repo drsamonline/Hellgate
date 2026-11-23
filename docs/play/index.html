@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HELLGATE — a procedural arena FPS</title>
+<meta name="description" content="A Doom-style 2.5D arena shooter in the browser. Sector-based procedural maps, three weapons, two enemy types, and not one external asset. Built with Three.js." />
+<meta name="theme-color" content="#07070a" />
+<meta property="og:title" content="HELLGATE — a procedural arena FPS" />
+<meta property="og:description" content="Sector maps from a seed string. Box enemies. Canvas textures. WebAudio. Zero assets." />
+<meta property="og:image" content="https://drsamonline.github.io/Hellgate/assets/og.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="favicon.svg" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0c'/><rect x='6' y='5' width='6' height='22' fill='%23ffb454'/><rect x='20' y='5' width='6' height='22' fill='%23ffb454'/><rect x='14' y='5' width='4' height='22' fill='%23ff3b30'/></svg>" />
+<style>
+  :root{
+    --ink:#07070a;
+    --ink2:#0d0c10;
+    --bone:#e8dcc8;
+    --dim:#a3947e;
+    --faint:#8d7f6c;
+    --amber:#ffb454;
+    --red:#ff3b30;
+    --green:#39ff9a;
+    --hair:rgba(255,180,84,.18);
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    --display:"Helvetica Neue",Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;color:var(--bone);font-family:var(--mono);
+    background-color:var(--ink);
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px);
+    font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  a{color:var(--amber);text-decoration:none}
+  a:hover{color:#ffd9a8}
+  ::selection{background:var(--red);color:#fff}
+
+  /* the cursor glow */
+  #glow{display:none}
+  @media (pointer:fine){
+  #glow{
+    display:block;
+    position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(340px 340px at var(--mx,50%) var(--my,40%),rgba(255,120,60,.10),transparent 70%);
+    transition:background .12s linear;
+  }
+  }
+
+  .wrap{max-width:1160px;margin:0 auto;padding:0 24px;position:relative;z-index:3}
+
+  /* ---------------------------------------------------------------- hero */
+  header{position:relative;min-height:92vh;display:flex;align-items:center;overflow:hidden}
+  .gate{position:absolute;inset:0;display:flex;justify-content:center;pointer-events:none}
+  .gate .pillar{
+    width:min(19vw,230px);align-self:stretch;margin-top:8vh;
+    background:linear-gradient(180deg,#100e13,#08070a 70%);
+    border:1px solid #1c1720;position:relative;
+  }
+  .gate .pillar::before{
+    content:"";position:absolute;inset:14px 14px auto 14px;height:5px;background:var(--amber);opacity:.35;
+  }
+  .gate .pillar::after{
+    content:"";position:absolute;inset:auto 14px 14px 14px;height:5px;background:var(--amber);opacity:.35;
+  }
+  .gate .slit{
+    width:clamp(90px,15vw,190px);align-self:stretch;margin-top:8vh;
+    background:linear-gradient(180deg,rgba(255,190,120,0) 0%,rgba(255,190,120,.30) 30%,rgba(255,120,50,.55) 55%,rgba(255,120,50,0) 100%);
+    animation:breathe 7s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.55;transform:scaleX(.92)}50%{opacity:1;transform:scaleX(1.06)}}
+
+  .hero{position:relative;z-index:4;width:100%;text-align:center;padding:10vh 24px 6vh}
+  .eyebrow{
+    font-size:11px;letter-spacing:.42em;color:var(--dim);text-transform:uppercase;margin:0 0 22px;
+  }
+  .eyebrow b{color:var(--red);font-weight:400}
+  h1{
+    font-family:var(--display);font-size:clamp(56px,13vw,168px);line-height:.86;
+    letter-spacing:.04em;margin:0;font-weight:800;text-transform:uppercase;
+    color:#fff3dc;text-shadow:0 0 38px rgba(255,90,40,.32);
+  }
+  h1 em{font-style:normal;color:var(--red);text-shadow:0 0 28px rgba(255,59,48,.55)}
+  .tagline{
+    margin:26px auto 0;max-width:640px;font-size:15px;color:#cbbba4;letter-spacing:.02em;
+  }
+  .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:38px}
+  .btn{
+    display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:2px;
+    font-size:12px;letter-spacing:.26em;text-transform:uppercase;border:1px solid transparent;
+    transition:.18s;cursor:pointer;font-family:var(--mono);
+  }
+  .btn.primary{
+    background:linear-gradient(#3d1a0f,#24100a);color:#ffd9a8;border-color:rgba(255,120,60,.5);
+    box-shadow:0 10px 40px rgba(255,80,40,.16),inset 0 1px 0 rgba(255,255,255,.07);
+  }
+  .btn.primary:hover{background:linear-gradient(#55230f,#2f150c);border-color:#ff8a4a;color:#fff0d8;transform:translateY(-2px)}
+  .btn.ghost{border-color:rgba(255,255,255,.14);color:#a99a86}
+  .btn.ghost:hover{border-color:var(--amber);color:var(--amber);transform:translateY(-2px)}
+  .hint{margin-top:20px;font-size:11px;letter-spacing:.2em;color:var(--faint)}
+
+  /* ------------------------------------------------------------ sections */
+  section{position:relative;padding:84px 0;z-index:3}
+  .rule{height:1px;background:var(--hair);position:relative}
+  .rule::before,.rule::after{
+    content:"";position:absolute;top:-3px;width:7px;height:7px;border:1px solid var(--hair);
+  }
+  .rule::before{left:0;border-right:0;border-bottom:0}
+  .rule::after{right:0;border-left:0;border-bottom:0}
+  .kicker{
+    font-size:10px;letter-spacing:.4em;color:var(--faint);text-transform:uppercase;margin:0 0 14px;
+  }
+  h2{
+    font-family:var(--display);font-size:clamp(26px,4.4vw,46px);font-weight:800;text-transform:uppercase;
+    letter-spacing:.03em;line-height:1.02;margin:0 0 18px;color:#f2e7d4;
+  }
+  h2 em{font-style:normal;color:var(--amber)}
+  .lede{max-width:680px;color:#b3a591;margin:0 0 34px;font-size:14.5px;line-height:1.75}
+
+  /* stats strip */
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)}
+  .stat{background:var(--ink);padding:22px 18px}
+  .stat b{display:block;font-family:var(--display);font-size:30px;font-weight:800;color:var(--amber);line-height:1}
+  .stat span{display:block;font-size:10px;letter-spacing:.22em;color:var(--faint);text-transform:uppercase;margin-top:8px}
+
+  /* filmstrip */
+  .strip{display:grid;gap:20px;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:8px}
+  @media (max-width:760px){.strip{grid-template-columns:1fr}}
+  figure{margin:0;border:1px solid rgba(255,255,255,.08);background:#000;overflow:hidden}
+  .shot{overflow:hidden;background:#000}
+  figure img{display:block;width:100%;height:auto;filter:saturate(.95) contrast(1.02);transition:transform .5s ease,filter .5s}
+  figure:hover img{transform:scale(1.02);filter:saturate(1.1) contrast(1.06)}
+  figcaption{
+    padding:11px 14px;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#c9bca8;
+    background:#0a0a0c;border-top:1px solid rgba(255,180,84,.14);
+    display:flex;justify-content:space-between;gap:10px;
+  }
+  figcaption i{color:var(--amber);font-style:normal}
+
+  /* seed / map */
+  .maprow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:44px;align-items:center}
+  .mapframe{border:1px solid var(--hair);padding:10px;background:#0a0a0c}
+  .mapframe img{display:block;width:100%;height:auto}
+  .seedbox{display:flex;gap:10px;margin-top:26px;flex-wrap:wrap}
+  .seedbox input{
+    flex:1 1 200px;min-width:0;background:#0e0d11;border:1px solid rgba(255,180,84,.28);color:var(--amber);
+    font-family:var(--mono);font-size:14px;letter-spacing:.16em;padding:14px 16px;border-radius:2px;outline:none;
+  }
+  .seedbox input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(255,180,84,.12)}
+  .legend{display:flex;gap:20px;flex-wrap:wrap;margin-top:18px;font-size:11px;letter-spacing:.14em;color:var(--faint)}
+  .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+
+  /* controls */
+  .keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 28px;margin-top:6px}
+  .key{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  kbd{
+    font-family:var(--mono);font-size:11px;letter-spacing:.1em;padding:5px 9px;border-radius:3px;
+    background:#15131a;border:1px solid #2a2431;border-bottom-width:2px;color:#e8dcc8;white-space:nowrap;
+  }
+  .key span{font-size:12px;color:#9d9081;letter-spacing:.08em}
+
+  /* feature grid */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1px;background:var(--hair);border:1px solid var(--hair)}
+  .card{background:var(--ink);padding:28px 24px;transition:background .2s}
+  .card:hover{background:var(--ink2)}
+  .card .n{font-size:10px;letter-spacing:.3em;color:var(--red)}
+  .card h3{font-family:var(--display);font-size:17px;letter-spacing:.06em;text-transform:uppercase;margin:10px 0 8px;color:#f0e4cc}
+  .card p{margin:0;font-size:13px;color:#9d9081;line-height:1.6}
+
+  /* footer */
+  footer{border-top:1px solid var(--hair);padding:56px 0 70px;position:relative;z-index:3}
+  .foot{display:flex;justify-content:space-between;gap:28px;flex-wrap:wrap;font-size:11px;letter-spacing:.16em;color:var(--faint);text-transform:uppercase}
+  .foot a{color:#c9bca8;text-decoration:underline;text-underline-offset:2px}
+  .foot a:hover{color:var(--amber)}
+
+  @media (max-width:820px){
+    .maprow{grid-template-columns:1fr;gap:28px}
+    .gate .pillar{width:22vw}
+    section{padding:70px 0}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    html{scroll-behavior:auto}
+  }
+  :focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+</style>
+<meta name="description" content="A Doom-style 2.5D arena shooter in the browser. Sector-based procedural maps, three weapons, two enemy types, and not one external asset. Built with Three.js.">
+<link rel="canonical" href="https://drsamonline.github.io/Hellgate/play/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hellgate — live demo">
+<meta property="og:description" content="A Doom-style 2.5D arena shooter in the browser. Sector-based procedural maps, three weapons, two enemy types, and not one external asset. Built with Three.js.">
+<meta property="og:url" content="https://drsamonline.github.io/Hellgate/play/">
+<meta name="twitter:card" content="summary">
+<meta name="robots" content="index, follow">
+</head>
+<body>
+<div id="glow"></div>
+
+<header>
+  <div class="gate" aria-hidden="true">
+    <div class="pillar"></div><div class="slit"></div><div class="pillar"></div>
+  </div>
+
+  <div class="hero">
+    <p class="eyebrow">Three.js · <b>no assets</b> · procedural</p>
+    <h1>Hell<em>gate</em></h1>
+    <p class="tagline">
+      A Doom-style 2.5D arena shooter that runs in a browser tab. Sector maps generated
+      from a seed string, three weapons, two enemy types, and not one external asset —
+      every texture is painted on a canvas, every enemy is boxes, every sound is synthesised.
+    </p>
+    <div class="cta">
+      <a class="btn primary" href="./play/">▶ Enter the gate</a>
+      <a class="btn ghost" href="https://github.com/drsamonline/Hellgate">Source</a>
+    </div>
+    <p class="hint">WASD · mouse · 1–3 · esc &nbsp;|&nbsp; ~20 MB, loads in a second</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="rule"></div>
+
+  <section id="what">
+    <p class="kicker">01 — what it is</p>
+    <h2>A shooter built out of <em>nothing but code</em></h2>
+    <p class="lede">
+      HELLGATE is a small, complete game: a first-person arena shooter with procedural
+      levels, a real combat loop, and a wave structure that gets harder until you die.
+      It is also a reference for how far you can get in Three.js without loading a single
+      image, model, or audio file.
+    </p>
+    <div class="stats">
+      <div class="stat"><b>0</b><span>external assets</span></div>
+      <div class="stat"><b>5</b><span>draw calls / level</span></div>
+      <div class="stat"><b>2.7k</b><span>triangles, a level</span></div>
+      <div class="stat"><b>3</b><span>headless test suites</span></div>
+      <div class="stat"><b>~14.8k</b><span>lines of JS</span></div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section id="shots">
+    <p class="kicker">02 — in the arena</p>
+    <h2>Look at it</h2>
+    <p class="lede">Real frames, captured from the game running headless in Chromium. No mockups.</p>
+    <div class="strip">
+      <figure>
+        <div class="shot"><img src="assets/arena.webp" width="1280" height="720" decoding="async" alt="A brick arena with imps and a grunt closing in, pistol equipped" loading="lazy" /></div>
+        <figcaption><span>the arena — wave 3, imps and a grunt</span><i>01</i></figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="assets/combat.webp" width="1280" height="720" decoding="async" alt="Shotgun blast with blood spray and tracers on an imp" loading="lazy" /></div>
+        <figcaption><span>shotgun — 8 pellets, damage falloff</span><i>02</i></figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="assets/rocket.webp" width="1280" height="720" decoding="async" alt="Rocket explosion lighting up a pack of imps orange" loading="lazy" /></div>
+        <figcaption><span>rocket — splash damage and screen shake</span><i>03</i></figcaption>
+      </figure>
+      <figure>
+        <div class="shot"><img src="assets/exit.webp" width="1280" height="720" decoding="async" alt="The exit room with its glowing pad and EXIT OPEN message" loading="lazy" /></div>
+        <figcaption><span>exit open — cleared wave, unlocked door</span><i>04</i></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section id="seed">
+    <div class="maprow">
+      <div>
+        <p class="kicker">03 — the map is a seed</p>
+        <h2>One string, <em>one arena</em></h2>
+        <p class="lede" style="margin-bottom:18px">
+          Rooms are carved as rectangles, joined by L-shaped corridors, then given random
+          ceiling heights so corridor mouths read as doorways. The exit room gets sealed
+          behind doors, one room gets a raised ledge, and the whole thing is merged into
+          five meshes. Type the same seed twice and you get the same map, down to the brick.
+        </p>
+        <div class="seedbox">
+          <input id="seed" value="hellgate" maxlength="24" spellcheck="false" aria-label="Map seed" />
+          <button class="btn primary" id="seedgo">Play this seed</button>
+        </div>
+        <div class="legend">
+          <span><i style="background:#3fa9ff"></i>spawn</span>
+          <span><i style="background:#39ff9a"></i>exit pad</span>
+          <span><i style="background:#ffd24a"></i>doors</span>
+        </div>
+      </div>
+      <div class="mapframe">
+        <img src="assets/map.svg" width="456" height="456" decoding="async" alt="Top-down map of the hellgate seed: ten rooms joined by corridors, with the exit room sealed behind three doors" />
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section id="how">
+    <p class="kicker">04 — how it plays</p>
+    <h2>Clear the wave, <em>open the exit</em></h2>
+    <div class="cards">
+      <div class="card">
+        <div class="n">WAVE 1–2</div>
+        <h3>Imps</h3>
+        <p>Throw fireballs, telegraph the throw, wander until they see you. Wave two adds grunts that close distance and hitscan you at range.</p>
+      </div>
+      <div class="card">
+        <div class="n">WAVE 3+</div>
+        <h3>The keycard</h3>
+        <p>From wave three the exit is keycard-locked as well as wave-locked: find the yellow card, then clear the room, then leave.</p>
+      </div>
+      <div class="card">
+        <div class="n">CLASS</div>
+        <h3>Powers</h3>
+        <p>Three classes, five powers on an energy pool: dash, shockwave, ward, volley, bulwark. A companion drone follows you and shoots what it can see.</p>
+      </div>
+      <div class="card">
+        <div class="n">ALWAYS</div>
+        <h3>Pickups</h3>
+        <p>Health, armour, bullets, shells and rockets are scattered procedurally each wave. Armour eats half of every hit.</p>
+      </div>
+      <div class="card">
+        <div class="n">FEEL</div>
+        <h3>Feedback</h3>
+        <p>Hit flash on enemies, tracers, wall decals, gibs, a face indicator that degrades, damage arrows, and screen shake on rockets.</p>
+      </div>
+    </div>
+
+    <div style="margin-top:56px">
+      <p class="kicker">controls</p>
+      <div class="keys">
+        <div class="key"><kbd>W A S D</kbd><span>move</span></div>
+        <div class="key"><kbd>Shift</kbd><span>sprint</span></div>
+        <div class="key"><kbd>Space</kbd><span>jump</span></div>
+        <div class="key"><kbd>Mouse</kbd><span>look</span></div>
+        <div class="key"><kbd>LMB</kbd><span>fire</span></div>
+        <div class="key"><kbd>1 2 3</kbd><span>pistol / shotgun / rocket</span></div>
+        <div class="key"><kbd>Q E</kbd><span>cycle weapons</span></div>
+        <div class="key"><kbd>Esc</kbd><span>pause</span></div>
+        <div class="key"><kbd>`</kbd><span>fps / draw calls</span></div>
+        <div class="key"><kbd>Q E R</kbd><span>class powers</span></div>
+        <div class="key"><kbd>M</kbd><span>mute</span></div>
+        <div class="key"><kbd>F</kbd><span>fullscreen</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="rule"></div>
+
+  <section id="under">
+    <p class="kicker">05 — under the hood</p>
+    <h2>Small files, <em>readable code</em></h2>
+    <p class="lede">
+      No bundler, no build step, no framework. ES modules and an import map. The level
+      generator imports nothing, so it can be unit-tested in Node without a browser.
+    </p>
+    <div class="cards">
+      <div class="card"><div class="n">play/src/level.js</div><h3>Generator + collision</h3><p>Sector grid, rooms, corridors, doors, circle-vs-wall sliding, wall raycasts. Pure math, no Three.js.</p></div>
+      <div class="card"><div class="n">play/src/levelmesh.js</div><h3>Geometry</h3><p>Turns the grid into five merged BufferGeometries with hand-built UVs and normals.</p></div>
+      <div class="card"><div class="n">play/src/enemies.js</div><h3>AI</h3><p>Two enemy types on one FSM: idle, chase, attack, pain, death. Grid line-of-sight, shared geometry.</p></div>
+      <div class="card"><div class="n">play/src/effects.js</div><h3>Feel</h3><p>Pooled particles, tracers, decals and lights. Nothing allocates per shot.</p></div>
+    </div>
+    <div class="cta" style="justify-content:flex-start;margin-top:34px">
+      <a class="btn ghost" href="https://github.com/drsamonline/Hellgate/tree/main/documentation">Documentation</a>
+      <a class="btn ghost" href="https://github.com/drsamonline/Hellgate/blob/main/ENHANCEMENTS.md">Roadmap</a>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <div>HELLGATE · PolyForm Noncommercial · built with <a href="https://threejs.org">three.js</a></div>
+    <div>
+      <a href="https://github.com/drsamonline/Hellgate">GitHub</a> ·
+      <a href="./play/">Play</a> ·
+      <a href="https://github.com/drsamonline/Hellgate/blob/main/ENHANCEMENTS.md">Roadmap</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // cursor glow: coalesced to one style write per frame, because a full-screen
+  // fixed layer repaints on every property change
+  let pending = null;
+  let raf = 0;
+  const paintGlow = () => {
+    raf = 0;
+    if (!pending) return;
+    document.documentElement.style.setProperty('--mx', pending.clientX + 'px');
+    document.documentElement.style.setProperty('--my', pending.clientY + 'px');
+    pending = null;
+  };
+  addEventListener('pointermove', (e) => {
+    pending = e;
+    if (!raf) raf = requestAnimationFrame(paintGlow);
+  }, { passive: true });
+
+  // seed -> game
+  const seedEl = document.getElementById('seed');
+  const go = () => {
+    const s = (seedEl.value || 'hellgate').trim().slice(0, 24) || 'hellgate';
+    location.href = './play/?seed=' + encodeURIComponent(s);
+  };
+  document.getElementById('seedgo').addEventListener('click', go);
+  seedEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+
+  // enter = play
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && document.activeElement !== seedEl) location.href = './play/';
+  });
+</script>
+</body>
+</html>
