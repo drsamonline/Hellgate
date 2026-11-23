@@ -1620,6 +1620,59 @@ console.log('\n== the campaign is the run ==');
   HG.game.state = 'playing';
 }
 
+// ---- the deep link is a level, not a zone ----------------------------------
+console.log('\n== the level deep link ==');
+{
+  // ?auto=1&level=N is the URL a shared level uses. It went through startGame()
+  // and played three waves of the zone until 2.6.0 — the same shape of bug as the
+  // title screen at 2.3.1, in the other entry point
+  location.search = '?auto=1&level=2';
+  HG.applyUrlOverrides();
+  frames(2);
+  ok(HG.game.level === 2, 'a deep link to level 2 starts level 2 (' + HG.game.level + ')');
+  ok(HG.game.wavesTarget === 1, 'with the level rules (' + HG.game.wavesTarget + ')');
+  ok(HG.game.objectiveType === HG.STORY_LEVELS[1].objective.type, 'and its objective');
+  // a zone named on the URL is still a zone run
+  location.search = '?auto=1&zone=gate';
+  HG.applyUrlOverrides();
+  frames(2);
+  ok(HG.game.level === 0, 'a zone deep link is a zone run (' + HG.game.level + ')');
+  location.search = '';
+  HG.beginZone(HG.zones[0]);
+  HG.game.state = 'playing';
+}
+
+// ---- the outro camera ------------------------------------------------------
+console.log('\n== the outro camera ==');
+{
+  HG.beginLevel(2);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  frames(2);
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const outPath = HG.outroPath();
+  ok(!!outPath && outPath.points.length > 2, 'a cleared room has a way out for the camera (' + (outPath ? outPath.points.length : 0) + ' points)');
+  ok(!!outPath && outPath.length > 3, 'and it is a step back, not a twitch (' + (outPath ? outPath.length.toFixed(1) : 0) + ' m)');
+
+  // the pad ends the level at once, and the panel waits for the camera.
+  // openExit(), not the flag: it opens the doors too, and the camera's way back
+  // crosses one when the exit room is too small to step back inside
+  HG.openExit();
+  HG.game.wave = 1;
+  HG.player.pos.set(HG.level.exit.x, 0, HG.level.exit.z);
+  frames(3);
+  ok(HG.game.state === 'cleared', 'the level is cleared the moment the pad is reached');
+  ok(HG.cinematic.playing === true, 'and the camera is stepping back');
+  ok(!document.getElementById('cleared').classList.contains('on'), 'with the panel not up yet');
+  let steps = 0;
+  while (HG.cinematic.playing && steps < 600) { HG.cinematic.update(0.05); steps++; }
+  ok(!HG.cinematic.playing, 'the walk ends (' + steps + ' steps)');
+  frames(2);
+  ok(document.getElementById('cleared').classList.contains('on'), 'and then the panel arrives');
+}
+
 // ---- the level select on the title screen ----------------------------------
 console.log('\n== the level select ==');
 {
@@ -1807,7 +1860,10 @@ ok(HG.damageRelic(muzzle, { x: 1, y: 0, z: 0 }, 4, 10) === true, 'a shot at a re
 ok(HG.game.relics.length === 3, 'and a chip is not a break');
 ok(HG.damageRelic(muzzle, { x: 1, y: 0, z: 0 }, 4, 999) === true, 'enough damage breaks it');
 ok(HG.game.relics.length === 2, 'the broken relic is off the floor');
-ok(HG.damageRelic({ x: rel.x + 6, y: rel.baseY, z: rel.z }, { x: 1, y: 0, z: 0 }, 4, 10) === false, 'a shot facing away from every relic misses');
+// beyond the farthest relic on the +x axis, so nothing is ahead of the ray:
+// relics are placed at random and a second one downrange is not a miss
+const farX = Math.max(...HG.game.relics.map((r) => r.x)) + 6;
+ok(HG.damageRelic({ x: farX, y: rel.baseY, z: rel.z }, { x: 1, y: 0, z: 0 }, 4, 10) === false, 'a shot facing away from every relic misses');
 HG.updateObjective(0.016);
 ok(HG.game.exitOpen === false, 'the door stays shut while relics stand');
 HG.breakRelic(0);

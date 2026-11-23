@@ -100,6 +100,23 @@ export class Cinematic {
     if (ahead.x !== p.x || ahead.z !== p.z) cam.lookAt(ahead.x, ahead.y, ahead.z);
   }
 
+  /**
+   * Abandon the cut without running its callback: a level change cancels a
+   * cutscene, it does not complete it. Without this the previous level's outro
+   * fired into the next level and showed a panel over a run that had started.
+   */
+  stop() {
+    this.playing = false;
+    this.onDone = null;
+    this.target = null;
+    this.path = null;
+    if (this.root) {
+      this.root.classList.remove('on');
+      this.root.style.opacity = '';
+      this.root.style.removeProperty('--bar');
+    }
+  }
+
   skip() {
     if (!this.playing) return;
     this.playing = false;

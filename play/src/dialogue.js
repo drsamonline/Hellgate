@@ -184,6 +184,20 @@ export class Dialogue {
     this.render();
   }
 
+  /** Abandon the scene without running its callback, for a level change. */
+  stop() {
+    this.playing = false;
+    this.onDone = null;
+    this.lines = [];
+    this.i = 0;
+    if (this.root) {
+      this.root.classList.remove('on');
+      this.root.classList.remove('talking');
+      this.root.style.opacity = '';
+      this.root.style.removeProperty('--bar');
+    }
+  }
+
   /** Leave the whole scene at once. */
   skip() {
     if (!this.playing) return;

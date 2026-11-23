@@ -108,7 +108,10 @@ export function buildCameraPath(level, from, to, opts = {}) {
   }
   let length = 0;
   for (let i = 1; i < points.length; i++) length += dist3(points[i - 1], points[i]);
-  return { points, length, eye };
+  // the level is kept so sampling can keep the camera out of the floor: a cell
+  // can carry two sectors, and a path that crosses a deck edge interpolates
+  // through the deck itself
+  return { points, length, eye, level };
 }
 
 /**
@@ -119,21 +122,32 @@ export function buildCameraPath(level, from, to, opts = {}) {
  */
 export function sampleCameraPath(path, d) {
   const pts = path.points;
-  if (pts.length === 1 || d <= 0) return { ...pts[0] };
+  if (pts.length === 1 || d <= 0) return lift(path, { ...pts[0] });
   let left = Math.max(0, d);
   for (let i = 1; i < pts.length; i++) {
     const seg = dist3(pts[i - 1], pts[i]);
     if (left <= seg || i === pts.length - 1) {
       const k = seg > 0 ? Math.min(1, left / seg) : 0;
-      return {
+      return lift(path, {
         x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * k,
         y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * k,
         z: pts[i - 1].z + (pts[i].z - pts[i - 1].z) * k,
-      };
+      });
     }
     left -= seg;
   }
-  return { ...pts[pts.length - 1] };
+  return lift(path, { ...pts[pts.length - 1] });
+}
+
+// Never inside the floor. Interpolating between two samples either side of a
+// step, a deck edge or a lift cuts through it; a camera 15 cm above a raised
+// floor is a camera in a wall. The clamp costs a small hop and nothing else.
+const MIN_CLEAR = 1.1;
+function lift(path, p) {
+  if (!path.level) return p;
+  const f = floorHeightAt(path.level, p.x, p.z);
+  if (p.y < f + MIN_CLEAR) p.y = f + MIN_CLEAR;
+  return p;
 }
 
 // A Catmull-Rom through the waypoints, cut at each corner to a maximum offset

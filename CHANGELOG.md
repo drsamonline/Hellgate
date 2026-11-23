@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.6.0 — 2026-11-23
+
+**A cutscene out.** The level ends with the camera stepping back across the room instead of a panel appearing
+the instant your foot touches the pad. The bookkeeping is done on the first line of `zoneCleared()` — the state
+is `cleared` immediately, and every gate that reads it reads the truth — but the panel waits for the camera.
+
+| Piece | What it does |
+| --- | --- |
+| `outroPath()` | the farthest reachable cell within 12 m, preferring the room you finished in; the exit room is usually the smallest on the level, so it steps back through the open door when it has to |
+| the walk | 2.6 m/s, capped at 4.5 s, looking at where you stood; then the panel, the choice cards and the level's last line |
+| `cinematic.stop()` and `dialogue.stop()` | a level change cancels a cutscene instead of completing it. A previous level's outro used to fire its callback into the next run and show a panel over it |
+
+**Two bugs found on the way.**
+
+| Bug | What it was |
+| --- | --- |
+| the camera could sit 15 cm above a raised floor | `sampleCameraPath` interpolates between samples, and a path across a deck edge or a lift cuts through it. Samples are clamped to at least 1.1 m above the floor now |
+| `?auto=1&level=N` played a zone | the deep link went through `startGame()`, which never learned about levels: three waves and the zone's objective. It is a level run now, and `?zone=` is still a zone run |
+
 ## 2.5.0 — 2026-11-23
 
 **The helper's third offer: he changes what ends the level.** The brief's line was "a flag that changes the

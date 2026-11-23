@@ -1478,6 +1478,10 @@ function nextLevel() {
 
 function beginZone(zoneDef) {
   audio.init();
+  // a level change cancels a cutscene and a caption: they belong to the level
+  // that started them, and one left running fired its callback into the next run
+  cinematic.stop();
+  dialogue.stop();
   // a zone run is not a level: without this, starting a zone after playing a
   // level kept the level's number, and the zone inherited the level's rules
   game.level = 0;
@@ -2325,15 +2329,57 @@ function zoneCleared() {
       `SCORE <b>${game.score}</b><br />KILLS <b>${game.kills}</b><br />` +
       `RELICS <b>${game.relicsTotal - game.relics.length}/${game.relicsTotal}</b>`;
   }
-  hud.setVisible(false);
   const epi = document.getElementById('clearedEpilogue');
   if (epi) epi.textContent = epilogueFor(zone.id);
-  showScreen('cleared');
-  audio.play('wave');
-  renderChoice();
-  // the level's last line, over the screen that says the level is done
-  const outro = dialogueFor('outro');
-  if (outro) dialogue.play(outro);
+
+  // The panel arrives after the camera has stepped back across the room. The
+  // state is 'cleared' from the first line of this function — the bookkeeping is
+  // done, and every gate that reads it reads the truth — but the screen waits.
+  const finish = () => {
+    hud.setVisible(false);
+    showScreen('cleared');
+    audio.play('wave');
+    renderChoice();
+    // the level's last line, over the screen that says the level is done
+    const outro = dialogueFor('outro');
+    if (outro) dialogue.play(outro);
+  };
+  const path = outroPath();
+  const look = { x: player.pos.x, y: player.pos.y + 1.3, z: player.pos.z };
+  if (path && cinematic.playWalk(path, { lookAt: look, speed: 2.6, hold: 0.2, onDone: finish })) {
+    hud.setVisible(false);
+    return;
+  }
+  finish();
+}
+
+/**
+ * The camera's way out: the farthest reachable cell in the room you cleared, so
+ * it steps back and watches rather than turning away. Null when the room is too
+ * small to be worth a cut, and the panel arrives at once.
+ * @returns {object|null} A path from `buildCameraPath`.
+ */
+function outroPath() {
+  if (!level || !player) return null;
+  const here = cellAt(level, player.pos.x, player.pos.z);
+  if (!here || here.room < 0) return null;
+  // the room you finished in is often the smallest one on the level — the exit
+  // room — so the camera steps back through the open door when it has to. The
+  // doors are open by the time this runs; the field would refuse the path
+  // otherwise, and null is the answer then.
+  let same = null;
+  let sameD = 3;
+  let any = null;
+  let anyD = 3;
+  for (const c of level.reachableCells) {
+    const d = Math.hypot(c.wx - player.pos.x, c.wz - player.pos.z);
+    if (d > 12) continue;
+    if (c.room === here.room && d > sameD) { sameD = d; same = c; }
+    if (d > anyD) { anyD = d; any = c; }
+  }
+  const best = same || any;
+  if (!best) return null;
+  return buildCameraPath(level, { x: player.pos.x, z: player.pos.z }, { x: best.wx, z: best.wz });
 }
 
 /**
@@ -2860,7 +2906,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.5.0';
+const BUILD = '2.6.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3188,13 +3234,11 @@ function loop() {
     accumulator = 0;
     updateDoors(frameDt); // finish opening even if a screen is up
     if (game.state === 'intro') story.update(frameDt, level);
-    if (game.state === 'cinematic') {
-      if (dialogue.playing) dialogue.update(frameDt);
-      else cinematic.update(frameDt);
-      if (effects) effects.applyShake(camera);
-    }
-    // a caption over the cleared screen is not a game state of its own
-    if (dialogue.playing && game.state !== 'cinematic') dialogue.update(frameDt);
+    // the caption and the camera are exclusive: whichever is playing gets the
+    // frame, whatever the state — a caption or an outro runs over 'cleared' too
+    if (dialogue.playing) dialogue.update(frameDt);
+    else if (cinematic.playing) cinematic.update(frameDt);
+    if (game.state === 'cinematic' && effects) effects.applyShake(camera);
   }
   if (touchCleanup && touchCleanup.setVisible) touchCleanup.setVisible(game.state === 'playing');
   render();
@@ -3223,6 +3267,9 @@ function applyUrlOverrides() {
     if (lz) {
       zone = lz;
       game.storyLevel = lv;
+      // and the run is that level, not a zone that happens to share its map: a
+      // deep link played three waves of the zone until 2.6.0
+      game.level = lv;
     }
   }
 
@@ -3239,10 +3286,13 @@ function applyUrlOverrides() {
     return false;
   }
 
-  // a zone named on the URL wins over the level's own zone, but keeps the
-  // level's objective and seed
+  // a zone named on the URL wins over the level's own zone, and it is a zone run
   const z = p.has('zone') ? zoneById(p.get('zone')) : zone;
   if (z) zone = z;
+  if (p.has('zone')) {
+    game.level = 0;
+    game.storyLevel = 0;
+  }
   const seed = p.get('seed') || zone.seed;
   game.zoneId = zone.id;
   startGame(seed, { auto: true });
@@ -3320,7 +3370,7 @@ window.HG = {
   get props() { return props; },
   get companion() { return companion; },
   get zone() { return zone; },
-  beginZone, beginLevel, nextLevel, renderLevelMap, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
+  beginZone, beginLevel, nextLevel, renderLevelMap, showZoneMap, outroPath, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, closeNpcOffer, npcQuestState, get npcOffer() { return npcOffer; },

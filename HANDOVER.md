@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.5.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.6.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.5.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 106, `v1.0.0` → `v2.5.0` |
+| Version | 2.6.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 107, `v1.0.0` → `v2.6.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 707 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,19 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Cutscenes, and the two entry points
+
+- **A level change cancels a cutscene; it does not complete it.** `cinematic.stop()` and `dialogue.stop()` run at
+  the top of `beginZone()`. Without them the previous level's outro fired its callback into the next run and
+  raised a cleared panel over it.
+- **`?auto=1&level=N` is a level run.** It goes through `startGame()`, which reads `game.level` — set before the
+  call in `applyUrlOverrides()`. It played three waves of the zone until 2.6.0: the same shape as the title
+  screen bug at 2.3.1, in the other entry point.
+- **The outro camera can leave the room you cleared.** The exit room is usually the smallest on the level, so
+  `outroPath()` falls back to any reachable cell within 12 m — through the door, which is open by then.
+- **`sampleCameraPath` clamps to 1.1 m above the floor.** Interpolating between two samples either side of a
+  deck edge or a lift cuts through it, and a camera 15 cm above a raised floor is a camera in a wall.
 
 ### The helper, and his two offers
 
