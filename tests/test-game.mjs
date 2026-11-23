@@ -1390,6 +1390,65 @@ console.log('\n== written dialogue ==');
   HG.game.storyLevel = savedLevel;
 }
 
+// ---- the helper's job ------------------------------------------------------
+console.log('\n== the helper pays ==');
+{
+  const n = HG.level.npc;
+  ok(!!n, 'the level has a helper to talk to');
+  if (n) {
+    HG.game.state = 'playing';
+    HG.enemies.clear();
+    HG.game.flags = HG.game.flags || {};
+    delete HG.game.flags.keshi;
+    n.quest = 'none';
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    ok(HG.openNpcOffer() === true, 'standing next to him offers the job');
+    ok(document.getElementById('letterbox').classList.contains('on'), 'and it is a caption on screen');
+    ok(/1\] take the job/.test(document.getElementById('cineLine').textContent), 'with two answers in the line');
+    const coins0 = HG.game.coins || 0;
+    const drops0 = HG.game.drops.length;
+    ok(HG.takeNpcOffer(0) === true, 'key 1 takes the job');
+    ok(HG.game.flags.keshi === 1, 'which sets the run flag');
+    ok((HG.game.coins || 0) === coins0 + 120, 'and pays the first half (' + ((HG.game.coins || 0) - coins0) + ')');
+    ok(HG.game.drops.length === drops0 + 1, 'and drops the trinket he promised');
+    ok(n.quest === 'taken', 'and the job is running');
+    ok(!document.getElementById('letterbox').classList.contains('on'), 'and the caption is gone');
+    ok(HG.takeNpcOffer(0) === false, 'answering twice does nothing');
+
+    // the second half: his room, cleared — so first put something alive in it
+    const spot = HG.level.reachableCells.find((c) => c.room === n.room && Math.hypot(c.wx - n.wx, c.wz - n.wz) > 2.5);
+    ok(!!spot, 'his room has floor to stand an enemy on');
+    HG.enemies.clear();
+    HG.enemies.spawnAt('imp', spot.wx, spot.wz, 1);
+    ok(HG.enemies.list.length === 1, 'one enemy is standing in his room');
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    HG.update(0.016);
+    ok(n.quest === 'taken', 'he does not pay while something in his room is alive');
+    const coins1 = HG.game.coins || 0;
+    // kill everything standing in his room
+    for (const e of HG.enemies.list) {
+      const c = cellAt(HG.level, e.pos.x, e.pos.z);
+      if (c && c.room === n.room) e.remove();
+    }
+    HG.update(0.016);
+    ok(n.quest === 'done', 'a cleared room finishes the job');
+    ok((HG.game.coins || 0) === coins1 + 180, 'and he pays the rest (' + ((HG.game.coins || 0) - coins1) + ')');
+    ok(HG.game.flags.keshi === 2, 'the flag records that he has paid');
+
+    // declining is a real answer, not a dead button
+    n.quest = 'none';
+    delete HG.game.flags.keshi;
+    HG.openNpcOffer();
+    const coins2 = HG.game.coins || 0;
+    HG.takeNpcOffer(1);
+    ok(n.quest === 'declined' && (HG.game.coins || 0) === coins2, 'key 2 declines and pays nothing');
+    ok(HG.openNpcOffer() === false, 'and he does not ask again this level');
+    // a resumed run must not be offered the job a second time
+    HG.game.flags.keshi = 2;
+    ok(HG.npcQuestState() === 'done', 'the flags carry the job across a resume');
+  }
+}
+
 console.log('\n== game modes ==');
 ok(Object.keys(HG.MODES).length === 8, 'eight modes are defined (' + Object.keys(HG.MODES).length + ')');
 ok(HG.mode === 'campaign', 'the default mode is campaign');

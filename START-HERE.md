@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.0.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.1.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -20,11 +20,10 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 > `updateObjective()` is the only decider; do not redo work marked measured-and-rejected in `ENHANCEMENTS.md`
 > without new numbers.
 >
-> WORK THIS NEXT, in order: (1) the cutscene camera that walks the level — `buildFlowField` from the camera's
-> cell to its target, `floorHeightAt` at each waypoint, a Catmull-Rom through the centres, in `cinematic.js`
-> (roadmap 64); (2) the dialogue system — lines with a speaker and a beat, letterboxed and skippable, driven by
-> the `story-levels.js` rows (roadmap 65); (3) the NPC's first quest — one dialogue, two choices, one sets a
-> flag that pays a trinket (roadmap 66).
+> WORK THIS NEXT, in order: (1) make the campaign the default — the 32 levels are a table and `?level=N` plays
+> one, but the game still starts the nine-zone wave campaign; (2) an outro cutscene that walks *away* from the
+> body rather than a caption over the cleared screen; (3) the terminals retired to flavour, which is the last
+> piece of the design brief.
 >
 > FLAKY ASSERTIONS: four were diagnosed and fixed at 2.0.0 (the pistol target, the pickup keeper, the resume
 > score and the hit-flash decay). If one goes red, re-run before believing it — three of those blamed innocent
@@ -37,12 +36,12 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.0.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.1.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
-| Tests | 885 playability + 604 in the other three suites; seven static gates; smoke, flow, run, invariants |
-| Modules | 38 in `play/src/` |
-| Releases | 100, `v1.0.0` → `v2.0.0` |
-| Roadmap | 54 shipped, 3 measured-and-rejected, 9 open of 66 |
+| Tests | 885 playability + 650 in the other three suites; seven static gates; smoke, flow, run, invariants |
+| Modules | 40 in `play/src/` |
+| Releases | 101, `v1.0.0` → `v2.1.0` |
+| Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
 
 ## What shipped in this run
 
@@ -50,6 +49,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | --- | --- |
 | 1.91.0 → 1.99.1 | Nine releases: the audit tail, instanced bodies, silhouettes, shadows, catwalks, lifts, the pause panels |
 | **2.0.0** | **The campaign: the `relics` objective, a HUD that counts, and 32 levels** |
+| **2.1.0** | **The story on screen: a camera that walks the level, written dialogue, and a job for the helper** |
 
 ### 2.0.0 in detail
 
@@ -70,13 +70,22 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | `survive` | the clock runs out, or the room is cleared first | 5, 11, 15, 19, 23, 27, 31 |
 | `relics` | the last relic breaks | 4, 12, 16, 20, 26, 28 |
 
+## 2.1.0 in detail
+
+| Piece | What it does |
+| --- | --- |
+| `campath.js` | the cutscene camera's path: `buildFlowField` + `floorHeightAt`, corners rounded to 0.7 m, resampled every 0.4 m |
+| `cinematic.playWalk()` | the walk mode, with a 4.5 s budget. The warden's entrance uses it, from the far side of his own room |
+| `dialogue.js` | scenes of a speaker and a line, typed at 52 cps, self-advancing after 2.1 s, skipped by any key. All 32 levels have an intro |
+| the helper's job | `V` offers it, `1` takes it (120 coins + a trinket, 180 when his room is clear), `2` declines. Carried in `game.flags.keshi` |
+
 ## What is next, in order
 
 | # | Item | Where | Size |
 | --- | --- | --- | --- |
-| 64 | The cutscene camera walks the level instead of flying through walls | `cinematic.js` | M |
-| 65 | Written dialogue with a speaker and a beat, driven by the level rows | `cinematic.js` + `story-levels.js` | L |
-| 66 | The NPC's first quest: a dialogue, a choice, a flag, a reward | `main.js` | M |
+| — | Make the campaign the default: 32 levels instead of nine zones | `main.js`, `world.js` | L |
+| — | An outro cutscene that walks away from the body | `campath.js` + `cinematic.js` | S |
+| — | Retire the terminals to flavour, the last piece of the brief | `lore.js` | M |
 
 **The first slice of the brief is still the test:** one level start to finish with a cutscene in, a dialogue
 line out and no terminal. Levels 1 and 4 are the two to build it on — `reach` and `relics`, both already

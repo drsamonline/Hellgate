@@ -449,6 +449,7 @@ function buildRun(seed, zoneDef) {
     npcBody.position.set(level.npc.wx, floorHeightAt(level, level.npc.wx, level.npc.wz), level.npc.wz);
     npcBody.rotation.y = Math.PI;
     scene.add(npcBody);
+    level.npc.quest = npcQuestState();
   }
 
   // chests: a box in a room that pays coins when you walk up to it. Coins are
@@ -1519,6 +1520,20 @@ function showZoneMap() {
   showScreen('map');
 }
 
+/**
+ * The interact key: the helper first, then the terminal. One key, two things to
+ * talk to, and the one you are standing next to is the one that answers.
+ */
+function interact() {
+  if (game.state !== 'playing') return;
+  const n = level && level.npc;
+  if (n && npcBody && n.quest === 'none' &&
+      Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz) < 2.1) {
+    if (openNpcOffer()) return;
+  }
+  openLore();
+}
+
 function openLore() {
   if (game.state !== 'playing' || !lore) return;
   const r = lore.readNear();
@@ -1694,6 +1709,105 @@ function updateLifts(dt) {
  * A stationary fighter is the drone's update loop with a room instead of a leash
  * and a target instead of a follow point.
  */
+// ---- the helper's job ------------------------------------------------------
+// He fights from his room and he sells ammo. This is the third thing the brief
+// asks of him: he asks for something, and he pays for it. The offer is a caption
+// with two keys, not a new panel — the letterbox is already on screen and the
+// player already knows how to read it.
+let npcOffer = null;
+
+/** The job, and what he pays for it. Two stages: taken, then done. */
+const NPC_JOB = { first: 120, second: 180 };
+
+/**
+ * The quest state for the helper in this level, restored from the run's flags.
+ * A resumed run must not be offered the same job twice.
+ * @returns {string} 'none' | 'declined' | 'taken' | 'done'
+ */
+function npcQuestState() {
+  const paid = (game.flags && game.flags.keshi) || 0;
+  if (paid >= 2) return 'done';
+  if (paid >= 1) return 'taken';
+  return 'none';
+}
+
+/** Stand next to him and he asks. */
+function openNpcOffer() {
+  const n = level && level.npc;
+  if (!n || npcOffer) return false;
+  if (n.quest !== 'none') return false;
+  npcOffer = { n };
+  const root = document.getElementById('letterbox');
+  const name = document.getElementById('cineName');
+  const line = document.getElementById('cineLine');
+  if (name) name.textContent = 'KESHI';
+  if (line) {
+    line.textContent = 'Clear this room and it is worth ' + NPC_JOB.second +
+      ' to me. Up front, ' + NPC_JOB.first + ' and a trinket.   [1] take the job   [2] not now';
+  }
+  if (root) {
+    root.classList.add('on');
+    root.classList.add('talking');
+  }
+  return true;
+}
+
+/** Close the caption. The letterbox is shared, so it goes back the way it was. */
+function closeNpcOffer() {
+  npcOffer = null;
+  const root = document.getElementById('letterbox');
+  if (root) {
+    root.classList.remove('on');
+    root.classList.remove('talking');
+  }
+}
+
+/**
+ * Answer the helper: 0 takes the job, 1 declines it.
+ * @param {number} i Which option.
+ * @returns {boolean} True when an offer was open to answer.
+ */
+function takeNpcOffer(i) {
+  if (!npcOffer) return false;
+  const n = npcOffer.n;
+  closeNpcOffer();
+  if (!n) return true;
+  game.flags = game.flags || {};
+  if (i !== 0) {
+    n.quest = 'declined';
+    hud.toast('KESHI  ·  ANOTHER TIME', 1.6);
+    return true;
+  }
+  n.quest = 'taken';
+  game.flags.keshi = 1;
+  game.coins = (game.coins || 0) + NPC_JOB.first;
+  const id = (TRINKETS[Math.floor(Math.random() * TRINKETS.length)] || {}).id;
+  if (id) dropTrinket(id, { x: n.wx + 0.9, z: n.wz });
+  hud.toast('JOB TAKEN  +' + NPC_JOB.first + ' COINS', 2.2);
+  audio.play('pickup');
+  note('npc job taken');
+  return true;
+}
+
+/** The second half: the room he stands in has to be empty of the living. */
+function checkNpcJob() {
+  const n = level && level.npc;
+  if (!n || n.quest !== 'taken') return;
+  const here = cellAt(level, player.pos.x, player.pos.z);
+  if (!here || here.room !== n.room) return;
+  for (const e of enemies.list) {
+    if (!e.alive) continue;
+    const c = cellAt(level, e.pos.x, e.pos.z);
+    if (c && c.room === n.room) return;
+  }
+  n.quest = 'done';
+  game.flags.keshi = 2;
+  game.coins = (game.coins || 0) + NPC_JOB.second;
+  hud.toast('KESHI PAYS UP  +' + NPC_JOB.second + ' COINS', 2.4);
+  audio.play('wave');
+  note('npc job paid');
+}
+
 function updateNpc(dt) {
   const n = level && level.npc;
   if (!n || !npcBody || !enemies) return;
@@ -1708,6 +1822,9 @@ function updateNpc(dt) {
   // the shop: stand next to him with coins and he sells the cheapest thing you
   // are short of. No new key, no new panel — the coins are the interface.
   const pd = Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz);
+  // the prompt is set after update()'s lore prompt, so it wins when both are near
+  if (pd < 2.1 && n.quest === 'none' && !npcOffer) hud.setPrompt(TOUCH ? 'TALK' : 'V  TALK');
+  checkNpcJob();
   n.shopCd = (n.shopCd || 0) - dt;
   if (pd < 2.1 && n.shopCd <= 0) {
     n.shopCd = 1.2;
@@ -2416,6 +2533,14 @@ window.addEventListener('keydown', (e) => {
     if (game.state === 'paused') { resumeGame(); return; }
   }
   if (game.state !== 'playing') return;
+  if (npcOffer) {
+    if (e.code === 'Digit1' || e.code === 'Digit2') {
+      takeNpcOffer(e.code === 'Digit1' ? 0 : 1);
+      e.preventDefault();
+      return;
+    }
+    if (e.code === 'Escape') { closeNpcOffer(); e.preventDefault(); return; }
+  }
   input.keys[e.code] = true;
   if (e.code === 'Space') { input.jumpQueued = true; e.preventDefault(); }
   if (e.code === 'Digit1') weapons.select(0);
@@ -2426,7 +2551,7 @@ window.addEventListener('keydown', (e) => {
   if (e.code === 'KeyE') castPower(1);
   if (e.code === 'KeyR') castPower(2);
   if (e.code === 'KeyX') weapons.next(1);
-  if (e.code === 'KeyV') openLore();
+  if (e.code === 'KeyV') interact();
   if (e.code === 'KeyG') throwGrenade();
   if (e.code === 'KeyF') swingBlade();
   if (e.code === 'Tab') { toggleInventory(); e.preventDefault(); }
@@ -2509,7 +2634,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.0.0';
+const BUILD = '2.1.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2972,6 +3097,7 @@ window.HG = {
   beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
+  interact, takeNpcOffer, openNpcOffer, closeNpcOffer, npcQuestState, get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
   takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex, hideScreens, showScreen,
   history: record, awardFor, achievementProgress: () => progressOf(record),

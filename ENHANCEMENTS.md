@@ -3,8 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Fifty-three items shipped — marked **✓ shipped** below; the rest say what is left and why. The three
-campaign items at the end (64–66) are the rest of `documentation/design-brief.md`.
+Fifty-seven items shipped — marked **✓ shipped** below; the rest say what is left and why.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -127,9 +126,9 @@ Cheap, low-risk, immediately noticeable. All `S`.
 61. **A campaign of hand-tuned seeds** — ten seeds with verified, escalating layouts, plus a  — ✓ shipped as chosen seeds: five scored by `tools/pick-seeds.mjs`level-select screen. Cheap to produce once the generator is frozen. `level.js` · M · medium
 62. **Procedural audio** — generate the ambient bed and enemy barks from a small grammar instead of hard-coded calls. `audio.js` · L · low — partly shipped: the ambient bed per zone (audio-kit textures), and every enemy type now has its own `voice` pitch, so an imp and a brute no longer fire the same blip. A full bark grammar is still open
 63. **A level editor** — the sector model is a grid; a paint-the-cells editor that exports a seed-independent map is a week of work and makes the project a platform. `tools/` · XL · medium
-64. **A cutscene that walks the level** — the boss entrance orbits its subject on a fixed arc, which is how it ends up inside a wall. `buildFlowField` from the camera's cell to its target cell, `floorHeightAt` at each waypoint, a Catmull-Rom through the centres. One function, three things that already work. `cinematic.js` · M · high
-65. **Dialogue, written not read off a tablet** — a script format of lines with a speaker and a beat, letterboxed and skippable, and the story moves off the terminals into it. Terminals stay as flavour. `cinematic.js` + `story-levels.js` · L · high
-66. **NPC quests that pay** — the helper exists and fights from his room. What he cannot do is ask for anything: a dialogue with two or three options, one of which sets a flag, and the flag changes the objective or pays a trinket, ammo or an upgrade. `main.js` · M · high
+64. **A cutscene that walks the level** — the boss entrance orbits its subject on a fixed arc, which is how it ends up inside a wall. `buildFlowField` from the camera's cell to its target cell, `floorHeightAt` at each waypoint, a Catmull-Rom through the centres. One function, three things that already work. `cinematic.js` · M · high — ✓ shipped as `campath.js`: the camera cannot cross a wall, measured over 16 paths on four seeds
+65. **Dialogue, written not read off a tablet** — a script format of lines with a speaker and a beat, letterboxed and skippable, and the story moves off the terminals into it. Terminals stay as flavour. `cinematic.js` + `story-levels.js` · L · high — ✓ shipped as `dialogue.js`: every one of the 32 levels has an intro scene, typed out and self-advancing
+66. **NPC quests that pay** — the helper exists and fights from his room. What he cannot do is ask for anything: a dialogue with two or three options, one of which sets a flag, and the flag changes the objective or pays a trinket, ammo or an upgrade. `main.js` · M · high — ✓ shipped: one job, two answers, 120 coins and a trinket up front, 180 when his room is clear
 
 ---
 

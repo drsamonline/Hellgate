@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.0.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.1.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.0.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 100, `v1.0.0` → `v2.0.0` |
-| Modules | 38 in `play/src/`, ~12,200 lines |
-| Assertions | 885 playability + 604 in the other three suites |
+| Version | 2.1.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 101, `v1.0.0` → `v2.1.0` |
+| Modules | 40 in `play/src/`, ~13,100 lines |
+| Assertions | 885 playability + 650 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 54 shipped, 3 measured-and-rejected, 9 open of 66 |
+| Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -73,14 +73,14 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 38 modules
+### `play/src/` — 40 modules
 
 | Group | Modules |
 | --- | --- |
 | Core | `main.js` (the loop, state machine, wiring — 2,600 lines), `player.js`, `weapons.js`, `powers.js`, `classes.js` |
-| World | `level.js` (cell grid + generation), `levelmesh.js` (merged geometry), `world.js` (zone table), `story-levels.js` (the 32-level campaign table), `props.js`, `items.js`, `textures.js`, `pixel.js` |
+| World | `level.js` (cell grid + generation), `levelmesh.js` (merged geometry), `world.js` (zone table), `story-levels.js` (the 32-level campaign table), `campath.js` (the cutscene camera's path), `props.js`, `items.js`, `textures.js`, `pixel.js` |
 | Enemies | `enemies.js` (8 types, AI, spawn, pools), `rig.js` (humanoid + quadruped joints), `models.js`, `glb.js` |
-| Feel | `effects.js` (pooled particles, decals, tracers, lights), `bloom.js`, `audio.js`, `music.js`, `cinematic.js`, `story.js` |
+| Feel | `effects.js` (pooled particles, decals, tracers, lights), `bloom.js`, `audio.js`, `music.js`, `cinematic.js`, `dialogue.js`, `story.js` |
 | UI | `hud.js`, `minimap.js`, `codex.js`, `search.js`, `touch.js`, `settings.js` |
 | Meta | `achievements.js`, `daily.js`, `loot.js`, `lore.js`, `book.js`, `zonebook.js`, `companion.js`, `projectiles.js`, `rng.js` |
 
@@ -177,7 +177,7 @@ restored *before* `applyClass`, which is what reads them.
 
 ## 6. What is left
 
-### Roadmap — 12 open of 66, of which 3 are measured-and-rejected
+### Roadmap — 9 open of 66, of which 3 are measured-and-rejected
 
 | # | Item | Size | Note |
 | --- | --- | --- | --- |
@@ -191,9 +191,6 @@ restored *before* `applyClass`, which is what reads them.
 | 59 | WebGPU renderer | XL | Measure before committing |
 | 60 | Co-op over WebRTC | XL | Host-authoritative |
 | 63 | Level editor | XL | Paint-the-cells, exports a map |
-| 64 | A cutscene that walks the level | M | `buildFlowField` + `floorHeightAt` + a Catmull-Rom |
-| 65 | Dialogue, written not read off a tablet | L | A script format of lines with a speaker and a beat |
-| 66 | NPC quests that pay | M | One dialogue, two choices, one flag, one reward |
 
 ### Measured and rejected — do not redo without new numbers
 

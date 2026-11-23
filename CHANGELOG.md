@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.0 — 2026-11-23
+
+**The story moves off the wall and onto the screen.** Three of the four pieces the design brief asked for.
+
+| Piece | What it does |
+| --- | --- |
+| `campath.js` | a cutscene camera that walks the level. The path is `buildFlowField` — the BFS the enemies use — so it cannot cross a wall, and `floorHeightAt` gives the height, so it follows stairs and decks. 16 paths over four seeds: no sampled point on a solid cell |
+| the warden's entrance | walks in from the far side of his own room instead of orbiting him on a fixed arc that could end inside a wall. 8–12 m, 2.5–3.8 s |
+| `dialogue.js` | the story as scenes of a speaker and a line, typed out, letterboxed, skippable. All 32 levels have an intro scene; a finished line advances itself after 2.1 s |
+| the helper's job | he asks for something at last. `V` offers it, `1` takes it: 120 coins and a trinket up front, 180 when his room is clear. `2` declines. The flag is in the run save, so a resumed run is not offered it twice |
+
+**Two bugs this found.**
+
+- The cinematic has documented itself as "skippable on any key, any click and any tap" since 1.x. Nothing ever called `skip()` except the tests — the same shape as the `fireCtx()` bug at 2.0.0: a handler that only a test ever calls. Any key or click skips it now.
+- `?level=N` only worked with `&auto=1`: `applyUrlOverrides()` returned before it read the parameter, so a deep link to level 4 started the gate. It is resolved before that return, and the title screen is prefilled with the level's own seed.
+
+**A cutscene has a budget.** A long path is walked faster rather than for longer: 4.5 s of walk, then a 0.5 s hold.
+
 ## 2.0.0 — 2026-11-23
 
 **The wave arena becomes a campaign.** A level states its objective, and clearing it ends the level.
