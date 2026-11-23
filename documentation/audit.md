@@ -452,3 +452,30 @@ draw nothing. A body past capacity 16 falls back to its own meshes, so this cann
 **The level-only number went up**, 47 → 56–63: the instanced sets exist as soon as a type has been built, and
 until every body of that type is released they are still in the pass. That is the honest shape of the trade —
 the cost is now paid once per type rather than once per enemy, and the eight-body frame is 50 % cheaper.
+
+## Pass nineteen — an enemy nobody could see, and what a screenshot is for
+
+Roadmap #49 (better enemy silhouettes) was a visual change, so it was checked by looking. The first shot of an
+imp came back with the imp missing — its spawn particles on screen, its body absent — and the obvious readings
+were all wrong: the body was built (14 meshes), in the scene, `visible`, at a finite position, with a correct
+instance matrix.
+
+| Reading | Why it was wrong |
+| --- | --- |
+| The viewmodel is covering it | Hiding the weapon scene changed nothing |
+| The camera is pitched up, as in pass seventeen | The pitch was forced to 0 for the shot |
+| Pausing broke the instance sync | Not pausing, and freezing the enemies instead, changed nothing |
+
+The cause was in the previous release. `syncEnemyInstances` set `part.inst.count = Math.max(1, liveCount)` as a
+liveness filter. `count` is a draw *range*, and slots are not compacted: four imp bodies attached with one alive
+at slot 3 meant the mesh drew slot 0 only, and that enemy was invisible. Every enemy whose slot index was at or
+above the live count was not drawn — which is most of a wave once bodies start pooling.
+
+Fixed by drawing the full capacity and letting dead slots hold a zero-scale matrix; `visible` alone decides
+whether a type costs a draw call.
+
+**The lesson is the one this audit keeps relearning.** Pass fourteen said "verify visually when the change is
+visual" and pass fifteen shipped a merge checked by a screenshot. This time the screenshot was the only thing
+that could have found it: every headless assertion passed, because every headless assertion tests the body, not
+the pixels. A draw-call budget cannot see a missing enemy either — 78 calls with one imp drawn and seven not is
+still under the ceiling.

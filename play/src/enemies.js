@@ -428,10 +428,13 @@ function syncEnemyInstances() {
       }
     }
     for (const part of set.parts) {
-      // a type with nothing alive on screen costs no draw call at all, and the
-      // instance count follows the living bodies so empty slots draw nothing
+      // A type with nothing alive costs no draw call at all. `count` stays at the
+      // full capacity: it is a draw *range*, not a liveness filter, and the slots
+      // are not compacted — trimming it to the live count drew nothing whenever
+      // the living body sat above that index, which is how the imp went invisible.
+      // A dead slot holds a zero-scale matrix and costs no triangles worth having.
       part.inst.visible = liveCount > 0;
-      part.inst.count = Math.max(1, liveCount);
+      part.inst.count = INSTANCE_CAP;
       part.inst.instanceMatrix.needsUpdate = true;
       if (part.inst.instanceColor) part.inst.instanceColor.needsUpdate = true;
       if (part.inst.computeBoundingSphere) part.inst.computeBoundingSphere();

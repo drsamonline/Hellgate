@@ -108,7 +108,7 @@ export function humanoid(p) {
   spine.userData.lean = p.lean || 0; // the pose blend needs the rest value
 
   // shoulders and head ride the spine so a lean carries them
-  const shoulders = joint(spine, 0, p.torsoLen * 0.92, 0);
+  const shoulders = joint(spine, 0, p.torsoLen * 0.92, p.hunch || 0);
   const neckMesh = new THREE.Mesh(cyl(p.headR * 0.42, p.headR * 0.5, p.neckLen + 0.06, 7), M.dark || M.body);
   neckMesh.position.y = p.neckLen * 0.5;
   shoulders.add(neckMesh);
@@ -131,6 +131,35 @@ export function humanoid(p) {
       head.add(eye);
     }
   }
+  if (p.brow) {
+    // a heavy brow over the eyes: the cheapest way to stop a sphere reading as a
+    // face and start it reading as a predator
+    const brow = new THREE.Mesh(box(p.headR * 1.5, p.headR * 0.3, p.headR * 0.5), M.dark || M.body);
+    brow.position.set(0, p.headR * 0.42, p.headR * 0.72);
+    brow.rotation.x = 0.22;
+    head.add(brow);
+  }
+  if (p.jaw) {
+    const jaw = new THREE.Mesh(box(p.headR * 1.05, p.headR * 0.42, p.headR * 0.95), M.dark || M.body);
+    jaw.position.set(0, -p.headR * 0.62, p.headR * 0.34);
+    head.add(jaw);
+    for (const sx of [-1, 1]) {
+      const tooth = new THREE.Mesh(cone(p.headR * 0.09, p.headR * 0.34, 4), M.dark || M.body);
+      tooth.position.set(sx * p.headR * 0.28, -p.headR * 0.38, p.headR * 0.76);
+      tooth.rotation.x = Math.PI;         // pointing down, out of the jaw
+      head.add(tooth);
+    }
+  }
+  if (p.spikes) {
+    // a ridge down the back: hunched things have spines you can count
+    for (let i = 0; i < p.spikes; i++) {
+      const t = (i + 1) / (p.spikes + 1);
+      const spike = new THREE.Mesh(cone(p.chestR * 0.16, p.chestR * 0.72, 4), M.dark || M.body);
+      spike.position.set(0, p.torsoLen * (0.18 + t * 0.72), -p.chestR * (0.92 - t * 0.16));
+      spike.rotation.x = -0.9;            // swept back along the spine
+      spine.add(spike);
+    }
+  }
   parts.head = head;
   parts.spine = spine;
 
@@ -146,7 +175,7 @@ export function humanoid(p) {
     lower.position.y = -p.lowerArm / 2;
     elbow.add(lower);
 
-    const hand = new THREE.Mesh(sph(p.armR * 0.95, 6), M.dark || M.body);
+    const hand = new THREE.Mesh(sph(p.armR * (p.fists ? 1.5 : 0.95), 6), M.dark || M.body);
     hand.position.y = -p.lowerArm;
     elbow.add(hand);
 
@@ -166,6 +195,12 @@ export function humanoid(p) {
     const shin = new THREE.Mesh(cyl(p.legR * 0.85, p.legR * 0.65, p.shin, 7), M.dark || M.body);
     shin.position.y = -p.shin / 2;
     knee.add(shin);
+    if (p.kneepads) {
+      const pad = new THREE.Mesh(sph(p.legR * 1.15, 6), M.dark || M.body);
+      pad.scale.set(1, 0.85, 0.7);
+      pad.position.set(0, -0.02, p.legR * 0.55);
+      knee.add(pad);
+    }
 
     const foot = new THREE.Mesh(box(p.legR * 1.7, p.legR * 0.7, p.legR * 3), M.dark || M.body);
     foot.position.set(0, -p.shin, p.legR * 0.8);
@@ -190,6 +225,23 @@ export function humanoid(p) {
       shoulders.add(pad);
     }
   }
+  if (p.traps) {
+    // a wedge of muscle from neck to shoulder: shoulders on legs, not a box on a box
+    const traps = new THREE.Mesh(box(p.shoulderX * 2.2, p.torsoLen * 0.22, p.chestR * 1.1), M.body);
+    traps.position.set(0, p.torsoLen * 0.86, -p.chestR * 0.12);
+    shoulders.add(traps);
+  }
+  if (p.pack) {
+    // a visible backpack, with a canister on it: from behind, a grunt is now a
+    // soldier carrying something instead of a barrel with legs
+    const pack = new THREE.Mesh(box(p.chestR * 1.15, p.torsoLen * 0.5, p.chestR * 0.55), M.body);
+    pack.position.set(0, p.torsoLen * 0.62, -p.chestR * 0.78);
+    spine.add(pack);
+    const tank = new THREE.Mesh(cyl(p.chestR * 0.24, p.chestR * 0.24, p.torsoLen * 0.56, 7), M.dark || M.body);
+    tank.position.set(p.chestR * 0.5, p.torsoLen * 0.66, -p.chestR * 1.0);
+    spine.add(tank);
+    parts.pack = pack;
+  }
   if (p.sac) {
     const sac = new THREE.Mesh(sph(p.sacR || 0.42, 9), M.sac || M.body);
     sac.scale.set(1, 0.92, 1.05);
@@ -211,6 +263,10 @@ export function humanoid(p) {
     const mag = new THREE.Mesh(box(0.07, 0.16, 0.07), M.dark || M.body);
     mag.position.set(0, -0.1, 0.02);
     gun.add(mag);
+    // a muzzle brake, so the thing in its hands reads as a weapon and not a pipe
+    const brake = new THREE.Mesh(box(0.13, 0.13, 0.12), M.plate || M.dark || M.body);
+    brake.position.z = 0.44;
+    gun.add(brake);
     gun.position.set(0, -p.lowerArm * 0.7, 0.1);
     parts.elbowR.add(gun);
   }
@@ -319,26 +375,32 @@ export function quadruped(p) {
 
 /** The proportions for each enemy body. */
 export const PROPORTIONS = {
+  // #49 — same joints, same mesh budget after the merge, more silhouette. The
+  // imp is a crouched thing with its arms below its knees and a ridge down its
+  // back; the grunt is a soldier with a pack and a muzzle; the brute is shoulders
+  // with a neck buried in them.
   imp: {
     hipR: 0.22, hipLen: 0.18, waistR: 0.22, chestR: 0.3, torsoLen: 0.7,
-    shoulderX: 0.28, neckLen: 0.13, headR: 0.21, headTall: 0.9,
-    armR: 0.075, upperArm: 0.42, lowerArm: 0.44,
-    legR: 0.1, thigh: 0.4, shin: 0.4, legX: 0.17,
-    lean: 0.22, horns: true, eyes: true,
+    shoulderX: 0.28, neckLen: 0.13, headR: 0.22, headTall: 0.86,
+    armR: 0.075, upperArm: 0.5, lowerArm: 0.52,
+    legR: 0.1, thigh: 0.34, shin: 0.34, legX: 0.17,
+    lean: 0.34, hunch: 0.07, horns: true, eyes: true, brow: true, jaw: true, spikes: 3,
   },
   grunt: {
-    hipR: 0.24, hipLen: 0.2, waistR: 0.26, chestR: 0.36, torsoLen: 0.78,
-    shoulderX: 0.32, neckLen: 0.11, headR: 0.24, headTall: 0.98,
+    hipR: 0.24, hipLen: 0.2, waistR: 0.26, chestR: 0.38, torsoLen: 0.78,
+    shoulderX: 0.34, neckLen: 0.11, headR: 0.24, headTall: 0.98,
     armR: 0.11, upperArm: 0.4, lowerArm: 0.38,
     legR: 0.13, thigh: 0.4, shin: 0.38, legX: 0.2,
     lean: 0.04, eyes: true, pauldrons: true, pauldronR: 0.15, gun: true,
+    pack: true, kneepads: true, brow: true,
   },
   brute: {
     hipR: 0.32, hipLen: 0.24, waistR: 0.36, chestR: 0.54, torsoLen: 0.98,
     shoulderX: 0.5, neckLen: 0.08, headR: 0.27, headTall: 0.86,
     armR: 0.2, upperArm: 0.6, lowerArm: 0.62,
     legR: 0.24, thigh: 0.5, shin: 0.48, legX: 0.3,
-    lean: 0.16, eyes: true, pauldrons: true, pauldronR: 0.26,
+    lean: 0.16, eyes: true, pauldrons: true, pauldronR: 0.3,
+    traps: true, fists: true, spikes: 2, jaw: true,
   },
   hound: {
     bodyR: 0.26, bodyLen: 1.15, neckLen: 0.34, tailLen: 0.42,
@@ -350,7 +412,7 @@ export const PROPORTIONS = {
     shoulderX: 0.26, neckLen: 0.14, headR: 0.2, headTall: 0.9,
     armR: 0.06, upperArm: 0.45, lowerArm: 0.42,
     legR: 0.08, thigh: 0.45, shin: 0.42, legX: 0.17,
-    lean: 0.42, eyes: true, sac: true, sacR: 0.42,
+    lean: 0.42, eyes: true, sac: true, sacR: 0.42, jaw: true, brow: true,
   },
   warden: {
     hipR: 0.44, hipLen: 0.3, waistR: 0.5, chestR: 0.72, torsoLen: 1.35,
@@ -358,7 +420,7 @@ export const PROPORTIONS = {
     armR: 0.26, upperArm: 0.72, lowerArm: 0.7,
     legR: 0.34, thigh: 0.62, shin: 0.6, legX: 0.4,
     lean: 0.04, horns: true, eyes: true, pauldrons: true, pauldronR: 0.3,
-    core: true, coreR: 0.26,
+    core: true, coreR: 0.26, spikes: 4, brow: true,
   },
 };
 

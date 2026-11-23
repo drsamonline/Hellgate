@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.93.0 — 2026-11-23
+
+**Enemy silhouettes — #49 — and an invisibility bug 1.92.0 shipped with**
+
+Same joints, same mesh budget after the merge, more creature: the imp is hunched with its arms hanging below
+its knees, a ridge of three spikes down its spine, a heavy brow and a jaw with teeth; the grunt carries a
+visible backpack and canister, knee pads, a brow and a muzzle brake on its gun; the brute gets a trapezius
+wedge, fists and a short ridge; the spitter and the warden get brows, and the warden a longer ridge.
+
+| Type | Meshes before | After |
+| --- | --- | --- |
+| imp | 13 | 14 |
+| grunt | 16 | 17 |
+| brute | 14 | 15 |
+| spitter | 13 | 14 |
+| warden | 14 | 15 |
+
+Everything added sits inside a joint that already existed, so the merge still gives one mesh per joint and the
+draw calls do not move.
+
+**The bug.** 1.92.0 trimmed each instanced mesh's `count` to the number of live bodies. `count` is a draw
+*range*, not a liveness filter, and slots are not compacted: with four imp bodies attached and one alive at
+slot 3, the mesh drew slot 0 and that enemy was invisible. Found by looking at a screenshot of an imp that
+would not appear, not by a test. `count` is the full capacity now, and dead slots hold a zero-scale matrix.
+
 ## 1.92.0 — 2026-11-23
 
 **Instanced enemy bodies — #45, and the measurement that had to be fixed first**
