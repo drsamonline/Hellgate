@@ -363,8 +363,12 @@ for (const [type, expect] of [['imp', 0.62], ['grunt', 0.52], ['hound', 0.64]]) 
   if (wall) {
     e.pos.x = wall.x * 2;
     e.pos.z = wall.z * 2;
-    const moved = e.depenetrate(HG.level);
+    // it steps out, so it takes a few frames rather than one snap — the snap was
+    // a two-cell teleport the player saw as an enemy appearing across the room
+    let moved = false;
+    for (let i = 0; i < 12 && !moved; i++) moved = e.depenetrate(HG.level);
     ok(moved === true, type + ' is pushed out of a solid cell');
+    for (let i = 0; i < 12 && isBlocked(HG.level, e.pos.x, e.pos.z); i++) e.depenetrate(HG.level);
     ok(!isBlocked(HG.level, e.pos.x, e.pos.z), type + ' ends up on open floor');
   }
 }
