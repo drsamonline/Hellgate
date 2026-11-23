@@ -166,14 +166,23 @@ export function humanoid(p) {
   // ---- arms: shoulder -> elbow -> hand ----------------------------------
   for (const [side, sx] of [['L', -1], ['R', 1]]) {
     const shoulder = joint(shoulders, sx * p.shoulderX, 0, 0);
-    const upper = new THREE.Mesh(cyl(p.armR * 0.92, p.armR, p.upperArm, 7), M.body);
+    const deltoid = new THREE.Mesh(sph(p.armR * 1.25, 7), M.body);
+    deltoid.scale.set(1, 0.9, 1);
+    shoulder.add(deltoid);
+    const upper = new THREE.Mesh(cyl(p.armR * 0.98, p.armR * 1.08, p.upperArm, 7), M.body);
     upper.position.y = -p.upperArm / 2;
     shoulder.add(upper);
 
     const elbow = joint(shoulder, 0, -p.upperArm, 0);
-    const lower = new THREE.Mesh(cyl(p.armR * 0.85, p.armR * 0.7, p.lowerArm, 7), M.dark || M.body);
+    const lower = new THREE.Mesh(cyl(p.armR * 0.85, p.armR * 0.62, p.lowerArm, 7), M.dark || M.body);
     lower.position.y = -p.lowerArm / 2;
     elbow.add(lower);
+    // a joint with a bulge reads as a limb; a bare cylinder reads as a pipe
+    const elbowCap = new THREE.Mesh(sph(p.armR * 0.95, 6), M.body);
+    elbow.add(elbowCap);
+    const wrist = new THREE.Mesh(cyl(p.armR * 0.62, p.armR * 0.7, p.armR * 0.5, 6), M.dark || M.body);
+    wrist.position.y = -p.lowerArm + p.armR * 0.2;
+    elbow.add(wrist);
 
     const hand = new THREE.Mesh(sph(p.armR * (p.fists ? 1.5 : 0.95), 6), M.dark || M.body);
     hand.position.y = -p.lowerArm;
@@ -187,14 +196,16 @@ export function humanoid(p) {
   // ---- legs: hip -> knee -> foot ----------------------------------------
   for (const [side, sx] of [['L', -1], ['R', 1]]) {
     const hip = joint(g, sx * p.legX, hipY, 0);
-    const thigh = new THREE.Mesh(cyl(p.legR, p.legR * 0.9, p.thigh, 7), M.body);
+    const thigh = new THREE.Mesh(cyl(p.legR * 1.12, p.legR * 0.82, p.thigh, 7), M.body);
     thigh.position.y = -p.thigh / 2;
     hip.add(thigh);
 
     const knee = joint(hip, 0, -p.thigh, 0);
-    const shin = new THREE.Mesh(cyl(p.legR * 0.85, p.legR * 0.65, p.shin, 7), M.dark || M.body);
+    const shin = new THREE.Mesh(cyl(p.legR * 0.85, p.legR * 0.58, p.shin, 7), M.dark || M.body);
     shin.position.y = -p.shin / 2;
     knee.add(shin);
+    const kneeCap = new THREE.Mesh(sph(p.legR * 1.0, 6), M.body);
+    knee.add(kneeCap);
     if (p.kneepads) {
       const pad = new THREE.Mesh(sph(p.legR * 1.15, 6), M.dark || M.body);
       pad.scale.set(1, 0.85, 0.7);
@@ -205,6 +216,9 @@ export function humanoid(p) {
     const foot = new THREE.Mesh(box(p.legR * 1.7, p.legR * 0.7, p.legR * 3), M.dark || M.body);
     foot.position.set(0, -p.shin, p.legR * 0.8);
     knee.add(foot);
+    const toe = new THREE.Mesh(box(p.legR * 1.5, p.legR * 0.45, p.legR * 0.8), M.dark || M.body);
+    toe.position.set(0, -p.shin - p.legR * 0.1, p.legR * 2.1);
+    knee.add(toe);
 
     parts[`hip${side}`] = hip;
     parts[`knee${side}`] = knee;
@@ -227,8 +241,11 @@ export function humanoid(p) {
   }
   if (p.traps) {
     // a wedge of muscle from neck to shoulder: shoulders on legs, not a box on a box
-    const traps = new THREE.Mesh(box(p.shoulderX * 2.2, p.torsoLen * 0.22, p.chestR * 1.1), M.body);
-    traps.position.set(0, p.torsoLen * 0.86, -p.chestR * 0.12);
+    // it sits ON the shoulder line, not above the head: the first version put it at
+    // 0.86 of a torso up from a joint already 0.92 up, and it floated clear of the
+    // body like a signboard
+    const traps = new THREE.Mesh(box(p.shoulderX * 1.9, p.torsoLen * 0.18, p.chestR * 0.9), M.body);
+    traps.position.set(0, -p.torsoLen * 0.02, -p.chestR * 0.16);
     shoulders.add(traps);
   }
   if (p.pack) {
