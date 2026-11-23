@@ -39,11 +39,17 @@ import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from 
 // ---------------------------------------------------------------- renderer --
 const canvas = document.getElementById('game');
 let fillLight = null;
+let sun = null;
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
 renderer.setSize(window.innerWidth, window.innerHeight, false);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
+// #52 — one directional shadow map with tight bounds, following the player. A map
+// that covers the arena is useless: at 40x40 cells the texel is a hand's width and
+// every shadow is a smear. A 14 m box is 1.4 cm per texel at 1024.
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 // A renderer-level grade in place of castle-valley's post filter: filmic tone
 // mapping compresses the highlights instead of clipping them, which is what
 // stops the muzzle flashes and the exit pad from going pure white.
@@ -77,9 +83,19 @@ function newScene(z) {
   fillLight = new THREE.PointLight(0xfff2e0, 1.5, 30, 1.4);
   fillLight.position.set(0, 2, 0);
   s.add(fillLight);
-  const d = new THREE.DirectionalLight(0xffd9b0, 0.3);
+  const d = new THREE.DirectionalLight(0xffd9b0, 0.55);
   d.position.set(1, 2, 0.6);
+  d.castShadow = true;
+  d.shadow.mapSize.set(1024, 1024);
+  const sc = d.shadow.camera;
+  sc.left = -14; sc.right = 14; sc.top = 14; sc.bottom = -14;
+  sc.near = 0.5; sc.far = 46;
+  sc.updateProjectionMatrix();
+  d.shadow.bias = -0.0012;
+  d.shadow.normalBias = 0.03;
+  sun = d;
   s.add(d);
+  s.add(d.target);
   return s;
 }
 
@@ -1467,6 +1483,14 @@ function checkLockedDoors(dt) {
 }
 
 /** The exit beacon leans green the moment the pad opens. */
+/** The sun follows the player: the shadow camera is a 14 m box, so it has to. */
+function updateSun() {
+  if (!sun || !player) return;
+  sun.position.set(player.pos.x + 9, player.pos.y + 16, player.pos.z + 7);
+  sun.target.position.set(player.pos.x, player.pos.y, player.pos.z);
+  sun.target.updateMatrixWorld();
+}
+
 /** The fill light follows the player, a little ahead and above. */
 function updateFillLight() {
   if (!fillLight) return;
@@ -2149,7 +2173,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.93.0';
+const BUILD = '1.94.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2360,6 +2384,7 @@ function update(dt) {
   updateMusic(dt);
   updateBeacon(dt);
   updateFillLight();
+  updateSun();
   checkLockedDoors(dt);
   checkStuckSpawn(dt);
   // each zone breathes: embers, drips, spores. It is the same particle pool the

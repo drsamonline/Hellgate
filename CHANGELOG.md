@@ -1,5 +1,27 @@
 # Changelog
 
+## 1.94.0 — 2026-11-23
+
+**Real-time shadows — #52**
+
+One directional shadow map with a tight 14 m box that follows the player, 1024², PCF, cast by the instanced
+enemy bodies and received by the level shell and the doors. The weak 0.3 directional that was already there is
+now the caster at 0.55, so the light that draws the shadow is also the light that makes it readable.
+
+| Frame, camera level, gate | Before | After |
+| --- | --- | --- |
+| The level alone | 56–63 | 57 |
+| Eight imps in front | 78–85 | 94 |
+| Triangles, eight imps | 8.7k | 24.7k |
+
+The shadow pass costs about 12 draw calls and re-renders the geometry it shadows — the trade the item asked
+for, and the ceiling of 120 still holds at 94.
+
+A map covering the arena was the wrong shape: at 40×40 cells the texel is a hand's width. A 14 m box around the
+player is 1.4 cm per texel, which is enough for an enemy to cast a legible shadow onto the floor it stands on.
+The level does not cast into itself — that is what needs the arena-sized map, and it is why rooms still read
+partly as boxes.
+
 ## 1.93.0 — 2026-11-23
 
 **Enemy silhouettes — #49 — and an invisibility bug 1.92.0 shipped with**

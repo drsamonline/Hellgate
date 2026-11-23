@@ -7,6 +7,7 @@ export const RepeatWrapping = 1000;
 export const SRGBColorSpace = 'srgb';
 export const StaticDrawUsage = 35044;
 export const DynamicDrawUsage = 35048;
+export const PCFShadowMap = 2;
 
 export class Vector3 {
   constructor(x = 0, y = 0, z = 0) { this.x = x; this.y = y; this.z = z; }
@@ -162,6 +163,7 @@ export class WebGLRenderer {
     this.outputColorSpace = SRGBColorSpace;
     this.renders = 0;
     this.capabilities = { getMaxAnisotropy: () => 8, isWebGL2: true };
+    this.shadowMap = { enabled: false, type: 0 };
     this.info = { render: { calls: 0, triangles: 0 }, memory: { geometries: 0, textures: 0 } };
   }
   setPixelRatio() {}
@@ -198,7 +200,20 @@ class Light extends Object3D {
 }
 export class AmbientLight extends Light {}
 export class HemisphereLight extends Light {}
-export class DirectionalLight extends Light {}
+export class DirectionalLight extends Light {
+  constructor(color, intensity) {
+    super(color, intensity);
+    this.isDirectionalLight = true;
+    this.castShadow = false;
+    this.target = new Object3D();
+    this.shadow = {
+      mapSize: { set() {}, x: 0, y: 0 },
+      camera: { left: -5, right: 5, top: 5, bottom: -5, near: 0.5, far: 50, updateProjectionMatrix() {} },
+      bias: 0,
+      normalBias: 0,
+    };
+  }
+}
 export class PointLight extends Light {}
 
 export class BufferAttribute {

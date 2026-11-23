@@ -479,3 +479,29 @@ visual" and pass fifteen shipped a merge checked by a screenshot. This time the 
 that could have found it: every headless assertion passed, because every headless assertion tests the body, not
 the pixels. A draw-call budget cannot see a missing enemy either — 78 calls with one imp drawn and seven not is
 still under the ceiling.
+
+## Pass twenty — shadows, and the size of the box
+
+Roadmap #52. One directional light casts, 1024² PCF, into a 14 m box that follows the player; the level shell
+and the doors receive; the instanced bodies cast.
+
+| Frame, camera level, gate | Before | After |
+| --- | --- | --- |
+| The level alone | 56–63 | 57 |
+| Eight imps in front | 78–85 | 94 |
+| Triangles, eight imps | 8.7k | 24.7k |
+
+The cost is the shadow pass re-rendering what it shadows: +12 draw calls, and the triangle count triples because
+every caster is drawn twice. Frame time cannot be measured here — SwiftShader runs at 150–200 ms whatever the
+scene — so draw calls and triangles are the numbers, and they are the ones the budget already watches.
+
+**What was deliberately not done.** The level does not cast into itself. That needs a map covering the arena,
+and at 40×40 cells a 1024² map is a hand's width per texel: every wall shadow becomes a smear, which is worse
+than the flat ambient it replaces. So the shadows are object shadows — enemies, props, barrels onto the floor —
+and the "rooms read as boxes" half of the item is still open. Doing it properly is a cascaded map or a baked
+lightmap per sector; #53 already writes a per-cell light value into vertex colours, and that is the cheaper
+path from here.
+
+Verified by eye, twice: a grunt at 4 m with the map on and off, same camera. The shadow under it is there and
+legible; it is subtle, because ambient 0.85 plus hemisphere 1.25 still carries most of the light. Dropping the
+ambient to make shadows read is a different change with a different risk, and it was not taken here.

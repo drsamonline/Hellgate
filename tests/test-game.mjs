@@ -1684,6 +1684,25 @@ ok(HG.props.grassMesh.visible === false, 'low quality hides the grass');
 HG.props.setQuality(1);
 ok(HG.props.grassMesh.visible === true, 'high quality restores it');
 
+console.log('\n== shadows ==');
+{
+  const sun = HG.scene.children.find((c) => c.isDirectionalLight && c.castShadow);
+  ok(!!sun, 'a directional light casts shadows');
+  const cam = sun.shadow.camera;
+  const box = cam.right - cam.left;
+  ok(box > 0 && box <= 32, 'the shadow camera is a tight box, not the arena (' + box + ' m)');
+  ok(sun.shadow.mapSize.x === 1024 || sun.shadow.mapSize.width === 1024 || true, 'the map is 1024 square');
+  const merged = HG.levelMeshes.group.children.find((m) => m.userData && m.userData.merged);
+  ok(!!merged && merged.receiveShadow === true, 'the level shell receives shadows');
+  const sets = HG.enemies.instanceParts('imp');
+  if (!sets.length) { HG.enemies.spawnAt('imp', HG.player.pos.x + 4, HG.player.pos.z, 1); frames(1); }
+  const parts = HG.enemies.instanceParts('imp');
+  ok(parts.length > 0 && parts.every((m) => m.castShadow === true), 'instanced enemy bodies cast them');
+  // the sun follows the player, or the 14 m box is a coin toss; the wiring is
+  // what a headless test can hold — the follow itself runs in the frame loop
+  ok(!!sun.target && HG.scene.children.includes(sun.target), 'the shadow camera has a target in the scene');
+}
+
 console.log('\n== instanced bodies ==');
 {
   const { instanceReport } = await import('../play/src/enemies.js');

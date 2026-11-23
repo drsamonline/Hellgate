@@ -370,6 +370,7 @@ function instanceSetFor(typeName, body, scene) {
     const inst = new THREE.InstancedMesh(m.geometry, mat, INSTANCE_CAP);
     inst.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     inst.frustumCulled = true;
+    inst.castShadow = true;
     inst.count = INSTANCE_CAP;
     for (let i = 0; i < INSTANCE_CAP; i++) {
       inst.setMatrixAt(i, INST_ZERO);

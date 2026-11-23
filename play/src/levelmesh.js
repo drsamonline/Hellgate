@@ -271,6 +271,7 @@ export function buildLevelMeshes(level, mats, zone) {
     g.setIndex(bk.i);
     g.computeBoundingSphere();
     const mesh = new THREE.Mesh(g, mats[bk.key.replace('decor:', '')]);
+    mesh.receiveShadow = true;
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();
     mesh.userData.merged = true;
@@ -299,6 +300,7 @@ export function buildLevelMeshes(level, mats, zone) {
       thinX ? CELL * 0.96 : 0.34
     );
     const mesh = new THREE.Mesh(geo, mats['door_plain'] || mats['door']);
+    mesh.receiveShadow = true;
     mesh.position.set(d.x * CELL, dc.floor + h / 2, d.z * CELL);
     mesh.userData.height = h;
     mesh.userData.baseY = dc.floor + h / 2;

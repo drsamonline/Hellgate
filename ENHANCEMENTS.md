@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Fifty-two items shipped — marked **✓ shipped** below; the rest say what is left and why.
+Fifty-three items shipped — marked **✓ shipped** below; the rest say what is left and why.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -99,7 +99,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 ## Tier 3 — Large (architectural)
 
-52. **Real-time shadows** — a single directional shadow map with tight bounds, or baked vertex AO. The current lighting is flat ambient, which is why rooms read as boxes. `main.js` · XL · high
+52. **Real-time shadows** — a single directional shadow map with tight bounds, or baked vertex AO. The current lighting is flat ambient, which is why rooms read as boxes. `main.js` · XL · high — ✓ shipped at 1.94.0: one 1024² PCF map in a 14 m box that follows the player, cast by the instanced bodies and received by the level shell. Measured: eight imps 78–85 → **94** draw calls, 8.7k → 24.7k triangles. The level does not cast into itself; that needs an arena-sized map, which is a smear at this cell size
 53. **Lightmap / baked lighting per sector** — a per-cell light value baked at generation and written into vertex colours; the cheapest way to get contrast and mood. `levelmesh.js` · L · high — ✓ shipped
 54. **Collision broadphase** — a uniform grid or BVH for enemies and projectiles instead of scanning the list. Only matters past ~50 enemies, but that is where this is headed. `enemies.js` · L · medium
 55. **Object pooling for enemies** — ✓ shipped (body pool per type, capped at 14 each; measured 16 bodies built for 36 enemies over five waves) — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
