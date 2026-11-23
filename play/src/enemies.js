@@ -1101,8 +1101,11 @@ export class Enemy {
     }
     if (this.parts.kneeL) this.parts.kneeL.rotation.x = Math.max(0, -swing) * 1.3;
     if (this.parts.kneeR) this.parts.kneeR.rotation.x = Math.max(0, swing) * 1.3;
-    if (this.parts.elbowL) this.parts.elbowL.rotation.x = Math.max(0, swing) * 0.9 - 0.15;
-    if (this.parts.elbowR) this.parts.elbowR.rotation.x = Math.max(0, -swing) * 0.9 - 0.15;
+    // A bent elbow at rest. Straight arms hanging at the sides is what made the
+    // bodies read as mannequins: the silhouette of a creature is in the fold of
+    // the arm, and the walk swing rides on top of the rest angle.
+    if (this.parts.elbowL) this.parts.elbowL.rotation.x = -0.62 + Math.max(0, swing) * 0.9;
+    if (this.parts.elbowR) this.parts.elbowR.rotation.x = -0.62 + Math.max(0, -swing) * 0.9;
 
     // Pose blending: the walk cycle is the base, and the state adds to it. A
     // shooting enemy raises both arms and leans back; a hurt one folds forward.
@@ -1127,12 +1130,13 @@ export class Enemy {
     if (this.parts.legBL) this.parts.legBL.rotation.x = -swing;
     if (this.parts.legBR) this.parts.legBR.rotation.x = swing;
     if (this.type === 'imp' && this.parts.armL) {
-      this.parts.armL.rotation.x = -swing * 0.7;
-      this.parts.armR.rotation.x = swing * 0.7;
+      // a hunched thing carries its arms in front of it
+      this.parts.armL.rotation.x = -0.42 - swing * 0.7;
+      this.parts.armR.rotation.x = -0.42 + swing * 0.7;
       this.parts.armR.rotation.x -= this.state === STATE.ATTACK ? 1.6 : 0;
     } else if (this.parts.armL) {
-      this.parts.armL.rotation.x = -swing * 0.7;
-      if (this.parts.armR) this.parts.armR.rotation.x = this.state === STATE.ATTACK ? -0.35 : 0;
+      this.parts.armL.rotation.x = -0.18 - swing * 0.7;
+      if (this.parts.armR) this.parts.armR.rotation.x = this.state === STATE.ATTACK ? -0.35 : -0.12;
     }
     const bob = Math.sin(this.walkPhase * 2) * 0.045 * sp;
     this.mesh.position.y = this.pos.y + bob;
