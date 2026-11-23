@@ -37,8 +37,15 @@ const ignoreIdx = process.argv.indexOf('--ignore');
 const ignore = ignoreIdx > -1 ? process.argv[ignoreIdx + 1] : null;
 
 const allHtml = walk(ROOT);
+// `docs/` is the deployed copy the pipeline writes for Pages, not source. Its
+// references resolve against the copy, and the copy is assembled at deploy time,
+// so checking it here reports every asset as missing. The source pages are the
+// ones this gate is about.
+const OUTPUT_DIRS = ['docs/', 'dist/', 'build/'];
 const pages = allHtml.filter((p) => {
-  if (ignore && path.relative(ROOT, p).startsWith(ignore.replace(/\*$/, ''))) return false;
+  const rel = path.relative(ROOT, p);
+  if (OUTPUT_DIRS.some((d) => rel.startsWith(d))) return false;
+  if (ignore && rel.startsWith(ignore.replace(/\*$/, ''))) return false;
   return /<!DOCTYPE|<html/i.test(fs.readFileSync(p, 'utf8'));
 });
 const skipped = allHtml.length - pages.length;
