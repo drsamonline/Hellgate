@@ -232,7 +232,8 @@ critical (pass-through walls, enemies teleporting) and one is the honest verdict
 
 | Trap | What it cost |
 | --- | --- |
-| **The pickup tests are flaky.** `full-health pickup is left on the floor` and `damaged player picks it up` fail on roughly one run in five and pass on the next, with or without a code change | They blamed `LOD_DIST` and then chests, both innocent. Re-run before believing them, and fix the flakiness before it blames something that matters |
+| **The pickup tests were flaky.** `full-health pickup is left on the floor` and `damaged player picks it up` failed about one run in five | They blamed `LOD_DIST` and then chests, both innocent. The cause: when the last enemy died in those frames the wave cleared and every pickup was dropped. Fixed by keeping one enemy alive across the assertion |
+| **`resuming restores the score` is still flaky** — it failed once in four runs after the pickup fix | Not diagnosed. It is the same class: a test that depends on state an earlier test left behind. Re-run before believing it |
 
 
 Four of these cost a release or a failed verification each.

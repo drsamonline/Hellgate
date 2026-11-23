@@ -2079,6 +2079,11 @@ const fakeMesh = {
   geometry: { dispose() {} }, material: { dispose() {} },
 };
 HG.game.pickups.push({ kind: 'health', mesh: fakeMesh, x: cell.wx, z: cell.wz, baseY: 1, t: 0 });
+// Keep one enemy alive across these frames. When the last one dies the wave
+// clears and every pickup is dropped — which is why this pair of assertions
+// failed roughly one run in five and blamed two innocent commits.
+HG.enemies.clear();
+HG.enemies.spawnAt('imp', HG.player.pos.x + 22, HG.player.pos.z + 22, 1);
 frames(3);
 ok(HG.game.pickups.length === before2 + 1, 'full-health pickup is left on the floor');
 // hold still: a slow CI frame lets the fixed-step accumulator catch up, and the
