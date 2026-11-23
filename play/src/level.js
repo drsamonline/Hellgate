@@ -309,11 +309,11 @@ function buildLevel(seed, opts = {}) {
   const CATWALK_H = 2.4;
   for (const [i, r] of rooms.entries()) {
     if (i === exitRoomIdx || i === 0) continue;
-    if (r.ceil < 5.2) continue;
+    // tall enough to walk under, wide enough for a deck and two ramps
+    if (r.ceil < 4.6) continue;
     const along = rng.chance(0.5);
     const span = along ? r.w : r.h;
-    if (span < 8 || (along ? r.h : r.w) < 5) continue;
-    if (!rng.chance(0.6)) continue;
+    if (span < 7 || (along ? r.h : r.w) < 5) continue;
     // the deck: two cells deep along the low side of the room
     const deck = [];
     for (let k = 0; k < 2; k++) {
@@ -331,6 +331,8 @@ function buildLevel(seed, opts = {}) {
     const mid = along ? r.x + (r.w >> 1) : r.z + (r.h >> 1);
     const near = along ? { x: mid, z: r.z + 3 } : { x: r.x + 3, z: mid };
     const far = along ? { x: mid, z: r.z + 4 } : { x: r.x + 4, z: mid };
+    // the ramps and the deck have to sit inside the room
+    if ((along ? r.h : r.w) < 6) continue;
     const nc = cells[idx(near.x, near.z)];
     const fc = cells[idx(far.x, far.z)];
     if (!nc || !fc || nc.solid || fc.solid || nc.stair || fc.stair || nc.platform || fc.platform) continue;
