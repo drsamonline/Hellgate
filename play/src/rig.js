@@ -244,8 +244,10 @@ export function humanoid(p) {
     // it sits ON the shoulder line, not above the head: the first version put it at
     // 0.86 of a torso up from a joint already 0.92 up, and it floated clear of the
     // body like a signboard
-    const traps = new THREE.Mesh(box(p.shoulderX * 1.9, p.torsoLen * 0.18, p.chestR * 0.9), M.body);
-    traps.position.set(0, -p.torsoLen * 0.02, -p.chestR * 0.16);
+    // narrow and shallow: wide enough to bridge neck to shoulder, not so deep that
+    // it becomes a breastplate across the chest
+    const traps = new THREE.Mesh(box(p.shoulderX * 1.35, p.torsoLen * 0.16, p.chestR * 0.55), M.body);
+    traps.position.set(0, -p.torsoLen * 0.02, -p.chestR * 0.34);
     shoulders.add(traps);
   }
   if (p.pack) {
