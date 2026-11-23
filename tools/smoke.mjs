@@ -46,6 +46,14 @@ try {
 }
 
 const fails = [];
+
+// A story level opens in a cutscene (2.1.0), and Start begins the campaign
+// (2.3.1), so choosing a class lands in 'cinematic' until it is skipped. A player
+// presses a key; this calls the same thing.
+const skipCutscene = (p) => p.evaluate(() => {
+  if (window.HG && window.HG.dialogue && window.HG.dialogue.playing) window.HG.dialogue.skip();
+});
+
 const ok = (name, cond, detail) => {
   if (cond) console.log('  ok   ' + name);
   else { fails.push(name + (detail ? ' — ' + detail : '')); console.log('  FAIL ' + name + (detail ? ' — ' + detail : '')); }
@@ -156,6 +164,7 @@ await page.waitForFunction('window.HG.game.state === "class"', { timeout: 15000 
 const cards = await page.evaluate(() => document.querySelectorAll('[data-class]').length);
 ok('class select renders three classes', cards === 3, cards + ' cards');
 await page.click('[data-class="marine"]');
+await skipCutscene(page);
 await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 15000 });
 ok('choosing a class starts the run', true);
 ok('wave 1 spawned enemies', (await page.evaluate(() => window.HG.enemies.list.length)) > 0);
@@ -327,7 +336,9 @@ await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 2000
 const resumed = await page.evaluate(() => ({ score: window.HG.game.score, wave: window.HG.game.wave }));
 ok('resuming restores score and wave', resumed.score === 777 && resumed.wave === 2, JSON.stringify(resumed));
 
-// a zone must be completable: clear the last wave, step on the pad, get the screen
+// a level must be completable: clear the last wave, step on the pad, get the screen.
+// Start from the title begins the campaign now, so this is a level — which is the
+// path a player actually takes, and the one that was broken until 2.3.1
 const zoneEnd = await page.evaluate(async () => {
   const HG = window.HG;
   HG.enemies.clear();
@@ -338,12 +349,15 @@ const zoneEnd = await page.evaluate(async () => {
   await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => requestAnimationFrame(r))));
   return {
     state: HG.game.state,
+    level: HG.game.level,
+    levels: (HG.progress.levels || []).slice(),
     cleared: HG.progress.cleared.slice(),
     zone: HG.zone.id,
   };
 });
-ok('the zone completes when the pad is reached', zoneEnd.state === 'cleared', zoneEnd.state);
-ok('progress records the zone', zoneEnd.cleared.includes(zoneEnd.zone), JSON.stringify(zoneEnd));
+ok('the level completes when the pad is reached', zoneEnd.state === 'cleared', zoneEnd.state);
+ok('Start from the title began a campaign level', zoneEnd.level === 1, 'level ' + zoneEnd.level);
+ok('progress records the level', zoneEnd.levels.includes(1), JSON.stringify(zoneEnd));
 
 // back to a live run for the rest of the checks
 await page.goto(`http://127.0.0.1:${PORT}/play/?auto=1&seed=smoke&wave=2`, { waitUntil: 'domcontentloaded' });
@@ -459,6 +473,7 @@ await mp.waitForFunction('window.HG.game.state === "intro"', { timeout: 20000 })
 await mp.tap('#storySkip');
 await mp.waitForFunction('window.HG.game.state === "class"', { timeout: 20000 });
 await mp.tap('[data-class="marine"]');
+await skipCutscene(mp);
 await mp.waitForFunction('window.HG.game.state === "playing"', { timeout: 20000 });
 await new Promise((r) => setTimeout(r, 500));
 

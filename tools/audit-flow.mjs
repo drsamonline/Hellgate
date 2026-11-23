@@ -62,6 +62,7 @@ await step('intro to class', async () => {
 
 await step('class to playing', async () => {
   await page.click('[data-class="marine"]');
+await page.evaluate(() => { if (window.HG.dialogue && window.HG.dialogue.playing) window.HG.dialogue.skip(); });
   await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 15000 });
   await wait(400);
 });

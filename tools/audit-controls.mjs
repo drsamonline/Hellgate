@@ -25,6 +25,7 @@ await page.waitForFunction('window.HG.game.state === "intro"', { timeout: 15000 
 await page.click('#storySkip');
 await page.waitForFunction('window.HG.game.state === "class"', { timeout: 15000 });
 await page.click('[data-class="marine"]');
+await page.evaluate(() => { if (window.HG.dialogue && window.HG.dialogue.playing) window.HG.dialogue.skip(); });
 await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 15000 });
 
 const keys = ['Tab', 'KeyJ', 'KeyC', 'KeyM', 'KeyN', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'KeyQ', 'KeyE', 'KeyR', 'KeyX', 'KeyV', 'KeyG', 'KeyF', 'Space'];

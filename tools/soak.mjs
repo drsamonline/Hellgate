@@ -54,6 +54,7 @@ function play(seed, difficulty) {
   HG.story.skip();
   frames(1);
   HG.chooseClass('marine');
+  HG.dialogue.skip();   // a story level opens in a cutscene
   frames(2);
 
   const p = HG.player;
