@@ -526,3 +526,29 @@ looks like enemies falling through catwalks and pickups floating.
 **The smallest honest first slice** is a catwalk: a raised floor over part of a room, walkable from below, joined
 by a stair. It needs the height-aware query and nothing else structural — and it is still a breaking API change
 to 31 call sites, so it is a release of its own.
+
+## Pass twenty-two — the catwalk existed; my measurement was looking at another zone
+
+The browser reported zero catwalk decks for `?seed=ashfall-187` while the same seed built headlessly with the
+ashfall shape returned ten. Neither the generator nor the sectors were at fault:
+
+| Call | Shape used | Decks |
+| --- | --- | --- |
+| `generateLevel('ashfall-187', ashfall.shape)` | ashfall | 10 |
+| `generateLevel('ashfall-187', gate.shape)` | gate | 0 |
+| the game at `?seed=ashfall-187` | **gate** | 0 |
+
+`applyUrlOverrides` reads `?zone=` into the title screen's selection but the run still starts in whatever zone
+`beginZone` is given, and `?seed=` only replaces the seed. So the URL built the gate's floor plan with an
+ashfall seed — a legitimate combination that has no catwalk, because the gate's rooms are 4–7 cells and none is
+tall enough for a deck.
+
+Forcing the zone in the page — `HG.beginZone(HG.zones.find(z => z.id === 'ashfall'))` — reports **10 deck cells
+at 2.4 m**, which matches the headless count. The catwalk is real and it is in the game.
+
+**Still not seen.** Two framing attempts failed: the first caught the story overlay (the overlay DOM survives a
+forced `state = 'playing'`; it needs `hideScreens()`), the second landed in a corridor 7 m from the deck with a
+wall in between. The deck has been confirmed to exist by number, never by eye.
+
+**The trap for the next person:** a zone's look and floor plan come from `zone.shape`, and a seed is only half
+of a level. Any harness that overrides one must override the other, or it measures a different arena.
