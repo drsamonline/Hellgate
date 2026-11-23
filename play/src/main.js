@@ -1483,6 +1483,24 @@ function checkLockedDoors(dt) {
 }
 
 /** The exit beacon leans green the moment the pad opens. */
+/** #50 — a lift cell moves its own floor, and the plate that draws it moves too. */
+function updateLifts(dt) {
+  if (!level || !level.lifts) return;
+  for (const l of level.lifts) {
+    const c = l.cell;
+    const L2 = c.lift;
+    if (L2.wait > 0) { L2.wait -= dt; continue; }
+    L2.y += L2.dir * 1.6 * dt;
+    if (L2.y >= L2.high) { L2.y = L2.high; L2.dir = -1; L2.wait = 1.2; }
+    else if (L2.y <= L2.low) { L2.y = L2.low; L2.dir = 1; L2.wait = 1.2; }
+  }
+  if (levelMeshes && levelMeshes.group) {
+    for (const m of levelMeshes.group.children) {
+      if (m.userData && m.userData.liftCell) m.position.y = m.userData.liftCell.lift.y - 0.08;
+    }
+  }
+}
+
 /** The sun follows the player: the shadow camera is a 14 m box, so it has to. */
 function updateSun() {
   if (!sun || !player) return;
@@ -2385,6 +2403,7 @@ function update(dt) {
   updateBeacon(dt);
   updateFillLight();
   updateSun();
+  updateLifts(dt);
   checkLockedDoors(dt);
   checkStuckSpawn(dt);
   // each zone breathes: embers, drips, spores. It is the same particle pool the

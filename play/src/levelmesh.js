@@ -95,7 +95,17 @@ export function buildLevelMeshes(level, mats, zone) {
       const fNW = ao(solidAt(x - 1, z), solidAt(x, z + 1)) * jitter;
 
       // floor (+Y): lit from above, softened into the wall bases
-      if (c.stair) {
+      if (c.lift) {
+        // the lift draws its own platform, in its own mesh, because it moves
+        const plate = new THREE.Mesh(
+          new THREE.BoxGeometry(CELL * 0.92, 0.16, CELL * 0.92),
+          mats[FLOOR_KEY[c.floorTex]] || mats['floor_tile']
+        );
+        plate.position.set(x * CELL, c.lift.y - 0.08, z * CELL);
+        plate.receiveShadow = true;
+        plate.userData.liftCell = c;
+        group.add(plate);
+      } else if (c.stair) {
         // Three steps across the cell, and every height sampled from
         // floorHeightAt: the visible stair and the collision ramp are then the
         // same surface. Two bugs lived here. The treads and risers were built in

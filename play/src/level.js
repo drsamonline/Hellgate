@@ -235,6 +235,7 @@ function buildLevel(seed, opts = {}) {
   // between the two levels is a stair that interpolates across the cell. Height
   // changes stop being a hard cliff you have to jump.
   const stairs = [];
+  const lifts = [];
   rooms.forEach((r, i) => {
     if (i === exitRoomIdx) return; // the exit pad stays flat
     const snapshot = [];
@@ -348,6 +349,26 @@ function buildLevel(seed, opts = {}) {
       stairs.push({ x: cell.x, z: cell.z, along: axis, low: lo, high: hi, flip: true });
     }
     break;                              // one catwalk per level, for step one
+  }
+
+  // ---- a lift (#50, on the sector model) --------------------------------
+  // One cell rises between the room floor and a balcony 2.4 m up. The balcony is
+  // just a second sector — the deck machinery already draws those — so the only
+  // new thing is the cell whose floor moves.
+  for (const [i, r] of rooms.entries()) {
+    if (i === exitRoomIdx || i === 0) continue;
+    if (r.ceil < 4.6 || r.w < 4 || r.h < 4) continue;
+    const lx = r.x + 1;
+    const lz = r.z + 2;
+    const bx = r.x + 2;
+    const lc = cells[idx(lx, lz)];
+    const bc = cells[idx(bx, lz)];
+    if (!lc || !bc || lc.solid || bc.solid || lc.stair || bc.stair || lc.sectors || bc.sectors) continue;
+    if (lc.platform || bc.platform) continue;
+    bc.sectors = [{ floor: bc.floor }, { floor: bc.floor + 2.4, catwalk: true }];
+    lc.lift = { low: lc.floor, high: lc.floor + 2.4, y: lc.floor, dir: 1, wait: 0 };
+    lifts.push({ x: lx, z: lz, cell: lc });
+    break;
   }
 
   const exitCell = { x: exitRoom.cx, z: exitRoom.cz };
@@ -560,6 +581,7 @@ function buildLevel(seed, opts = {}) {
     spawnRoomExits,
     crates,
     stairs,
+    lifts,
     secrets,
     broken: new Set(),   // secret walls that have been opened
     idx,
@@ -625,6 +647,7 @@ export function isBlocked(level, x, z) {
 export function floorHeightAt(level, x, z, fromY) {
   const c = cellAt(level, x, z);
   if (!c) return 0;
+  if (c.lift) return c.lift.y;
   if (!c.stair) {
     // #37 step one: a cell may carry more than one sector — a catwalk over a
     // floor. `fromY` is the height you are coming from, and the sector you land
