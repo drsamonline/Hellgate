@@ -2172,6 +2172,16 @@ document.getElementById('seedInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') document.getElementById('startBtn').click();
 });
 document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+// A way to save on purpose. The save existed and the title screen's Continue
+// button read it, but nothing in the game ever wrote one except the wave
+// transitions, so a player who quit had no way to keep a run.
+document.getElementById('saveQuitBtn')?.addEventListener('click', () => {
+  if (game.state !== 'paused' && game.state !== 'inventory' && game.state !== 'diary') return;
+  saveRun();
+  hud.toast('RUN SAVED');
+  // reload so the title screen builds Continue from the save just written
+  setTimeout(() => location.reload(), 350);
+});
 
 // ---- settings screen ------------------------------------------------------
 let settingsReturn = 'title';
