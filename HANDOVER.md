@@ -217,6 +217,11 @@ Two of those findings are worth remembering as traps:
   measurements so the next person does not repeat the work.
 - **Keep `VERSION` and `BUILD` in step**, and let `check-claims` fail if they drift.
 
+### Read this first if a player has complained
+
+`documentation/player-report.md` — nine issues reported after playing to zone 6 on 1.98.0, triaged. Two are
+critical (pass-through walls, enemies teleporting) and one is the honest verdict on the design (boring by zone 6).
+
 ### Traps learned at 1.91–1.96
 
 Four of these cost a release or a failed verification each.
