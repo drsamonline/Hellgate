@@ -228,7 +228,12 @@ start to finish, not thirty-two.
 `documentation/player-report.md` — nine issues reported after playing to zone 6 on 1.98.0, triaged. Two are
 critical (pass-through walls, enemies teleporting) and one is the honest verdict on the design (boring by zone 6).
 
-### Traps learned at 1.91–1.96
+### Traps learned at 1.91–1.99
+
+| Trap | What it cost |
+| --- | --- |
+| **The pickup tests are flaky.** `full-health pickup is left on the floor` and `damaged player picks it up` fail on roughly one run in five and pass on the next, with or without a code change | They blamed `LOD_DIST` and then chests, both innocent. Re-run before believing them, and fix the flakiness before it blames something that matters |
+
 
 Four of these cost a release or a failed verification each.
 
