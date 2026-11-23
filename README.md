@@ -128,7 +128,8 @@ play/src/minimap.js   the floor plan, drawn once with live markers
 play/src/bloom.js     the post pass: bright pixels blurred and added back
 play/src/music.js     generated music: a scale, a tempo and a rule for the next note
 play/src/items.js     the things on the floor, built to look like the thing they are
-play/src/cinematic.js the letterboxed boss entrance
+play/src/cinematic.js the letterboxed boss entrance, and a camera that walks the level
+play/src/campath.js  the cutscene camera's path: the flow field, the floor, a rounded corner
 play/src/rig.js       a parametric humanoid: joints, not boxes
 play/src/glb.js       a 200-line reader for glTF 2.0 binary models
 play/src/book.js      a branching narrative engine: the book is data

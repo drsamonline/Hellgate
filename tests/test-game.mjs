@@ -5,7 +5,8 @@
 import fs from 'node:fs';
 import './domstub.mjs';
 import { WEAPONS } from '../play/src/weapons.js';
-import { isBlocked, buildFlowField } from '../play/src/level.js';
+import { isBlocked, buildFlowField, floorHeightAt } from '../play/src/level.js';
+import { buildCameraPath } from '../play/src/campath.js';
 const { hasLineOfSight, cellAt } = await import('../play/src/level.js');
 const { poolStats } = await import('../play/src/enemies.js');
 await import('../play/src/level.js');
@@ -1289,6 +1290,51 @@ ok(HG.cinematic.t > 0, 'and it advances with the clock');
 ok(HG.cinematic.camera.position.length() > 0 || true, 'the camera is placed by the cut');
 HG.cinematic.skip();
 ok(HG.cinematic.playing === false, 'skip stops it');
+
+// the walk mode: the camera travels the level instead of orbiting through it
+console.log('\n== the cutscene camera walks ==');
+{
+  const cells = HG.level.reachableCells.filter((c) => c.room >= 0);
+  const a = cells[0];
+  const b = cells[cells.length - 1];
+  const camPath = buildCameraPath(HG.level, { x: a.wx, z: a.wz }, { x: b.wx, z: b.wz });
+  ok(!!camPath && camPath.points.length > 4, 'a camera path is built from the level (' + (camPath ? camPath.points.length : 0) + ' points)');
+  let finished = false;
+  const started = HG.cinematic.playWalk(camPath, {
+    title: 'THE WARDEN',
+    line: 'a walk',
+    lookAt: { x: b.wx, y: 1, z: b.wz },
+    speed: 3,
+    onDone: () => { finished = true; },
+  });
+  ok(started === true, 'the walk starts');
+  ok(HG.cinematic.playing === true, 'and the letterbox is up for it');
+  const startPos = HG.camera.position.clone();
+  HG.cinematic.update(0.5);
+  ok(HG.camera.position.distanceTo(startPos) > 0.5, 'the camera moves along the path');
+  // every frame of the walk, the camera is over open floor and above it
+  let offFloor = 0;
+  let frames2 = 0;
+  for (let i = 0; i < 600 && HG.cinematic.playing; i++) {
+    HG.cinematic.update(0.05);
+    frames2++;
+    const p = HG.camera.position;
+    const c = cellAt(HG.level, p.x, p.z);
+    if (!c || c.solid) offFloor++;
+    else if (p.y - floorHeightAt(HG.level, p.x, p.z) < 0.2) offFloor++;
+  }
+  ok(frames2 > 10, 'the walk runs for as long as its length needs (' + frames2 + ' frames)');
+  // 4.5 s of walk + 0.5 s hold + 0.45 s of letterbox going out
+  ok(HG.cinematic.duration <= 5.6, 'a long path is walked faster rather than for longer (' + HG.cinematic.duration.toFixed(1) + ' s)');
+  ok(offFloor === 0, 'and the camera is over open floor on every frame (' + offFloor + ' bad)');
+  ok(finished === true, 'the walk ends and hands control back');
+  ok(HG.cinematic.playing === false, 'and the letterbox comes down');
+
+  // a path that does not exist is refused, and the caller is told at once
+  let refused = false;
+  const none = HG.cinematic.playWalk(null, { onDone: () => { refused = true; } });
+  ok(none === false && refused === true, 'a walk with no path hands control back immediately');
+}
 
 console.log('\n== game modes ==');
 ok(Object.keys(HG.MODES).length === 8, 'eight modes are defined (' + Object.keys(HG.MODES).length + ')');

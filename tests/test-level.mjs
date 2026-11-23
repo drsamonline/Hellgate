@@ -1,5 +1,6 @@
 import { generateLevel, CELL, MAX_STEP, cellAt, isBlocked, circleBlocked, floorHeightAt, raycastWalls, hasLineOfSight, buildFlowField, flowStep } from '../play/src/level.js';
 import { STORY_LEVELS, OBJECTIVE_TYPES, storyLevel, storyLevelZone } from '../play/src/story-levels.js';
+import { buildCameraPath, sampleCameraPath, cellPath, CAM_EYE } from '../play/src/campath.js';
 
 let fails = 0;
 const bad = (seed, msg) => { console.log(`FAIL [${seed}] ${msg}`); fails++; };
@@ -267,6 +268,73 @@ for (const n of [1, 9, 17, 25]) {
 }
 if (storyOpen.length === 4 && !(storyOpen[3] > storyOpen[0])) {
   bad('table', `the last act is not larger than the first: ${storyOpen.join(' < ')}`);
+}
+
+// ---- the cutscene camera walks the level --------------------------------
+// The whole point of building the path from the flow field is that the camera
+// cannot cross a wall. That is what these sample for, densely, on four seeds.
+console.log('\n== camera paths ==');
+{
+  let paths = 0;
+  let worstOff = 0;
+  for (const seed of ['gate-238', 'foundry-101', 'l04-grove-427', 'l28-vault-726']) {
+    const L = generateLevel(seed);
+    L.doorOpen = true;
+    const roomCells = L.reachableCells.filter((c) => c.room >= 0);
+    for (let i = 0; i < 4; i++) {
+      const a = roomCells[Math.floor(Math.random() * roomCells.length)];
+      const b = roomCells[Math.floor(Math.random() * roomCells.length)];
+      if (a === b) continue;
+      const p = buildCameraPath(L, { x: a.wx, z: a.wz }, { x: b.wx, z: b.wz });
+      if (!p) { bad(seed, 'no camera path between two reachable cells'); continue; }
+      paths++;
+      if (!(p.length > 0)) bad(seed, 'a camera path with no length');
+      const end = sampleCameraPath(p, p.length);
+      if (Math.hypot(end.x - b.wx, end.z - b.wz) > 0.01) bad(seed, 'the path does not end at its target');
+      const start = sampleCameraPath(p, 0);
+      if (Math.hypot(start.x - a.wx, start.z - a.wz) > 1.5) bad(seed, 'the path does not start near its origin');
+      // dense sampling: a quarter of a metre, every sample on open floor, and the
+      // camera always ABOVE that floor. Not "exactly eye height": a stair is a
+      // 0.5 m step at a cell boundary, and the polyline between two samples either
+      // side of it crosses the step over 0.4 m of travel. Above the floor is the
+      // invariant that matters — a camera inside a step is the bug.
+      for (let d = 0; d <= p.length; d += 0.25) {
+        const q = sampleCameraPath(p, d);
+        const c = cellAt(L, q.x, q.z);
+        if (!c || c.solid) { bad(seed, `the camera leaves the floor at ${d.toFixed(1)} m`); break; }
+        const above = q.y - floorHeightAt(L, q.x, q.z);
+        worstOff = Math.max(worstOff, Math.abs(above - CAM_EYE));
+        if (above < 0.35) { bad(seed, `the camera is ${above.toFixed(2)} m above the floor at ${d.toFixed(1)} m`); break; }
+        if (above > 3.2) { bad(seed, `the camera is ${above.toFixed(2)} m above the floor at ${d.toFixed(1)} m`); break; }
+      }
+    }
+  }
+  if (paths < 8) bad('campath', `only ${paths} paths were built, the check is not doing much`);
+  console.log(`  camera paths: ${paths}, worst eye-height error ${worstOff.toFixed(2)} m (a stair step)`);
+
+  // sampling clamps instead of extrapolating
+  const L2 = generateLevel('gate-238');
+  L2.doorOpen = true;
+  const two = L2.reachableCells.filter((c) => c.room >= 0);
+  const p2 = buildCameraPath(L2, { x: two[0].wx, z: two[0].wz }, { x: two[two.length - 1].wx, z: two[two.length - 1].wz });
+  if (p2) {
+    const under = sampleCameraPath(p2, -50);
+    const over = sampleCameraPath(p2, p2.length + 50);
+    const first = sampleCameraPath(p2, 0);
+    const last = sampleCameraPath(p2, p2.length);
+    if (Math.hypot(under.x - first.x, under.z - first.z) > 1e-9) bad('campath', 'a negative distance does not clamp to the start');
+    if (Math.hypot(over.x - last.x, over.z - last.z) > 1e-9) bad('campath', 'a distance past the end does not clamp');
+  }
+
+  // a place the player cannot walk to has no camera path, and null is the answer
+  const L3 = generateLevel('gate-238');
+  const sec = L3.secrets && L3.secrets[0];
+  if (sec) {
+    const into = cellPath(L3, { x: L3.spawn.x, z: L3.spawn.z }, { x: sec.alcove.wx, z: sec.alcove.wz });
+    if (into !== null) bad('campath', 'a path was built through a secret wall');
+  } else {
+    bad('campath', 'no secret room to test the sealed case with');
+  }
 }
 
 console.log(`\nseeds=${seeds.length} avgRooms=${(totalRooms / seeds.length).toFixed(1)} doors=${totalDoor}/${seeds.length} minOpenCells=${minOpen}`);

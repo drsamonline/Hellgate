@@ -4,7 +4,8 @@
 
 import * as THREE from 'three';
 import { makeRng } from './rng.js';
-import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, CELL } from './level.js';
+import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, CELL } from './level.js';
+import { buildCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { humanoid, PROPORTIONS, rigMat } from './rig.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
@@ -880,18 +881,55 @@ function startWave(n) {
   hud.toast('WAVE ' + n, 2);
   audio.play('wave');
 
-  // the warden gets an entrance: three seconds, skippable, then control back
+  // the warden gets an entrance: skippable, then control back. The camera walks
+  // in along a real path from the far side of his own room — the old arc orbited
+  // him and could end up inside a wall
   const boss = enemies.boss;
   if (boss && game.state === 'playing' && !game.bossSeen) {
     game.bossSeen = true;
     game.state = 'cinematic';
     releaseLock();
-    cinematic.play(boss, 'THE WARDEN', zone.name + ' · ' + game.wave + ' of ' + game.wavesTarget, () => {
+    const back = () => {
       game.state = 'playing';
       requestLock();
       clock.getDelta();
-    });
+    };
+    const title = 'THE WARDEN';
+    const line = zone.name + ' · ' + game.wave + ' of ' + game.wavesTarget;
+    const path = bossApproach(boss);
+    if (!path || !cinematic.playWalk(path, {
+      title,
+      line,
+      lookAt: { x: boss.pos.x, y: boss.pos.y + boss.height * 0.62, z: boss.pos.z },
+      speed: 3.2,
+      onDone: back,
+    })) {
+      cinematic.play(boss, title, line, back);
+    }
   }
+}
+
+/**
+ * A camera path to the boss from the far side of the room he stands in.
+ *
+ * His own room, not the player's: the doors are shut when a wave starts, so a
+ * path from the player would cross a door and the flow field would refuse it.
+ * @param {object} boss The enemy to walk towards.
+ * @returns {object|null} A path from `buildCameraPath`, or null.
+ */
+function bossApproach(boss) {
+  if (!level || !boss) return null;
+  const room = cellAt(level, boss.pos.x, boss.pos.z);
+  if (!room || room.room < 0) return null;
+  let from = null;
+  let best = 3;   // shorter than this is not worth a cut at all
+  for (const c of level.reachableCells) {
+    if (c.room !== room.room) continue;
+    const d = Math.hypot(c.wx - boss.pos.x, c.wz - boss.pos.z);
+    if (d > best) { best = d; from = c; }
+  }
+  if (!from) return null;
+  return buildCameraPath(level, { x: from.wx, z: from.wz }, { x: boss.pos.x, z: boss.pos.z });
 }
 
 // The performance preset drops bloom; the others keep it. A device that cannot
