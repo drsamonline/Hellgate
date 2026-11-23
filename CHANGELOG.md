@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.96.0 — 2026-11-23
+
+**Catwalks — #37 step one: two sectors in one cell**
+
+A tall room gets a deck 2.4 m up across one side, and **the floor below it is still a floor**. That is the
+sector model in miniature: `c.sectors = [{floor}, {floor: +2.4, catwalk}]`, and `floorHeightAt(x, z, fromY)`
+answers with the one you can stand on from where you are.
+
+| Piece | Change |
+| --- | --- |
+| Generator | a deck in one tall room per level, plus two stair cells to reach it — one band may only rise 3 × `MAX_STEP`, so the 2.4 m climb is split in two |
+| Collision | the player's ground and step queries pass their own height, so the deck is a floor from above and the ground is a floor from below |
+| Mesh | the deck surface, and a rim on every side that drops to open air, so it reads as a platform |
+
+The deck appears only in rooms at least 8 cells along, 5 across and 5.2 m tall, which is not every zone: the
+zone the game boots into has none. Loosening that is the next commit, not this one.
+
 ## 1.95.0 — 2026-11-23
 
 **The ground under #37 — a height-aware floor query**

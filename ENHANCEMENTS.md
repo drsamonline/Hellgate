@@ -56,7 +56,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 ## Tier 2 — Medium (a weekend each)
 
-37. **Sector portals / real 2.5D** — the current model is one floor and one ceiling per cell. Storing per-cell floor *and* ceiling polygons with portal edges would allow true multi-level rooms, stairs and catwalks. This is the big one. `level.js` + `levelmesh.js` · XL · very high — **scoped at 1.94.0, not started.** What it actually costs:
+37. **Sector portals / real 2.5D** — *step one shipped at 1.96.0: catwalks.* — the current model is one floor and one ceiling per cell. Storing per-cell floor *and* ceiling polygons with portal edges would allow true multi-level rooms, stairs and catwalks. This is the big one. `level.js` + `levelmesh.js` · XL · very high — **scoped at 1.94.0, not started.** What it actually costs:
 
    | Subsystem | Change | Size |
    | --- | --- | --- |
