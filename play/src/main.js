@@ -407,7 +407,11 @@ function buildRun(seed, zoneDef) {
 
   scene = newScene(zone);
   level = generateLevel(seed, zone.shape);
-  level.doorOpen = false;
+  // A level states what ends it. 'reach' opens the way from the first frame, so
+  // the level is somewhere you cross rather than a pen you empty; 'clear' keeps
+  // the wave arena's rule and the pad opens when the room is empty.
+  level.doorOpen = zone.objectiveType === 'reach';
+  game.exitOpen = zone.objectiveType === 'reach';
   // the helper: a body, a coat, and a room he never leaves. He shoots what walks
   // in, and he is where the coins get spent.
   npcBody = null;

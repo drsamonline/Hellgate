@@ -24,7 +24,11 @@ export const ZONES = [
     ambient: 0.8,
     wall: 0, floor: 0,
     props: { trees: 0, rocks: 10, grass: 24, animals: 3 },
-    objective: 'Clear the arena',
+    objective: 'Reach the far side of the gate',
+    // What ends this level. 'clear' is the wave arena; 'reach' opens the pad from
+    // the first frame, so the level is a place you cross rather than a pen you
+    // empty. The 32-level campaign starts with this one field.
+    objectiveType: 'reach',
     side: 'Break the three relics',
     relics: 3,
   },
