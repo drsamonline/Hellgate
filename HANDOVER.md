@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v1.92.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v1.96.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 1.92.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 92, `v1.0.0` → `v1.92.0` |
+| Version | 1.96.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 96, `v1.0.0` → `v1.96.0` |
 | Modules | 37 in `play/src/`, ~11,600 lines |
 | Assertions | 885 across 4 suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 51 shipped, 3 measured-and-rejected, 9 open of 63 |
+| Roadmap | 53 shipped, 4 measured-and-rejected, 8 open of 63 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -216,3 +216,30 @@ Two of those findings are worth remembering as traps:
 - **Write down the numbers with the decision.** `ENHANCEMENTS.md` and `documentation/audit.md` carry the
   measurements so the next person does not repeat the work.
 - **Keep `VERSION` and `BUILD` in step**, and let `check-claims` fail if they drift.
+
+### Traps learned at 1.91–1.96
+
+Four of these cost a release or a failed verification each.
+
+| Trap | What it cost |
+| --- | --- |
+| **A seed is half a level.** `?seed=` replaces the seed, not the zone; `?zone=` only prefills the title screen. A harness that overrides one must override the other | A "catwalk missing" hunt that was building the gate's floor plan with an ashfall seed |
+| **`InstancedMesh.count` is a draw range, not a liveness filter.** Slots are not compacted, so trimming `count` to the live body count hides every enemy above that index | 1.92.0 shipped invisible enemies; found by looking at a screenshot, not by a test |
+| **A test that samples a cell boundary reads the neighbour.** `cellAt` rounds, so a sample at `t = 1` lands in the next cell and compares two different floors | A correct ramp failed the stair check on four seeds |
+| **`bash tests/run.sh \| tail -1` hides the verdict.** The `FAIL` lines come before the last line, and `tail` exits 0, so a chain keeps going | A breaking commit pushed green-by-accident, reverted an hour later |
+
+The gate line that reads the answer:
+
+```bash
+bash tests/run.sh | grep -E "FAIL|all suites"
+```
+
+### What 1.96 leaves open
+
+| Item | State |
+| --- | --- |
+| #37 portal edges | Catwalks are step one: `c.sectors` exists, `floorHeightAt` takes a height, the deck is drawn with a rim. Portal edges between sectors and true multi-level rooms are untouched |
+| #50 lifts | Not started. Needs a moving floor under a **merged, static** level mesh: exclude the lift cell from the merge, build it as its own mesh, move it per frame |
+| #52 room shadows | Object shadows shipped; the level still does not cast into itself. Cascaded map or the per-cell bake #53 already writes |
+| #54 broadphase | Measured and left alone: 0.68 ms for fifty enemies |
+| #48, #56, #59, #60, #63 | Untouched |
