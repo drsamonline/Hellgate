@@ -207,6 +207,9 @@ const levelOnly = await page.evaluate(() => {
   // pin BOTH angles: the frustum is what the camera points at, and a budget that
   // depends on where the run happened to leave the yaw measured 57 one run and
   // 80 the next for the same level
+  // pin the position as well as the angles: what is in frustum depends on where
+  // the player stands, and the spawn cell is not the same in every seed
+  HG.player.pos.set(HG.level.spawn.x, HG.player.pos.y, HG.level.spawn.z);
   HG.player.pitch = 0;
   HG.player.yaw = 0;
   HG.player.syncCamera();
