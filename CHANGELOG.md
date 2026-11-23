@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.99.1 — 2026-11-23
+
+**The pause menu's Journal and Inventory buttons did nothing**
+
+Both handlers set `game.state = 'paused'` and then called `showDiary()` / `toggleInventory()`, and both of those
+begin with `if (game.state !== 'playing') return;`. The buttons returned before drawing anything. Reported as
+"when they r clicked nothing happens", which is exactly what they did.
+
+That also explains Tab and J doing nothing from the pause screen: same guard, same silent return.
+
+**And the LOD proxy is at 24 m.** It was 12, when a body was 13 draw calls and a slab at distance was worth it.
+Since #45 the bodies are instanced, so the cost is per type rather than per enemy — the proxy saved almost
+nothing and a box at 12 m was just a box the player could see.
+
 ## 1.99.0 — 2026-11-23
 
 **From a player's report, after six zones**
