@@ -461,6 +461,9 @@ function buildRun(seed, zoneDef) {
   enemies.onKill = (e, weaponName) => {
     game.kills++;
     game.waveKills++;
+    // money from kills as well as chests: a boss pays for a rocket, a hound for
+    // a fifth of one. The helper's kills pay too — the coins are the run's.
+    game.coins = (game.coins || 0) + (e && e.T && e.T.boss ? 120 : e && e.type === 'hound' ? 8 : 12);
     if (e && e.type) {
       game.killsByType = game.killsByType || {};
       game.killsByType[e.type] = (game.killsByType[e.type] || 0) + 1;
