@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.98.0 — 2026-11-23
+
+**Lifts — #50, on the sector model**
+
+One cell per level rises between the room floor and a balcony 2.4 m up. The balcony is a second sector, which
+the catwalk machinery from 1.96.0 already draws and collides with, so the only new thing is a cell whose floor
+moves.
+
+| Piece | Change |
+| --- | --- |
+| Data | `c.lift = { low, high, y, dir, wait }`; `floorHeightAt` returns `c.lift.y` for that cell |
+| Generator | a lift beside a balcony sector in a tall room |
+| Mesh | the merged level skips that cell's floor and draws a plate in its own mesh, because a merged mesh cannot move |
+| Drive | 1.6 m/s, a 1.2 s pause at each end, and the plate follows the cell |
+
+The lift was held back for two releases because `HG.level.lifts` read empty in the browser against one in Node.
+It was not a defect: the run had a **different seed** from the one I checked — a level is seed plus shape, and
+neither alone identifies one. See pass twenty-three in `documentation/audit.md`.
+
 ## 1.97.0 — 2026-11-23
 
 **The enemy body, from cylinders to creatures**

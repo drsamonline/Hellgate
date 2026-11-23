@@ -554,3 +554,18 @@ put the camera 7 m away with a wall in between. Framing a feature is its own pie
 
 **The trap for the next person:** a zone's look and floor plan come from `zone.shape`, and a seed is only half
 of a level. Any harness that overrides one must override the other, or it measures a different arena.
+
+## Pass twenty-three — the lift was there; the seed was not
+
+`HG.level.lifts` came back empty in the browser for the gate zone while Node found one at cell (26,16). Asking
+the page to rebuild its own level settled it:
+
+| Where | Seed | Shape | Lifts |
+| --- | --- | --- | --- |
+| Node | `gate-238` (the zone's own seed) | gate | 1 |
+| The browser | **`hellgate`** (a stored/URL seed) | gate | 0 |
+| The page, regenerating with its own seed | `hellgate` | gate | 0 |
+
+The generator and the level object agree. The run simply had a different seed from the one I checked against —
+the same mistake as pass twenty-two, one level down: there I compared a seed against another zone's floor plan,
+here a seed against another seed's level. **A level is seed + shape, and neither alone identifies one.**
