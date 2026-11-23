@@ -112,8 +112,8 @@ chest is a reason to search a room, which is exactly what "clear the room and wa
 | The plan says | The direction says | Which wins |
 | --- | --- | --- |
 | NPCs are text-only, "no 3D model required" | he fights when you are near | **the direction** — he needs a body, a weapon and a room |
-| Readable terminals in every level ("echo logs") for lore and hints | **no reading from tablets** | **the direction** — the story is cutscene and dialogue; terminals stop carrying it |
-| Currency from enemy kills ("5–20 Scrap per kill") | money is found in **chests** | **the direction** — chests, so rooms are worth searching |
+| Readable terminals in every level | **keep terminals** — but the *story* is cutscene and dialogue | **both**: terminals stay as optional colour and hints, and nothing that matters is only in one |
+| Currency from enemy kills, called "Scrap" | money is found in **chests** *and* per kill, and it is not called Scrap | **the direction** — chests give the reason to search a room, kills keep the pace; the name is money |
 
 Everything else in the plan is compatible and worth keeping: 32 levels in four acts, the two relics at **16** and
 **28**, the ending determined by relic count, the act bosses at 8, 24 and 32, and the trader appearing on a fixed
@@ -123,3 +123,11 @@ schedule of levels.
 
 The first story level now needs, to be a fair test of the shape: an objective, a cutscene that walks the level, one
 NPC in a room who shoots what comes in and sells one thing, one chest with coins in it, and no terminal.
+
+### Settled, 2026-11-23
+
+| Question | Answer |
+| --- | --- |
+| Terminals | **kept** — flavour and hints, never the only place the plot lives |
+| The NPC | fights when the player is near; never leaves his room |
+| Money | from **chests in rooms** and **per kill**; it is money, not "Scrap" |
