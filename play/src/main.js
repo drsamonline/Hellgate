@@ -280,6 +280,7 @@ const game = {
   wavesTarget: 3,
   relics: [],
   relicsTotal: 0,
+  coins: 0,
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
   upgrades: {},
@@ -405,6 +406,25 @@ function buildRun(seed, zoneDef) {
   scene = newScene(zone);
   level = generateLevel(seed, zone.shape);
   level.doorOpen = false;
+  // chests: a box in a room that pays coins when you walk up to it. Coins are
+  // money — from chests and from kills — and they are what the NPC's shop spends.
+  if (level.chests) {
+    const coinMat = new THREE.MeshLambertMaterial({ color: 0x8a6a2a });
+    const lidMat = new THREE.MeshLambertMaterial({ color: 0xb08a3a });
+    for (const ch of level.chests) {
+      const g = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.42, 0.46), coinMat);
+      body.position.y = 0.21;
+      g.add(body);
+      const lid = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.12, 0.5), lidMat);
+      lid.position.y = 0.48;
+      g.add(lid);
+      g.position.set(ch.wx, floorHeightAt(level, ch.wx, ch.wz), ch.wz);
+      scene.add(g);
+      ch.mesh = g;
+      ch.lid = lid;
+    }
+  }
   // the zone decides the palette: same generator, different surface
   for (const c of level.cells) {
     if (c.solid) continue;
@@ -1501,6 +1521,20 @@ function updateLifts(dt) {
   }
 }
 
+/** Walk up to a chest and it opens: coins, and the lid tips back. */
+function updateChests(dt) {
+  if (!level || !level.chests || !player) return;
+  for (const ch of level.chests) {
+    if (ch.opened || !ch.mesh) continue;
+    if (Math.hypot(ch.wx - player.pos.x, ch.wz - player.pos.z) > 1.25) continue;
+    ch.opened = true;
+    game.coins = (game.coins || 0) + ch.coins;
+    if (ch.lid) ch.lid.rotation.x = -1.1;
+    hud.toast('+' + ch.coins + ' COINS', 1.4);
+    audio.play('pickup', ch.mesh.position);
+  }
+}
+
 /** The sun follows the player: the shadow camera is a 14 m box, so it has to. */
 function updateSun() {
   if (!sun || !player) return;
@@ -2415,6 +2449,7 @@ function update(dt) {
   updateTension(dt);
   updateMusic(dt);
   updateBeacon(dt);
+  updateChests(dt);
   updateFillLight();
   updateSun();
   updateLifts(dt);

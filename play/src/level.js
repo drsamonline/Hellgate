@@ -302,6 +302,29 @@ function buildLevel(seed, opts = {}) {
   });
 
 
+  // ---- chests: money, and a reason to search a room ----------------------
+  // Coins come from chests (and from kills). A chest is what turns "clear the
+  // room and walk to the pad" into "look around first".
+  const chests = [];
+  {
+    const spots = [];
+    // the same flood fill the platforms use, so a chest is never behind a wall
+    const seen = reachableFrom(spawnCell.x, spawnCell.z).seen;
+    for (const c of cells) {
+      if (c.solid || c.crate || c.door || c.exit || c.stair || c.sectors) continue;
+      if (c.room < 0) continue;
+      if (Math.hypot(c.x * CELL - spawn.x, c.z * CELL - spawn.z) < 6) continue;
+      if (!seen[c.z * W + c.x]) continue;
+      spots.push(c);
+    }
+    const want = 1 + rng.int(0, 2);
+    for (let i = 0; i < want && spots.length; i++) {
+      const c = spots.splice(rng.int(0, spots.length - 1), 1)[0];
+      c.chest = true;
+      chests.push({ x: c.x, z: c.z, wx: c.x * CELL, wz: c.z * CELL, coins: 25 + rng.int(0, 4) * 15, opened: false });
+    }
+  }
+
   // ---- catwalks (#37, step one) -----------------------------------------
   // A tall room gets a deck at 2.4 m across one side, with the floor below still
   // walkable: two sectors in one cell, which is the whole point of the sector
@@ -582,6 +605,7 @@ function buildLevel(seed, opts = {}) {
     crates,
     stairs,
     lifts,
+    chests,
     secrets,
     broken: new Set(),   // secret walls that have been opened
     idx,
