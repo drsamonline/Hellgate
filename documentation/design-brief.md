@@ -74,3 +74,52 @@ object, and clothes are extra meshes on joints that already exist. What is missi
 
 **The smallest version that is worth having:** one NPC in the first story level, with one line of dialogue and one
 choice that pays something. Everything else is content on top of that shape.
+
+## Third pass — the NPC is a helper, and the trader needs money
+
+> NPC IS JUST HELPER, WHEN HE IS NEAR HE HELPS KILLING ENEMY BUT NEVER LEAVES HIS ROOM, HE IS QUEST GIVER AND
+> TRADER, BUT ADDING TRADER NEEDS TO ADD MONEY TOO, AND THE MONEY IS FOUND IN CHESTS IN ROOMS
+
+That corrects the plan it came with, in three places, and the corrections are the binding ones.
+
+### The NPC
+
+| Property | Value |
+| --- | --- |
+| Body | a real `humanoid()` body with a coat — he fights, so he is seen at close range and from the side |
+| Movement | **none**. He never leaves his room, so no pathing, no follow, no stuck-in-a-wall case |
+| Combat | when an enemy is inside his room and within range, he shoots it. Same damage path as the drone: `hurt()` with a weapon name, `onKill` wired, kill feed and score count |
+| Role | quest giver **and** trader — one character, one room, both functions |
+| Frequency | one per level is affordable now that he is stationary; the earlier "act boundaries only" was a cost decision for a character who had to be somewhere |
+
+This is the companion code the game already has, with the follow removed and a room as its leash. `companion.js`
+drops visibility inside 1.1 m and follows the player; the NPC needs the same update loop, a room test instead of
+a distance test, and a target test instead of a follow target.
+
+### Money, and where it comes from
+
+| Piece | Notes |
+| --- | --- |
+| **Chests** | a new prop: a box in a room, opened with the interact key, pays coins. One to three per level, placed on reachable floor, never in the spawn room |
+| **Coins** | a counter on the run, carried in the save, shown in the HUD next to score |
+| **Prices** | ammo, a trinket, an upgrade, a hint — the four tables already exist, so a price is a number on an existing entry |
+
+Coins from **chests in rooms**, not from kills: that is the correction, and it changes the shape of a level — a
+chest is a reason to search a room, which is exactly what "clear the room and walk to the pad" was missing.
+
+### Three conflicts with the plan that came with it
+
+| The plan says | The direction says | Which wins |
+| --- | --- | --- |
+| NPCs are text-only, "no 3D model required" | he fights when you are near | **the direction** — he needs a body, a weapon and a room |
+| Readable terminals in every level ("echo logs") for lore and hints | **no reading from tablets** | **the direction** — the story is cutscene and dialogue; terminals stop carrying it |
+| Currency from enemy kills ("5–20 Scrap per kill") | money is found in **chests** | **the direction** — chests, so rooms are worth searching |
+
+Everything else in the plan is compatible and worth keeping: 32 levels in four acts, the two relics at **16** and
+**28**, the ending determined by relic count, the act bosses at 8, 24 and 32, and the trader appearing on a fixed
+schedule of levels.
+
+### What this adds to the first slice
+
+The first story level now needs, to be a fair test of the shape: an objective, a cutscene that walks the level, one
+NPC in a room who shoots what comes in and sells one thing, one chest with coins in it, and no terminal.
