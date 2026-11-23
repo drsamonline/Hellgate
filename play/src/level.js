@@ -573,10 +573,25 @@ export function isBlocked(level, x, z) {
 /**
  * Floor height at a world position.
  */
-export function floorHeightAt(level, x, z) {
+export function floorHeightAt(level, x, z, fromY) {
   const c = cellAt(level, x, z);
   if (!c) return 0;
-  if (!c.stair) return c.floor;
+  if (!c.stair) {
+    // #37 step one: a cell may carry more than one sector — a catwalk over a
+    // floor. `fromY` is the height you are coming from, and the sector you land
+    // on is the highest one you could step up to. Today every cell has exactly
+    // one sector, so this returns `c.floor` and every existing caller is
+    // unchanged; the moment the generator writes `c.sectors`, the 31 call sites
+    // that pass a height already get the right floor.
+    if (c.sectors && c.sectors.length > 1 && fromY != null) {
+      let best = c.sectors[0].floor;
+      for (const sec of c.sectors) {
+        if (sec.floor <= fromY + MAX_STEP && sec.floor > best - 1e-9) best = sec.floor;
+      }
+      return best;
+    }
+    return c.floor;
+  }
   // Interpolate across the whole cell: the band is a ramp made of three steps,
   // and a cell spans half a cell either side of its own centre. Without the
   // half-cell offset the ramp only climbed over the far half, so the last step

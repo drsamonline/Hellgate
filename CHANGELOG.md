@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.95.0 — 2026-11-23
+
+**The ground under #37 — a height-aware floor query**
+
+`floorHeightAt(level, x, z, fromY)` now takes the height you are coming from, and picks the sector you could
+step up to when a cell carries more than one. Today every cell carries exactly one sector, so it returns
+`c.floor` and all 31 call sites behave identically — the query is in place before the data is, which is the
+order that keeps a migration honest.
+
+The selection rule is the one the collision already uses: the highest floor at or below `fromY + MAX_STEP`.
+Three assertions hold it: a one-sector cell answers the same with and without a height, a two-sector cell puts
+you on the catwalk when you can reach it, and leaves you on the floor when you cannot.
+
+#37 itself is scoped in `ENHANCEMENTS.md` with what it touches: the cell model, this query, the mesh, the 2-D
+flow field and every reachability test. Step one is a catwalk on this query; portal edges and lifts follow.
+
 ## 1.94.0 — 2026-11-23
 
 **Real-time shadows — #52**
