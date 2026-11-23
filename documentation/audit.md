@@ -546,9 +546,11 @@ tall enough for a deck.
 Forcing the zone in the page — `HG.beginZone(HG.zones.find(z => z.id === 'ashfall'))` — reports **10 deck cells
 at 2.4 m**, which matches the headless count. The catwalk is real and it is in the game.
 
-**Still not seen.** Two framing attempts failed: the first caught the story overlay (the overlay DOM survives a
-forced `state = 'playing'`; it needs `hideScreens()`), the second landed in a corridor 7 m from the deck with a
-wall in between. The deck has been confirmed to exist by number, never by eye.
+**Seen at last.** Third framing attempt: the player stood *on* the deck at 2.4 m with the overlay hidden. The
+shot shows the deck surface underfoot, its rim dropping away on the left, and the room below through the gap —
+which is what a catwalk has to look like. The two failed attempts before it are worth recording: the first
+caught the story overlay (its DOM survives a forced `state = 'playing'`; it needs `hideScreens()`), the second
+put the camera 7 m away with a wall in between. Framing a feature is its own piece of work.
 
 **The trap for the next person:** a zone's look and floor plan come from `zone.shape`, and a seed is only half
 of a level. Any harness that overrides one must override the other, or it measures a different arena.
