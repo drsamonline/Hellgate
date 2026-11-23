@@ -505,3 +505,24 @@ path from here.
 Verified by eye, twice: a grunt at 4 m with the map on and off, same camera. The shadow under it is there and
 legible; it is subtle, because ambient 0.85 plus hemisphere 1.25 still carries most of the light. Dropping the
 ambient to make shadows read is a different change with a different risk, and it was not taken here.
+
+## Pass twenty-one — scoping #37 instead of starting it
+
+The roadmap's last structural item. Nothing was built; what follows is the measurement of what it touches, so the
+next person does not start from a blank page.
+
+| Subsystem | Change | Where it lands |
+| --- | --- | --- |
+| Cell data | one floor/ceiling scalar pair → a list of sectors, each with a floor polygon, a ceiling polygon and a portal edge | `level.js` |
+| `floorHeightAt` | needs the height you came from; **31 call sites in 7 modules** | enemies 10, main 8, props 6, player 4, lore 2, level 1 |
+| `levelmesh` | one floor quad per cell → one per sector; 8 `c.floor` and 9 `c.ceil` reads | `levelmesh.js` |
+| Flow field | BFS is 2-D; two levels per cell needs a level index or enemies path to a catwalk they cannot reach | `enemies.js`, `level.js` |
+| Reachability | `reachCount >= 220`, the playability flood fill and the invariants tool are all 2-D | `level.js`, `tests/` |
+
+That is an XL change by the project's own definition, and it is not a change to start at the end of a session in
+which the pod reset six times: a half-migrated `floorHeightAt` is 31 call sites reading the wrong floor, which
+looks like enemies falling through catwalks and pickups floating.
+
+**The smallest honest first slice** is a catwalk: a raised floor over part of a room, walkable from below, joined
+by a stair. It needs the height-aware query and nothing else structural — and it is still a breaking API change
+to 31 call sites, so it is a release of its own.

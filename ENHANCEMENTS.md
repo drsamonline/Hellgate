@@ -56,7 +56,19 @@ Cheap, low-risk, immediately noticeable. All `S`.
 
 ## Tier 2 — Medium (a weekend each)
 
-37. **Sector portals / real 2.5D** — the current model is one floor and one ceiling per cell. Storing per-cell floor *and* ceiling polygons with portal edges would allow true multi-level rooms, stairs and catwalks. This is the big one. `level.js` + `levelmesh.js` · XL · very high
+37. **Sector portals / real 2.5D** — the current model is one floor and one ceiling per cell. Storing per-cell floor *and* ceiling polygons with portal edges would allow true multi-level rooms, stairs and catwalks. This is the big one. `level.js` + `levelmesh.js` · XL · very high — **scoped at 1.94.0, not started.** What it actually costs:
+
+   | Subsystem | Change | Size |
+   | --- | --- | --- |
+   | Cell data | `floor`/`ceil` scalars become a list of sectors per cell, each with a floor polygon, a ceiling polygon and a portal edge to its neighbour | the model |
+   | `floorHeightAt` | needs the height you came from: `floorHeightAt(level, x, z, fromY)`. **31 call sites across 7 modules** (enemies 10, main 8, props 6, player 4, lore 2, level 1) | the whole surface |
+   | `levelmesh` | one floor quad per cell becomes one per sector, plus portal-side quads; 8 `c.floor` and 9 `c.ceil` reads | the mesh |
+   | Flow field | BFS is 2-D. Two levels in one cell means the field needs a level index, or enemies path to the catwalk they cannot reach | the AI |
+   | Reachability | `reachCount >= 220` and the playability suite are 2-D flood fills; both become per-level | the tests |
+
+   **Step one, and it is the whole item in miniature:** a catwalk — a raised floor over part of a room, with the floor below still walkable, joined by a stair. That needs the height-aware `floorHeightAt` and nothing else structurally; the mesh can keep one quad per cell per sector. It is a breaking API change to 31 call sites, which is why it is a release of its own and not a patch to this one.
+
+   **Step two:** portal edges and moving sectors, which is #50 (lifts) on the same model.
 38. **Stairs and ramps** — a stair cell type with 2–3 sub-steps, so height changes stop being a hard 0.5 m cliff. `level.js` · L · high — ✓ shipped (raised platforms with a three-step band)
 39. **Door animation** — doors currently pop out of existence. Slide them up over 400 ms with — ✓ shipped a sound. `levelmesh.js` · M · high
 40. **Enemy corpses persist** — leave the last N bodies instead of sinking them all. Needs pe — ✓ shipped (12 kept, oldest cleared)r-enemy material cloning for a fade (already half-done for the hit flash). `enemies.js` · M · medium
