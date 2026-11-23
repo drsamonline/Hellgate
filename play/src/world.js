@@ -49,7 +49,11 @@ export const ZONES = [
     ambient: 0.78,
     wall: 2, floor: 1,
     props: { trees: 0, rocks: 18, grass: 8, animals: 1 },
-    objective: 'Clear the foundry',
+    objective: 'Hold out until the door opens',
+    // The second objective type: the pad opens on a timer, so the level is a
+    // fight you survive rather than a room you empty.
+    objectiveType: 'survive',
+    objectiveTime: 75,
     side: 'Find the overseer key',
     relics: 2,
   },

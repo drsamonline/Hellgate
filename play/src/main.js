@@ -412,6 +412,9 @@ function buildRun(seed, zoneDef) {
   // the wave arena's rule and the pad opens when the room is empty.
   level.doorOpen = zone.objectiveType === 'reach';
   game.exitOpen = zone.objectiveType === 'reach';
+  // 'survive': the pad opens when the clock runs out, whatever is still standing
+  game.objectiveType = zone.objectiveType || 'clear';
+  game.objectiveT = zone.objectiveTime || 0;
   // the helper: a body, a coat, and a room he never leaves. He shoots what walks
   // in, and he is where the coins get spent.
   npcBody = null;
@@ -1598,6 +1601,18 @@ function updateNpc(dt) {
   n.fired++;
 }
 
+/** The clock, for a level whose objective is to outlast it. */
+function updateObjective(dt) {
+  if (game.state !== 'playing') return;
+  if (game.objectiveType !== 'survive' || game.exitOpen) return;
+  game.objectiveT -= dt;
+  if (game.objectiveT <= 0) {
+    game.objectiveT = 0;
+    openExit();
+    hud.toast('THE DOOR IS OPEN', 2);
+  }
+}
+
 /** Walk up to a chest and it opens: coins, and the lid tips back. */
 function updateChests(dt) {
   if (!level || !level.chests || !player) return;
@@ -2526,6 +2541,7 @@ function update(dt) {
   updateTension(dt);
   updateMusic(dt);
   updateBeacon(dt);
+  updateObjective(dt);
   updateChests(dt);
   updateNpc(dt);
   updateFillLight();
