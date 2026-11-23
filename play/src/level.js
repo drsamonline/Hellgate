@@ -302,6 +302,21 @@ function buildLevel(seed, opts = {}) {
   });
 
 
+  // ---- the helper: one NPC in a room, who never leaves it -----------------
+  // He shoots what comes into his room and sells what you can afford. Stationary
+  // on purpose: no pathing, no follow, no way to get stuck in a wall.
+  let npc = null;
+  {
+    const seen2 = reachableFrom(spawnCell.x, spawnCell.z).seen;
+    const spots = cells.filter((c) => !c.solid && !c.crate && !c.door && !c.exit && c.room > 0
+      && seen2[c.z * W + c.x] && !c.stair && !c.sectors
+      && Math.hypot(c.x * CELL - spawn.x, c.z * CELL - spawn.z) > 8);
+    if (spots.length) {
+      const c = spots[rng.int(0, spots.length - 1)];
+      npc = { x: c.x, z: c.z, wx: c.x * CELL, wz: c.z * CELL, room: c.room, cd: 0, fired: 0 };
+    }
+  }
+
   // ---- chests: money, and a reason to search a room ----------------------
   // Coins come from chests (and from kills). A chest is what turns "clear the
   // room and walk to the pad" into "look around first".
@@ -606,6 +621,7 @@ function buildLevel(seed, opts = {}) {
     stairs,
     lifts,
     chests,
+    npc,
     secrets,
     broken: new Set(),   // secret walls that have been opened
     idx,

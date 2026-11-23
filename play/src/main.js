@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { makeRng } from './rng.js';
 import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, CELL } from './level.js';
 import { buildLevelMeshes } from './levelmesh.js';
+import { humanoid, PROPORTIONS, rigMat } from './rig.js';
 import { makeMaterials, makeDecalTextures } from './textures.js';
 import { Player } from './player.js';
 import { Weapons, WEAPONS } from './weapons.js';
@@ -40,6 +41,7 @@ import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from 
 const canvas = document.getElementById('game');
 let fillLight = null;
 let sun = null;
+let npcBody = null;
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
@@ -406,6 +408,19 @@ function buildRun(seed, zoneDef) {
   scene = newScene(zone);
   level = generateLevel(seed, zone.shape);
   level.doorOpen = false;
+  // the helper: a body, a coat, and a room he never leaves. He shoots what walks
+  // in, and he is where the coins get spent.
+  npcBody = null;
+  if (level.npc) {
+    const coat = rigMat(0x4a5a6a, true);
+    const skin = rigMat(0x8a7a6a, true);
+    const built = humanoid({ ...PROPORTIONS.grunt, mats: { body: coat, dark: skin, eye: rigMat(0xffd24a, false), plate: coat } });
+    npcBody = built.group;
+    npcBody.position.set(level.npc.wx, floorHeightAt(level, level.npc.wx, level.npc.wz), level.npc.wz);
+    npcBody.rotation.y = Math.PI;
+    scene.add(npcBody);
+  }
+
   // chests: a box in a room that pays coins when you walk up to it. Coins are
   // money — from chests and from kills — and they are what the NPC's shop spends.
   if (level.chests) {
@@ -1521,6 +1536,40 @@ function updateLifts(dt) {
   }
 }
 
+/**
+ * The helper: nearest live enemy inside his room, in range, shot on a cooldown.
+ * A stationary fighter is the drone's update loop with a room instead of a leash
+ * and a target instead of a follow point.
+ */
+function updateNpc(dt) {
+  const n = level && level.npc;
+  if (!n || !npcBody || !enemies) return;
+  n.cd -= dt;
+  let best = null;
+  let bestD = 9;
+  for (const e of enemies.list) {
+    if (!e.alive) continue;
+    const d = Math.hypot(e.pos.x - n.wx, e.pos.z - n.wz);
+    if (d < bestD) { bestD = d; best = e; }
+  }
+  if (!best) return;
+  npcBody.rotation.y = Math.atan2(best.pos.x - n.wx, best.pos.z - n.wz);
+  if (n.cd > 0) return;
+  n.cd = 0.55;
+  const from = new THREE.Vector3(n.wx, npcBody.position.y + 1.35, n.wz);
+  const to = new THREE.Vector3(best.pos.x, best.pos.y + best.height * 0.5, best.pos.z);
+  if (effects) {
+    effects.tracer(from, to, 0xffd24a);
+    effects.muzzleFlash(from, 0.22);
+  }
+  if (audio) audio.play('shot', from);
+  best.hurt(14, {
+    level, player, effects, audio, projectiles,
+    onKill: enemies.onKill, weapon: 'KESHI', hud, camera,
+  }, { x: (to.x - from.x) / bestD, y: 0, z: (to.z - from.z) / bestD });
+  n.fired++;
+}
+
 /** Walk up to a chest and it opens: coins, and the lid tips back. */
 function updateChests(dt) {
   if (!level || !level.chests || !player) return;
@@ -2450,6 +2499,7 @@ function update(dt) {
   updateMusic(dt);
   updateBeacon(dt);
   updateChests(dt);
+  updateNpc(dt);
   updateFillLight();
   updateSun();
   updateLifts(dt);
