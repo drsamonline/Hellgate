@@ -211,7 +211,10 @@ const levelOnly = await page.evaluate(() => {
 });
 // measured 55-66 depending on the seed's prop count; the budget is the ceiling
 // that still catches a regression, not the number of the day
-ok('the level alone stays under 80 draw calls', levelOnly.calls > 0 && levelOnly.calls < 80, JSON.stringify(levelOnly));
+// Measured 57 before the shadow pass and the catwalk decks; 80 with both, on the
+// gate, which now carries a deck. The ceiling follows the measurement, with the
+// headroom the other budgets get — and the jump is recorded rather than absorbed.
+ok('the level alone stays under 100 draw calls', levelOnly.calls > 0 && levelOnly.calls < 100, JSON.stringify(levelOnly));
 
 const withWave = await page.evaluate(() => {
   const HG = window.HG;
@@ -302,7 +305,10 @@ const saved = await page.evaluate(() => {
 });
 ok('a run saves with score and wave', saved && saved.score === 777 && saved.wave === 2, JSON.stringify(saved));
 
-await page.reload({ waitUntil: 'domcontentloaded' });
+// 30 s is the default and it is not enough on a slow runner: this step timed out
+// once on CI and once locally, and a navigation timeout here reads as a game bug.
+// The assertion after it is the point of the step.
+await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 });
 await page.waitForFunction('typeof window.HG === "object"', { timeout: 20000 });
 const cont = await page.evaluate(() => {
   const b = document.getElementById('continueBtn');
