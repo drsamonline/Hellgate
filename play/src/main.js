@@ -2268,8 +2268,12 @@ function stampBuild() {
 
 stampBuild();
 document.getElementById('settingsBtnTitle').addEventListener('click', () => openSettings('title'));
-document.getElementById('journalBtn')?.addEventListener('click', () => { game.state = 'paused'; showDiary(); });
-document.getElementById('invBtn')?.addEventListener('click', () => { game.state = 'paused'; toggleInventory(); });
+// Both of these used to set `game.state = 'paused'` and then call a function that
+// begins `if (game.state !== 'playing') return;` — so the two buttons in the pause
+// menu did nothing at all, which is what the player reported. The functions set
+// the state themselves; they only need to be allowed to run from paused.
+document.getElementById('journalBtn')?.addEventListener('click', () => { game.state = 'playing'; showDiary(); });
+document.getElementById('invBtn')?.addEventListener('click', () => { game.state = 'playing'; toggleInventory(); });
 document.getElementById('settingsBtnPause').addEventListener('click', () => openSettings('pause'));
 document.getElementById('reportBtn')?.addEventListener('click', () => { copyReport(); });
 document.getElementById('codexSearch')?.addEventListener('input', (e) => renderCodex(e.target.value));
