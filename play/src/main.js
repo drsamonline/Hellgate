@@ -1552,6 +1552,27 @@ function updateNpc(dt) {
     const d = Math.hypot(e.pos.x - n.wx, e.pos.z - n.wz);
     if (d < bestD) { bestD = d; best = e; }
   }
+  // the shop: stand next to him with coins and he sells the cheapest thing you
+  // are short of. No new key, no new panel — the coins are the interface.
+  const pd = Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz);
+  n.shopCd = (n.shopCd || 0) - dt;
+  if (pd < 2.1 && n.shopCd <= 0) {
+    n.shopCd = 1.2;
+    const shop = [
+      { kind: 'bullets', n: 20, price: 40 },
+      { kind: 'shells', n: 8, price: 60 },
+      { kind: 'rockets', n: 3, price: 100 },
+    ];
+    const buy = shop.find((it) => (game.coins || 0) >= it.price && (player.ammo[it.kind] || 0) < 40);
+    if (buy) {
+      game.coins -= buy.price;
+      player.addAmmo(buy.kind, buy.n);
+      hud.toast('BOUGHT ' + buy.n + ' ' + buy.kind.toUpperCase() + '  -' + buy.price, 1.4);
+    } else if ((game.coins || 0) < 40) {
+      hud.toast('NEED 40 COINS', 1.0);
+    }
+  }
+
   if (!best) return;
   npcBody.rotation.y = Math.atan2(best.pos.x - n.wx, best.pos.z - n.wz);
   if (n.cd > 0) return;
