@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.5.0 — 2026-11-23
+
+**The helper's third offer: he changes what ends the level.** The brief's line was "a flag that changes the
+objective or pays a reward". The job pays, the door pays, and this one changes the objective: on a `clear`
+level he tells you there are three relics under the floor, and taking the job turns the level into a `relics`
+level — the room stops ending it and the relics start.
+
+| Piece | What it does |
+| --- | --- |
+| the relics offer | `spawnRelics(3)`, `objectiveType = 'relics'`, the door shut again, `game.flags.keshiRelics = 1`. He pays 200 when the last one breaks, once |
+| the order | it comes before the door while it is available: a player who takes it should not be sold a door in the same breath |
+| what it does not do | it does not touch the gate. `updateObjective()` reads the relic count exactly as it does on level 4, so the door opens on the count, not on the coins |
+| when it is not offered | on a level that already has relics, on a `reach` level, or once the flag is set |
+
+**The shop resumes once he has nothing to ask.** Standing next to him when the door opens buys 60 coins of
+shells in the same second the 200 lands — the auto-shop is the shipped design ("the coins are the interface"),
+and it is worth a decision rather than a silent fix.
+
 ## 2.4.0 — 2026-11-23
 
 **The helper's second offer: he sells the door.** The brief asked for two things from the NPC — a job that

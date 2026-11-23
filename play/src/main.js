@@ -830,6 +830,13 @@ function breakRelic(i) {
     game.sideDone = true;
     game.score += 400;
     hud.toast('SIDE OBJECTIVE COMPLETE  +400', 2.4);
+    // he pays for the relics he asked for, once. The door is still updateObjective's
+    if (game.flags && game.flags.keshiRelics === 1) {
+      game.flags.keshiRelics = 2;
+      game.coins = (game.coins || 0) + NPC_RELICS.pays;
+      hud.toast('KESHI PAYS  +' + NPC_RELICS.pays + ' COINS', 2.4);
+      note('npc relic job paid');
+    }
   } else {
     hud.toast('RELIC  ' + (game.relicsTotal - game.relics.length) + '/' + game.relicsTotal);
   }
@@ -1837,6 +1844,9 @@ const NPC_JOB = { first: 120, second: 180 };
 /** What he charges to open the door for you, once the job is paid. */
 const NPC_DOOR = 250;
 
+/** What he pays for three relics, and how many he asks for. */
+const NPC_RELICS = { count: 3, pays: 200 };
+
 /**
  * The quest state for the helper in this level, restored from the run's flags.
  * A resumed run must not be offered the same job twice.
@@ -1861,8 +1871,13 @@ function npcQuestState() {
 function npcOfferKind(n) {
   if (!n) return null;
   if (n.quest === 'none') return 'job';
+  if (n.quest !== 'done' || game.exitOpen) return null;
+  // the third offer comes first once it is available: it changes what the level
+  // is, and a player who takes it should not be sold a door in the same breath
+  const relics = (game.flags && game.flags.keshiRelics) || 0;
+  if (!relics && game.objectiveType === 'clear' && !game.relicsTotal) return 'relics';
   const bought = (game.flags && game.flags.keshiDoor) || 0;
-  if (n.quest === 'done' && !bought && !game.exitOpen && game.objectiveType !== 'reach') return 'door';
+  if (!bought && game.objectiveType !== 'reach') return 'door';
   return null;
 }
 
@@ -1881,7 +1896,10 @@ function openNpcOffer() {
     line.textContent = kind === 'job'
       ? 'Clear this room and it is worth ' + NPC_JOB.second + ' to me. Up front, ' +
         NPC_JOB.first + ' and a trinket.   [1] take the job   [2] not now'
-      : 'The door. ' + NPC_DOOR + ' and I open it where you stand, relics or no relics.   [1] pay   [2] not now';
+      : kind === 'relics'
+        ? 'There are ' + NPC_RELICS.count + ' relics under this floor. Break them and I pay ' +
+          NPC_RELICS.pays + '. The door answers to them, not to an empty room.   [1] do it   [2] not now'
+        : 'The door. ' + NPC_DOOR + ' and I open it where you stand, relics or no relics.   [1] pay   [2] not now';
   }
   if (root) {
     root.classList.add('on');
@@ -1912,6 +1930,25 @@ function takeNpcOffer(i) {
   closeNpcOffer();
   if (!n) return true;
   game.flags = game.flags || {};
+
+  if (kind === 'relics') {
+    if (i !== 0) {
+      hud.toast('KESHI  ·  ANOTHER TIME', 1.6);
+      return true;
+    }
+    // the flag changes the objective: the room no longer ends this level, the
+    // relics do, and updateObjective() already knows how to read that
+    game.flags.keshiRelics = 1;
+    game.objectiveType = 'relics';
+    game.objectiveT = 0;
+    game.exitOpen = false;
+    level.doorOpen = false;
+    spawnRelics(NPC_RELICS.count);
+    hud.toast(NPC_RELICS.count + ' RELICS  ·  BREAK THEM ALL', 2.4);
+    audio.play('key');
+    note('npc relic job taken');
+    return true;
+  }
 
   if (kind === 'door') {
     if (i !== 0) {
@@ -2823,7 +2860,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.4.0';
+const BUILD = '2.5.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.4.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.5.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.4.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 105, `v1.0.0` → `v2.4.0` |
+| Version | 2.5.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 106, `v1.0.0` → `v2.5.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 694 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 707 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -138,9 +138,13 @@ wiped by the next call.
 
 ### The helper, and his two offers
 
-- **He has two offers, and `npcOfferKind()` is the only decider.** `job` while the job is unpaid, `door` once it
-  is paid, on a level whose door is shut and whose objective is not `reach`. `V` falls through to the terminal
-  when there is neither.
+- **He has three offers, and `npcOfferKind()` is the only decider.** `job` while the job is unpaid; `relics` on
+  a `clear` level with no relics on it (it turns the level into a `relics` level and pays 200 when the last one
+  breaks); `door` once the job is paid, on a level whose door is shut and whose objective is not `reach`. `V`
+  falls through to the terminal when there is none.
+- **An offer that changes the objective writes the objective, nothing else.** The relics offer sets
+  `objectiveType`, spawns the relics and shuts the door; `updateObjective()` opens it on the count, as on any
+  `relics` level. Do not open the gate from the offer.
 - **The shop must not run while he has an offer for you.** It buys ammo automatically within 2.1 m, every 1.2 s,
   and it spent the 250 coins the door costs while the player was standing there reading the offer. Found in a
   browser, not by the suite: the test set the coins and called the handler with no frame between.

@@ -1498,6 +1498,48 @@ console.log('\n== the helper pays ==');
     ok(HG.openNpcOffer() === false, 'and nothing to sell on a level that is already open');
     HG.game.objectiveType = 'clear';
     HG.game.exitOpen = false;
+
+    // ---- his third offer: he changes what ends the level
+    HG.game.flags = { keshi: 2 };
+    delete HG.game.flags.keshiDoor;
+    delete HG.game.flags.keshiRelics;
+    n.quest = 'done';
+    HG.game.objectiveType = 'clear';
+    HG.game.exitOpen = false;
+    HG.level.doorOpen = false;
+    HG.game.relicsTotal = 0;
+    HG.game.relics.length = 0;
+    HG.game.coins = 0;
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    ok(HG.openNpcOffer() === true, 'he offers the relics on a clear level');
+    ok(HG.npcOffer.kind === 'relics', 'and that is the offer that comes first (' + HG.npcOffer.kind + ')');
+    ok(/relics/i.test(document.getElementById('cineLine').textContent), 'naming what he wants');
+    HG.takeNpcOffer(0);
+    ok(HG.game.objectiveType === 'relics', 'taking it changes the objective to relics');
+    ok(HG.game.relicsTotal === 3 && HG.game.relics.length === 3, 'and puts three on the floor');
+    ok(HG.game.exitOpen === false, 'with the door shut again');
+    ok(/relics/i.test(HG.objectiveLine()), 'and the objective line says so: ' + HG.objectiveLine());
+    ok(HG.game.flags.keshiRelics === 1, 'the flag records it');
+    // breaking them all pays him his part, and the door follows from the count
+    const coins0b = HG.game.coins || 0;
+    while (HG.game.relics.length) HG.breakRelic(0);
+    ok((HG.game.coins || 0) === coins0b + 200, 'he pays 200 when the last one breaks (' + ((HG.game.coins || 0) - coins0b) + ')');
+    ok(HG.game.flags.keshiRelics === 2, 'and only once');
+    HG.updateObjective(0.016);
+    ok(HG.game.exitOpen === true, 'and the door opens on the count, not on the coins');
+    ok(HG.openNpcOffer() === false, 'he does not offer it twice');
+
+    // a level that already has relics is not offered a second set
+    HG.game.flags = { keshi: 2 };
+    delete HG.game.flags.keshiRelics;
+    HG.game.exitOpen = false;
+    HG.game.objectiveType = 'clear';
+    HG.game.relicsTotal = 2;
+    ok(HG.openNpcOffer() === true && HG.npcOffer.kind !== 'relics', 'a level with relics already gets the door, not more relics');
+    HG.closeNpcOffer();
+    HG.game.relicsTotal = 0;
+    HG.game.objectiveType = 'clear';
+    HG.game.exitOpen = false;
   }
 }
 
