@@ -313,10 +313,12 @@ function buildLevel(seed, opts = {}) {
     if (r.ceil < 4.6) continue;
     const along = rng.chance(0.5);
     const span = along ? r.w : r.h;
-    if (span < 7 || (along ? r.h : r.w) < 5) continue;
+    // one cell of deck, two of ramp, and a cell to walk in from: a 5-wide room
+    // holds a catwalk if the deck is one deep
+    if (span < 5 || (along ? r.h : r.w) < 5) continue;
     // the deck: two cells deep along the low side of the room
     const deck = [];
-    for (let k = 0; k < 2; k++) {
+    for (let k = 0; k < 1; k++) {
       for (let m = 1; m < span - 1; m++) {
         const x = along ? r.x + m : r.x + 1 + k;
         const z = along ? r.z + 1 + k : r.z + m;
@@ -325,14 +327,12 @@ function buildLevel(seed, opts = {}) {
         deck.push({ x, z, c });
       }
     }
-    if (deck.length < 6) continue;
+    if (deck.length < 3) continue;
     // two stair cells in front of the deck: the far one climbs 0 -> 1.2, the near
     // one 1.2 -> 2.4, and both ramps climb towards the deck
     const mid = along ? r.x + (r.w >> 1) : r.z + (r.h >> 1);
-    const near = along ? { x: mid, z: r.z + 3 } : { x: r.x + 3, z: mid };
-    const far = along ? { x: mid, z: r.z + 4 } : { x: r.x + 4, z: mid };
-    // the ramps and the deck have to sit inside the room
-    if ((along ? r.h : r.w) < 6) continue;
+    const near = along ? { x: mid, z: r.z + 2 } : { x: r.x + 2, z: mid };
+    const far = along ? { x: mid, z: r.z + 3 } : { x: r.x + 3, z: mid };
     const nc = cells[idx(near.x, near.z)];
     const fc = cells[idx(far.x, far.z)];
     if (!nc || !fc || nc.solid || fc.solid || nc.stair || fc.stair || nc.platform || fc.platform) continue;
