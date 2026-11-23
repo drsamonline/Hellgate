@@ -1707,6 +1707,28 @@ console.log('\n== shadows ==');
   ok(!!sun.target && HG.scene.children.includes(sun.target), 'the shadow camera has a target in the scene');
 }
 
+console.log('\n== the panels actually appear ==');
+{
+  // state alone is not enough: the player reported both panels "not opening"
+  // while the flow audit passed, because the audit only checked game.state. The
+  // element has to carry .on as well.
+  HG.game.state = 'playing';
+  HG.toggleInventory();
+  const inv = document.getElementById('inventory');
+  ok(HG.game.state === 'inventory', 'the inventory state opens');
+  ok(!!inv && inv.classList.contains('on'), 'and its screen is on');
+  HG.toggleInventory();
+  ok(!inv || !inv.classList.contains('on'), 'and closes again');
+  HG.game.state = 'playing';
+  HG.showDiary();
+  const diary = document.getElementById('diary');
+  ok(HG.game.state === 'diary', 'the journal state opens');
+  ok(!!diary && diary.classList.contains('on'), 'and its screen is on');
+  ok((document.getElementById('diaryBody') || {}).innerHTML.length > 100, 'and it has content');
+  HG.game.state = 'playing';
+  HG.hideScreens();
+}
+
 console.log('\n== instanced bodies ==');
 {
   const { instanceReport } = await import('../play/src/enemies.js');

@@ -38,11 +38,25 @@ function makeEl(id='',tag='div'){
   return el;
 }
 const els = new Map();
+// The real page ships these as <div class="screen">. The stub creates elements on
+// demand, so they have to exist before a class selector can find them.
+const SCREEN_IDS = ['title', 'intro', 'class', 'map', 'inventory', 'diary', 'codex', 'lore', 'cleared', 'dead', 'gameover', 'settings'];
 const document = {
   pointerLockElement: null, _listeners: {},
   getElementById(id){ if(!els.has(id)) els.set(id, makeEl(id, (id==='game'||id==='face')?'canvas':'div')); return els.get(id); },
   createElement(tag){ return makeEl('', tag); },
-  querySelectorAll(sel){ if(sel==='.screen') return ['title','pause','gameover','settings'].map(i=>this.getElementById(i)); return []; },
+  // every element that carries the class, not a hard-coded four: the game shows
+  // inventory, diary, codex, map and lore screens too, and a list of four made
+  // every panel assertion in the harness blind
+  querySelectorAll(sel){
+    if (sel && sel[0] === '.') {
+      const cls = sel.slice(1);
+      const out = [];
+      for (const el of els.values()) if (el.classList && el.classList.contains(cls)) out.push(el);
+      return out;
+    }
+    return [];
+  },
   addEventListener(t,fn){(this._listeners[t]||(this._listeners[t]=[])).push(fn);},
   dispatch(t,ev={}){ for(const fn of this._listeners[t]||[]) fn(ev); },
   exitPointerLock(){ this.pointerLockElement = null; },
@@ -72,4 +86,7 @@ globalThis.localStorage = { getItem:k=>store.has(k)?store.get(k):null, setItem:(
 globalThis.__RAF = [];
 globalThis.requestAnimationFrame = fn => { globalThis.__RAF.push(fn); return 1; };
 globalThis.__FAKE_DT = 1/60;
+// create the screens up front, with the class the real page gives them
+for (const id of SCREEN_IDS) document.getElementById(id).classList.add('screen');
+
 export {};
