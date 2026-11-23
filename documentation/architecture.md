@@ -40,6 +40,21 @@ works offline and the version cannot drift under the game.
      rng.js
 ```
 
+## The campaign table
+
+`story-levels.js` is data, not logic: 32 rows of `id`, `seed`, `shape` and `objective`, in four acts of
+eight. It imports `world.js` for the zone lookup and nothing else.
+
+| Function | Does |
+| --- | --- |
+| `storyLevel(n)` | the row for a 1-based level number, or null |
+| `storyLevelZone(row)` | the row dressed on its base zone: seed, shape, objective, title. The zone **id** is kept, so unlocks, progression and the save format are untouched |
+| `OBJECTIVE_TYPES` | `reach`, `clear`, `survive`, `relics` — a row naming a fifth fails `tests/test-level.mjs` |
+
+`?level=N` on the game URL resolves a row and starts it. `game.storyLevel` carries the number for the
+status panel and for debugging.
+
+
 `level.js` imports **only** `rng.js`. No Three.js, no DOM. That is deliberate: it is the file with
 the most logic worth testing, so it must run in Node.
 

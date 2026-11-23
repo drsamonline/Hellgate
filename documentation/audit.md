@@ -1,6 +1,6 @@
 # Audit — 1.76.0
 
-A full read of all 37 modules, plus three scripted sweeps and a browser flow walk.
+A full read of all 37 modules, plus three scripted sweeps and a browser flow walk. (`story-levels.js`, added at 2.0.0, is a data table and has not been through a pass; `enemies.js` changed at 2.0.0 only where `updateFlash()` was factored out of `animate()`.)
 This is the record of what was found and what was done about it.
 
 ## Method

@@ -7,7 +7,7 @@ Sector maps generated from a seed string · three weapons · two enemy types · 
 
 [![Play the demo](https://img.shields.io/badge/▶_play-live_demo-ff3b30?style=for-the-badge)](https://drsamonline.github.io/Hellgate/play/)
 [![Read the docs](https://img.shields.io/badge/docs-read-ffb454?style=for-the-badge&logo=readthedocs&logoColor=white)](documentation/architecture.md)
-[![Roadmap](https://img.shields.io/badge/roadmap-63_items-39ff9a?style=for-the-badge)](ENHANCEMENTS.md)
+[![Roadmap](https://img.shields.io/badge/roadmap-66_items-39ff9a?style=for-the-badge)](ENHANCEMENTS.md)
 
 [![License](https://img.shields.io/github/license/drsamonline/Hellgate?style=flat-square&color=3da639)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/drsamonline/Hellgate/test.yml?style=flat-square&label=tests)](../../actions/workflows/test.yml)
@@ -188,7 +188,7 @@ which is how the game was checked against the current release and not only again
 - [Tuning](documentation/tuning.md) — every constant worth changing, and what it does
 - [Testing](documentation/testing.md) — how the harness works, how to add a suite
 - [API](documentation/api.md) — every exported symbol, one line each
-- [Enhancement roadmap](ENHANCEMENTS.md) — 63 ideas, quick wins first
+- [Enhancement roadmap](ENHANCEMENTS.md) — 66 ideas, quick wins first
 
 ## Performance
 

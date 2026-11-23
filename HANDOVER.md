@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v1.96.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.0.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 1.96.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 96, `v1.0.0` → `v1.96.0` |
-| Modules | 37 in `play/src/`, ~11,600 lines |
-| Assertions | 885 across 4 suites |
+| Version | 2.0.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 100, `v1.0.0` → `v2.0.0` |
+| Modules | 38 in `play/src/`, ~12,200 lines |
+| Assertions | 885 playability + 604 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 53 shipped, 4 measured-and-rejected, 8 open of 63 |
+| Roadmap | 54 shipped, 3 measured-and-rejected, 9 open of 66 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -73,12 +73,12 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 37 modules
+### `play/src/` — 38 modules
 
 | Group | Modules |
 | --- | --- |
 | Core | `main.js` (the loop, state machine, wiring — 2,600 lines), `player.js`, `weapons.js`, `powers.js`, `classes.js` |
-| World | `level.js` (cell grid + generation), `levelmesh.js` (merged geometry), `world.js` (zone table), `props.js`, `items.js`, `textures.js`, `pixel.js` |
+| World | `level.js` (cell grid + generation), `levelmesh.js` (merged geometry), `world.js` (zone table), `story-levels.js` (the 32-level campaign table), `props.js`, `items.js`, `textures.js`, `pixel.js` |
 | Enemies | `enemies.js` (8 types, AI, spawn, pools), `rig.js` (humanoid + quadruped joints), `models.js`, `glb.js` |
 | Feel | `effects.js` (pooled particles, decals, tracers, lights), `bloom.js`, `audio.js`, `music.js`, `cinematic.js`, `story.js` |
 | UI | `hud.js`, `minimap.js`, `codex.js`, `search.js`, `touch.js`, `settings.js` |
@@ -136,6 +136,17 @@ Four separate bugs in this project came from **one value written in two places t
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
 
+### The objective gate
+
+- **`openExit()` is the only writer of `game.exitOpen`.** `checkWave()` calls it for `clear` and `reach`;
+  `updateObjective()` calls it for `survive` and `relics`. Nothing else may, and `updateObjective()` returns
+  immediately when the door is already open, so a second call in the same frame opens nothing twice.
+- **A `relics` level must not open its door because the room is empty.** `checkWave()` returns early for
+  `relics` before it reaches the wave-clear path. `survive` deliberately keeps the clear path as a second way
+  out — that is how 1.99.0 shipped it and what the playability suite plays, so narrowing it breaks 24
+  assertions across four seeds.
+- **`breakRelic()` never touches the gate.** It scores, bursts and splices; the door follows from the count.
+
 ### Save and resume
 
 `saveRun()` must carry everything `resumeRun()` needs: zone, seed, wave, score, kills, class, health, armour,
@@ -166,21 +177,23 @@ restored *before* `applyClass`, which is what reads them.
 
 ## 6. What is left
 
-### Roadmap — 10 open of 63
+### Roadmap — 12 open of 66, of which 3 are measured-and-rejected
 
 | # | Item | Size | Note |
 | --- | --- | --- | --- |
 | 37 | Sector portals / true multi-level | XL | Floor+ceiling polygons with portal edges. The last structural item |
-| 45 | Instanced enemies | L | Bodies are merged; instancing needs per-instance colour for the hit flash |
+| 46 | Chunked level meshes | L | **Measured and rejected** — 255 draw calls against 117 |
+| 47 | Texture atlas | L | **Measured and rejected** — cannot tile; walls repeat UV 2.4 |
 | 48 | Weapon sprites instead of meshes | M | Doom-style 2D frames |
-| 49 | Better enemy models | M | Same box budget, better silhouette |
 | 50 | Animated doors and lifts as sectors | L | Moving floor heights |
-| 52 | Real-time shadows | XL | Flat ambient is why rooms read as boxes |
-| 54 | Collision broadphase | L | Only matters past ~50 enemies |
+| 54 | Collision broadphase | L | **Measured and rejected** — 0.68 ms for fifty enemies |
 | 56 | Deterministic replay | L | Input stream + seed; needs a sim RNG stream |
 | 59 | WebGPU renderer | XL | Measure before committing |
 | 60 | Co-op over WebRTC | XL | Host-authoritative |
 | 63 | Level editor | XL | Paint-the-cells, exports a map |
+| 64 | A cutscene that walks the level | M | `buildFlowField` + `floorHeightAt` + a Catmull-Rom |
+| 65 | Dialogue, written not read off a tablet | L | A script format of lines with a speaker and a beat |
+| 66 | NPC quests that pay | M | One dialogue, two choices, one flag, one reward |
 
 ### Measured and rejected — do not redo without new numbers
 
@@ -233,7 +246,8 @@ critical (pass-through walls, enemies teleporting) and one is the honest verdict
 | Trap | What it cost |
 | --- | --- |
 | **The pickup tests were flaky.** `full-health pickup is left on the floor` and `damaged player picks it up` failed about one run in five | They blamed `LOD_DIST` and then chests, both innocent. The cause: when the last enemy died in those frames the wave cleared and every pickup was dropped. Fixed by keeping one enemy alive across the assertion |
-| **`resuming restores the score` is still flaky** — it failed once in four runs after the pickup fix | Not diagnosed. It is the same class: a test that depends on state an earlier test left behind. Re-run before believing it |
+| **`resuming restores the score` was flaky** | Diagnosed and fixed at 2.0.0. It read the score two frames after `resumeRun()`, and a wave that spawned no enemy clears in two frames and pays the exit bonus into the score. The score is read before the loop runs now |
+| **Four assertions went red on CI and green here** | All four were the same shape: a value the loop can move between the write and the read. The pistol target could be a corpse from an earlier section (`-2 -> -2`); the pickup keeper spawned at `player.pos + 22`, which can land in a wall and clear the wave; the hit-flash decay ran 90 rAF frames against a dt-scaled decay; the build stamp hardcoded `'1.'` and would have failed on 2.0.0 for no reason |
 
 
 Four of these cost a release or a failed verification each.
