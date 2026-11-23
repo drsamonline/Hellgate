@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.4.0 — 2026-11-23
+
+**The helper's second offer: he sells the door.** The brief asked for two things from the NPC — a job that
+pays, and a choice that *changes the objective*. The job shipped at 2.1.0. This is the other half: once he has
+been paid, he will open the door where you stand for 250 coins, relics or no relics.
+
+| Piece | What it does |
+| --- | --- |
+| the door offer | 250 coins, `game.flags.keshiDoor`, and `openExit()` — he sells the door, he does not open it himself, so the gate keeps one writer |
+| when he offers it | after the job is paid, on a level that is not `reach` (which is already open) and whose door is not already open |
+| when he does not | a `reach` level, an open door, or a bought door: `npcOfferKind()` decides, and `V` falls through to the terminal |
+
+**A bug the browser found, not the suite.** Standing next to him with 300 coins spent 60 of them on shells
+every 1.2 seconds — his shop — so the 250-coin door could never be afforded. The shop does not run while he has
+an offer for you now. The headless suite could not see it: the purchase assertion set the coins and called the
+handler in the same breath, with no frame in between.
+
 ## 2.3.1 — 2026-11-23
 
 **The title screen never started the campaign.** Reported from play: "level 1 has 3 waves still, and gate is

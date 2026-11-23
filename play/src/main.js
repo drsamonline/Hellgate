@@ -1643,8 +1643,7 @@ function showZoneMap() {
 function interact() {
   if (game.state !== 'playing') return;
   const n = level && level.npc;
-  if (n && npcBody && n.quest === 'none' &&
-      Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz) < 2.1) {
+  if (n && npcBody && Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz) < 2.1) {
     if (openNpcOffer()) return;
   }
   openLore();
@@ -1835,6 +1834,9 @@ let npcOffer = null;
 /** The job, and what he pays for it. Two stages: taken, then done. */
 const NPC_JOB = { first: 120, second: 180 };
 
+/** What he charges to open the door for you, once the job is paid. */
+const NPC_DOOR = 250;
+
 /**
  * The quest state for the helper in this level, restored from the run's flags.
  * A resumed run must not be offered the same job twice.
@@ -1847,19 +1849,39 @@ function npcQuestState() {
   return 'none';
 }
 
+/**
+ * Which offer he has for you right now, or null.
+ *
+ * Two of them, and the second is the brief's other half: a job that pays, and a
+ * price that changes what ends the level. He will not sell you a door you have
+ * already walked through, or one a `reach` level left open.
+ * @param {object|null} n `level.npc`.
+ * @returns {string|null} 'job' | 'door' | null
+ */
+function npcOfferKind(n) {
+  if (!n) return null;
+  if (n.quest === 'none') return 'job';
+  const bought = (game.flags && game.flags.keshiDoor) || 0;
+  if (n.quest === 'done' && !bought && !game.exitOpen && game.objectiveType !== 'reach') return 'door';
+  return null;
+}
+
 /** Stand next to him and he asks. */
 function openNpcOffer() {
   const n = level && level.npc;
   if (!n || npcOffer) return false;
-  if (n.quest !== 'none') return false;
-  npcOffer = { n };
+  const kind = npcOfferKind(n);
+  if (!kind) return false;
+  npcOffer = { n, kind };
   const root = document.getElementById('letterbox');
   const name = document.getElementById('cineName');
   const line = document.getElementById('cineLine');
   if (name) name.textContent = 'KESHI';
   if (line) {
-    line.textContent = 'Clear this room and it is worth ' + NPC_JOB.second +
-      ' to me. Up front, ' + NPC_JOB.first + ' and a trinket.   [1] take the job   [2] not now';
+    line.textContent = kind === 'job'
+      ? 'Clear this room and it is worth ' + NPC_JOB.second + ' to me. Up front, ' +
+        NPC_JOB.first + ' and a trinket.   [1] take the job   [2] not now'
+      : 'The door. ' + NPC_DOOR + ' and I open it where you stand, relics or no relics.   [1] pay   [2] not now';
   }
   if (root) {
     root.classList.add('on');
@@ -1879,16 +1901,38 @@ function closeNpcOffer() {
 }
 
 /**
- * Answer the helper: 0 takes the job, 1 declines it.
+ * Answer the helper: 0 takes what he is offering, 1 declines it.
  * @param {number} i Which option.
  * @returns {boolean} True when an offer was open to answer.
  */
 function takeNpcOffer(i) {
   if (!npcOffer) return false;
   const n = npcOffer.n;
+  const kind = npcOffer.kind;
   closeNpcOffer();
   if (!n) return true;
   game.flags = game.flags || {};
+
+  if (kind === 'door') {
+    if (i !== 0) {
+      hud.toast('KESHI  ·  THE DOOR STAYS SHUT', 1.6);
+      return true;
+    }
+    if ((game.coins || 0) < NPC_DOOR) {
+      hud.toast('NEED ' + NPC_DOOR + ' COINS', 1.4);
+      return true;
+    }
+    game.coins -= NPC_DOOR;
+    game.flags.keshiDoor = 1;
+    // openExit() stays the only writer of exitOpen: he sells the door, he does
+    // not open it himself
+    openExit();
+    hud.toast('DOOR BOUGHT  -' + NPC_DOOR + ' COINS', 2.2);
+    audio.play('door');
+    note('npc door bought');
+    return true;
+  }
+
   if (i !== 0) {
     n.quest = 'declined';
     hud.toast('KESHI  ·  ANOTHER TIME', 1.6);
@@ -1939,10 +1983,13 @@ function updateNpc(dt) {
   // are short of. No new key, no new panel — the coins are the interface.
   const pd = Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz);
   // the prompt is set after update()'s lore prompt, so it wins when both are near
-  if (pd < 2.1 && n.quest === 'none' && !npcOffer) hud.setPrompt(TOUCH ? 'TALK' : 'V  TALK');
+  if (pd < 2.1 && !npcOffer && npcOfferKind(n)) hud.setPrompt(TOUCH ? 'TALK' : 'V  TALK');
   checkNpcJob();
   n.shopCd = (n.shopCd || 0) - dt;
-  if (pd < 2.1 && n.shopCd <= 0) {
+  // he does not sell you ammo out of the coins he is about to ask for: standing
+  // next to him with 300 coins used to spend 60 on shells every 1.2 s, and the
+  // door he offers for 250 could never be afforded
+  if (pd < 2.1 && n.shopCd <= 0 && !npcOffer && !npcOfferKind(n)) {
     n.shopCd = 1.2;
     const shop = [
       { kind: 'bullets', n: 20, price: 40 },
@@ -2776,7 +2823,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.3.1';
+const BUILD = '2.4.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

@@ -1455,6 +1455,49 @@ console.log('\n== the helper pays ==');
     // a resumed run must not be offered the job a second time
     HG.game.flags.keshi = 2;
     ok(HG.npcQuestState() === 'done', 'the flags carry the job across a resume');
+
+    // ---- his second offer: the door, for a price
+    HG.game.flags = { keshi: 2 };
+    delete HG.game.flags.keshiDoor;
+    n.quest = 'done';
+    HG.game.objectiveType = 'clear';
+    HG.game.exitOpen = false;
+    HG.level.doorOpen = false;
+    HG.game.coins = 100;
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    ok(HG.openNpcOffer() === true, 'he offers the door once the job is paid');
+    ok(/pay/.test(document.getElementById('cineLine').textContent), 'and names the price: ' + document.getElementById('cineLine').textContent.slice(0, 40));
+    HG.takeNpcOffer(0);
+    ok((HG.game.coins || 0) === 100, '100 coins is not enough and nothing is taken');
+    ok(HG.game.exitOpen === false, 'and the door stays shut');
+    ok(HG.openNpcOffer() === true, 'he asks again when you are still short');
+    HG.closeNpcOffer();
+
+    HG.game.coins = 300;
+    // and he does not spend it on ammo while the offer stands
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    HG.update(1.5);
+    ok((HG.game.coins || 0) === 300, 'he does not sell you ammo out of the coins he is asking for (' + (HG.game.coins || 0) + ')');
+    // an empty room opens the door by itself in those frames, and he does not sell
+    // a door that is already open
+    HG.game.exitOpen = false;
+    HG.level.doorOpen = false;
+    ok(HG.openNpcOffer() === true, 'the door offer is still on the table');
+    HG.openNpcOffer();
+    HG.takeNpcOffer(0);
+    ok((HG.game.coins || 0) === 50, '250 coins buys the door (' + (HG.game.coins || 0) + ')');
+    ok(HG.game.exitOpen === true, 'and the door is open');
+    ok(HG.game.flags.keshiDoor === 1, 'the flag records that it was bought');
+    ok(HG.openNpcOffer() === false, 'he does not sell a door that is already open');
+
+    // a reach level is open anyway, so there is nothing to sell
+    HG.game.flags = { keshi: 2 };
+    delete HG.game.flags.keshiDoor;
+    HG.game.exitOpen = false;
+    HG.game.objectiveType = 'reach';
+    ok(HG.openNpcOffer() === false, 'and nothing to sell on a level that is already open');
+    HG.game.objectiveType = 'clear';
+    HG.game.exitOpen = false;
   }
 }
 

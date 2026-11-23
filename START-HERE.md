@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.3.1** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.4.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.3.1 (`VERSION` and `BUILD` agree) |
+| Version | 2.4.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 676 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 40 in `play/src/` |
-| Releases | 104, `v1.0.0` → `v2.3.1` |
+| Releases | 105, `v1.0.0` → `v2.4.0` |
 | Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
 
 ## What shipped in this run
@@ -53,6 +53,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.2.0** | **The campaign is the game: 32 levels, level progression, and a map in four acts** |
 | **2.3.0** | **The gate is a place you cross — the `reach` door fixed, and all 32 levels in the playability suite** |
 | **2.3.1** | **Start actually starts the campaign — the seed box was never empty, so nobody saw 2.2.0** |
+| **2.4.0** | **The helper sells the door — a choice that changes what ends the level** |
 
 ### 2.0.0 in detail
 
@@ -96,9 +97,9 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | # | Item | Where | Size |
 | --- | --- | --- | --- |
-| — | A level select on the title screen | `play/index.html` + `main.js` | S |
-| — | A second NPC quest, in a room the objective sends you through | `main.js` | M |
-| — | Run the playability suite over the 32 levels instead of nine zones | `tests/test-playability.mjs` | M |
+| — | The outro cutscene: walk the camera away from the body, now that the cleared screen no longer covers it | `campath.js` + `cinematic.js` | S |
+| — | A third offer that changes the *objective* rather than the door: he names a relic and pays for it | `main.js` | M |
+| — | The level select shows no cutscene stills; a thumbnail per act would sell the campaign | `tools/shoot.mjs` | M |
 
 **The first slice of the brief is still the test:** one level start to finish with a cutscene in, a dialogue
 line out and no terminal. Levels 1 and 4 are the two to build it on — `reach` and `relics`, both already

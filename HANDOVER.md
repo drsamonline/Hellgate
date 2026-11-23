@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.3.1**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.4.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.3.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 104, `v1.0.0` → `v2.3.1` |
+| Version | 2.4.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 105, `v1.0.0` → `v2.4.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 676 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,16 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The helper, and his two offers
+
+- **He has two offers, and `npcOfferKind()` is the only decider.** `job` while the job is unpaid, `door` once it
+  is paid, on a level whose door is shut and whose objective is not `reach`. `V` falls through to the terminal
+  when there is neither.
+- **The shop must not run while he has an offer for you.** It buys ammo automatically within 2.1 m, every 1.2 s,
+  and it spent the 250 coins the door costs while the player was standing there reading the offer. Found in a
+  browser, not by the suite: the test set the coins and called the handler with no frame between.
+- **He sells the door; `openExit()` opens it.** The gate still has one writer.
 
 ### The campaign, and what a level is
 
