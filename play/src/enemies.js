@@ -981,8 +981,10 @@ export class Enemy {
     if (here && !here.solid && !here.crate) return false;
     let best = null;
     let bestD = Infinity;
-    for (let dz = -2; dz <= 2; dz++) {
-      for (let dx = -2; dx <= 2; dx++) {
+    // one cell, not two: the nearest open cell is where it steps to, and a wider
+    // search only ever found somewhere further away
+    for (let dz = -1; dz <= 1; dz++) {
+      for (let dx = -1; dx <= 1; dx++) {
         const nx = cx + dx;
         const nz = cz + dz;
         if (nx < 0 || nz < 0 || nx >= level.W || nz >= level.H) continue;
@@ -995,9 +997,16 @@ export class Enemy {
       }
     }
     if (!best) return false;
-    this.pos.x = best.x;
-    this.pos.z = best.z;
-    this.pos.y = floorHeightAt(level, best.x, best.z);
+    // Step out, do not teleport. Snapping to the cell centre moved a body up to
+    // two cells in one frame — which the player sees as an enemy appearing across
+    // the room, and reported as "enemies teleport to rooms randomly".
+    const ddx = best.x - this.pos.x;
+    const ddz = best.z - this.pos.z;
+    const dist = Math.hypot(ddx, ddz) || 1;
+    const step = Math.min(dist, 0.35);
+    this.pos.x += (ddx / dist) * step;
+    this.pos.z += (ddz / dist) * step;
+    this.pos.y = floorHeightAt(level, this.pos.x, this.pos.z);
     return true;
   }
 
