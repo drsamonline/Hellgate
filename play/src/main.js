@@ -1452,6 +1452,10 @@ function beginLevel(n) {
   game.level = n;          // buildRun sets it from the zone; a level is its own thing
   game.storyLevel = n;
   game.wavesTarget = 1;
+  // the box shows the level's own seed, and stops counting as a typed override
+  const box = document.getElementById('seedInput');
+  if (box) box.value = def.seed;
+  seedTouched = false;
   return true;
 }
 
@@ -1467,6 +1471,9 @@ function nextLevel() {
 
 function beginZone(zoneDef) {
   audio.init();
+  // a zone run is not a level: without this, starting a zone after playing a
+  // level kept the level's number, and the zone inherited the level's rules
+  game.level = 0;
   if (!zoneDef || zoneDef.id === ZONES[0].id) game.upgrades = {};
   zone = zoneDef || zone;
   game.zoneId = zone.id;
@@ -2682,10 +2689,17 @@ window.addEventListener('keyup', (e) => {
   input.keys[e.code] = false;
 });
 
+// The seed box ships with a value in the markup, so "the box has text" is not
+// the same as "the player typed a seed": the campaign start keyed off that and
+// never fired, which is how 2.2.0 shipped a title screen that still started the
+// nine-zone gate with three waves.
+let seedTouched = false;
+document.getElementById('seedInput').addEventListener('input', () => { seedTouched = true; });
+
 document.getElementById('startBtn').addEventListener('click', () => {
-  // a mode that plays the campaign starts the next level, not a zone. A seed in
-  // the box is a deliberate override and still starts a zone.
-  if (MODES[gameMode] && MODES[gameMode].levels && !document.getElementById('seedInput').value.trim()) {
+  // a mode that plays the campaign starts the next level, not a zone. A seed the
+  // player actually typed is a deliberate override and still starts a zone.
+  if (MODES[gameMode] && MODES[gameMode].levels && !seedTouched) {
     beginLevel(nextLevel());
     return;
   }
@@ -2762,7 +2776,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.3.0';
+const BUILD = '2.3.1';
 
 // ---------------------------------------------------------------------------
 // REPORT

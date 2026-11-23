@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.3.1 — 2026-11-23
+
+**The title screen never started the campaign.** Reported from play: "level 1 has 3 waves still, and gate is
+the same as before". Both were true, and both had one cause.
+
+`Start` decided between the campaign and a zone run by asking whether the seed box was empty. The box ships with
+`value="hellgate"` in the markup, so it was never empty: every player who pressed Start got the nine-zone gate
+with three waves, and 2.2.0's campaign was reachable only through the `Levels` button or a URL.
+
+| Fix | What it was |
+| --- | --- |
+| `seedTouched` | a flag set by the box's `input` event. A seed the player actually typed still starts a zone on that seed; an untouched box starts the next campaign level, and the box is then set to that level's own seed |
+| `beginZone()` clears `game.level` | a zone started after a level kept the level's number, so the zone inherited the level's rules — one wave, and a level's objective |
+
+**Why the probes missed it:** they cleared the seed box before clicking Start, which no player does. The suite
+could not see it either — the DOM stub has no markup, so its seed box is empty. The new assertion sets the box
+to its shipped value, leaves it untouched, and expects level 1; and a second one types into it and expects a
+zone. The probe that found it does nothing but load the page and press Start.
+
 ## 2.3.0 — 2026-11-23
 
 **The gate is a place you cross.** A `reach` level has been broken since 1.99: `buildRun()` opened the door on

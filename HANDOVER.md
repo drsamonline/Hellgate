@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.3.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.3.1**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.3.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 103, `v1.0.0` → `v2.3.0` |
+| Version | 2.3.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 104, `v1.0.0` → `v2.3.1` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 676 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -137,6 +137,13 @@ idempotent and it is the only place stats are computed. Anything that "adjusts" 
 wiped by the next call.
 
 ### The campaign, and what a level is
+
+- **A probe that sets up state the player cannot reach is not a probe.** 2.2.0 shipped a title screen whose
+  Start never began the campaign, and every automated check passed: the probes cleared the seed box before
+  clicking Start and the stub's box is empty, while the real markup ships `value="hellgate"`. The check that
+  found it loads `/play/` with no parameters and clicks Start. Do that first, before any state setup.
+- **Start reads a flag, not the box.** `seedTouched` is set by the input event; an untouched box starts the
+  next campaign level, a typed one starts a zone on that seed.
 
 - **A level is a row in `story-levels.js`, not a zone.** `beginLevel(n)` dresses the row on its base zone and
   sets `wavesTarget = 1`: one wave, one objective, and the pad ends the level. `game.level` is 0 for a zone run.
