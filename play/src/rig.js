@@ -150,6 +150,17 @@ export function humanoid(p) {
       head.add(tooth);
     }
   }
+  if (p.muzzle) {
+    // a snout: a tapered box out of the front of the skull, with a nose on the
+    // end. A sphere with a brow reads as a head at 2 m and as a dot at 10.
+    const snout = new THREE.Mesh(cyl(p.headR * 0.34, p.headR * 0.62, p.headR * 0.95, 5), M.dark || M.body);
+    snout.rotation.x = Math.PI / 2;
+    snout.position.set(0, -p.headR * 0.1, p.headR * 0.86);
+    head.add(snout);
+    const nose = new THREE.Mesh(sph(p.headR * 0.16, 5), M.dark || M.body);
+    nose.position.set(0, -p.headR * 0.1, p.headR * 1.34);
+    head.add(nose);
+  }
   if (p.spikes) {
     // a ridge down the back: hunched things have spines you can count
     for (let i = 0; i < p.spikes; i++) {
@@ -403,7 +414,7 @@ export const PROPORTIONS = {
     shoulderX: 0.28, neckLen: 0.13, headR: 0.22, headTall: 0.86,
     armR: 0.075, upperArm: 0.5, lowerArm: 0.52,
     legR: 0.1, thigh: 0.34, shin: 0.34, legX: 0.17,
-    lean: 0.34, hunch: 0.07, horns: true, eyes: true, brow: true, jaw: true, spikes: 3,
+    lean: 0.34, hunch: 0.07, horns: true, eyes: true, brow: true, jaw: true, spikes: 3, muzzle: true,
   },
   grunt: {
     hipR: 0.24, hipLen: 0.2, waistR: 0.26, chestR: 0.38, torsoLen: 0.78,
@@ -419,7 +430,7 @@ export const PROPORTIONS = {
     armR: 0.2, upperArm: 0.6, lowerArm: 0.62,
     legR: 0.24, thigh: 0.5, shin: 0.48, legX: 0.3,
     lean: 0.16, eyes: true, pauldrons: true, pauldronR: 0.3,
-    traps: true, fists: true, spikes: 2, jaw: true,
+    traps: true, fists: true, spikes: 2, jaw: true, muzzle: true,
   },
   hound: {
     bodyR: 0.26, bodyLen: 1.15, neckLen: 0.34, tailLen: 0.42,
@@ -431,7 +442,7 @@ export const PROPORTIONS = {
     shoulderX: 0.26, neckLen: 0.14, headR: 0.2, headTall: 0.9,
     armR: 0.06, upperArm: 0.45, lowerArm: 0.42,
     legR: 0.08, thigh: 0.45, shin: 0.42, legX: 0.17,
-    lean: 0.42, eyes: true, sac: true, sacR: 0.42, jaw: true, brow: true,
+    lean: 0.42, eyes: true, sac: true, sacR: 0.42, jaw: true, brow: true, muzzle: true,
   },
   warden: {
     hipR: 0.44, hipLen: 0.3, waistR: 0.5, chestR: 0.72, torsoLen: 1.35,
