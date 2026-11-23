@@ -27,7 +27,7 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 | Version | 2.7.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
 | Releases | 108, `v1.0.0` → `v2.7.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 707 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 725 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |

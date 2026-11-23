@@ -38,7 +38,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | --- | --- |
 | Version | 2.7.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
-| Tests | 1391 playability (all 32 levels) + 707 in the other three suites; seven static gates; smoke, flow, run, invariants |
+| Tests | 1391 playability (all 32 levels) + 725 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 40 in `play/src/` |
 | Releases | 108, `v1.0.0` → `v2.7.0` |
 | Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
