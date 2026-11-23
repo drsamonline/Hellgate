@@ -171,7 +171,12 @@ export function buildLevelMeshes(level, mats, zone) {
           const nTop = ncell && !ncell.solid && ncell.sectors && ncell.sectors.length > 1
             ? ncell.sectors[1].floor : (ncell && !ncell.solid ? ncell.floor : -99);
           if (nTop >= deck.floor - 1e-4) continue;      // a deck next door: no rim
-          const y0 = Math.max(nTop, c.floor);
+          // A thin lip, not a face down to the floor. The deck cell is open at
+          // ground level — that is the point of two sectors — so a full-height
+          // rim was a wall the player could see and walk straight through. The
+          // deck's underside is a slab edge above your head, which is what a
+          // catwalk looks like from below.
+          const y0 = deck.floor - 0.18;
           const sh = [0.62, 0.62, 0.72, 0.72];
           if (d === 0) quad(WALL_KEY[c.wall], [x1, y0, z0], [x1, y0, z1], [x1, deck.floor, z1], [x1, deck.floor, z0], 1, 1, sh);
           else if (d === 1) quad(WALL_KEY[c.wall], [x0, y0, z1], [x0, y0, z0], [x0, deck.floor, z0], [x0, deck.floor, z1], 1, 1, sh);
