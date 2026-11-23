@@ -1621,6 +1621,36 @@ console.log('\n== the campaign is the run ==');
 }
 
 // ---- a wave that cannot be placed is not placed on top of you --------------
+console.log('\n== the act is the curve ==');
+{
+  const diffOf = (n) => {
+    HG.beginLevel(n);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    return HG.enemies.diff.hp;
+  };
+  // the vault dresses levels 12, 20 and 26: one zone, three acts
+  const d12 = diffOf(12);
+  const d20 = diffOf(20);
+  const d26 = diffOf(26);
+  ok(d20 > d12 && d26 > d20,
+    'the same zone gets harder by act (' + [d12, d20, d26].map((x) => x.toFixed(2)).join(' < ') + ')');
+  const d1 = diffOf(1);
+  const d32 = diffOf(32);
+  ok(d32 > d1, 'and the last level is harder than the first (' + d1.toFixed(2) + ' -> ' + d32.toFixed(2) + ')');
+
+  // a zone run keeps the zone's own threat: the act table is for levels only
+  HG.beginZone(HG.zones[0]);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  const preset = HG.MODES[HG.mode].forceHard ? 'hard' : HG.settings.difficulty;
+  const want = HG.zones[0].threat;
+  ok(HG.enemies.diff.hp / want > 0.5 && HG.enemies.diff.hp / want < 1.5,
+    'a zone run is scaled by its own threat (' + HG.enemies.diff.hp.toFixed(2) + ' on ' + preset + ')');
+}
+
 console.log('\n== the spawn rule has no fallback ==');
 {
   // spawnWave() used to fall back to every reachable cell when the 12 m filter
@@ -2645,7 +2675,6 @@ HG.enemies.clear();
 // "full health" means the run's own maximum, which is not 100 once upgrades,
 // trinkets or story flags have raised it
 HG.player.health = HG.player.maxHp;
-const before2 = HG.game.pickups.length;
 // a cell far from the exit pad: teleporting onto the pad completes the wave,
 // and a wave change clears every pickup, which is not what this test is about
 const cell = HG.level.openCells.find((c) =>
@@ -2656,7 +2685,8 @@ const fakeMesh = {
   visible: true, rotation: { y: 0 }, position: { y: 0 },
   geometry: { dispose() {} }, material: { dispose() {} },
 };
-HG.game.pickups.push({ kind: 'health', mesh: fakeMesh, x: cell.wx, z: cell.wz, baseY: 1, t: 0 });
+const probePickup = { kind: 'health', mesh: fakeMesh, x: cell.wx, z: cell.wz, baseY: 1, t: 0 };
+HG.game.pickups.push(probePickup);
 // Keep one enemy alive across these frames. When the last one dies the wave
 // clears and every pickup is dropped — which is why this pair of assertions
 // failed roughly one run in five and blamed two innocent commits.
@@ -2668,7 +2698,9 @@ const keep = HG.level.openCells[HG.level.openCells.length - 1];
 HG.enemies.spawnAt('imp', keep.wx, keep.wz, 1);
 ok(HG.enemies.list.length === 1, 'one enemy is left standing for the pickup pair');
 frames(3);
-ok(HG.game.pickups.length === before2 + 1, 'full-health pickup is left on the floor');
+// this pickup, not the length of the list: a wave that clears drops every pickup,
+// and a wave that starts adds some, so a count is a claim about the world
+ok(HG.game.pickups.includes(probePickup), 'full-health pickup is left on the floor');
 // hold still: a slow CI frame lets the fixed-step accumulator catch up, and the
 // player walks out of the pickup radius between the two assertions
 HG.player.health = 40;
@@ -2676,7 +2708,7 @@ HG.player.pos.set(cell.wx, 0, cell.wz);
 if (HG.player.vel && HG.player.vel.set) HG.player.vel.set(0, 0, 0);
 for (const k of Object.keys(HG.input.keys || {})) HG.input.keys[k] = false;
 frames(1);
-ok(HG.game.pickups.length === before2, 'damaged player picks it up');
+ok(!HG.game.pickups.includes(probePickup), 'damaged player picks it up');
 
 console.log('\n== seed in the URL (roadmap 9) ==');
 HG.startGame('urltest');

@@ -593,6 +593,7 @@ function buildRun(seed, zoneDef) {
   game.wavesTarget = mode.waves != null ? mode.waves
     : game.level ? 1                                   // a level is one objective, not three waves
       : (zone.boss ? 4 : 3);
+  if (game.level) game.storyLevel = game.level;
   game.bossSeen = false;
   // a level gated on relics must have some even if the zone forgot a count: an
   // objective with nothing to break is a door that never opens
@@ -989,11 +990,32 @@ function bossApproach(boss) {
  * the last one at the same wave number — which is how a player dies on level
  * one and never sees the other four.
  */
+/**
+ * The act a campaign level belongs to, as a difficulty floor.
+ *
+ * The zone's own `threat` was the whole curve, and it is a curve over nine
+ * places rather than over 32 levels: a level in act IV dressed in the gate was
+ * as easy as the first one. The act is the floor now, and a zone that is already
+ * harder than its act keeps its own number.
+ */
+const ACT_THREAT = [0.8, 1.0, 1.2, 1.4];
+
+/**
+ * The threat floor for the level being played, or 0 for a zone run.
+ * @returns {number} A multiplier.
+ */
+function levelThreat() {
+  if (!game.level) return 0;
+  const row = storyLevel(game.level);
+  if (!row) return 0;
+  return ACT_THREAT[Math.min(ACT_THREAT.length - 1, Math.max(0, row.act - 1))];
+}
+
 function zoneDiff() {
   const mode = MODES[gameMode] || MODES.campaign;
   const preset = mode.forceHard ? 'hard' : settings.difficulty;
   const base = DIFF_MULT[preset] || DIFF_MULT.normal;
-  const t = (zone && zone.threat) || 1;
+  const t = Math.max((zone && zone.threat) || 1, levelThreat());
   return { hp: base.hp * t, dmg: base.dmg * t, count: base.count * t };
 }
 
@@ -1454,11 +1476,9 @@ function beginLevel(n) {
   const row = storyLevel(n);
   const def = row ? storyLevelZone(row) : null;
   if (!def) return false;
-  game.level = n;
-  beginZone(def);
-  game.level = n;          // buildRun sets it from the zone; a level is its own thing
-  game.storyLevel = n;
-  game.wavesTarget = 1;
+  // the number goes in through beginZone, before buildRun: the difficulty table
+  // reads it, and setting it afterwards left every level on its zone's threat
+  beginZone(def, n);
   // the box shows the level's own seed, and stops counting as a typed override
   const box = document.getElementById('seedInput');
   if (box) box.value = def.seed;
@@ -1476,7 +1496,12 @@ function nextLevel() {
   return STORY_LEVELS.length;
 }
 
-function beginZone(zoneDef) {
+/**
+ * Start a run: a zone, or one campaign level.
+ * @param {object} zoneDef The zone definition to dress the run in.
+ * @param {number} [levelN] The campaign level, or 0 for a zone run.
+ */
+function beginZone(zoneDef, levelN = 0) {
   audio.init();
   // a level change cancels a cutscene and a caption: they belong to the level
   // that started them, and one left running fired its callback into the next run
@@ -1484,7 +1509,7 @@ function beginZone(zoneDef) {
   dialogue.stop();
   // a zone run is not a level: without this, starting a zone after playing a
   // level kept the level's number, and the zone inherited the level's rules
-  game.level = 0;
+  game.level = levelN || 0;
   if (!zoneDef || zoneDef.id === ZONES[0].id) game.upgrades = {};
   zone = zoneDef || zone;
   game.zoneId = zone.id;
@@ -2906,7 +2931,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.6.0';
+const BUILD = '2.7.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

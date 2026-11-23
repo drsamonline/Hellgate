@@ -1,5 +1,31 @@
 # Changelog
 
+## 2.7.0 — 2026-11-23
+
+**The act is the difficulty curve.** Difficulty was `zone.threat`, and that is a curve over nine places rather
+than over 32 levels: a level in act IV dressed in the gate was as easy as the first one. The act is a floor now —
+`0.8, 1.0, 1.2, 1.4` — and a zone that is already harder than its act keeps its own number.
+
+| Level | Zone | Act | threat |
+| --- | --- | --- | --- |
+| 1 | gate | I | 0.80 |
+| 12 | vault | II | 1.12 |
+| 20 | vault | III | 1.20 |
+| 26 | vault | IV | 1.40 |
+| 32 | throne | IV | 1.40 |
+
+The same zone at three acts is the proof: 1.12 → 1.20 → 1.40. A zone run is untouched — it is still scaled by
+its zone's own threat, because a zone played on its own has no act.
+
+**The level number had to move.** `beginZone(zoneDef, levelN)` takes it now, before `buildRun()` computes the
+difficulty. Setting `game.level` after the call — which is what 2.2.0 did — left every level on its zone's
+threat, and the curve was inert.
+
+**The pickup pair stops measuring the world.** Its two assertions counted `game.pickups.length` before and after
+three frames; a wave that clears drops every pickup and a wave that starts adds some, so the count was a claim
+about the level, not about the pickup. They assert the specific pickup now, and the pair has passed six
+consecutive suite runs since.
+
 ## 2.6.0 — 2026-11-23
 
 **A cutscene out.** The level ends with the camera stepping back across the room instead of a panel appearing

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.6.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.7.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.6.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 107, `v1.0.0` → `v2.6.0` |
+| Version | 2.7.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 108, `v1.0.0` → `v2.7.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 707 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -146,6 +146,9 @@ wiped by the next call.
   screen bug at 2.3.1, in the other entry point.
 - **The outro camera can leave the room you cleared.** The exit room is usually the smallest on the level, so
   `outroPath()` falls back to any reachable cell within 12 m — through the door, which is open by then.
+- **The act is the difficulty floor** (`ACT_THREAT` in `main.js`). `zone.threat` alone is a curve over nine
+  places, not 32 levels. `beginZone(zoneDef, levelN)` takes the number *before* `buildRun()` computes the
+  difficulty — setting `game.level` after the call leaves the curve inert, which is how 2.2.0 shipped it.
 - **The spawn rule has no fallback.** `spawnWave()` filtered cells to those more than 12 m from the player and the
   spawn and outside the spawn room, and then fell back to every reachable cell when the filter emptied — the
   player standing at the exit does that on a small level. Nothing spawns now (`enemies.starved` counts it). The
