@@ -12,12 +12,13 @@ is `cleared` immediately, and every gate that reads it reads the truth — but t
 | the walk | 2.6 m/s, capped at 4.5 s, looking at where you stood; then the panel, the choice cards and the level's last line |
 | `cinematic.stop()` and `dialogue.stop()` | a level change cancels a cutscene instead of completing it. A previous level's outro used to fire its callback into the next run and show a panel over it |
 
-**Two bugs found on the way.**
+**Three bugs found on the way.**
 
 | Bug | What it was |
 | --- | --- |
 | the camera could sit 15 cm above a raised floor | `sampleCameraPath` interpolates between samples, and a path across a deck edge or a lift cuts through it. Samples are clamped to at least 1.1 m above the floor now |
 | `?auto=1&level=N` played a zone | the deep link went through `startGame()`, which never learned about levels: three waves and the zone's objective. It is a level run now, and `?zone=` is still a zone run |
+| **a wave could spawn inside 12 m of the player** | `spawnWave()` fell back to *every* reachable cell when its filter emptied — which it does when the player stands at the exit on a small level. That is the rule the brief says must never bend, and CI caught it on a seed the suite plays. Nothing spawns now; an empty wave opens the door, an ambush in a doorway does not |
 
 ## 2.5.0 — 2026-11-23
 

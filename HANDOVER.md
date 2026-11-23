@@ -146,6 +146,10 @@ wiped by the next call.
   screen bug at 2.3.1, in the other entry point.
 - **The outro camera can leave the room you cleared.** The exit room is usually the smallest on the level, so
   `outroPath()` falls back to any reachable cell within 12 m — through the door, which is open by then.
+- **The spawn rule has no fallback.** `spawnWave()` filtered cells to those more than 12 m from the player and the
+  spawn and outside the spawn room, and then fell back to every reachable cell when the filter emptied — the
+  player standing at the exit does that on a small level. Nothing spawns now (`enemies.starved` counts it). The
+  brief's two rules are absolute, so the code must have no branch that ignores them.
 - **`sampleCameraPath` clamps to 1.1 m above the floor.** Interpolating between two samples either side of a
   deck edge or a lift cuts through it, and a camera 15 cm above a raised floor is a camera in a wall.
 

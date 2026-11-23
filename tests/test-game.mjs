@@ -1620,6 +1620,36 @@ console.log('\n== the campaign is the run ==');
   HG.game.state = 'playing';
 }
 
+// ---- a wave that cannot be placed is not placed on top of you --------------
+console.log('\n== the spawn rule has no fallback ==');
+{
+  // spawnWave() used to fall back to every reachable cell when the 12 m filter
+  // emptied — which it does when the player is standing at the exit on a small
+  // level. That put a wave inside the spawn room and inside 12 m, the two things
+  // the brief says must never happen. CI caught it; this is the case it caught.
+  HG.beginLevel(1);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  frames(2);
+  HG.game.state = 'playing';
+  const L = HG.level;
+  HG.player.pos.set(L.exit.x, 0, L.exit.z);
+  HG.enemies.clear();
+  HG.startWave(2);
+  frames(1);
+  const inSpawnRoom = HG.enemies.list.filter((e) => {
+    const c = L.cells[L.idx(Math.round(e.pos.x / 2), Math.round(e.pos.z / 2))];
+    return c && c.room === L.spawnRoom;
+  });
+  const nearSpawn = HG.enemies.list.filter((e) => Math.hypot(e.pos.x - L.spawn.x, e.pos.z - L.spawn.z) < 12);
+  const nearPlayer = HG.enemies.list.filter((e) => Math.hypot(e.pos.x - HG.player.pos.x, e.pos.z - HG.player.pos.z) < 12);
+  ok(inSpawnRoom.length === 0, 'no enemy in the spawn room with the player at the exit (' + inSpawnRoom.length + ')');
+  ok(nearSpawn.length === 0, 'none within 12 m of the spawn point (' + nearSpawn.length + ')');
+  ok(nearPlayer.length === 0, 'none within 12 m of the player at the exit (' + nearPlayer.length + ')');
+  ok(HG.enemies.list.length > 0 || HG.enemies.starved > 0, 'and if the level had nowhere to put them, it said so (' + HG.enemies.list.length + ' placed)');
+}
+
 // ---- the deep link is a level, not a zone ----------------------------------
 console.log('\n== the level deep link ==');
 {

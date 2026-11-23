@@ -1252,7 +1252,18 @@ export class EnemyManager {
       if (d <= 12) return false;
       return Math.hypot(c.wx - spawnX, c.wz - spawnZ) > 12;
     });
-    const pool = cells.length ? cells : (this.level.reachableCells || this.level.openCells);
+    // The rule has no fallback. The pool used to fall back to every reachable
+    // cell when the filter emptied — a small level, or a player standing in the
+    // middle of it — which put a wave inside the spawn room and inside 12 m, the
+    // two things that must never happen. Nothing spawns instead: an empty wave
+    // opens the door, an ambush in the doorway is a bug report.
+    const pool = cells;
+    if (!pool.length) {
+      if (this.level && this.level.reachableCells) {
+        this.starved = (this.starved || 0) + 1;
+      }
+      return;
+    }
 
     for (let i = 0; i < count; i++) {
       const c = pool[Math.floor(Math.random() * pool.length)];
