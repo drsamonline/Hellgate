@@ -717,8 +717,12 @@ function spawnRelics(n) {
   game.relicsTotal = n;
   game.sideDone = false;
   if (!n) return;
+  // not in the exit room, not in the spawn room, and not within 8 m of the spawn:
+  // a big spawn room has cells more than 8 m out, and a relic standing in the room
+  // you start in is a relic you break before you have walked anywhere
   const pool = level.reachableCells.filter(
-    (c) => c.room >= 0 && c.room !== level.exitRoom && Math.hypot(c.wx - level.spawn.x, c.wz - level.spawn.z) > 8
+    (c) => c.room >= 0 && c.room !== level.exitRoom && c.room !== level.spawnRoom &&
+      Math.hypot(c.wx - level.spawn.x, c.wz - level.spawn.z) > 8
   );
   const use = pool.length ? pool : level.reachableCells;
   for (let i = 0; i < n; i++) {
@@ -882,17 +886,31 @@ function startWave(n) {
   game.waveKills = 0;
   game.waveStart = elapsed;
   game.hasKey = false;
-  game.exitOpen = false;
+  // a 'reach' level is open from the first frame — buildRun() says so and this
+  // function shut it again on every level since 1.99, which is why the gate read
+  // as a pen you empty rather than a place you cross
+  const reach = game.objectiveType === 'reach';
+  game.exitOpen = reach;
   game.warnedKey = false;
-  level.doorOpen = false;
-  levelMeshes.doorMeshes.forEach((m) => {
-    m.visible = true;
-    m.userData.slide = 0;
-    m.userData.opening = false;
-    m.position.y = m.userData.baseY != null ? m.userData.baseY : m.position.y;
-    if (m.userData.lamp) m.userData.lamp.material.color.setHex(0xff3b30);
-  });
-  getMats()['pad'].color.setHex(0x552222);
+  level.doorOpen = reach;
+  if (reach) {
+    for (const m of levelMeshes.doorMeshes) {
+      m.visible = false;
+      m.userData.slide = 1;
+      m.userData.opening = false;
+      if (m.userData.lamp) m.userData.lamp.material.color.setHex(0x39ff9a);
+    }
+    getMats()['pad'].color.setHex(0x39ff9a);
+  } else {
+    levelMeshes.doorMeshes.forEach((m) => {
+      m.visible = true;
+      m.userData.slide = 0;
+      m.userData.opening = false;
+      m.position.y = m.userData.baseY != null ? m.userData.baseY : m.position.y;
+      if (m.userData.lamp) m.userData.lamp.material.color.setHex(0xff3b30);
+    });
+    getMats()['pad'].color.setHex(0x552222);
+  }
 
   clearPickups();
   enemies.clear(); // defensive: a wave always starts from an empty arena
@@ -2684,12 +2702,22 @@ document.getElementById('startBtn').addEventListener('click', () => {
   beginZone(z);
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
+// the level select: the map, from the title, before a run exists
+document.getElementById('levelSelectBtn')?.addEventListener('click', () => {
+  mapReturn = 'title';
+  showZoneMap();
+});
 document.getElementById('loreClose')?.addEventListener('click', closeLore);
 document.getElementById('mapBtn')?.addEventListener('click', () => { mapReturn = game.state === 'cleared' ? 'cleared' : 'playing'; showZoneMap(); });
 document.getElementById('mapBack')?.addEventListener('click', () => {
   // the map's Back button had no listener at all: a player on the map could not
   // leave it without picking a zone, which restarts the run
   if (mapReturn === 'cleared') { showScreen('cleared'); return; }
+  if (mapReturn === 'title') {
+    game.state = 'title';
+    showScreen('title');
+    return;
+  }
   hideScreens();
   if (game.state === 'map') game.state = 'playing';
   requestLock();
@@ -2734,7 +2762,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.2.0';
+const BUILD = '2.3.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

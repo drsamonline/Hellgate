@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.2.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.3.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.2.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.3.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
-| Tests | 885 playability + 671 in the other three suites; seven static gates; smoke, flow, run, invariants |
+| Tests | 1391 playability (all 32 levels) + 676 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 40 in `play/src/` |
-| Releases | 102, `v1.0.0` → `v2.2.0` |
+| Releases | 103, `v1.0.0` → `v2.3.0` |
 | Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
 
 ## What shipped in this run
@@ -51,6 +51,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.0.0** | **The campaign: the `relics` objective, a HUD that counts, and 32 levels** |
 | **2.1.0** | **The story on screen: a camera that walks the level, written dialogue, and a job for the helper** |
 | **2.2.0** | **The campaign is the game: 32 levels, level progression, and a map in four acts** |
+| **2.3.0** | **The gate is a place you cross — the `reach` door fixed, and all 32 levels in the playability suite** |
 
 ### 2.0.0 in detail
 

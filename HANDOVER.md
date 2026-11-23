@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.2.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.3.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.2.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 102, `v1.0.0` → `v2.2.0` |
+| Version | 2.3.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 103, `v1.0.0` → `v2.3.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 885 playability + 671 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 676 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -46,7 +46,7 @@ need a real origin.
 ### The gates, in the order to run them
 
 ```bash
-bash tests/run.sh              # 885 assertions, ~3 s, no browser
+bash tests/run.sh              # 1391 assertions, ~16 s, no browser
 node tools/check-claims.js     # 14 checks: README claims vs the code
 node tools/check-docs.mjs      # every export has a JSDoc block
 node tools/check-links.mjs     # every local reference resolves
@@ -148,6 +148,13 @@ wiped by the next call.
   the box still starts a zone, which is how the playability suite plays nine zones over six seeds each.
 
 ### The objective gate
+
+- **`startWave()` used to lock the doors on every level, `reach` included.** `buildRun()` opened them and
+  `startWave(1)` shut them in the same call, so a `reach` level — the gate, and six campaign levels — read as
+  a pen you empty. Found by the 32-level sweep at 2.3.0, not by any gate that existed before it.
+- **`spawnRelics()` keeps relics out of the exit room and 8 m from the spawn**, which is not the same as out
+  of the spawn room: a big room has cells 9 m from the spawn. Level 28 had one. It excludes the spawn room by
+  room id now.
 
 - **`openExit()` is the only writer of `game.exitOpen`.** `checkWave()` calls it for `clear` and `reach`;
   `updateObjective()` calls it for `survive` and `relics`. Nothing else may, and `updateObjective()` returns

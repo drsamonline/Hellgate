@@ -38,7 +38,7 @@ Written from the player's direction, 2026-11-23. This supersedes the wave model.
 | No build step, no npm at runtime, zero external assets | it is what makes the game load instantly and identically everywhere |
 | `recomputeStats()` stays a pure derivation | four separate bugs came from the alternative |
 | No enemy in the spawn room, never within 12 m | it is the first rule in the handover |
-| The gates stay green | 885 assertions, six static gates, four browser gates |
+| The gates stay green | 1391 assertions, seven static gates, four browser gates |
 
 ## Additions — 2026-11-23, second pass
 

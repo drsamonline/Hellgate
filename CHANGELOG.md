@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.3.0 — 2026-11-23
+
+**The gate is a place you cross.** A `reach` level has been broken since 1.99: `buildRun()` opened the door on
+the first frame and `startWave(1)` shut it again, on every level, every time. The zone that shipped the
+objective — the gate — read as a pen you empty, and the six `reach` levels in the campaign did the same.
+
+| Fix | What it was |
+| --- | --- |
+| the `reach` door | `startWave()` locks the doors unconditionally. It now leaves them open, with the lamps green and the pad lit, when the level's objective is `reach` |
+| a relic in the spawn room | `spawnRelics()` kept relics out of the exit room and 8 m from the spawn, but a big spawn room has cells further out than 8 m, and level 28 put one of its five relics in the room you start in |
+
+**The campaign is now what the playability suite plays.** All 32 levels, through `beginLevel()`, once each:
+the objective the row names, the door state that follows it, the relic count, the clock, and the two spawn
+rules — no enemy in the spawn room, none within 12 m — plus the pad ending the level and the campaign recording
+it. 885 assertions became 1391, and the two bugs above were the first two it found.
+
+**And a level select on the title screen.** The map existed but only mid-run. `Levels` on the title opens it,
+locked levels cannot be picked, and Back returns to the title rather than to a run.
+
 ## 2.2.0 — 2026-11-23
 
 **The campaign is the game.** The 32-level table stopped being a thing you could reach with a URL and became

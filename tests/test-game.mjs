@@ -1234,6 +1234,10 @@ for (let i = 0; i < dm.length; i++) {
 }
 ok(misaligned === 0, 'every door is thin along the way into its room (' + misaligned + ' misaligned)');
 ok(dm.every((m) => !!m.userData.lamp), 'every door has a lock lamp');
+// a 'reach' level opens its doors on the first frame by design, and the gate is
+// one, so the lamp is green there: this asks about a level whose door is shut
+HG.game.objectiveType = 'clear';
+HG.startWave(1);
 ok(dm[0].userData.lamp.material.color.getHex() !== 0x39ff9a, 'and it is not green while the door is shut');
 HG.openExit && HG.openExit();
 frames(40);
@@ -1523,6 +1527,26 @@ console.log('\n== the campaign is the run ==');
   HG.game.objectiveT = 0;
   HG.game.exitOpen = false;
   HG.level.doorOpen = false;
+  HG.game.state = 'playing';
+}
+
+// ---- the level select on the title screen ----------------------------------
+console.log('\n== the level select ==');
+{
+  const btn = document.getElementById('levelSelectBtn');
+  ok(!!btn, 'the title screen has a Levels button');
+  HG.game.state = 'title';
+  btn.dispatch('click');
+  ok(HG.game.state === 'map', 'and it opens the map');
+  const html = document.getElementById('zoneList').innerHTML;
+  ok((html.match(/data-level=/g) || []).length === 32, 'with all 32 levels on it');
+  // a level past the one reached cannot be picked. Read from the record rather
+  // than assuming level 2: earlier sections clear levels
+  const firstLocked = Math.min(32, (HG.progress.level || 1) + 1);
+  const locked = new RegExp('data-level="' + firstLocked + '"[^>]*disabled').test(html);
+  ok(locked, 'and level ' + firstLocked + ' is locked at level ' + HG.progress.level);
+  document.getElementById('mapBack').dispatch('click');
+  ok(HG.game.state === 'title', 'back returns to the title, not to a run');
   HG.game.state = 'playing';
 }
 

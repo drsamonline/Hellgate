@@ -147,6 +147,87 @@ for (const zone of ZONES) {
   }
 }
 
+// ---- the campaign: all 32 levels, played as the game plays them -------------
+// The zone sweep above plays nine zones over six seeds each. This plays every
+// level in the table once, through `beginLevel()`, and checks the rules that are
+// about a level rather than about a floor plan: the objective the row names, the
+// door it opens, and the two spawn rules that have never been allowed to bend.
+{
+  const { STORY_LEVELS } = await import('../play/src/story-levels.js');
+  let levels = 0;
+  for (const row of STORY_LEVELS) {
+    const tag = 'L' + row.n + ' ' + row.id;
+    const began = HG.beginLevel(row.n);
+    ok(began === true, tag + ': the level starts from the table');
+    if (!began) continue;
+    levels++;
+    HG.story.skip();
+    frames(1);
+    HG.chooseClass('marine');
+    frames(2);
+    HG.cinematic.skip();
+    HG.dialogue.skip();
+    HG.player.health = 1e9;
+
+    const L = HG.level;
+    const o = row.objective;
+
+    // the objective the row names is the one the level plays
+    ok(HG.game.objectiveType === o.type, tag + ': plays its own objective (' + HG.game.objectiveType + ')');
+    ok(HG.game.wavesTarget === 1, tag + ': one wave, not three');
+    ok(HG.game.level === row.n && HG.game.storyLevel === row.n, tag + ': knows which level it is');
+
+    // a `reach` level is crossable from the first frame; the others are shut
+    ok(HG.game.exitOpen === (o.type === 'reach'), tag + ': the door state follows the objective');
+
+    // relics: the count the row asks for, and none of them in the spawn room
+    if (o.type === 'relics') {
+      ok(HG.game.relicsTotal === o.relics, tag + ': spawns the relics the row asks for (' + HG.game.relicsTotal + ')');
+      ok(HG.game.relics.length === o.relics, tag + ': and all of them are on the floor');
+      const inSpawn = HG.game.relics.filter((r) => {
+        const c = L.cells[L.idx(Math.round(r.x / 2), Math.round(r.z / 2))];
+        return c && c.room === L.spawnRoom;
+      });
+      ok(inSpawn.length === 0, tag + ': no relic stands in the spawn room');
+    }
+    if (o.type === 'survive') {
+      ok(HG.game.objectiveT > 0 && HG.game.objectiveT <= o.time, tag + ': the clock starts at its full time');
+    }
+
+    // the floor is a level, not a pen
+    ok(L.spawnRoom === 0, tag + ': the spawn room is room 0');
+    ok(L.exitRoom !== L.spawnRoom, tag + ': the exit is never the room you start in');
+    ok(!isBlocked(L, L.spawn.x, L.spawn.z), tag + ': the spawn is on open floor');
+    ok(L.spawnRoomExits >= 1, tag + ': the spawn room has a way out that is not a door');
+    ok(L.reachCount >= 220, tag + ': the floor is bigger than a box (' + L.reachCount + ' cells)');
+
+    // THE rule: no enemy in the spawn room, and none within 12 m of the spawn
+    const inRoom = HG.enemies.list.filter((e) => {
+      const c = L.cells[L.idx(Math.round(e.pos.x / 2), Math.round(e.pos.z / 2))];
+      return c && c.room === L.spawnRoom;
+    });
+    ok(inRoom.length === 0, tag + ': no enemy stands in the spawn room (' + inRoom.length + ')');
+    const near = HG.enemies.list.filter((e) => Math.hypot(e.pos.x - L.spawn.x, e.pos.z - L.spawn.z) < 12);
+    ok(near.length === 0, tag + ': no enemy is within 12 m of the spawn (' + near.length + ')');
+    const bodies = HG.enemies.list.filter((e) => {
+      const c = L.cells[L.idx(Math.round(e.pos.x / 2), Math.round(e.pos.z / 2))];
+      return c && c.solid;
+    });
+    ok(bodies.length === 0, tag + ': no enemy stands inside rock (' + bodies.length + ')');
+
+    // and the level can be finished: the pad ends it
+    HG.enemies.clear();
+    HG.game.hasKey = true;
+    HG.game.exitOpen = true;
+    HG.game.wave = 1;
+    HG.player.pos.set(L.exit.x, 0, L.exit.z);
+    frames(3);
+    ok(HG.game.state === 'cleared', tag + ': stepping on the pad ends the level');
+    ok((HG.progress.levels || []).includes(row.n), tag + ': and the campaign records it');
+  }
+  ok(levels === 32, 'all 32 levels were played (' + levels + ')');
+}
+
 // ---- the cache stamp -------------------------------------------------------
 {
   const fs = await import('node:fs');
