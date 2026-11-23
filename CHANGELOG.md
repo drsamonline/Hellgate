@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.97.0 — 2026-11-23
+
+**The enemy body, from cylinders to creatures**
+
+Everything below is inside joints that already existed, so the merged mesh count per body moves by one or two
+and the draw calls do not move.
+
+| Part | Before | After |
+| --- | --- | --- |
+| Shoulder | a cylinder starting at a pivot | a deltoid where the arm meets the torso, then a tapered upper arm |
+| Elbow | one cylinder for the forearm | an elbow cap, a forearm narrowing to the wrist, a wrist band |
+| Hip and knee | a straight thigh, one cylinder for the shin | a thigh wider at the hip than at the knee, a knee cap |
+| Foot | one brick | a foot and a toe box |
+| Pose | straight arms at the sides — the walk cycle set absolute rotations, so that was the only pose | folded elbows (−0.62) and arms forward, with the swing riding on top |
+| Head | a sphere with a brow | a brow, a jaw with teeth, and a snout with a nose on the imp, spitter and brute |
+| Brute | a trapezius floating above its head, then a breastplate across its chest | a narrow bridge from neck to shoulder |
+
+Two of these were defects rather than taste: the trapezius was placed 0.86 of a torso above a joint already 0.92
+up, so it hung clear of the body, and the rest pose could not exist because the animation overwrote it.
+
+**Also in this release, from the harness:** the draw-call budgets pin the player's position and both camera
+angles, so the same level measures the same frame every run — the level-only number had moved 57 → 80 between
+runs because the frustum depended on where the run happened to leave the camera. The level-only ceiling follows
+its measurement at 100, and the smoke reload step gets 60 s after timing out twice.
+
 ## 1.96.0 — 2026-11-23
 
 **Catwalks — #37 step one: two sectors in one cell**
