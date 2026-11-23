@@ -147,6 +147,28 @@ export function buildLevelMeshes(level, mats, zone) {
         quad(FLOOR_KEY[c.floorTex], [x0, c.floor, z1], [x1, c.floor, z1], [x1, c.floor, z0], [x0, c.floor, z0], 1, 1,
           [fNW, fNE, fSE, fSW]);
       }
+      // the deck: a second floor in the same cell, with a rim on every side that
+      // drops to open air, so it reads as a platform and not a floating plane
+      if (c.sectors && c.sectors.length > 1) {
+        const deck = c.sectors[1];
+        quad(FLOOR_KEY[c.floorTex], [x0, deck.floor, z1], [x1, deck.floor, z1], [x1, deck.floor, z0], [x0, deck.floor, z0], 1, 1,
+          [fNW, fNE, fSE, fSW]);
+        const NB4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+        for (let d = 0; d < 4; d++) {
+          const nx2 = x + NB4[d][0];
+          const nz2 = z + NB4[d][1];
+          const ncell = (nx2 >= 0 && nz2 >= 0 && nx2 < level.W && nz2 < level.H) ? level.cells[nz2 * level.W + nx2] : null;
+          const nTop = ncell && !ncell.solid && ncell.sectors && ncell.sectors.length > 1
+            ? ncell.sectors[1].floor : (ncell && !ncell.solid ? ncell.floor : -99);
+          if (nTop >= deck.floor - 1e-4) continue;      // a deck next door: no rim
+          const y0 = Math.max(nTop, c.floor);
+          const sh = [0.62, 0.62, 0.72, 0.72];
+          if (d === 0) quad(WALL_KEY[c.wall], [x1, y0, z0], [x1, y0, z1], [x1, deck.floor, z1], [x1, deck.floor, z0], 1, 1, sh);
+          else if (d === 1) quad(WALL_KEY[c.wall], [x0, y0, z1], [x0, y0, z0], [x0, deck.floor, z0], [x0, deck.floor, z1], 1, 1, sh);
+          else if (d === 2) quad(WALL_KEY[c.wall], [x1, y0, z1], [x0, y0, z1], [x0, deck.floor, z1], [x1, deck.floor, z1], 1, 1, sh);
+          else quad(WALL_KEY[c.wall], [x0, y0, z0], [x1, y0, z0], [x1, deck.floor, z0], [x0, deck.floor, z0], 1, 1, sh);
+        }
+      }
       // ceiling (-Y): dark, and darker in the corners
       quad('ceil', [x0, c.ceil, z0], [x1, c.ceil, z0], [x1, c.ceil, z1], [x0, c.ceil, z1], 1, 1,
         [fSW * 0.88, fSE * 0.88, fNE * 0.88, fNW * 0.88]);

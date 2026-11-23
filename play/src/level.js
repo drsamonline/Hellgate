@@ -301,6 +301,53 @@ function buildLevel(seed, opts = {}) {
   });
 
 
+  // ---- catwalks (#37, step one) -----------------------------------------
+  // A tall room gets a deck at 2.4 m across one side, with the floor below still
+  // walkable: two sectors in one cell, which is the whole point of the sector
+  // model. Two stair cells climb to it — one cell cannot, because a single band
+  // may only rise 3 x MAX_STEP and the deck is 2.4 m up.
+  const CATWALK_H = 2.4;
+  for (const [i, r] of rooms.entries()) {
+    if (i === exitRoomIdx || i === 0) continue;
+    if (r.ceil < 5.2) continue;
+    const along = rng.chance(0.5);
+    const span = along ? r.w : r.h;
+    if (span < 8 || (along ? r.h : r.w) < 5) continue;
+    if (!rng.chance(0.6)) continue;
+    // the deck: two cells deep along the low side of the room
+    const deck = [];
+    for (let k = 0; k < 2; k++) {
+      for (let m = 1; m < span - 1; m++) {
+        const x = along ? r.x + m : r.x + 1 + k;
+        const z = along ? r.z + 1 + k : r.z + m;
+        const c = cells[idx(x, z)];
+        if (c.solid || c.stair || c.platform) continue;
+        deck.push({ x, z, c });
+      }
+    }
+    if (deck.length < 6) continue;
+    // two stair cells in front of the deck: the far one climbs 0 -> 1.2, the near
+    // one 1.2 -> 2.4, and both ramps climb towards the deck
+    const mid = along ? r.x + (r.w >> 1) : r.z + (r.h >> 1);
+    const near = along ? { x: mid, z: r.z + 3 } : { x: r.x + 3, z: mid };
+    const far = along ? { x: mid, z: r.z + 4 } : { x: r.x + 4, z: mid };
+    const nc = cells[idx(near.x, near.z)];
+    const fc = cells[idx(far.x, far.z)];
+    if (!nc || !fc || nc.solid || fc.solid || nc.stair || fc.stair || nc.platform || fc.platform) continue;
+    for (const d of deck) {
+      d.c.sectors = [{ floor: d.c.floor }, { floor: d.c.floor + CATWALK_H, catwalk: true }];
+    }
+    const axis = along ? 'z' : 'x';
+    for (const [cell, lo, hi] of [[fc, fc.floor, fc.floor + CATWALK_H / 2], [nc, nc.floor + CATWALK_H / 2, nc.floor + CATWALK_H]]) {
+      cell.stair = axis;
+      cell.flip = true;                 // both ramps climb towards the deck
+      cell.stairLow = lo;
+      cell.stairHigh = hi;
+      stairs.push({ x: cell.x, z: cell.z, along: axis, low: lo, high: hi, flip: true });
+    }
+    break;                              // one catwalk per level, for step one
+  }
+
   const exitCell = { x: exitRoom.cx, z: exitRoom.cz };
   cells[idx(exitCell.x, exitCell.z)].exit = true;
 

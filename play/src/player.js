@@ -163,7 +163,8 @@ export class Player {
     }
     input.jumpQueued = false;
 
-    const target = floorHeightAt(level, this.pos.x, this.pos.z);
+    // the height you are at decides which sector of the cell you stand on
+    const target = floorHeightAt(level, this.pos.x, this.pos.z, this.pos.y);
     if (this.pos.y <= target + 0.001 && this.vy <= 0) {
       this.pos.y = target;
       this.vy = 0;
@@ -204,7 +205,7 @@ export class Player {
     const nx = this.pos.x + dx;
     const nz = this.pos.z + dz;
     if (circleBlocked(level, nx, nz, PLAYER_RADIUS)) return;
-    const f = floorHeightAt(level, nx, nz);
+    const f = floorHeightAt(level, nx, nz, this.pos.y);
     if (f - this.pos.y > MAX_STEP + 0.001) return; // too tall to walk up
     this.pos.x = nx;
     this.pos.z = nz;
