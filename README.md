@@ -118,6 +118,7 @@ play/src/audio.js     WebAudio synth — no samples
 play/src/classes.js   three classes: body, starting weapon, power set
 play/src/powers.js    energy pool, five powers, cooldowns
 play/src/world.js     nine zones, unlock progression, best score per zone
+play/src/story-levels.js  the campaign: 32 rows of id, seed, shape and objective
 play/src/story.js     the cold open: typed panels over a camera flythrough
 play/src/props.js     instanced trees, rocks and grass; animals that bolt
 play/src/companion.js the drone that follows you and shoots

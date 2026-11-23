@@ -1,4 +1,5 @@
 import { generateLevel, CELL, MAX_STEP, cellAt, isBlocked, circleBlocked, floorHeightAt, raycastWalls, hasLineOfSight, buildFlowField, flowStep } from '../play/src/level.js';
+import { STORY_LEVELS, OBJECTIVE_TYPES, storyLevel, storyLevelZone } from '../play/src/story-levels.js';
 
 let fails = 0;
 const bad = (seed, msg) => { console.log(`FAIL [${seed}] ${msg}`); fails++; };
@@ -217,6 +218,55 @@ for (const seed of seeds) {
   // LOS: self is always visible
   if (!hasLineOfSight(L, { x: L.spawn.x, y: 1.6, z: L.spawn.z }, { x: L.spawn.x + 0.1, y: 1.6, z: L.spawn.z }))
     bad(seed, 'LOS to self failed');
+}
+
+// ---- the campaign table: 32 rows, and every one of them is a level --------
+console.log('\n== story levels ==');
+if (STORY_LEVELS.length !== 32) bad('table', `32 levels expected, ${STORY_LEVELS.length} present`);
+
+const ids = new Set();
+const tableSeeds = new Set();
+const actCount = { 1: 0, 2: 0, 3: 0, 4: 0 };
+for (const [i, row] of STORY_LEVELS.entries()) {
+  const tag = row.id || `row ${i}`;
+  if (row.n !== i + 1) bad(tag, 'n does not match the row order');
+  if (!row.id || ids.has(row.id)) bad(tag, 'id is missing or repeated');
+  ids.add(row.id);
+  if (!row.seed || tableSeeds.has(row.seed)) bad(tag, 'seed is missing or repeated');
+  tableSeeds.add(row.seed);
+  if (!(row.act >= 1 && row.act <= 4)) bad(tag, 'act is not 1-4');
+  else actCount[row.act]++;
+  const o = row.objective || {};
+  if (!OBJECTIVE_TYPES.includes(o.type)) bad(tag, 'objective type is not one that works: ' + o.type);
+  if (o.type === 'survive' && !(o.time > 0)) bad(tag, 'a survive level with no clock');
+  if (o.type === 'relics' && !(o.relics > 0)) bad(tag, 'a relics level with nothing to break');
+  const sh = row.shape || {};
+  if (!Array.isArray(sh.rooms) || sh.rooms.length !== 2 || sh.rooms[0] > sh.rooms[1]) bad(tag, 'shape.rooms is not a range');
+  if (!Array.isArray(sh.size) || sh.size.length !== 2 || sh.size[0] > sh.size[1]) bad(tag, 'shape.size is not a range');
+}
+for (const a of [1, 2, 3, 4]) if (actCount[a] !== 8) bad('table', `act ${a} has ${actCount[a]} levels, not 8`);
+if (storyLevel(0) !== null || storyLevel(33) !== null) bad('table', 'a level outside 1-32 is not null');
+if (storyLevel(32) !== STORY_LEVELS[31]) bad('table', 'storyLevel(32) is not the last row');
+
+// one row per act, generated for real: the table has to be buildable, not just
+// well formed. Four seeds keeps the suite at its four seconds.
+const storyOpen = [];
+for (const n of [1, 9, 17, 25]) {
+  const row = storyLevel(n);
+  const z = storyLevelZone(row);
+  if (!z) { bad(row.id, 'a row does not become a zone definition'); continue; }
+  if (z.objectiveType !== row.objective.type) bad(row.id, 'the objective type was lost on the way to the zone');
+  if (z.seed !== row.seed) bad(row.id, 'the seed was lost on the way to the zone');
+  if (z.id !== row.zone) bad(row.id, 'the zone id changed: progression is keyed on it');
+  const SL = generateLevel(z.seed, z.shape);
+  storyOpen.push(SL.openCells.length);
+  if (SL.rooms.length < 5) bad(row.id, 'too few rooms: ' + SL.rooms.length);
+  if (isBlocked(SL, SL.spawn.x, SL.spawn.z)) bad(row.id, 'spawn blocked');
+  if (circleBlocked(SL, SL.spawn.x, SL.spawn.z, 0.42)) bad(row.id, 'spawn circle blocked');
+  if (!SL.spawnRoomExits) bad(row.id, 'the spawn room has no way out');
+}
+if (storyOpen.length === 4 && !(storyOpen[3] > storyOpen[0])) {
+  bad('table', `the last act is not larger than the first: ${storyOpen.join(' < ')}`);
 }
 
 console.log(`\nseeds=${seeds.length} avgRooms=${(totalRooms / seeds.length).toFixed(1)} doors=${totalDoor}/${seeds.length} minOpenCells=${minOpen}`);

@@ -42,7 +42,7 @@ ok('suite count', suites === suiteRows, `${suites} suites on disk, ${suiteRows} 
 
 // 3. modules -----------------------------------------------------------------
 const mods = fs.readdirSync(path.join(root, 'play/src')).filter((f) => f.endsWith('.js')).length;
-const archRows = (readme.match(/^play\/src\/[a-z]+\.js\s/gm) || []).length;
+const archRows = (readme.match(/^play\/src\/[a-z-]+\.js\s/gm) || []).length;
 ok('module count', mods === archRows, `${mods} modules, ${archRows} listed in the README`);
 
 // 4. lines of game JS --------------------------------------------------------

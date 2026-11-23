@@ -26,6 +26,7 @@ import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, isUnlocked } from './world.js';
+import { STORY_LEVELS, storyLevel, storyLevelZone } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
@@ -146,6 +147,10 @@ function saveRun() {
       relicsLeft: game.relics.length,
       relicsTotal: game.relicsTotal,
       sideDone: !!game.sideDone,
+      // the clock is part of the run: a reload on a survive level would otherwise
+      // restart it at full time, which is a free 75 seconds
+      objectiveType: game.objectiveType,
+      objectiveT: game.objectiveT,
       ts: Date.now(),
     }));
   } catch (e) { /* private mode */ }
@@ -269,6 +274,10 @@ const MODES = {
 
 let gameMode = 'campaign';
 
+// a relic takes this much damage to break: three pistol shots or two blasts.
+// High enough that breaking one is a decision, low enough that it is not a chore.
+const RELIC_HP = 40;
+
 const DIFF_MULT = {
   easy: { hp: 0.8, dmg: 0.7, count: 0.75 },
   normal: { hp: 1, dmg: 1, count: 1 },
@@ -282,6 +291,9 @@ const game = {
   wavesTarget: 3,
   relics: [],
   relicsTotal: 0,
+  objectiveType: 'clear',
+  objectiveT: 0,
+  storyLevel: 0,
   coins: 0,
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
@@ -413,8 +425,10 @@ function buildRun(seed, zoneDef) {
   level.doorOpen = zone.objectiveType === 'reach';
   game.exitOpen = zone.objectiveType === 'reach';
   // 'survive': the pad opens when the clock runs out, whatever is still standing
+  // 'relics': the pad opens when the last relic is broken, whatever is standing
   game.objectiveType = zone.objectiveType || 'clear';
   game.objectiveT = zone.objectiveTime || 0;
+  game.storyLevel = zone.storyLevel || 0;
   // the helper: a body, a coat, and a room he never leaves. He shoots what walks
   // in, and he is where the coins get spent.
   npcBody = null;
@@ -562,7 +576,10 @@ function buildRun(seed, zoneDef) {
   game.mode = gameMode;
   game.wavesTarget = mode.waves != null ? mode.waves : (zone.boss ? 4 : 3);
   game.bossSeen = false;
-  spawnRelics(zone.relics || 0);
+  // a level gated on relics must have some even if the zone forgot a count: an
+  // objective with nothing to break is a door that never opens
+  const relicCount = zone.relics || (zone.objectiveType === 'relics' ? 3 : 0);
+  spawnRelics(relicCount);
   applyClass(game.classId);
   applySettings();
   startWave(1);
@@ -580,6 +597,9 @@ function resumeRun(save) {
   game.bookAt = typeof save.bookAt === 'string' ? save.bookAt : null;
   game.killsByType = (save.killsByType && typeof save.killsByType === 'object') ? { ...save.killsByType } : {};
   applyClass(save.classId);
+  if (Number.isFinite(save.objectiveT) && save.objectiveType === game.objectiveType) {
+    game.objectiveT = Math.max(0, save.objectiveT);
+  }
   // relics are respawned by buildRun at fresh positions, so the count is what
   // survives: take the excess back off the floor rather than let them be collected twice
   if (Number.isFinite(save.relicsLeft) && save.relicsTotal === game.relicsTotal) {
@@ -682,7 +702,9 @@ function spawnRelics(n) {
     const baseY = (level.cells[level.idx(c.x, c.z)] || { floor: 0 }).floor + 0.7;
     mesh.position.set(c.wx, baseY, c.wz);
     scene.add(mesh);
-    game.relics.push({ mesh, x: c.wx, z: c.wz, baseY, t: Math.random() * 6 });
+    // hp, so a relic is something you break rather than only something you walk
+    // into: the 'relics' objective is a shooting objective
+    game.relics.push({ mesh, x: c.wx, z: c.wz, baseY, t: Math.random() * 6, hp: RELIC_HP, maxHp: RELIC_HP });
   }
 }
 
@@ -755,21 +777,65 @@ function updateRelics(dt) {
     r.t += dt;
     r.mesh.rotation.y += dt * 1.6;
     r.mesh.position.y = r.baseY + Math.sin(r.t * 2.4) * 0.1;
-    if (Math.hypot(r.x - player.pos.x, r.z - player.pos.z) < 1.2) {
-      game.score += 150;
-      effects.burst({ x: r.x, y: r.baseY, z: r.z }, 0xc77dff, 14, 3, 0.5, 3);
-      audio.play('key', { x: r.x, z: r.z });
-      dropMesh(r.mesh);
-      game.relics.splice(i, 1);
-      if (!game.relics.length) {
-        game.sideDone = true;
-        game.score += 400;
-        hud.toast('SIDE OBJECTIVE COMPLETE  +400', 2.4);
-      } else {
-        hud.toast('RELIC  ' + (game.relicsTotal - game.relics.length) + '/' + game.relicsTotal);
-      }
-    }
+    if (Math.hypot(r.x - player.pos.x, r.z - player.pos.z) < 1.2) breakRelic(i);
   }
+}
+
+/**
+ * A relic comes apart: score, a burst, one less on the floor.
+ *
+ * It never touches `exitOpen`. The door is opened by `updateObjective()`, which
+ * reads the relic count — one writer for the gate, which is the rule this
+ * codebase has paid for four times over.
+ * @param {number} i Index into `game.relics`.
+ */
+function breakRelic(i) {
+  const r = game.relics[i];
+  if (!r) return;
+  game.score += 150;
+  effects.burst({ x: r.x, y: r.baseY, z: r.z }, 0xc77dff, 14, 3, 0.5, 3);
+  audio.play('key', { x: r.x, z: r.z });
+  dropMesh(r.mesh);
+  game.relics.splice(i, 1);
+  if (!game.relics.length) {
+    game.sideDone = true;
+    game.score += 400;
+    hud.toast('SIDE OBJECTIVE COMPLETE  +400', 2.4);
+  } else {
+    hud.toast('RELIC  ' + (game.relicsTotal - game.relics.length) + '/' + game.relicsTotal);
+  }
+}
+
+/**
+ * A shot at a relic: the ray is tested against the relic's column, the same way
+ * a barrel is, so a shot over the top of it misses.
+ * @param {{x:number,y:number,z:number}} origin The muzzle.
+ * @param {{x:number,y:number,z:number}} dir Normalised ray.
+ * @param {number} maxDist How far the shot carries before a wall stops it.
+ * @param {number} amount Damage.
+ * @returns {boolean} True when a relic took the shot.
+ */
+function damageRelic(origin, dir, maxDist, amount) {
+  let best = -1;
+  let bestT = Infinity;
+  const len = Math.hypot(dir.x, dir.z) || 1;
+  for (let i = 0; i < game.relics.length; i++) {
+    const r = game.relics[i];
+    const t = ((r.x - origin.x) * dir.x + (r.z - origin.z) * dir.z) / len;
+    if (t < 0 || t > maxDist) continue;
+    const px = origin.x + (dir.x / len) * t;
+    const pz = origin.z + (dir.z / len) * t;
+    if (Math.hypot(r.x - px, r.z - pz) > 0.5) continue;
+    const rayY = origin.y + (dir.y / len) * t;
+    if (rayY < r.baseY - 0.9 || rayY > r.baseY + 0.6) continue;
+    if (t < bestT) { bestT = t; best = i; }
+  }
+  if (best < 0) return false;
+  const r = game.relics[best];
+  r.hp -= amount;
+  effects.burst({ x: r.x, y: r.baseY, z: r.z }, 0xc77dff, 5, 2.5, 0.35, 12);
+  if (r.hp <= 0) breakRelic(best);
+  return true;
 }
 
 function startWave(n) {
@@ -1270,6 +1336,10 @@ function checkWave() {
     return;
   }
   if (enemies.aliveCount > 0) return;
+  // a 'relics' level must not open its door because the room happens to be empty:
+  // the relics own it. 'survive' keeps the clear path as a second way out, which
+  // is how 1.99.0 shipped it and what the playability suite plays.
+  if (game.objectiveType === 'relics') return;
   const modeNow = MODES[game.mode] || MODES.campaign;
   const keyWave = modeNow.keyEveryWave ? 1 : 3;
   if (game.wave >= keyWave && !game.hasKey) {
@@ -1601,13 +1671,27 @@ function updateNpc(dt) {
   n.fired++;
 }
 
-/** The clock, for a level whose objective is to outlast it. */
+/**
+ * The one place the objective decides whether the door opens.
+ *
+ * `clear` and `reach` are handled by `checkWave()`; the clock and the relics are
+ * derived here every frame from state that other code only ever writes to. That
+ * makes it idempotent, and `openExit()` stays the only function that writes
+ * `exitOpen`.
+ * @param {number} dt Seconds.
+ */
 function updateObjective(dt) {
   if (game.state !== 'playing') return;
-  if (game.objectiveType !== 'survive' || game.exitOpen) return;
-  game.objectiveT -= dt;
-  if (game.objectiveT <= 0) {
-    game.objectiveT = 0;
+  if (game.exitOpen) return;
+  if (game.objectiveType === 'survive') {
+    game.objectiveT = Math.max(0, game.objectiveT - dt);
+    if (game.objectiveT <= 0) {
+      openExit();
+      hud.toast('THE DOOR IS OPEN', 2);
+    }
+    return;
+  }
+  if (game.objectiveType === 'relics' && game.relicsTotal > 0 && !game.relics.length) {
     openExit();
     hud.toast('THE DOOR IS OPEN', 2);
   }
@@ -1654,6 +1738,12 @@ function updateBeacon(dt) {
 
 function objectiveLine() {
   if (game.exitOpen) return 'Reach the exit pad.';
+  if (game.objectiveType === 'survive') {
+    return 'Survive ' + Math.ceil(game.objectiveT) + ' s. The door opens on the clock.';
+  }
+  if (game.objectiveType === 'relics') {
+    return 'Break the relics: ' + game.relics.length + ' of ' + game.relicsTotal + ' left.';
+  }
   if (enemies.aliveCount > 0) return 'Clear the wave: ' + enemies.aliveCount + ' left.';
   if (game.wave >= 3 && !game.hasKey) return 'Find the keycard. It is somewhere on this floor.';
   return 'The exit is open.';
@@ -2327,7 +2417,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '1.99.1';
+const BUILD = '2.0.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -2493,6 +2583,13 @@ function fireCtx() {
     hud,
     camera,
     onKill: () => { game.kills++; },
+    // weapons.js has always supported the first three; nothing passed them, so a
+    // shot at a barrel, a crate or a secret wall did nothing at all. The relic is
+    // the fourth, and the reason this was found.
+    damageBarrels,
+    damageCrate,
+    damageSecret,
+    damageRelic,
   };
 }
 
@@ -2579,6 +2676,8 @@ function update(dt) {
     zone,
     relics: game.relicsTotal - game.relics.length,
     relicsTotal: game.relicsTotal,
+    objectiveType: game.objectiveType,
+    objectiveT: game.objectiveT,
     sideDone: game.sideDone,
     keycard: game.keycard ? { x: game.keycard.x, z: game.keycard.z } : null,
     nearest: nearestEnemy(),
@@ -2678,6 +2777,18 @@ function applyUrlOverrides() {
 
   const z = p.has('zone') ? zoneById(p.get('zone')) : zone;
   if (z) zone = z;
+  // ?level=N dresses a campaign row on top of its zone: the same palette and
+  // props, the row's seed, shape and objective. The zone id stays, so unlocks and
+  // the save format do not learn a second kind of key.
+  const lv = parseInt(p.get('level') || '', 10);
+  if (Number.isFinite(lv) && lv >= 1 && lv <= STORY_LEVELS.length) {
+    const row = storyLevel(lv);
+    const lz = row ? storyLevelZone(row) : null;
+    if (lz) {
+      zone = lz;
+      game.storyLevel = lv;
+    }
+  }
   const seed = p.get('seed') || zone.seed;
   game.zoneId = zone.id;
   startGame(seed, { auto: true });
@@ -2769,7 +2880,8 @@ window.HG = {
   takeUpgrade, UPGRADES, TRINKETS, PICKUP_DEFS, dropTrinket, recomputeStats, applyClass,
   // the simulation step, for tools that advance the game without a display
   update, effects, projectiles, level, enemies, scene,
-  explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate,
+  explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate, damageRelic,
+  spawnRelics, breakRelic, updateObjective, STORY_LEVELS, storyLevel, storyLevelZone,
   runStats, topRuns, recordRun, gameOver,
   openLore, closeLore, resolveChoice, get lore() { return lore; },
   applySettings, changeSetting, openSettings, closeSettings,

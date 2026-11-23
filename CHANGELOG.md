@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.0.0 — 2026-11-23
+
+**The wave arena becomes a campaign.** A level states its objective, and clearing it ends the level.
+
+| Piece | What it does |
+| --- | --- |
+| `relics` objective | a level spawns N relics, each with 40 hp; a shot chips one, the last one opens the door. Break-by-touch still works, so the old side objective is the same object |
+| `updateObjective()` | the one place the gate is decided. `survive` counts the clock down, `relics` reads the count, and a second call in the same frame opens nothing twice — `openExit()` is still the only writer of `exitOpen` |
+| HUD objective line | `SURVIVE · 1:14` counts down while the clock runs, `BREAK THE RELICS · 2 LEFT` counts the relics. It was showing `CLEAR THE WAVE` on both |
+| `story-levels.js` | 32 rows: id, seed, shape, objective, in four acts of eight. `storyLevelZone()` dresses a row on its zone, so unlocks and the save format are untouched. `?level=N` plays one |
+| the clock survives a reload | `saveRun` carries `objectiveT`; a reload on a survive level used to restart the clock at full time |
+
+**A bug this found:** `weapons.js` has had `ctx.damageBarrels`, `ctx.damageCrate` and `ctx.damageSecret`
+branches since they were written, and `fireCtx()` never passed any of them. Shooting a barrel, a crate or a
+secret wall did nothing at all — only the tests called the handlers directly. All four are wired now, which is
+also what makes a relic shootable.
+
+**Rooms grow, and the table says what it delivers.** Acts III and IV ask for 7–11 and 6–9 rooms of 6–10 cells;
+on a 40×40 grid that is what fits. Open floor area goes from 429 cells in level 1 to about 580 in level 32.
+
 ## 1.99.1 — 2026-11-23
 
 **The pause menu's Journal and Inventory buttons did nothing**

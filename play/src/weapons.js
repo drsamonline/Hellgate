@@ -269,6 +269,8 @@ export class Weapons {
         if (killed) this.audio.play('hit');
       } else if (ctx.damageBarrels && ctx.damageBarrels(origin, dir, maxD, w.damage)) {
         // the barrel took it; its own explosion does the rest
+      } else if (ctx.damageRelic && ctx.damageRelic(origin, dir, maxD, w.damage)) {
+        // the relic took it; the burst is drawn by the handler
       } else if (wallHit && ctx.damageCrate && ctx.damageCrate(wallHit.cell, w.damage)) {
         // the crate took it
       } else if (wallHit && ctx.damageSecret && ctx.damageSecret(wallHit.cell, w.damage)) {

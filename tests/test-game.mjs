@@ -1398,6 +1398,84 @@ const unreachablePicks = HG.level.reachableCells.filter((c) => {
 });
 ok(unreachablePicks.length === 0, 'no reachable pick is solid, secret or a crate (' + unreachablePicks.length + ')');
 
+// ---- the relics objective -------------------------------------------------
+// A relic is a thing you break, and breaking the last one opens the door. The
+// gate itself is written in exactly one place, updateObjective(), so that is
+// what these assert: not that a relic exists, but that the count decides.
+console.log('\n== the relics objective ==');
+HG.game.state = 'playing';
+HG.game.exitOpen = false;
+HG.level.doorOpen = false;
+HG.game.objectiveType = 'relics';
+HG.spawnRelics(3);
+ok(HG.game.relics.length === 3, 'a relics level puts three on the floor');
+ok(HG.game.relics.every((r) => r.hp > 0), 'each one has hit points, so a shot can break it');
+const rel = HG.game.relics[0];
+const muzzle = { x: rel.x - 2, y: rel.baseY, z: rel.z };
+ok(HG.damageRelic(muzzle, { x: 1, y: 0, z: 0 }, 4, 10) === true, 'a shot at a relic hits it');
+ok(HG.game.relics.length === 3, 'and a chip is not a break');
+ok(HG.damageRelic(muzzle, { x: 1, y: 0, z: 0 }, 4, 999) === true, 'enough damage breaks it');
+ok(HG.game.relics.length === 2, 'the broken relic is off the floor');
+ok(HG.damageRelic({ x: rel.x + 6, y: rel.baseY, z: rel.z }, { x: 1, y: 0, z: 0 }, 4, 10) === false, 'a shot facing away from every relic misses');
+HG.updateObjective(0.016);
+ok(HG.game.exitOpen === false, 'the door stays shut while relics stand');
+HG.breakRelic(0);
+HG.updateObjective(0.016);
+ok(HG.game.exitOpen === false, 'and still shut with one left');
+HG.breakRelic(0);
+HG.updateObjective(0.016);
+ok(HG.game.relics.length === 0, 'every relic is broken');
+ok(HG.game.exitOpen === true, 'the last relic opens the door');
+const scoreAtRelicDoor = HG.game.score;
+HG.updateObjective(0.016);
+ok(HG.game.score === scoreAtRelicDoor, 'a second call opens nothing twice');
+
+// the clock, same rule: derived in one place, idempotent
+HG.game.objectiveType = 'survive';
+HG.game.exitOpen = false;
+HG.level.doorOpen = false;
+HG.game.objectiveT = 30;
+HG.updateObjective(1);
+ok(HG.game.objectiveT === 29, 'the clock counts down: ' + HG.game.objectiveT);
+ok(HG.game.exitOpen === false, 'and the door stays shut at 29 s');
+HG.game.objectiveT = 0.5;
+HG.updateObjective(1);
+ok(HG.game.exitOpen === true, 'the clock running out opens the door');
+const scoreAtDoor = HG.game.score;
+HG.updateObjective(1);
+ok(HG.game.score === scoreAtDoor, 'and a second call opens nothing twice');
+
+// ---- the HUD counts the clock ---------------------------------------------
+console.log('\n== the HUD line ==');
+const hudState = (o) => ({
+  player: HG.player, wave: 1, kills: 0, enemies: 0, hasKey: true, score: 0,
+  powers: HG.powers, zone: HG.zone, relics: 0, relicsTotal: 0, sideDone: false,
+  keycard: null, nearest: null, boss: null, buffs: HG.game.buffs, near: false,
+  exitOpen: false, exit: HG.level.exit, camera: HG.camera,
+  objectiveType: 'clear', objectiveT: 0, ...o,
+});
+const objEl = () => document.getElementById('objective').textContent;
+HG.hud.update(0.016, HG.player, HG.weapons, hudState({ objectiveType: 'survive', objectiveT: 75 }));
+const clockA = objEl();
+HG.hud.update(0.016, HG.player, HG.weapons, hudState({ objectiveType: 'survive', objectiveT: 64 }));
+const clockB = objEl();
+ok(/^SURVIVE/.test(clockA), 'a survive level says so on the HUD: ' + clockA);
+ok(/1:15/.test(clockA), '75 s reads as 1:15: ' + clockA);
+ok(/1:04/.test(clockB), '64 s reads as 1:04: ' + clockB);
+ok(clockA !== clockB, 'the line moves as the clock runs');
+HG.hud.update(0.016, HG.player, HG.weapons, hudState({ objectiveType: 'relics', relics: 1, relicsTotal: 3 }));
+ok(/RELICS/.test(objEl()) && /2 LEFT/.test(objEl()), 'the relic count is on the HUD: ' + objEl());
+HG.hud.update(0.016, HG.player, HG.weapons, hudState({ exitOpen: true }));
+ok(/EXIT/.test(objEl()), 'an open exit still wins the line: ' + objEl());
+
+// put the run back the way the rest of this file expects to find it
+HG.game.objectiveType = 'clear';
+HG.game.objectiveT = 0;
+HG.game.exitOpen = false;
+HG.level.doorOpen = false;
+HG.spawnRelics(0);
+ok(HG.game.relicsTotal === 0 && HG.game.relics.length === 0, 'the relics are cleared again for the next section');
+
 console.log('\n== enemy level of detail ==');
 HG.enemies.clear();
 HG.enemies.spawnAt('imp', HG.player.pos.x + 40, HG.player.pos.z, 1);

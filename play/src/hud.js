@@ -134,6 +134,15 @@ export class HUD {
       if (state.exitOpen) {
         text = 'REACH THE EXIT';
         tone = 'go';
+      } else if (state.objectiveType === 'survive') {
+        // the clock is the objective: a number that does not move is a lie
+        const t = Math.max(0, Math.ceil(state.objectiveT || 0));
+        text = 'SURVIVE \u00b7 ' + Math.floor(t / 60) + ':' + String(t % 60).padStart(2, '0');
+        tone = t <= 10 ? 'warn' : '';
+      } else if (state.objectiveType === 'relics') {
+        const left = Math.max(0, (state.relicsTotal || 0) - (state.relics || 0));
+        text = 'BREAK THE RELICS \u00b7 ' + left + ' LEFT';
+        tone = 'warn';
       } else if (state.enemies > 0) {
         text = 'CLEAR THE WAVE \u00b7 ' + state.enemies + ' LEFT';
       } else if (state.wave >= 3 && !state.hasKey) {
