@@ -39,3 +39,38 @@ Written from the player's direction, 2026-11-23. This supersedes the wave model.
 | `recomputeStats()` stays a pure derivation | four separate bugs came from the alternative |
 | No enemy in the spawn room, never within 12 m | it is the first rule in the handover |
 | The gates stay green | 885 assertions, six static gates, four browser gates |
+
+## Additions — 2026-11-23, second pass
+
+> ALSO THE CUTSCENES PASS THROUGH WALL RATHER THAN THAT THEY SHOULD TRAVEL THE REAL PATH AND PROPER CUTSCENE, U
+> CAN ADD NPCS DIFFERENT VIEW OF BODY TYPES AND CLOTHS WHICH SOMETIMES GIVE QUESTS AND REWARDS
+
+### Cutscenes travel the level, they do not fly through it
+
+The boss entrance in `cinematic.js` orbits its subject on a fixed arc, which is why it can end up inside a wall.
+A cutscene camera has to move along **walkable ground**, which the game already knows how to compute:
+
+| Piece | How |
+| --- | --- |
+| The path | `buildFlowField` from the camera's start cell to its end cell — the same BFS the enemies use, so the camera cannot cross a wall any more than they can |
+| The height | `floorHeightAt` at each waypoint, plus the eye height, so the camera follows stairs and decks |
+| The smoothing | a Catmull-Rom through the waypoint centres, cut to the cell interior, not a straight lerp |
+| The look-at | a target that is also on a path, or the subject's chest when it is in sight |
+
+That is one function and it reuses three things that already work.
+
+### NPCs
+
+The rig is parametric — `humanoid(p)` takes proportions and a materials set — so a new body type is a proportions
+object, and clothes are extra meshes on joints that already exist. What is missing is not the geometry:
+
+| Piece | Notes |
+| --- | --- |
+| Body types | 3–4 more `PROPORTIONS` entries: tall/thin, short/wide, armoured. All the same joint names, so the animation code does not change |
+| Clothes | a coat, a hood, a tabard — boxes and cylinders on the spine and shoulders, the way the grunt's pack already works |
+| Placement | one or two per level, in a room the objective sends you through, never in the spawn room |
+| Quests | a dialogue with two or three options, one of which sets a flag; the flag changes the objective or pays a reward |
+| Rewards | a trinket, ammo, a relic, or an upgrade — all of which already exist as tables |
+
+**The smallest version that is worth having:** one NPC in the first story level, with one line of dialogue and one
+choice that pays something. Everything else is content on top of that shape.
