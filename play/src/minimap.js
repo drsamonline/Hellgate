@@ -92,16 +92,49 @@ export class Minimap {
       g.fill();
     }
 
-    // the player: a triangle pointing where you are looking
+    // the player: a long thin arrow pointing where you are looking. A stubby
+    // triangle at 132 px reads as a dot with a corner; the nose is 9 px now and
+    // the tail is notched, so the direction is unmistakable at a glance.
     const x = px(player.pos.x);
     const z = pz(player.pos.z);
     const a = player.yaw;
+    const nose = 9 * this.dpr;
+    const wing = 4 * this.dpr;
+    const notch = 2 * this.dpr;
     g.fillStyle = '#ffd9a8';
     g.beginPath();
-    g.moveTo(x + Math.sin(-a) * 5 * this.dpr, z + Math.cos(-a) * 5 * this.dpr);
-    g.lineTo(x + Math.sin(-a + 2.5) * 3.2 * this.dpr, z + Math.cos(-a + 2.5) * 3.2 * this.dpr);
-    g.lineTo(x + Math.sin(-a - 2.5) * 3.2 * this.dpr, z + Math.cos(-a - 2.5) * 3.2 * this.dpr);
+    g.moveTo(x + Math.sin(-a) * nose, z + Math.cos(-a) * nose);
+    g.lineTo(x + Math.sin(-a + 2.4) * wing, z + Math.cos(-a + 2.4) * wing);
+    g.lineTo(x + Math.sin(-a) * notch, z + Math.cos(-a) * notch);
+    g.lineTo(x + Math.sin(-a - 2.4) * wing, z + Math.cos(-a - 2.4) * wing);
     g.closePath();
     g.fill();
+
+    // and a tapered arrow from you to the thing you are looking for, so the map
+    // answers "where do I go" and not only "where am I"
+    if (wp) {
+      const dx = px(wp.x) - x;
+      const dz = pz(wp.z) - z;
+      const len = Math.hypot(dx, dz);
+      if (len > 16 * this.dpr) {
+        const ux = dx / len;
+        const uz = dz / len;
+        const tipX = x + ux * (len - 6 * this.dpr);
+        const tipZ = z + uz * (len - 6 * this.dpr);
+        g.strokeStyle = exitOpen ? 'rgba(57,255,154,0.55)' : 'rgba(255,210,74,0.55)';
+        g.lineWidth = 1.5 * this.dpr;
+        g.beginPath();
+        g.moveTo(x + ux * 10 * this.dpr, z + uz * 10 * this.dpr);
+        g.lineTo(tipX, tipZ);
+        g.stroke();
+        g.beginPath();
+        g.moveTo(tipX + ux * 6 * this.dpr, tipZ + uz * 6 * this.dpr);
+        g.lineTo(tipX - uz * 3 * this.dpr, tipZ + ux * 3 * this.dpr);
+        g.lineTo(tipX + uz * 3 * this.dpr, tipZ - ux * 3 * this.dpr);
+        g.closePath();
+        g.fillStyle = exitOpen ? 'rgba(57,255,154,0.75)' : 'rgba(255,210,74,0.75)';
+        g.fill();
+      }
+    }
   }
 }
