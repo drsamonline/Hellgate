@@ -26,3 +26,16 @@ Reported after playing to zone 6. Verbatim, then triaged. Nothing here is fixed 
 The suite passes 885 assertions and the flow audit walks thirteen steps, and a player still found nine problems in
 six zones. Every one of the nine is a thing a *player* does that no test does: walk into a wall, look for a lift,
 press every key, play past zone three.
+
+## Issue 5 — what has been ruled out
+
+| Suspect | Verdict |
+| --- | --- |
+| The markup | `#diary` and `#inventory` are `<section class="screen">` inside `#screens`, both present |
+| The CSS | `.screen { display:none }` and `.screen.on { display:flex }`, no per-id override that would hide either |
+| The wiring | `showDiary()` and `toggleInventory()` both call `showScreen(...)` and `releaseLock()` |
+| The key handler | `if (e.code === 'Tab') toggleInventory(); if (e.code === 'KeyJ') showDiary();`, behind `if (game.state !== 'playing') return;` |
+| A programmatic keydown | `tools/audit-controls.mjs` dispatches every bound key and both panels change state |
+| The harness | it could not have caught a visibility bug: the DOM stub knew four screens by name, so `showScreen` could not turn these on at all. Fixed at 1.99.0 — a panel assertion now checks `.on` and content, not just `game.state` |
+
+**What is left** is how a real keypress reaches the page while the pointer is locked: browser focus, or `Tab` being consumed as focus traversal before the handler sees it. The player's one-word answer — does the game freeze, or does nothing happen — separates those two, and nothing else does.
