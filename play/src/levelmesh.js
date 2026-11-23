@@ -210,7 +210,13 @@ export function buildLevelMeshes(level, mats, zone) {
         if (!ncell || ncell.solid) {
           spans.push([hC, c.ceil]);
         } else {
-          if (hN > hC + 1e-4) spans.push([hC, hN]);
+          // A stair cell is a ramp across its whole width: its side neighbours
+          // are open floor at a lower height, so drawing the floor-to-floor face
+          // there put a wall along the side of the ramp that the player walked
+          // straight through. The ramp's own risers already close the surface.
+          if (c.stair && ncell.stair === undefined) {
+            // nothing: the ramp is open to the side
+          } else if (hN > hC + 1e-4) spans.push([hC, hN]);
           if (ncell.ceil < c.ceil - 1e-4) spans.push([ncell.ceil, c.ceil]);
         }
 
