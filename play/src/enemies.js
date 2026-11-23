@@ -715,6 +715,11 @@ export class Enemy {
 
     if (this.state === STATE.DEATH) {
       this.deadT += dt;
+      // the hit flash is the only thing a corpse still needs to update: a body
+      // killed by the shot that made it flash used to keep its white-hot
+      // emissive for as long as it lay there, because animate() is not reached
+      // once the state is DEATH
+      this.updateFlash(dt);
       const t = Math.min(1, this.deadT / 0.45);
       this.mesh.rotation.x = (Math.PI / 2) * t * 0.92;
       // the body stays on the floor: a wave that clears leaves a room that
@@ -1052,11 +1057,17 @@ export class Enemy {
     }
   }
 
-  animate(dt) {
-    if (this.T.boss && this.parts && this.parts.core) {
-      const k = this.phase === 3 ? 1.4 : this.phase === 2 ? 1.15 : 1;
-      this.parts.core.scale.setScalar(k);
-    }
+  /**
+   * The two things the emissive channel carries: the hit flash, and the wind-up
+   * glow that telegraphs a shot.
+   *
+   * Called from `animate()`, and from the death branch of `update()` as well —
+   * a body killed by the shot that lit it used to keep its white-hot emissive
+   * for as long as it lay on the floor, because `animate()` is never reached
+   * once the state is DEATH.
+   * @param {number} dt Seconds.
+   */
+  updateFlash(dt) {
     if (this.flash > 0) {
       this.flash = Math.max(0, this.flash - dt);
       const e = this.flash / 0.16;
@@ -1073,6 +1084,14 @@ export class Enemy {
       this.charged = false;
       for (const m of this.flashMats) m.emissive.setRGB(0, 0, 0);
     }
+  }
+
+  animate(dt) {
+    if (this.T.boss && this.parts && this.parts.core) {
+      const k = this.phase === 3 ? 1.4 : this.phase === 2 ? 1.15 : 1;
+      this.parts.core.scale.setScalar(k);
+    }
+    this.updateFlash(dt);
     if (this.bodyData && this.flash <= 0) this.bodyData.flashK = 0;
     const sp = this.moving ? 1 : 0;
     // a wisp floats: its tendrils move even when it is holding position

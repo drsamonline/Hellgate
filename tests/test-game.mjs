@@ -153,8 +153,9 @@ ok(HG.player.ammo.shells === shells0 - 1, 'shotgun fired (shells ' + shells0 + '
 console.log('\n== hitscan damage ==');
 const spot = duelSpot(3.5);
 ok(!!spot, 'found a clear duel spot');
-// isolate one enemy so the assertion is unambiguous
-const target = HG.enemies.list[0];
+// isolate one enemy so the assertion is unambiguous — a live one: list[0] can be
+// a corpse left by an earlier section, and a corpse takes no damage (-2 -> -2)
+const target = HG.enemies.list.find((e) => e.alive) || HG.enemies.list[0];
 for (const e of HG.enemies.list) if (e !== target) e.remove();
 HG.enemies.list = [target];
 target.pos.set(spot.b.x, spot.b.floor, spot.b.z);
@@ -176,7 +177,10 @@ ok(target.flash > 0 && target.flashMats[0].emissive.r > 0, 'enemy flashes white-
 // Let the flash finish rather than assuming a frame count is enough: a fixed
 // 24 frames is a claim about dt, and dt is the harness's, not the game's. The
 // assertion is that it ends, so wait for the end.
-for (let i = 0; i < 90 && target.flash > 0; i++) frames(1);
+// driven with an explicit dt: the decay is dt-scaled, so ninety rAF frames is a
+// different amount of decay on every machine, and 90 of them was not enough on a
+// fast one
+for (let i = 0; i < 40 && target.flash > 0; i++) HG.update(0.05);
 // the emissive channel is shared with the wind-up glow, so "black" is the wrong
 // assertion: the flash ends, and anything left is the charge colour, which has no blue
 const emissiveAfter = target.flashMats[0].emissive;
@@ -1927,9 +1931,12 @@ HG.saveRun();
 const sv1 = HG.loadRun();
 ok(sv1.score === 1234 && sv1.wave === 2, 'the save captures score and wave');
 HG.resumeRun(sv1);
+// the score is read before the loop runs: two frames is enough for a wave that
+// spawned no enemy to clear, and clearing pays the exit bonus, which moved the
+// score and made this the flake it has been for two releases
+ok(HG.game.score === 1234, 'resuming restores the score');
 frames(2);
 ok(HG.game.state === 'playing', 'resuming returns to play');
-ok(HG.game.score === 1234, 'resuming restores the score');
 ok(HG.game.wave === 2, 'resuming restores the wave');
 HG.toggleInventory();
 ok(HG.game.state === 'inventory', 'tab opens the status panel');
@@ -2175,7 +2182,12 @@ HG.game.pickups.push({ kind: 'health', mesh: fakeMesh, x: cell.wx, z: cell.wz, b
 // clears and every pickup is dropped — which is why this pair of assertions
 // failed roughly one run in five and blamed two innocent commits.
 HG.enemies.clear();
-HG.enemies.spawnAt('imp', HG.player.pos.x + 22, HG.player.pos.z + 22, 1);
+// an open cell, not a coordinate offset: an offset can land in a wall, spawn
+// nothing, clear the wave and drop every pickup — which is the failure this
+// pair kept producing
+const keep = HG.level.openCells[HG.level.openCells.length - 1];
+HG.enemies.spawnAt('imp', keep.wx, keep.wz, 1);
+ok(HG.enemies.list.length === 1, 'one enemy is left standing for the pickup pair');
 frames(3);
 ok(HG.game.pickups.length === before2 + 1, 'full-health pickup is left on the floor');
 // hold still: a slow CI frame lets the fixed-step accumulator catch up, and the
