@@ -204,7 +204,11 @@ ok('a run in progress is saved', inv.save === true);
 // in front — about 14 calls per body, which is 13 merged joints plus a shadow.
 const levelOnly = await page.evaluate(() => {
   const HG = window.HG;
+  // pin BOTH angles: the frustum is what the camera points at, and a budget that
+  // depends on where the run happened to leave the yaw measured 57 one run and
+  // 80 the next for the same level
   HG.player.pitch = 0;
+  HG.player.yaw = 0;
   HG.player.syncCamera();
   HG.enemies.clear();
   return new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(HG.renderStats))));
