@@ -26,7 +26,7 @@ import { loadSettings, saveSettings, clampSettings } from './settings.js';
 import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
-import { ZONES, zoneById, loadProgress, clearZone, isUnlocked } from './world.js';
+import { ZONES, zoneById, loadProgress, clearZone, clearLevel, isUnlocked, isLevelUnlocked } from './world.js';
 import { STORY_LEVELS, storyLevel, storyLevelZone } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
@@ -149,6 +149,8 @@ function saveRun() {
       relicsLeft: game.relics.length,
       relicsTotal: game.relicsTotal,
       sideDone: !!game.sideDone,
+      // which campaign level this run is: a zone run saves 0
+      level: game.level,
       // the clock is part of the run: a reload on a survive level would otherwise
       // restart it at full time, which is a free 75 seconds
       objectiveType: game.objectiveType,
@@ -210,11 +212,12 @@ const UPGRADES = [
 const MODES = {
   campaign: {
     name: 'CAMPAIGN',
-    blurb: 'Nine zones in order. Clear a zone to unlock the next.',
-    waves: null,       // the zone decides
+    blurb: 'Thirty-two levels in four acts. Clear one to unlock the next.',
+    waves: null,       // the level decides
     lives: 1,
     endless: false,
     bossRush: false,
+    levels: true,      // plays the campaign table, not the nine zones
   },
   endless: {
     name: 'ENDLESS',
@@ -250,6 +253,7 @@ const MODES = {
     bossRush: false,
     forceHard: true,
     keyEveryWave: true,
+    levels: true,
   },
   hardcore: {
     name: 'HARDCORE',
@@ -259,6 +263,7 @@ const MODES = {
     endless: false,
     bossRush: false,
     noSave: true,
+    levels: true,
   },
   daily: {
     name: 'DAILY',
@@ -303,6 +308,7 @@ const game = {
   objectiveType: 'clear',
   objectiveT: 0,
   storyLevel: 0,
+  level: 0,           // the campaign level being played, 0 for a zone run
   coins: 0,
   sideDone: false,
   buffs: { damage: 0, speed: 0, shield: 0 },
@@ -584,7 +590,9 @@ function buildRun(seed, zoneDef) {
 
   const mode = MODES[gameMode] || MODES.campaign;
   game.mode = gameMode;
-  game.wavesTarget = mode.waves != null ? mode.waves : (zone.boss ? 4 : 3);
+  game.wavesTarget = mode.waves != null ? mode.waves
+    : game.level ? 1                                   // a level is one objective, not three waves
+      : (zone.boss ? 4 : 3);
   game.bossSeen = false;
   // a level gated on relics must have some even if the zone forgot a count: an
   // objective with nothing to break is a door that never opens
@@ -597,9 +605,16 @@ function buildRun(seed, zoneDef) {
 
 function resumeRun(save) {
   audio.init();
-  zone = zoneById(save.zoneId);
+  // a campaign run resumes on its own level, not on whatever zone id was saved:
+  // two levels can share a zone, and the level decides the seed and the objective
+  const row = save.level ? storyLevel(save.level) : null;
+  const ldef = row ? storyLevelZone(row) : null;
+  zone = ldef || zoneById(save.zoneId);
   game.zoneId = zone.id;
   buildRun(save.seed, zone);
+  game.level = ldef ? save.level : 0;
+  game.storyLevel = ldef ? save.level : 0;
+  if (ldef) game.wavesTarget = 1;
   // restore the run's memory before the stats are computed: applyClass reads
   // game.flags, and a flag restored afterwards would do nothing until next zone
   game.upgrades = (save.upgrades && typeof save.upgrades === 'object') ? { ...save.upgrades } : {};
@@ -1401,6 +1416,37 @@ function checkWave() {
 
 // ------------------------------------------------------------------ game flow
 
+/**
+ * Start a campaign level.
+ *
+ * The level is a row in `story-levels.js` dressed on its zone, so the palette,
+ * the props and the threat still come from the zone table. One wave, one
+ * objective, and the pad ends the level rather than advancing to wave two.
+ * @param {number} n 1-based level number.
+ * @returns {boolean} False when there is no such level.
+ */
+function beginLevel(n) {
+  const row = storyLevel(n);
+  const def = row ? storyLevelZone(row) : null;
+  if (!def) return false;
+  game.level = n;
+  beginZone(def);
+  game.level = n;          // buildRun sets it from the zone; a level is its own thing
+  game.storyLevel = n;
+  game.wavesTarget = 1;
+  return true;
+}
+
+/**
+ * The level to start from: the first one not yet cleared, or the last.
+ * @returns {number} A 1-based level number.
+ */
+function nextLevel() {
+  const done = progress.levels || [];
+  for (let n = 1; n <= STORY_LEVELS.length; n++) if (!done.includes(n)) return n;
+  return STORY_LEVELS.length;
+}
+
 function beginZone(zoneDef) {
   audio.init();
   if (!zoneDef || zoneDef.id === ZONES[0].id) game.upgrades = {};
@@ -1484,11 +1530,56 @@ function dialogueFor(kind) {
 }
 
 let mapReturn = 'playing';
+/**
+ * The campaign map: 32 levels in four acts, locked past the one you reached.
+ */
+function renderLevelMap() {
+  const hint = document.getElementById('mapHint');
+  const next = nextLevel();
+  const row = storyLevel(next);
+  if (hint) {
+    hint.textContent = row
+      ? 'NEXT — LEVEL ' + next + ' · ' + row.title + ' · ' + (row.objective.type || 'clear')
+      : 'EVERY LEVEL CLEARED';
+  }
+  const wrap = document.getElementById('zoneList');
+  if (!wrap) return;
+  const done = progress.levels || [];
+  let html = '';
+  let act = 0;
+  for (const l of STORY_LEVELS) {
+    if (l.act !== act) {
+      act = l.act;
+      html += `<div class="actrow">ACT ${act}</div>`;
+    }
+    const open = isLevelUnlocked(progress, l.n);
+    const cleared = done.includes(l.n);
+    const best = (progress.best || {})['l' + l.n] || 0;
+    html += `<button class="zonerow ${open ? '' : 'locked'}" data-level="${l.n}" ${open ? '' : 'disabled'}>
+      <span class="zi">${String(l.n).padStart(2, '0')}</span>
+      <span class="zn">${l.title}</span>
+      <span class="zb">${open ? l.objective.type + (l.objective.time ? ' · ' + l.objective.time + 's' : '') +
+        (l.objective.relics ? ' · ' + l.objective.relics + ' relics' : '') : 'Locked'}</span>
+      <span class="zs">${cleared ? 'CLEARED' : ''}${best ? ' · ' + best : ''}</span>
+    </button>`;
+  }
+  wrap.innerHTML = html;
+  wrap.querySelectorAll('[data-level]').forEach((el) => {
+    el.addEventListener('click', () => beginLevel(Number(el.getAttribute('data-level'))));
+  });
+}
+
 function showZoneMap() {
   // the map is the "what now" screen: every zone, its state, and the one line
-  // that says what the next action is
+  // that says what the next action is. In campaign mode it lists the 32 levels
+  // instead, grouped by act — the zones are the dressing now, not the run.
   game.state = 'map';
   hud.setVisible(false);
+  if ((MODES[gameMode] || {}).levels || game.level) {
+    renderLevelMap();
+    showScreen('map');
+    return;
+  }
   // the next thing to do, in one line, above the list
   const nextIdx = ZONES.findIndex((z, i) => isUnlocked(progress, i) && !progress.cleared.includes(z.id));
   const hint = document.getElementById('mapHint');
@@ -2115,12 +2206,14 @@ function zoneCleared() {
   awardFor();
   game.state = 'cleared';
   releaseLock();
-  clearZone(progress, zone.id, game.score);
+  if (game.level) clearLevel(progress, game.level, game.score);
+  else clearZone(progress, zone.id, game.score);
   clearRun();
   const el = document.getElementById('clearedStats');
   if (el) {
     el.innerHTML =
-      `ZONE <b>${zone.name}</b><br />SCORE <b>${game.score}</b><br />KILLS <b>${game.kills}</b><br />` +
+      `${game.level ? 'LEVEL <b>' + game.level + ' · ' + zone.name + '</b>' : 'ZONE <b>' + zone.name + '</b>'}<br />` +
+      `SCORE <b>${game.score}</b><br />KILLS <b>${game.kills}</b><br />` +
       `RELICS <b>${game.relicsTotal - game.relics.length}/${game.relicsTotal}</b>`;
   }
   hud.setVisible(false);
@@ -2572,6 +2665,12 @@ window.addEventListener('keyup', (e) => {
 });
 
 document.getElementById('startBtn').addEventListener('click', () => {
+  // a mode that plays the campaign starts the next level, not a zone. A seed in
+  // the box is a deliberate override and still starts a zone.
+  if (MODES[gameMode] && MODES[gameMode].levels && !document.getElementById('seedInput').value.trim()) {
+    beginLevel(nextLevel());
+    return;
+  }
   // the daily overrides the seed box: a daily you can reseed is not a daily
   if (MODES[gameMode] && MODES[gameMode].daily) {
     const seed = dailySeed();
@@ -2598,6 +2697,7 @@ document.getElementById('mapBack')?.addEventListener('click', () => {
 });
 document.getElementById('mapFromCleared')?.addEventListener('click', () => { mapReturn = 'cleared'; showZoneMap(); });
 document.getElementById('clearedNext')?.addEventListener('click', () => {
+  if (game.level) { beginLevel(Math.min(STORY_LEVELS.length, game.level + 1)); return; }
   const i = ZONES.findIndex((z) => z.id === zone.id);
   beginZone(ZONES[Math.min(ZONES.length - 1, i + 1)]);
 });
@@ -2634,7 +2734,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.1.0';
+const BUILD = '2.2.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3094,7 +3194,7 @@ window.HG = {
   get props() { return props; },
   get companion() { return companion; },
   get zone() { return zone; },
-  beginZone, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
+  beginZone, beginLevel, nextLevel, renderLevelMap, showZoneMap, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, closeNpcOffer, npcQuestState, get npcOffer() { return npcOffer; },

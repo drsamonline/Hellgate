@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.1.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.2.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -20,10 +20,10 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 > `updateObjective()` is the only decider; do not redo work marked measured-and-rejected in `ENHANCEMENTS.md`
 > without new numbers.
 >
-> WORK THIS NEXT, in order: (1) make the campaign the default — the 32 levels are a table and `?level=N` plays
-> one, but the game still starts the nine-zone wave campaign; (2) an outro cutscene that walks *away* from the
-> body rather than a caption over the cleared screen; (3) the terminals retired to flavour, which is the last
-> piece of the design brief.
+> WORK THIS NEXT, in order: (1) the level select on the title screen — the map exists but the title screen
+> still offers only Start; (2) three of the 32 levels are `survive` clocks with nothing else happening, and the
+> brief's NPC quest exists in one room: a second quest, in a room the objective sends you through; (3) the
+> nine-zone playability suite runs six seeds of nine zones — give it the 32 levels instead.
 >
 > FLAKY ASSERTIONS: four were diagnosed and fixed at 2.0.0 (the pistol target, the pickup keeper, the resume
 > score and the hit-flash decay). If one goes red, re-run before believing it — three of those blamed innocent
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.1.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.2.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
-| Tests | 885 playability + 650 in the other three suites; seven static gates; smoke, flow, run, invariants |
+| Tests | 885 playability + 671 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 40 in `play/src/` |
-| Releases | 101, `v1.0.0` → `v2.1.0` |
+| Releases | 102, `v1.0.0` → `v2.2.0` |
 | Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
 
 ## What shipped in this run
@@ -50,6 +50,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | 1.91.0 → 1.99.1 | Nine releases: the audit tail, instanced bodies, silhouettes, shadows, catwalks, lifts, the pause panels |
 | **2.0.0** | **The campaign: the `relics` objective, a HUD that counts, and 32 levels** |
 | **2.1.0** | **The story on screen: a camera that walks the level, written dialogue, and a job for the helper** |
+| **2.2.0** | **The campaign is the game: 32 levels, level progression, and a map in four acts** |
 
 ### 2.0.0 in detail
 
@@ -79,13 +80,23 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | `dialogue.js` | scenes of a speaker and a line, typed at 52 cps, self-advancing after 2.1 s, skipped by any key. All 32 levels have an intro |
 | the helper's job | `V` offers it, `1` takes it (120 coins + a trinket, 180 when his room is clear), `2` declines. Carried in `game.flags.keshi` |
 
+## 2.2.0 in detail
+
+| Piece | What it does |
+| --- | --- |
+| `beginLevel(n)` | a table row dressed on its zone; `wavesTarget` 1, so the pad ends the level |
+| progression | `progress.level` / `progress.levels`; an old record is repaired, not discarded |
+| the map | 32 rows in four acts with objective, lock state and best score |
+| save and resume | the run carries its level; the level decides the seed and the objective |
+| modes | Campaign, Nightmare, Hardcore play levels; Endless, Boss Rush, Arena, Daily play zones |
+
 ## What is next, in order
 
 | # | Item | Where | Size |
 | --- | --- | --- | --- |
-| — | Make the campaign the default: 32 levels instead of nine zones | `main.js`, `world.js` | L |
-| — | An outro cutscene that walks away from the body | `campath.js` + `cinematic.js` | S |
-| — | Retire the terminals to flavour, the last piece of the brief | `lore.js` | M |
+| — | A level select on the title screen | `play/index.html` + `main.js` | S |
+| — | A second NPC quest, in a room the objective sends you through | `main.js` | M |
+| — | Run the playability suite over the 32 levels instead of nine zones | `tests/test-playability.mjs` | M |
 
 **The first slice of the brief is still the test:** one level start to finish with a cutscene in, a dialogue
 line out and no terminal. Levels 1 and 4 are the two to build it on — `reach` and `relics`, both already

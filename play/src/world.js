@@ -220,10 +220,15 @@ export function loadProgress() {
     // edited by hand — threw on the next zone clear instead of starting over
     if (p && typeof p.unlocked === 'number' && Array.isArray(p.cleared)) {
       if (!p.best || typeof p.best !== 'object' || Array.isArray(p.best)) p.best = {};
+      // the campaign's own progress. A record written before 2.2 has neither, and
+      // repairing it here is what keeps a returning player's zones intact while
+      // starting them at level 1 rather than on a broken record
+      if (!Array.isArray(p.levels)) p.levels = [];
+      if (!(typeof p.level === 'number' && p.level >= 1)) p.level = 1;
       return p;
     }
   } catch (e) { /* ignore */ }
-  return { unlocked: 1, cleared: [], best: {} };
+  return { unlocked: 1, cleared: [], best: {}, levels: [], level: 1 };
 }
 
 /**
@@ -247,6 +252,34 @@ export function zoneById(id) {
  */
 export function isUnlocked(progress, index) {
   return index < progress.unlocked;
+}
+
+/**
+ * True when a campaign level is unlocked: the next one, or any already reached.
+ * @param {object} progress The record from `loadProgress`.
+ * @param {number} n 1-based level number.
+ * @returns {boolean} Whether it can be played.
+ */
+export function isLevelUnlocked(progress, n) {
+  return n >= 1 && n <= (progress.level || 1);
+}
+
+/**
+ * Record a campaign level as cleared, unlock the next and keep the best score.
+ * @param {object} progress The record from `loadProgress`.
+ * @param {number} n 1-based level number.
+ * @param {number} score The run's score on it.
+ * @returns {object} The same record, saved.
+ */
+export function clearLevel(progress, n, score) {
+  if (!Array.isArray(progress.levels)) progress.levels = [];
+  if (!progress.best || typeof progress.best !== 'object') progress.best = {};
+  if (!progress.levels.includes(n)) progress.levels.push(n);
+  progress.level = Math.max(progress.level || 1, n + 1);
+  const key = 'l' + n;
+  progress.best[key] = Math.max(progress.best[key] || 0, score || 0);
+  saveProgress(progress);
+  return progress;
 }
 
 /**

@@ -1449,6 +1449,83 @@ console.log('\n== the helper pays ==');
   }
 }
 
+// ---- the campaign is the progression --------------------------------------
+console.log('\n== the campaign is the run ==');
+{
+  const { loadProgress, clearLevel, isLevelUnlocked } = await import('../play/src/world.js');
+  const prog = { unlocked: 1, cleared: [], best: {}, levels: [], level: 1 };
+  ok(isLevelUnlocked(prog, 1) === true && isLevelUnlocked(prog, 2) === false, 'only level 1 is open on a fresh record');
+  clearLevel(prog, 1, 900);
+  ok(isLevelUnlocked(prog, 2) === true, 'clearing level 1 opens level 2');
+  ok(prog.best.l1 === 900, 'and keeps its score under l1');
+  clearLevel(prog, 1, 400);
+  ok(prog.best.l1 === 900, 'a worse score does not replace a better one');
+  ok(prog.levels.length === 1, 'a level is recorded once however often it is cleared');
+
+  // an old record with no levels is repaired rather than thrown away
+  const store = new Map([['hellgate.progress', JSON.stringify({ unlocked: 4, cleared: ['gate'], best: { gate: 100 } })]]);
+  const savedLS = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+  };
+  const old = loadProgress();
+  ok(Array.isArray(old.levels) && old.level === 1, 'a record from before the campaign is repaired, not discarded');
+  ok(old.unlocked === 4 && old.cleared.includes('gate'), 'and keeps the zone progress it had');
+  globalThis.localStorage = savedLS;
+
+  // a level is one wave and one objective
+  ok(HG.beginLevel(2) === true, 'a level starts from the table');
+  ok(HG.game.level === 2 && HG.game.storyLevel === 2, 'and knows which level it is');
+  ok(HG.game.wavesTarget === 1, 'a level is one wave, not three (' + HG.game.wavesTarget + ')');
+  ok(HG.zone.seed === HG.STORY_LEVELS[1].seed, 'on the level own seed');
+  ok(HG.beginLevel(99) === false, 'there is no level 99');
+
+  // the pad ends the level and records it
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  HG.game.exitOpen = true;
+  HG.game.wave = 1;
+  HG.player.pos.set(HG.level.exit.x, 0, HG.level.exit.z);
+  frames(2);
+  ok(HG.game.state === 'cleared', 'stepping on the pad ends the level');
+  ok((HG.progress.levels || []).includes(2), 'and records it in the campaign');
+
+  // the map lists the 32 levels, not the nine zones
+  HG.showZoneMap();
+  // counted from the markup, not querySelectorAll: the DOM stub creates elements
+  // on demand and answers every selector with an empty list
+  const rows = (document.getElementById('zoneList').innerHTML.match(/data-level=/g) || []).length;
+  ok(rows === 32, 'the map lists 32 levels (' + rows + ')');
+  ok(!document.getElementById('zoneList').innerHTML.includes('data-zone='), 'and not the nine zones');
+  ok(document.getElementById('zoneList').innerHTML.includes('ACT 1'), 'grouped into acts');
+
+  // the save carries the level, and a resume comes back to it
+  HG.beginLevel(5);
+  HG.game.score = 4321;
+  HG.saveRun();
+  const sv = HG.loadRun();
+  ok(sv.level === 5, 'the save says which level the run is');
+  HG.resumeRun(sv);
+  ok(HG.game.level === 5 && HG.game.storyLevel === 5, 'and a resume comes back to that level');
+  ok(HG.game.wavesTarget === 1, 'with the level rules, not the zone rules');
+  ok(HG.game.score === 4321, 'and the score it had');
+
+  // back to a zone run's rules for whatever follows: this block leaves the game
+  // on level 5, whose objective is a clock, and the objective section below would
+  // read it. The level itself is left alone — rebuilding it here reshuffles the
+  // barrels the section after that measures.
+  HG.game.level = 0;
+  HG.game.storyLevel = 0;
+  HG.game.wavesTarget = 3;
+  HG.game.objectiveType = 'clear';
+  HG.game.objectiveT = 0;
+  HG.game.exitOpen = false;
+  HG.level.doorOpen = false;
+  HG.game.state = 'playing';
+}
+
 console.log('\n== game modes ==');
 ok(Object.keys(HG.MODES).length === 8, 'eight modes are defined (' + Object.keys(HG.MODES).length + ')');
 ok(HG.mode === 'campaign', 'the default mode is campaign');
@@ -1762,6 +1839,10 @@ HG.game.barrels.length = 0;
 HG.spawnBarrels();
 ok(HG.game.barrels.length > 0, 'barrels are placed (' + HG.game.barrels.length + ')');
 const b0 = HG.game.barrels[0];
+// isolate it: barrels are placed at random, and one standing in front of b0 takes
+// the shot and fails an assertion about b0 — the same reason the hitscan test
+// keeps one enemy
+HG.game.barrels = [b0];
 // a barrel is a volume now, so the ray has to be at its height, not at y = 0
 const { floorHeightAt: floorOf } = await import('../play/src/level.js');
 const origin = { x: b0.x - 5, y: floorOf(HG.level, b0.x, b0.z) + 0.9, z: b0.z };

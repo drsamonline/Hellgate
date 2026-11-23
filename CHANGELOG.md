@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.2.0 — 2026-11-23
+
+**The campaign is the game.** The 32-level table stopped being a thing you could reach with a URL and became
+the progression: START begins the next level you have not cleared, the pad ends the level, and the map is four
+acts of eight.
+
+| Piece | What it does |
+| --- | --- |
+| `beginLevel(n)` | a row from `story-levels.js` dressed on its zone. One wave, one objective: `wavesTarget` is 1, so the pad ends the level instead of advancing to wave two |
+| progression | `progress.level` and `progress.levels` in the same record the zones use. A record written before 2.2 is repaired, not discarded — its zones survive and the campaign starts at level 1 |
+| the map | 32 rows in four acts, locked past the level you have reached, with the objective and the best score on each. It listed nine zones |
+| the cleared screen | `LEVEL 5 · The Cold Stores`, not `ZONE …`, and Next starts level 6 |
+| save and resume | the run carries its level. Two levels can share a zone, so the level — not the zone id — decides the seed and the objective on a resume |
+| modes | Campaign, Nightmare and Hardcore play the levels. Endless, Boss Rush, Arena and Daily still play zones, and a seed typed in the box still starts a zone |
+
+**What did not change:** the nine zones. They are the palette, the props and the threat each level is dressed
+in, and `?zone=` still plays one on its own — which is what the playability suite does, over six seeds each.
+
+**A test caught the pattern again.** The barrel assertions picked `barrels[0]` and fired along a ray that a
+nearer barrel could intercept: barrels are placed at random, so the assertion measured the layout. It is
+isolated to one barrel now, the same way the hitscan test keeps one enemy.
+
 ## 2.1.0 — 2026-11-23
 
 **The story moves off the wall and onto the screen.** Three of the four pieces the design brief asked for.

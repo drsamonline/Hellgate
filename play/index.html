@@ -351,6 +351,7 @@
     border-radius:3px;color:#e8dcc8;font-family:var(--mono);font-size:12px;cursor:pointer;transition:.15s}
   .zonerow:hover:not(.locked){border-color:#ffb454;background:#151219}
   .zonerow.locked{opacity:.42;cursor:not-allowed}
+.actrow{font-size:9px;letter-spacing:.3em;color:var(--amber);opacity:.75;margin:10px 2px 4px}
   .zonerow .zi{color:#ff3b30;letter-spacing:.1em}
   .zonerow .zn{letter-spacing:.18em;color:#ffb454}
   .zonerow .zb{color:#8d7f6c;font-size:11px}
@@ -644,7 +645,7 @@
         <button class="mode" id="modeGauntlet" data-mode="gauntlet">GAUNTLET</button>
         <button class="mode" id="modeDaily" data-mode="daily">DAILY</button>
       </div>
-      <p id="modeBlurb" class="modeblurb">Nine zones in order. Clear a zone to unlock the next.</p>
+      <p id="modeBlurb" class="modeblurb">Thirty-two levels in four acts. Clear one to unlock the next.</p>
       <div class="row">
         <button id="startBtn">Enter the gate</button>
       <button id="continueBtn" class="ghost" style="display:none"></button>
@@ -698,7 +699,7 @@
 
     <section id="map" class="screen">
       <h2>THE GATE</h2>
-      <p class="sub">nine zones · clear one to open the next</p>
+      <p class="sub">32 levels · four acts · clear one to open the next</p>
       <p id="mapHint" class="maphint"></p>
       <div id="zoneList" class="zonelist"></div>
       <button id="mapBack" class="ghost" style="margin-top:18px">Back</button>

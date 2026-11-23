@@ -67,7 +67,7 @@ Nothing here is a mockup or a composited image.
 | <img src="assets/combat.webp" alt="Shotgun blast, blood spray, tracers" /> **Shotgun** — 8 pellets, per-pellet damage falloff, blood decals | <img src="assets/rocket.webp" alt="Rocket explosion lighting the room" /> **Rocket** — splash damage, pooled particles, a real point light, screen shake |
 | <img src="assets/exit.webp" alt="Exit room with glowing pad" /> **Exit** — wave cleared, doors open, pad lit | <img src="assets/title.webp" alt="Title screen" /> **Title** — seed entry, best run from localStorage |
 | <img src="assets/intro.webp" alt="Story intro over a camera flythrough" /> **Cold open** — typed panels over the level you are about to play | <img src="assets/class.webp" alt="Class selection" /> **Class** — body, starting weapon, powers |
-| <img src="assets/map.webp" alt="World map with nine zones" /> **World map** — nine zones, clear one to open the next | <img src="assets/grove.webp" alt="Grove zone with trees, animals and enemies" /> **Grove** — trees, grass, animals, and the energy bar | <img src="assets/boss.webp" alt="The warden boss with its health bar" /> **The warden** — 620 hp, ground slam and a three-ball volley | <img src="assets/mobile.webp" alt="The game on a phone in portrait, with touch controls" /> **On a phone** — stick, look, tap to fire, six buttons | <img src="assets/status.webp" alt="The status panel: class, weapons, powers, buffs, zone" /> **Status** — `Tab`: class, weapons, powers, buffs, relics |
+| <img src="assets/map.webp" alt="World map with nine zones" /> **World map** — 32 levels in four acts, clear one to open the next | <img src="assets/grove.webp" alt="Grove zone with trees, animals and enemies" /> **Grove** — trees, grass, animals, and the energy bar | <img src="assets/boss.webp" alt="The warden boss with its health bar" /> **The warden** — 620 hp, ground slam and a three-ball volley | <img src="assets/mobile.webp" alt="The game on a phone in portrait, with touch controls" /> **On a phone** — stick, look, tap to fire, six buttons | <img src="assets/status.webp" alt="The status panel: class, weapons, powers, buffs, zone" /> **Status** — `Tab`: class, weapons, powers, buffs, relics |
 
 <img src="assets/map.svg" alt="Top-down view of a generated level" width="420" align="right" />
 
@@ -95,7 +95,7 @@ The picture on the right is rendered from the live generator by `tools/map.mjs`,
 
 **Feel** — Doom-style face that degrades with health · damage direction arrows · red edge vignette · weapon sway and bob · pooled particles, tracers, decals and lights (nothing allocates per shot).
 
-**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · nine zones with unlock progression, the last one a three-phase boss · an upgrade choice between zones · trinkets that drop from kills · a run saved at every wave and offered as Continue · a status panel on Tab · a relic side objective in every zone · wall terminals to read · timed damage and haste pickups · a story cold open · mobile touch controls.
+**RPG layer** — three classes with their own body, weapon and powers · five powers on an energy pool (dash, shockwave, ward, volley, bulwark) · a companion drone that follows and fights · 32 campaign levels in four acts, each with one objective, the last a three-phase boss · nine zones that dress them · an upgrade choice between zones · trinkets that drop from kills · a run saved at every wave and offered as Continue · a status panel on Tab · a relic side objective in every zone · wall terminals to read · timed damage and haste pickups · a story cold open · mobile touch controls.
 
 **Meta** — seeded maps · three difficulty presets · score with a per-wave time bonus · wave difficulty curve · procedural pickups · keycard gate · title / pause / game-over screens · best run in `localStorage`.
 
@@ -117,7 +117,7 @@ play/src/hud.js       face, counters, crosshair, damage arrows
 play/src/audio.js     WebAudio synth — no samples
 play/src/classes.js   three classes: body, starting weapon, power set
 play/src/powers.js    energy pool, five powers, cooldowns
-play/src/world.js     nine zones, unlock progression, best score per zone
+play/src/world.js     nine zones, level and zone progression, best score per level
 play/src/story-levels.js  the campaign: 32 rows of id, seed, shape and objective
 play/src/story.js     the cold open: typed panels over a camera flythrough
 play/src/props.js     instanced trees, rocks and grass; animals that bolt

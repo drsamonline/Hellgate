@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.1.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.2.0**, 2026-11-23.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.1.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 101, `v1.0.0` → `v2.1.0` |
+| Version | 2.2.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 102, `v1.0.0` → `v2.2.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 885 playability + 650 in the other three suites |
+| Assertions | 885 playability + 671 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -135,6 +135,17 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The campaign, and what a level is
+
+- **A level is a row in `story-levels.js`, not a zone.** `beginLevel(n)` dresses the row on its base zone and
+  sets `wavesTarget = 1`: one wave, one objective, and the pad ends the level. `game.level` is 0 for a zone run.
+- **Two levels can share a zone**, so a save carries `level`, and `resumeRun()` resolves the zone from the
+  level. Reading the zone id back instead gives level 12 the wrong seed.
+- **`progress` holds both**: `unlocked`/`cleared`/`best` for zones, `level`/`levels` for the campaign. An old
+  record has no `level`, and `loadProgress()` repairs it rather than throwing it away.
+- **The modes that play levels say so**: `levels: true` on campaign, nightmare and hardcore. A seed typed in
+  the box still starts a zone, which is how the playability suite plays nine zones over six seeds each.
 
 ### The objective gate
 
