@@ -94,18 +94,29 @@ for (const seed of seeds) {
       // The ramp must climb the whole cell and land on the floor it joins. It
       // used to interpolate over the far half only, so the last step was rise/2
       // — past MAX_STEP for any band taller than a metre, i.e. a wall to walk up.
+      // Sample strictly inside the cell. A sample exactly on the boundary rounds
+      // into the neighbour and reads ITS floor, which is how a correct ramp next
+      // to a lower cell failed this check with a 0.56 m "step" that was the test's
+      // own artefact. The ramp still has to climb the whole cell, so the peak is
+      // checked against its own high end instead of against the neighbour.
       const N = 20;
       let prev = null;
       let worst = 0;
+      let peak = -1e9;
       for (let i = 0; i <= N; i++) {
-        const t = i / N;
+        const t = 0.02 + (i / N) * 0.96;
         const wx = c.stair === 'x' ? (c.x - 0.5 + t) * CELL : c.x * CELL;
         const wz = c.stair === 'z' ? (c.z - 0.5 + t) * CELL : c.z * CELL;
         const h = floorHeightAt(L, wx, wz);
+        peak = Math.max(peak, h);
         if (prev !== null) worst = Math.max(worst, Math.abs(h - prev));
         prev = h;
       }
       if (worst > MAX_STEP + 1e-6) bad(seed, 'stair ramp steps ' + worst.toFixed(2) + ' m in one sample');
+      const top = Math.max(c.stairLow, c.stairHigh);
+      if (Math.abs(peak - top) > 0.08 * Math.abs(c.stairHigh - c.stairLow) + 0.02) {
+        bad(seed, 'stair ramp reaches ' + peak.toFixed(2) + ' of ' + top.toFixed(2) + ', so it does not climb the whole cell');
+      }
       for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const n = L.cells[(c.z + dz) * L.W + (c.x + dx)];
         if (!n || n.solid || !n.platform) continue;
