@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.28.0 — 2026-11-24
+
+**Every enemy in the campaign was an imp.** A campaign level is one wave, and `spawnWave` picked its bodies by wave
+number — grunts at wave 2, hounds at 4, everything at 6. Wave 1 means imps, so all 32 levels were imps, and the
+variety the game has had since 1.9x was unreachable in the campaign.
+
+| Act | Roster | Mean body hp at that act's threat |
+| --- | --- | --- |
+| I | imp | 44 |
+| II | imp, grunt, wisp | 50 |
+| III | imp, grunt, hound, spitter | 54 |
+| IV | imp, grunt, hound, spitter, brute, stalker | 88 |
+
+| Piece | What it does |
+| --- | --- |
+| `ROSTER_FOR_ACT` | the act decides what walks at you, in `story-levels.js` beside the boss table |
+| `spawnWave({ roster })` | takes the list from the caller; the wave-number ladder stays for endless and boss-rush |
+| each act adds | act II adds grunt and wisp, act III hound and spitter, act IV brute and stalker — asserted |
+| the balance report | its enemy table was a four-entry mirror; it imports the real `TYPES` now, and prints the roster's mean health beside the imp's |
+
+Act IV's first wave is now 11 bodies with a mean of 88 hp rather than 99-hp imps: a mix is harder than a rank of
+the same thing, because a brute soaks a shotgun and a stalker does not stand still.
+
 ## 2.27.1 — 2026-11-24
 
 **The four bosses are four fights, not four stat blocks.** 2.27.0 gave them different numbers; this asks them what

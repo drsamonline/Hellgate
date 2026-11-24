@@ -1833,6 +1833,41 @@ console.log('\n== one boss per act ==');
   }
 }
 
+console.log('\n== each act brings its own enemies ==');
+{
+  // A campaign level is one wave, so spawnWave's wave-number ladder never got
+  // past its first rung: every body in all 32 levels was an imp. The act decides
+  // the roster now.
+  const { ROSTER_FOR_ACT } = await import('../play/src/story-levels.js');
+  const kinds = (n) => {
+    HG.beginLevel(n, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    return new Set(HG.enemies.list.filter((e) => !(e.T && e.T.boss)).map((e) => e.type));
+  };
+  const act1 = kinds(1);
+  ok(act1.size >= 1 && [...act1].every((t) => ROSTER_FOR_ACT[1].includes(t)),
+    'act I sends what act I is for: ' + [...act1].join(', '));
+  const act3 = kinds(20);
+  ok([...act3].every((t) => ROSTER_FOR_ACT[3].includes(t)),
+    'act III sends its own: ' + [...act3].join(', '));
+  const act4 = kinds(29);
+  ok([...act4].every((t) => ROSTER_FOR_ACT[4].includes(t)),
+    'act IV sends its own: ' + [...act4].join(', '));
+  // and the rosters climb: every act's list is a superset of the one before it
+  for (const a of [2, 3, 4]) {
+    const prev = new Set(ROSTER_FOR_ACT[a - 1]);
+    const now = new Set(ROSTER_FOR_ACT[a]);
+    const added = [...now].filter((t) => !prev.has(t));
+    ok(added.length > 0, 'act ' + a + ' adds ' + added.join(', ') + ' to the roster');
+  }
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+}
+
 console.log('\n== the four bosses fight differently ==');
 {
   // data can be different and the fight identical. This puts each boss in line

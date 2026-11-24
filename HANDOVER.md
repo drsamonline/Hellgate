@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.27.1**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.28.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.27.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 131, `v1.0.0` → `v2.27.1` |
+| Version | 2.28.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 132, `v1.0.0` → `v2.28.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,14 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### What walks at you
+
+- **`ROSTER_FOR_ACT` in `story-levels.js`.** A campaign level is one wave, and `spawnWave` picked bodies by wave
+  number — so every enemy in all 32 levels was an imp, and six of the ten types were unreachable in the campaign.
+- **`spawnWave({ roster })`** takes the list from the caller. The wave-number ladder stays for endless and boss-rush.
+- **A mirrored table drifts.** The balance report carried a four-entry copy of `TYPES`; the bosses and rosters made
+  every entry past those four `undefined`. It imports the real table now.
 
 ### The four bosses
 

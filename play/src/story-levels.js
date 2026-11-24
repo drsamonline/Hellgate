@@ -26,6 +26,20 @@ import { ZONES } from './world.js';
 export const BOSS_FOR_ACT = { 1: 'warden', 2: 'cinder', 3: 'spine', 4: 'gate' };
 
 /**
+ * What walks towards you in each act.
+ *
+ * A campaign level is a single wave, so the wave-number ladder in `spawnWave`
+ * never reached past its first rung: all 32 levels were imps. The act decides
+ * the roster instead, and each act keeps the body it taught you to handle.
+ */
+export const ROSTER_FOR_ACT = {
+  1: ['imp'],
+  2: ['imp', 'imp', 'grunt', 'wisp'],
+  3: ['imp', 'grunt', 'grunt', 'hound', 'spitter'],
+  4: ['imp', 'grunt', 'hound', 'hound', 'spitter', 'brute', 'stalker'],
+};
+
+/**
  * What a level teaches the first time it is played, one line at a time.
  *
  * The brief's complaint was "games is bit boring", and a new player who does not

@@ -33,13 +33,9 @@ const DIFF = {
   hard: { hp: 1.3, dmg: 1.25, count: 1.3 },
 };
 
-// enemy table, mirrored from play/src/enemies.js TYPES
-const TYPES = {
-  imp: { hp: 55, damage: 15, attackCd: 2.1, melee: false },
-  grunt: { hp: 40, damage: 12, attackCd: 2.0, melee: true },
-  hound: { hp: 22, damage: 11, attackCd: 1.4, melee: true },
-  warden: { hp: 620, damage: 26, attackCd: 2.3, melee: true },
-};
+// the real enemy table, imported: this used to be a four-entry mirror, and the
+// four act bosses and the act rosters made every entry past those four undefined
+const { TYPES } = await import('../play/src/enemies.js');
 
 const { ZONES } = await import('../play/src/world.js');
 
@@ -127,7 +123,8 @@ for (let wave = 1; wave <= 8; wave++) {
 if (process.argv[2] === 'acts' || !zoneArg) {
   const PLAYER_HP = 110;
   console.log('the ladder — the first wave of each act\n');
-  console.log('act  level  zone        enemies  hp each  damage per hit  hits to kill  standing-still hp');
+  const { ROSTER_FOR_ACT } = await import('../play/src/story-levels.js');
+  console.log('act  level  zone        enemies  hp each  damage per hit  hits to kill  roster mean hp  standing-still hp');
   for (const act of [1, 2, 3, 4]) {
     const row = STORY_LEVELS.find((r) => r.act === act);
     const lz = storyLevelZone(row);
@@ -140,10 +137,13 @@ if (process.argv[2] === 'acts' || !zoneArg) {
     const hits = Math.ceil(PLAYER_HP / perHit);
     const incoming = n * (TYPES.imp.damage / TYPES.imp.attackCd) * d.dmg;
     const secs = (impHp * n) / dps(weapon('shotgun'));
+    // the roster is what actually walks at you; the imp column is the yardstick
+    const roster = ROSTER_FOR_ACT[act] || ['imp'];
+    const meanHp = roster.reduce((a, t) => a + Math.round(TYPES[t].hp * d.hp), 0) / roster.length;
     console.log(
       String(act).padEnd(5) + String(row.n).padEnd(7) + String(row.zone).padEnd(12) +
       String(n).padEnd(9) + String(impHp).padEnd(9) + String(perHit).padEnd(16) +
-      String(hits).padEnd(14) + Math.round(incoming * secs)
+      String(hits).padEnd(14) + String(Math.round(meanHp)).padEnd(16) + Math.round(incoming * secs)
     );
   }
   console.log('\n  "hits to kill" is an imp landing one hit on a player with 110 hp and no armour.');

@@ -27,7 +27,7 @@ import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, clearLevel, isUnlocked, isLevelUnlocked } from './world.js';
-import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS, BOSS_FOR_ACT } from './story-levels.js';
+import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS, BOSS_FOR_ACT, ROSTER_FOR_ACT } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
@@ -958,6 +958,9 @@ function startWave(n) {
   enemies.spawnWave(n, player.pos, {
     boss: mode.bossRush || !!zone.boss || bossLevel,
     bossType: BOSS_FOR_ACT[game.bossAct || 1],
+    // the act decides what walks towards you: a level is one wave, so the
+    // wave-number ladder inside spawnWave never got past imps in the campaign
+    roster: game.bossAct ? ROSTER_FOR_ACT[game.bossAct] : null,
     waves: game.wavesTarget,
   });
   spawnPickups(n);
@@ -3145,7 +3148,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.27.1';
+const BUILD = '2.28.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

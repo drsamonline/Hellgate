@@ -1295,9 +1295,13 @@ export class EnemyManager {
 
     for (let i = 0; i < count; i++) {
       const c = pool[Math.floor(simRand() * pool.length)];
-      // wave 2 brings grunts, wave 4 brings hounds; after that it is a mix
+      // A campaign level is ONE wave, so the wave-number ladder below never
+      // fired for any of the 32 levels: every enemy in the campaign was an imp.
+      // The caller can hand a roster instead, and main.js hands the act's.
       let type = 'imp';
-      if (wave >= 6 && i % 11 === 10) type = 'stalker';
+      if (opts.roster && opts.roster.length) {
+        type = opts.roster[Math.floor(simRand() * opts.roster.length)];
+      } else if (wave >= 6 && i % 11 === 10) type = 'stalker';
       else if (wave >= 5 && i % 9 === 8) type = 'brute';
       else if (wave >= 2 && i % 5 === 4) type = 'wisp';
       else if (wave >= 4 && i % 5 === 3) type = 'spitter';
