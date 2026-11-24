@@ -29,6 +29,30 @@ export const TYPES = {
     melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN', pitch: 0.55, voice: 0.5,
     boss: true,
   },
+  // ---- the four act bosses -------------------------------------------------
+  // One per act, each built from a rule that act already taught, so the last
+  // level of an act is a test of the thing the eight before it taught.
+  cinder: {
+    hp: 700, speed: 1.6, radius: 1.0, height: 2.8, hitRadius: 1.35,
+    attackRange: 26, attackCd: 1.9, telegraph: 0.8, damage: 16,
+    melee: true, meleeRange: 3.2, meleeDamage: 22, sight: 34, color: 0xc2401a,
+    label: 'CINDER', pitch: 0.62, voice: 0.55, boss: true, lob: true,
+    lobDamage: 24,
+  },
+  spine: {
+    hp: 780, speed: 2.0, radius: 1.05, height: 3.1, hitRadius: 1.4,
+    attackRange: 3.4, attackCd: 1.6, telegraph: 0.6, damage: 20,
+    melee: true, meleeRange: 3.4, meleeDamage: 30, sight: 40, color: 0x8a2b6a,
+    label: 'SPINE', pitch: 0.5, voice: 0.45, boss: true,
+    charges: true, chargeSpeed: 9.5,
+  },
+  gate: {
+    hp: 900, speed: 1.7, radius: 1.1, height: 3.4, hitRadius: 1.5,
+    attackRange: 22, attackCd: 2.0, telegraph: 0.75, damage: 22,
+    melee: true, meleeRange: 3.6, meleeDamage: 34, sight: 36, color: 0x3a1020,
+    label: 'THE GATE', pitch: 0.42, voice: 0.4, boss: true, lob: true,
+    lobDamage: 28, charges: true, chargeSpeed: 8,
+  },
   hound: {
     hp: 22, speed: 4.4, radius: 0.64, height: 1.05, hitRadius: 0.45,
     attackRange: 2.4, attackCd: 0.9, telegraph: 0.25, damage: 9,
@@ -871,7 +895,8 @@ export class Enemy {
       const flat = Math.hypot(to.x - from.x, to.z - from.z);
       const dir = new THREE.Vector3(to.x - from.x, 0, to.z - from.z).normalize();
       projectiles.spawn('acid', new THREE.Vector3(from.x, from.y + 0.3, from.z), dir, {
-        damage: this.damage,
+        // a boss lobs something heavier than the imp's
+        damage: this.T.lobDamage || this.damage,
         owner: 'enemy',
         vy: 2.2 + flat * 0.28,
       });
@@ -1312,7 +1337,7 @@ export class EnemyManager {
       });
       const c = (roomy.length ? roomy : pool)[Math.floor(simRand() * (roomy.length || pool.length))];
       const pos = new THREE.Vector3(c.wx, 0, c.wz);
-      const boss = new Enemy('warden', pos, wave, this.scene, { diff });
+      const boss = new Enemy(opts.bossType || 'warden', pos, wave, this.scene, { diff });
       boss.pos.y = floorHeightAt(this.level, pos.x, pos.z);
       boss.mesh.position.y = boss.pos.y;
       this.list.push(boss);

@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.27.0 — 2026-11-24
+
+**One boss per act.** The campaign had one boss and it was hardcoded: `spawnWave` built a `'warden'` and the entrance
+cinematic said `THE WARDEN` whoever walked in. Four acts now end on four different fights, each built from a rule the
+act before it taught.
+
+| Act | Level | Boss | Health | The rule it tests |
+| --- | --- | --- | --- | --- |
+| I | 8 | **WARDEN** | 620 | the brute you spend eight levels learning to circle |
+| II | 16 | **CINDER** | 700 | it lobs the arcs the kiln taught you to sidestep |
+| III | 24 | **SPINE** | 780 | it charges the way the hounds do |
+| IV | 32 | **THE GATE** | 900 | all three at once |
+
+| Piece | What it does |
+| --- | --- |
+| three new types | `cinder` (lobs, heavier arc), `spine` (charges at 9.5 m/s), `gate` (lobs and charges) — each a boss with its own colour, height and hit radius |
+| `BOSS_FOR_ACT` | act → type, in `story-levels.js` beside the level table |
+| the level flag | `boss: true` on levels 8, 16, 24 and 32 — the act endings, not every level dressed in a boss zone |
+| the entrance | the cinematic now says the boss's own name and `ACT n ENDS`, instead of always `THE WARDEN` |
+| the lob | a boss lobs for `lobDamage` (24 / 28) rather than the imp's 15 |
+| the bestiary | it counts `Object.keys(TYPES).length`, so the four new bodies did not silently make "kill every type" easier |
+
 ## 2.26.0 — 2026-11-24
 
 **The first five minutes, walked and asserted.** The last item of harden-and-ship that does not need you.

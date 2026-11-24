@@ -27,7 +27,7 @@ import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, clearLevel, isUnlocked, isLevelUnlocked } from './world.js';
-import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS } from './story-levels.js';
+import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS, BOSS_FOR_ACT } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
@@ -619,6 +619,11 @@ function buildRun(seed, zoneDef, fresh = false) {
     : game.level ? 1                                   // a level is one objective, not three waves
       : (zone.boss ? 4 : 3);
   if (game.level) game.storyLevel = game.level;
+  // the act's own boss, on the act's own last level: the story table carries the
+  // flag, so a level dressed in a boss zone is not automatically a boss fight
+  const row = game.level ? storyLevel(game.level) : null;
+  game.bossLevel = !!(row && row.boss);
+  game.bossAct = row ? row.act : 0;
   game.bossSeen = false;
   // a level gated on relics must have some even if the zone forgot a count: an
   // objective with nothing to break is a door that never opens
@@ -948,7 +953,13 @@ function startWave(n) {
   clearPickups();
   enemies.clear(); // defensive: a wave always starts from an empty arena
   const mode = MODES[game.mode] || MODES.campaign;
-  enemies.spawnWave(n, player.pos, { boss: mode.bossRush || !!zone.boss, waves: game.wavesTarget });
+  // the last level of each act is a boss level, and the boss is that act's own
+  const bossLevel = game.bossLevel === true;
+  enemies.spawnWave(n, player.pos, {
+    boss: mode.bossRush || !!zone.boss || bossLevel,
+    bossType: BOSS_FOR_ACT[game.bossAct || 1],
+    waves: game.wavesTarget,
+  });
   spawnPickups(n);
   if (n >= 3) spawnKeycard();
   saveRun();
@@ -969,8 +980,9 @@ function startWave(n) {
       requestLock();
       clock.getDelta();
     };
-    const title = 'THE WARDEN';
-    const line = zone.name + ' · ' + game.wave + ' of ' + game.wavesTarget;
+    // the boss's own name, not the warden's: four acts, four entrances
+    const title = (boss.T && boss.T.label) || 'A BOSS';
+    const line = (game.bossLevel ? 'ACT ' + game.bossAct + ' ENDS' : zone.name) + ' · ' + game.wave + ' of ' + game.wavesTarget;
     const path = bossApproach(boss);
     if (!path || !cinematic.playWalk(path, {
       title,
@@ -3133,7 +3145,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.26.0';
+const BUILD = '2.27.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

@@ -16,6 +16,16 @@
 import { ZONES } from './world.js';
 
 /**
+ * Which boss closes each act.
+ *
+ * One per act, each built from a rule the act already taught: the warden is the
+ * brute act I spends eight levels teaching you to circle, the cinder lobs the
+ * arcs act II's kiln taught you to sidestep, the spine charges the way act III's
+ * hounds do, and the gate does all three.
+ */
+export const BOSS_FOR_ACT = { 1: 'warden', 2: 'cinder', 3: 'spine', 4: 'gate' };
+
+/**
  * What a level teaches the first time it is played, one line at a time.
  *
  * The brief's complaint was "games is bit boring", and a new player who does not
@@ -81,7 +91,7 @@ export const STORY_LEVELS = [
   { n: 7, id: 'the-flood-line', act: 1, title: 'The Flood Line', zone: 'cistern', seed: 'l07-cistern-449',
     shape: { rooms: [8, 11], size: [5, 8], tall: 0.15 }, objective: { type: 'reach' } },
   { n: 8, id: 'the-warden', act: 1, title: 'The Warden', zone: 'ashfall', seed: 'l08-ashfall-457',
-    shape: { rooms: [9, 12], size: [5, 8], tall: 0.4 }, objective: { type: 'clear' } },
+    shape: { rooms: [9, 12], size: [5, 8], tall: 0.4 }, objective: { type: 'clear' }, boss: true },
 
   // ---- act II — down the kiln road --------------------------------------
   { n: 9, id: 'kiln-road', act: 2, title: 'Kiln Road', zone: 'kiln', seed: 'l09-kiln-503',
@@ -99,7 +109,7 @@ export const STORY_LEVELS = [
   { n: 15, id: 'holding-pattern', act: 2, title: 'Holding Pattern', zone: 'ashfall', seed: 'l15-ashfall-552',
     shape: { rooms: [10, 13], size: [6, 9], tall: 0.4 }, objective: { type: 'survive', time: 80 } },
   { n: 16, id: 'the-first-relic', act: 2, title: 'The First Relic', zone: 'vault', seed: 'l16-vault-561',
-    shape: { rooms: [11, 14], size: [6, 9], tall: 0.4 }, objective: { type: 'relics', relics: 4 } },
+    shape: { rooms: [11, 14], size: [6, 9], tall: 0.4 }, objective: { type: 'relics', relics: 4 }, boss: true },
 
   // ---- act III — the spine, and what it holds up ------------------------
   { n: 17, id: 'spine-foot', act: 3, title: 'Spine Foot', zone: 'spine', seed: 'l17-spine-607',
@@ -117,7 +127,7 @@ export const STORY_LEVELS = [
   { n: 23, id: 'ash-clock', act: 3, title: 'Ash Clock', zone: 'ashfall', seed: 'l23-ashfall-656',
     shape: { rooms: [7, 11], size: [6, 9], tall: 0.5 }, objective: { type: 'survive', time: 90 } },
   { n: 24, id: 'the-hinge', act: 3, title: 'The Hinge', zone: 'throne', seed: 'l24-throne-665',
-    shape: { rooms: [7, 11], size: [6, 9], tall: 0.55 }, objective: { type: 'clear' } },
+    shape: { rooms: [7, 11], size: [6, 9], tall: 0.55 }, objective: { type: 'clear' }, boss: true },
 
   // ---- act IV — the throne ---------------------------------------------
   { n: 25, id: 'the-antecourt', act: 4, title: 'The Antecourt', zone: 'throne', seed: 'l25-throne-701',
@@ -135,7 +145,7 @@ export const STORY_LEVELS = [
   { n: 31, id: 'the-last-minute', act: 4, title: 'The Last Minute', zone: 'ashfall', seed: 'l31-ashfall-751',
     shape: { rooms: [6, 9], size: [7, 10], tall: 0.6 }, objective: { type: 'survive', time: 100 } },
   { n: 32, id: 'the-throne', act: 4, title: 'The Throne', zone: 'throne', seed: 'l32-throne-759',
-    shape: { rooms: [6, 9], size: [7, 10], tall: 0.7 }, objective: { type: 'clear' } },
+    shape: { rooms: [6, 9], size: [7, 10], tall: 0.7 }, objective: { type: 'clear' }, boss: true },
 ];
 
 // one lookup table, built on first use: the campaign is read, not walked

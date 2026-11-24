@@ -14,6 +14,8 @@
 // table (same licence), rewritten against this game's state.
 // ---------------------------------------------------------------------------
 
+import { TYPES } from './enemies.js';
+
 const KEY = 'hellgate.achievements';
 
 /**
@@ -42,7 +44,9 @@ export const ACHIEVEMENTS = [
   { id: 'relic', name: 'RELIC HUNTER', desc: 'Collect every relic in a zone', check: (r) => r.relic === true },
   { id: 'rich', name: 'DEEP POCKETS', desc: 'Score 10,000 in one run', check: (r) => r.score >= 10000 },
   { id: 'survivor', name: 'SURVIVOR', desc: 'Finish a run without dying', check: (r, h) => r.survived === true },
-  { id: 'bestiary', name: 'BESTIARY', desc: 'Kill every enemy type at least once', check: (r, h) => h.types >= 8 },
+  // derived, not hardcoded: four act bosses took the type count from eight to
+  // eleven, and an achievement that says "every type" must mean every type
+  { id: 'bestiary', name: 'BESTIARY', desc: 'Kill every enemy type at least once', check: (r, h) => h.types >= Object.keys(TYPES).length },
 ];
 
 /** A fresh history. */

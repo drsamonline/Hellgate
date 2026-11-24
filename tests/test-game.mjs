@@ -1796,6 +1796,43 @@ console.log('\n== a long toast wraps instead of running off the screen ==');
   ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
 }
 
+console.log('\n== one boss per act ==');
+{
+  const { BOSS_FOR_ACT, STORY_LEVELS } = await import('../play/src/story-levels.js');
+  const { TYPES } = await import('../play/src/enemies.js');
+  // four acts, four bosses, each one a type that exists and is marked as a boss
+  const acts = [1, 2, 3, 4];
+  ok(acts.every((a) => !!BOSS_FOR_ACT[a]), 'every act has a boss: ' + acts.map((a) => BOSS_FOR_ACT[a]).join(', '));
+  ok(new Set(acts.map((a) => BOSS_FOR_ACT[a])).size === 4, 'and they are four different bodies');
+  for (const a of acts) {
+    const T = TYPES[BOSS_FOR_ACT[a]];
+    ok(!!T && T.boss === true, 'act ' + a + '\'s boss is a boss type (' + BOSS_FOR_ACT[a] + ')');
+  }
+  // tougher each act, or the ladder is a lie
+  const hp = acts.map((a) => TYPES[BOSS_FOR_ACT[a]].hp);
+  ok(hp.every((h, i) => i === 0 || h > hp[i - 1]), 'each act\'s boss has more health: ' + hp.join(' < '));
+
+  // the last level of each act is a boss level, and nothing else is
+  const bossLevels = STORY_LEVELS.filter((r) => r.boss).map((r) => r.n);
+  ok(bossLevels.join(',') === '8,16,24,32', 'the act endings are the boss levels: ' + bossLevels.join(', '));
+
+  // and the level actually spawns that boss
+  for (const n of [8, 16, 24, 32]) {
+    HG.beginLevel(n, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    const boss = HG.enemies.list.find((e) => e.T && e.T.boss);
+    const want = BOSS_FOR_ACT[Math.ceil(n / 8)];
+    ok(!!boss, 'level ' + n + ' spawns a boss');
+    ok(boss && boss.type === want, 'and it is the ' + want + ' (' + (boss && boss.type) + ')');
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+  }
+}
+
 console.log('\n== the first run, walked ==');
 {
   // title -> start -> intro -> class -> playing, driven by the game's own
