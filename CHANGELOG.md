@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.20.0 — 2026-11-24
+
+Two things from play: **"the intro still cuts through walls"** and **"the guns are in side views … it seems
+sideways"**. Both were true, and both were mine.
+
+| Bug | What it was |
+| --- | --- |
+| the intro flew through walls | `Story.start()` lerped the camera between the three biggest room centres and the exit — a straight chord between two rooms crosses whatever stands between them. It follows `campath.js` now, the same flow field the enemies use, with the doors opened for the path so the camera flies the level as it will be |
+| the guns were side-on | the sprites were drawn in **profile**: a silhouette of a gun lying across the canvas. A first-person weapon points up the screen — the muzzle at the top, the receiver filling the bottom, the barrel short because you are looking down it |
+
+**The third gun pass.** The barrel is a tube now, not a slab: five vertical bands from a lit left edge to a
+shadowed right one, a muzzle ring at the far end, and the art drawn at 78% and pushed into the corner so it sits
+in the frame like a view model instead of filling it.
+
+**What it still is:** functional art, not good art. A pistol, a shotgun, a chaingun and a rocket launcher that read
+as themselves at a glance, in the game's palette, drawn in code. If it wants a fourth pass, it wants one from
+someone who can see it while drawing — every judgement here was made from a screenshot after the fact.
+
 ## 2.19.0 — 2026-11-24
 
 **A level teaches the first time you play it.** The brief's complaint was "games is bit boring", and a player who

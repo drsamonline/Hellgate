@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.19.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.20.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.19.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 122, `v1.0.0` → `v2.19.0` |
+| Version | 2.20.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 123, `v1.0.0` → `v2.20.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,15 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Two cameras, and one rule for both
+
+- **A camera follows the floor.** The intro used to lerp between room centres — a chord through walls. It uses
+  `buildCameraPath()` now, and a test samples its whole length and fails on any point that lands in a solid cell.
+  `Story.start()` opens the doors for the path build and closes them again: the camera flies the level as it will
+  be, not as it is in the half-second before a wave.
+- **A first-person gun points up the screen.** The first two sprite passes drew a profile silhouette, which reads
+  as a gun lying on the floor. Muzzle at the top, receiver filling the bottom, barrel short and shaded as a tube.
 
 ### Teaching, and the widest text in the game
 

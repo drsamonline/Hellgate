@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
+import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { CELL } from './level.js';
 
 // One cold open per zone, so five levels read as five places and not one arena
@@ -124,7 +125,10 @@ export class Story {
     this.panel = 0;
     this.done = false;
 
-    // a slow arc through the biggest rooms, ending above the exit
+    // The flythrough used to be a straight chord between the three biggest
+    // rooms and the exit, which is a camera through walls: a chord between two
+    // room centres crosses whatever is between them. It follows the level's own
+    // walkable path now, the same flow field the enemies use, so it cannot.
     const rooms = level.rooms
       .slice()
       .sort((a, b) => b.w * b.h - a.w * a.h)
@@ -132,6 +136,16 @@ export class Story {
     const pts = rooms.map((r) => new THREE.Vector3(r.cx * CELL, 2.4, r.cz * CELL));
     pts.push(new THREE.Vector3(level.exit.x, 2.2, level.exit.z));
     this.path = pts;
+    this.camPath = null;
+    if (rooms.length) {
+      // the doors are shut during the intro; the camera flies the level as it
+      // will be, not as it is in the half-second before a wave
+      const wasOpen = level.doorOpen;
+      level.doorOpen = true;
+      const from = { x: rooms[0].cx * CELL, z: rooms[0].cz * CELL };
+      this.camPath = buildCameraPath(level, from, { x: level.exit.x, z: level.exit.z }, { eye: 2.2 });
+      level.doorOpen = wasOpen;
+    }
 
     const total = this.panels.reduce((a, p) => a + p.hold, 0);
     this.total = total;
@@ -146,20 +160,29 @@ export class Story {
     if (this.done || !this.camera || !this.path.length) return;
     this.t += dt;
 
-    // camera: walk the polyline, looking one segment ahead
+    // camera: along the walkable path when there is one, and the old chord when
+    // there is not (a level with no route from the first room to the exit)
     const u = Math.min(1, this.t / this.duration);
-    const segs = this.path.length - 1;
-    const f = u * segs;
-    const i = Math.min(segs - 1, Math.floor(f));
-    const k = f - i;
-    const a = this.path[i];
-    const b = this.path[i + 1];
-    const pos = a.clone().lerp(b, k);
-    pos.y = 2.2 + Math.sin(this.t * 0.7) * 0.25;
-    this.camera.position.copy(pos);
-    const look = b.clone();
-    look.y = 1.1;
-    this.camera.lookAt(look);
+    if (this.camPath) {
+      const d = u * this.camPath.length;
+      const p = sampleCameraPath(this.camPath, d);
+      this.camera.position.set(p.x, p.y + Math.sin(this.t * 0.7) * 0.2, p.z);
+      const ahead = sampleCameraPath(this.camPath, Math.min(this.camPath.length, d + 3));
+      this.camera.lookAt(new THREE.Vector3(ahead.x, ahead.y - 1.1, ahead.z));
+    } else {
+      const segs = this.path.length - 1;
+      const f = u * segs;
+      const i = Math.min(segs - 1, Math.floor(f));
+      const k = f - i;
+      const a = this.path[i];
+      const b = this.path[i + 1];
+      const pos = a.clone().lerp(b, k);
+      pos.y = 2.2 + Math.sin(this.t * 0.7) * 0.25;
+      this.camera.position.copy(pos);
+      const look = b.clone();
+      look.y = 1.1;
+      this.camera.lookAt(look);
+    }
 
     // panels
     let acc = 0;

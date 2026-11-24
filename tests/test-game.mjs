@@ -1796,6 +1796,27 @@ console.log('\n== a long toast wraps instead of running off the screen ==');
   ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
 }
 
+console.log('\n== the intro camera follows the floor ==');
+{
+  // the cold open used to lerp between room centres: a straight chord through
+  // whatever stands between them. It walks the level's own path now.
+  HG.beginLevel(1, true);
+  const st = HG.story;
+  st.start(HG.camera, HG.level, () => {}, HG.zone.id);
+  ok(!!st.camPath && st.camPath.points.length > 4,
+    'the intro builds a walkable path (' + (st.camPath ? st.camPath.points.length : 0) + ' points)');
+  let bad = 0;
+  const total = st.camPath ? st.camPath.length : 0;
+  for (let d = 0; d <= total; d += 0.5) {
+    const p = st.camPath ? HG.samplePath(st.camPath, d) : null;
+    if (!p) { bad++; continue; }
+    const c = HG.cellAt(HG.level, p.x, p.z);
+    if (!c || c.solid) bad++;
+  }
+  ok(bad === 0, 'and never leaves the floor (' + bad + ' bad of ' + Math.round(total * 2) + ' samples)');
+  st.skip();
+}
+
 console.log('\n== a level teaches the first time ==');
 {
   // a level you have not cleared queues its hints; one you have cleared does not
