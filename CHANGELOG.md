@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.12.0 — 2026-11-24
+
+**The replay reaches the player.** 2.11.0 made a run reproducible; this gives you the run. `Copy replay` on the
+death and cleared screens puts the JSON on the clipboard (or saves it as `hellgate-<seed>-<frames>.json`),
+`Watch a replay` on the title loads one back, and `?play=1` plays the last one copied.
+
+| Piece | What it does |
+| --- | --- |
+| `copyReplay()` | clipboard if the page has one, a download if not, and it keeps a copy in `localStorage` so `?play=1` has something to play |
+| `watchReplay(json)` | reads the meta, starts that level fresh, picks that class, and hands the frames to the loop |
+| `replayFileName()` | `hellgate-l02-gate-412-60.json` — the seed and the frame count, so two files never collide |
+
+**And a hole this found: the cleared screen had no Next button.** The handler for `#clearedNext` has been
+attached since 2.2.0 to an id that is not in the page — `?.addEventListener` made it a silent no-op, so "Next
+starts level 6" was a changelog line for a button nobody could press. It exists now, and it works.
+
 ## 2.11.0 — 2026-11-24
 
 **A run is reproducible.** `?rec=1` records the input stream and the seed; `HG.replayJSON()` hands you the run as

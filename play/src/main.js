@@ -2940,6 +2940,19 @@ document.getElementById('startBtn').addEventListener('click', () => {
   beginZone(z);
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
+// the replay: a copy from the death and cleared screens, and a file to watch
+document.getElementById('replayBtn')?.addEventListener('click', () => copyReplay());
+document.getElementById('replayBtnCleared')?.addEventListener('click', () => copyReplay());
+document.getElementById('watchBtn')?.addEventListener('click', () => document.getElementById('replayFile').click());
+document.getElementById('replayFile')?.addEventListener('change', (e) => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    if (!watchReplay(String(reader.result))) hud.toast('NOT A REPLAY', 2);
+  };
+  reader.readAsText(f);
+});
 // the level select: the map, from the title, before a run exists
 document.getElementById('levelSelectBtn')?.addEventListener('click', () => {
   mapReturn = 'title';
@@ -3000,7 +3013,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.11.0';
+const BUILD = '2.12.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3201,6 +3214,70 @@ function startRecording() {
 /** The replay of the run so far, as a string, or null when nothing is recorded. */
 function replayJSON() {
   return recorder ? recorder.toJSON() : null;
+}
+
+/** What the file is called: the zone, the seed and the number of frames. */
+function replayFileName() {
+  const r = recorder;
+  const seed = (r && r.meta.seed) || game.seed || 'run';
+  const n = (r && r.frames.length) || 0;
+  return 'hellgate-' + String(seed).replace(/[^a-z0-9-]/gi, '') + '-' + n + '.json';
+}
+
+/**
+ * Hand the replay to the player: the clipboard if there is one, a download if
+ * not. A bug report is a sentence; this makes it the run.
+ * @returns {string} 'copied' | 'saved' | 'none'.
+ */
+function copyReplay() {
+  const json = replayJSON();
+  if (!json) {
+    hud.toast('NO REPLAY RECORDED', 1.6);
+    return 'none';
+  }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json);
+      try { localStorage.setItem('hellgate.replay', json); } catch (e) { /* private mode */ }
+      hud.toast('REPLAY COPIED  ·  ' + (json.length / 1024).toFixed(1) + ' KB', 2.4);
+      return 'copied';
+    }
+  } catch (e) { /* fall through to the download */ }
+  try {
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = replayFileName();
+    a.click();
+    URL.revokeObjectURL(url);
+    hud.toast('REPLAY SAVED  ·  ' + replayFileName(), 2.4);
+    return 'saved';
+  } catch (e) {
+    hud.toast('COULD NOT SAVE THE REPLAY', 2);
+    return 'none';
+  }
+}
+
+/**
+ * Start a run from a replay file and hand the frames to the loop.
+ * @param {string} json From `replayJSON()`.
+ * @returns {boolean} True when the replay is playing.
+ */
+function watchReplay(json) {
+  let meta = {};
+  try { meta = (JSON.parse(json).meta) || {}; } catch (e) { return false; }
+  if (meta.level) beginLevel(meta.level, true);
+  else beginZone(zoneById(meta.zone || ZONES[0].id), 0, true);
+  story.skip();
+  chooseClass(meta.classId || game.classId);
+  dialogue.stop();
+  cinematic.stop();
+  game.state = 'playing';
+  if (!loadReplay(json)) return false;
+  hud.setVisible(true);
+  note('replay: ' + (meta.seed || '?'));
+  return true;
 }
 
 /**
@@ -3458,6 +3535,13 @@ function applyUrlOverrides() {
   if (p.get('nohud') === '1') hud.setVisible(false);
   // ?rec=1 records this run; the replay is on `HG.replayJSON()` when it ends
   if (p.get('rec') === '1') startRecording();
+  // ?play=1 plays the replay left in localStorage by the last copy
+  if (p.get('play') === '1') {
+    try {
+      const saved = localStorage.getItem('hellgate.replay');
+      if (saved) watchReplay(saved);
+    } catch (e) { /* private mode */ }
+  }
   return true;
 }
 
@@ -3519,7 +3603,7 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
-  startRecording, replayJSON, loadReplay, stateHash, simDraws,
+  startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
   get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,

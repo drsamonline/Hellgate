@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.11.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.12.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.11.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 112, `v1.0.0` → `v2.11.0` |
+| Version | 2.12.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 113, `v1.0.0` → `v2.12.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 754 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -137,6 +137,10 @@ idempotent and it is the only place stats are computed. Anything that "adjusts" 
 wiped by the next call.
 
 ### Replay, and what determinism costs
+
+- **`?.addEventListener` on an id that is not in the page is a silent no-op.** `#clearedNext` was wired at 2.2.0
+  and did not exist in the markup until 2.12.0, so a changelog line described a button nobody could press. Grep
+  the id in `play/index.html` before believing a handler.
 
 - **Every random number that changes the world draws from `simrng.js`**, seeded per level from the run's seed.
   Cosmetic randomness (particles, music, texture noise) stays on `Math.random` on purpose.

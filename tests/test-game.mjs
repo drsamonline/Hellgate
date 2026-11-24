@@ -1736,6 +1736,50 @@ console.log('\n== a run is reproducible ==');
   ok(simDraws() > 0, 'and the run drew from the seeded stream (' + simDraws() + ' numbers)');
 }
 
+console.log('\n== the replay reaches the player ==');
+{
+  // the cleared screen had no Next button: the handler was attached to an id
+  // that is not in the page, and `?.addEventListener` hid it
+  const nextBtn = document.getElementById('clearedNext');
+  ok(!!nextBtn, 'the cleared screen has a Next button');
+  HG.beginLevel(3, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  nextBtn.dispatch('click');
+  ok(HG.game.level === 4, 'and it starts the next level (' + HG.game.level + ')');
+
+  // a run records, and the replay has a name
+  HG.beginLevel(2, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.game.state = 'playing';
+  HG.startRecording();
+  for (let i = 0; i < 30; i++) HG.update(1 / 60);
+  const name = HG.replayFileName();
+  ok(/^hellgate-.*-30\.json$/.test(name), 'the file is named for the seed and the frames: ' + name);
+  ok(typeof HG.replayJSON() === 'string', 'and there is a replay to hand over');
+
+  // copying does not throw in a page with no clipboard and no Blob
+  const res = HG.copyReplay();
+  ok(res === 'copied' || res === 'saved' || res === 'none', 'copying answers one of three things (' + res + ')');
+
+  // a replay file starts the run it came from
+  const json = HG.replayJSON();
+  const before = JSON.parse(json).meta.level;
+  HG.game.level = 0;
+  ok(HG.watchReplay(json) === true, 'a replay file starts a run');
+  ok(HG.game.level === before, 'on the level it was recorded on (' + HG.game.level + ')');
+  ok(HG.game.state === 'playing', 'and playing');
+  HG.update(1 / 60);
+  ok(true, 'and the loop drives it without falling over');
+
+  // nothing recorded, nothing to copy
+  const savedRec = HG.replayJSON();
+  ok(savedRec !== null, 'the recorder is still there for the rest of the suite');
+}
+
 console.log('\n== the guns are sprites ==');
 {
   const models = HG.weapons.models;

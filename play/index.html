@@ -650,6 +650,8 @@
         <button id="startBtn">Enter the gate</button>
       <button id="continueBtn" class="ghost" style="display:none"></button>
         <button id="levelSelectBtn" class="ghost">Levels</button>
+        <button id="watchBtn" class="ghost">Watch a replay</button>
+        <input id="replayFile" type="file" accept=".json,application/json" style="display:none" />
         <button id="settingsBtnTitle" class="ghost">Settings</button>
       </div>
       <div id="best"></div>
@@ -713,6 +715,8 @@
       <p class="sub">pick one — it lasts the rest of the run</p>
       <div id="upgradeCards" class="upgrid"></div>
       <div class="row">
+        <button id="clearedNext">Next level</button>
+        <button id="replayBtnCleared" class="ghost">Copy replay</button>
         <button id="mapFromCleared" class="ghost">World map</button>
       </div>
     </section>
@@ -783,6 +787,7 @@
       <div id="stats"></div>
       <div class="row">
         <button id="retryBtn">Try again</button>
+        <button id="replayBtn" class="ghost">Copy replay</button>
         <button id="mapBtn" class="ghost">World map</button>
         <button id="menuBtn" class="ghost">Main menu</button>
       </div>

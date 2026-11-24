@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.11.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.12.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.11.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.12.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
-| Tests | 1391 playability (all 32 levels) + 754 in the other three suites; seven static gates; smoke, flow, run, invariants |
+| Tests | 1391 playability (all 32 levels) + 764 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 42 in `play/src/` |
-| Releases | 112, `v1.0.0` → `v2.11.0` |
+| Releases | 113, `v1.0.0` → `v2.12.0` |
 | Roadmap | 59 shipped, 3 measured-and-rejected, 4 open of 66 |
 
 ## What shipped in this run
@@ -61,6 +61,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.9.0** | **The guns are sprites; a steeper ladder; richer money; the dialogue spine finished** |
 | **2.10.0** | **The guns, second pass — machined bodies, four silhouettes, a fist on the grip** |
 | **2.11.0** | **A run is reproducible — the sim stream, the recorder, and a state hash** |
+| **2.12.0** | **The replay reaches the player — copy, watch, `?play=1` — and the missing Next button** |
 
 ### 2.0.0 in detail
 
@@ -104,7 +105,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | # | Item | Where | Size |
 | --- | --- | --- | --- |
-| — | Ship the replay to the player: a download button on the death screen, and `?play=` to load one | `main.js` | S |
+| — | Sector portals (#37): a cell with two floors you can walk between | `level.js` + `levelmesh.js` | XL |
 | — | Sector portals (#37): a cell with two floors you can walk between | `level.js` + `levelmesh.js` | XL |
 | — | Sector portals (#37): a cell with two floors you can walk between | `level.js` + `levelmesh.js` | XL |
 | — | The auto-shop has no consent: decide whether it needs a key press | `main.js` | S |
