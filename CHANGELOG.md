@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.13.0 — 2026-11-24
+
+**Catwalks are tested, marked, and no longer blocked.** The sector model — a cell with two floors, shipped at
+1.96.0 — has never had a single assertion about the second one. It has 78 deck cells across 14 levels, and
+writing the test found a crate standing on one of them.
+
+| Piece | What it does |
+| --- | --- |
+| the test | for every level with a deck: a body arriving from the deck height lands on the deck, a body arriving from the floor lands on the floor, and every deck cell is reachable from the spawn. 78 cells, 14 levels |
+| **a crate on a deck** | `level.js` placed crates in rooms without checking `c.sectors`, so a crate could stand on a catwalk — its mesh sits at the cell's floor, so it hung 2.4 m up and blocked the deck. Crates skip deck cells now |
+| pickups | `randomCell()` skips deck cells: a pickup 2.4 m up is one you cannot see from the floor |
+| the minimap | a deck shows as a pale blue square, the way a lift does — otherwise a catwalk is a place you find by walking into a wall and looking up |
+
+**What this is not:** #37's second half — a hole in the mesh so you can see and shoot between sectors — is still
+open, and it is the last structural item.
+
 ## 2.12.0 — 2026-11-24
 
 **The replay reaches the player.** 2.11.0 made a run reproducible; this gives you the run. `Copy replay` on the

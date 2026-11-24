@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.12.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.13.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.12.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 113, `v1.0.0` → `v2.12.0` |
+| Version | 2.13.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 114, `v1.0.0` → `v2.13.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,15 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Sectors, and what stands on them
+
+- **A cell may carry `c.sectors`**: `[ground, deck]`. `floorHeightAt(level, x, z, fromY)` picks the sector you
+  land on from the height you arrive at — pass `fromY` or you get the ground every time. The player does.
+- **Nothing may be placed on a deck cell.** A crate's mesh sits at the cell's floor, so a crate on a catwalk hangs
+  2.4 m up and blocks it; a pickup there is invisible from the floor. Crates and `randomCell()` skip `c.sectors`.
+- **The flow field is at ground level.** A deck cell is reachable because you can walk under it — that is not the
+  same as walking onto it, which is what the ramps and the lift are for.
 
 ### Replay, and what determinism costs
 

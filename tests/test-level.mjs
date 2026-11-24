@@ -340,6 +340,53 @@ console.log('\n== camera paths ==');
   }
 }
 
+// ---- catwalks: a deck you can see, reach and stand on (#37, step one) -----
+// A cell carries two sectors, and the sector model has never had an assertion
+// about the second one. Without these, a deck that is drawn but not standable
+// looks exactly like a deck that works.
+console.log('\n== catwalks ==');
+{
+  const { STORY_LEVELS, storyLevelZone } = await import('../play/src/story-levels.js');
+  let levels = 0;
+  let decks = 0;
+  let walkable = 0;
+  for (const row of STORY_LEVELS) {
+    const z = storyLevelZone(row);
+    const L = generateLevel(z.seed, z.shape);
+    L.doorOpen = true;
+    const deck = L.cells.filter((c) => c.sectors && c.sectors.length > 1);
+    if (!deck.length) continue;
+    levels++;
+    const field = buildFlowField(L, L.spawn.x, L.spawn.z);
+    for (const c of deck) {
+      decks++;
+      const wx = c.x * CELL;
+      const wz = c.z * CELL;
+      const top = c.sectors[1].floor;
+      const ground = c.sectors[0].floor;
+      // the height a body gets depends on the height it came from: that is the
+      // whole of the sector model in one function
+      if (Math.abs(floorHeightAt(L, wx, wz, top) - top) > 1e-6) {
+        bad(row.id, 'a body on the deck does not land on the deck');
+        continue;
+      }
+      if (Math.abs(floorHeightAt(L, wx, wz, ground) - ground) > 1e-6) {
+        bad(row.id, 'a body under the deck does not land on the floor');
+        continue;
+      }
+      // and the deck has to be reachable: a deck nobody can walk onto is scenery
+      if (field[c.z * L.W + c.x] < 0) {
+        bad(row.id, 'the deck is not reachable from the spawn');
+        continue;
+      }
+      walkable++;
+    }
+  }
+  if (levels < 5) bad('catwalk', `only ${levels} levels have a deck — the check is not doing much`);
+  if (decks !== walkable) bad('catwalk', `${decks - walkable} deck cells are not walkable`);
+  console.log(`  decks: ${decks} cells on ${levels} levels, all reachable and standable`);
+}
+
 console.log(`\nseeds=${seeds.length} avgRooms=${(totalRooms / seeds.length).toFixed(1)} doors=${totalDoor}/${seeds.length} minOpenCells=${minOpen}`);
 console.log(fails === 0 ? 'ALL LEVEL TESTS PASSED' : `${fails} FAILURES`);
 process.exit(fails ? 1 : 0);

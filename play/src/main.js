@@ -1128,6 +1128,9 @@ const PICKUP_DEFS = {
 function randomCell(minDist = 0, roomsOnly = true) {
   const pool = level.reachableCells.filter((c) => {
     if (roomsOnly && c.room < 0) return false;
+    // not on a deck: a pickup 2.4 m up is a pickup you cannot see from the floor,
+    // and the cell is in the flow field at ground level either way
+    if (c.sectors) return false;
     if (c.x === level.exit.cx && c.z === level.exit.cz) return false;
     return Math.hypot(c.wx - player.pos.x, c.wz - player.pos.z) > minDist;
   });
@@ -3013,7 +3016,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.12.0';
+const BUILD = '2.13.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

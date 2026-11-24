@@ -83,6 +83,15 @@ export class Minimap {
       g.strokeRect(lx - 2.5 * this.dpr, lz - 2.5 * this.dpr, 5 * this.dpr, 5 * this.dpr);
     }
 
+    // a catwalk is a deck 2.4 m up in one room of the level: without a mark it is
+    // a place you find by walking into a wall and looking up
+    for (const c of this.level.cells) {
+      if (!c.sectors || c.sectors.length < 2) continue;
+      const dx = px(c.x * CELL), dz = pz(c.z * CELL);
+      g.fillStyle = 'rgba(143,208,255,0.35)';
+      g.fillRect(dx - 2 * this.dpr, dz - 2 * this.dpr, 4 * this.dpr, 4 * this.dpr);
+    }
+
     for (const e of enemies) {
       if (!e.alive) continue;
       g.fillStyle = e.T && e.T.boss ? '#ff3b30' : '#e0432f';

@@ -524,7 +524,9 @@ function buildLevel(seed, opts = {}) {
       const x = rng.int(r.x + 1, r.x + r.w - 2);
       const z = rng.int(r.z + 1, r.z + r.h - 2);
       const c = cells[idx(x, z)];
-      if (c.solid || c.stair || c.platform || c.room !== i) continue;
+      // not on a deck: a crate's mesh sits on the cell's floor, so a crate on a
+      // catwalk hangs 2.4 m up and blocks a deck the player is meant to walk on
+      if (c.solid || c.stair || c.platform || c.sectors || c.room !== i) continue;
       if (Math.abs(x - r.cx) <= 1 && Math.abs(z - r.cz) <= 1) continue; // keep the middle clear
       c.crate = true;
       c.crateHp = 45;
