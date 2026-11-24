@@ -1477,7 +1477,7 @@ console.log('\n== the helper pays ==');
     // and he does not spend it on ammo while the offer stands
     HG.player.pos.set(n.wx + 0.8, 0, n.wz);
     HG.update(1.5);
-    ok((HG.game.coins || 0) === 300, 'he does not sell you ammo out of the coins he is asking for (' + (HG.game.coins || 0) + ')');
+    ok((HG.game.coins || 0) === 300, 'walking up with coins buys nothing (' + (HG.game.coins || 0) + ')');
     // an empty room opens the door by itself in those frames, and he does not sell
     // a door that is already open
     HG.game.exitOpen = false;
@@ -1540,6 +1540,44 @@ console.log('\n== the helper pays ==');
     HG.game.relicsTotal = 0;
     HG.game.objectiveType = 'clear';
     HG.game.exitOpen = false;
+
+    // ---- the shop is on V, and only on V
+    // everything he could ask for is answered: the job paid, the door bought,
+    // the relics done
+    HG.game.flags = { keshi: 2, keshiDoor: 1, keshiRelics: 2 };
+    n.quest = 'done';
+    HG.game.objectiveType = 'clear';
+    HG.game.exitOpen = false;
+    HG.game.coins = 200;
+    HG.player.ammo.bullets = 0;
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    ok(HG.openNpcOffer() === false, 'with nothing to ask he has nothing to offer');
+    ok(HG.openNpcShop() === true, 'and the shop opens on the interact key');
+    ok(HG.npcOffer.kind === 'shop', 'as a shop');
+    const shopLine = document.getElementById('cineLine').textContent;
+    ok(/20 bullets/.test(shopLine) && /40/.test(shopLine), 'listing what he sells and what it costs: ' + shopLine.slice(0, 40));
+    ok(/200 coins/.test(shopLine), 'and what you have');
+    const coinsBefore = HG.game.coins;
+    HG.takeNpcOffer(0);
+    ok(HG.game.coins === coinsBefore - 40, 'key 1 buys the bullets (' + (coinsBefore - HG.game.coins) + ')');
+    ok(HG.player.ammo.bullets === 20, 'and they are in the gun (' + HG.player.ammo.bullets + ')');
+    ok(HG.npcOffer && HG.npcOffer.kind === 'shop', 'the shop stays open for the next one');
+    // short of the price: nothing is spent and the shop says so
+    HG.game.coins = 10;
+    HG.player.ammo.rockets = 0;
+    HG.takeNpcOffer(2);
+    ok(HG.game.coins === 10 && HG.player.ammo.rockets === 0, 'a rocket he cannot afford is not sold');
+    ok(HG.npcOffer && HG.npcOffer.kind === 'shop', 'and the shop is still open');
+    HG.takeNpcOffer(3);
+    ok(HG.npcOffer === null, 'key 4 leaves');
+
+    // walking up with money and never pressing V spends none of it
+    HG.game.coins = 200;
+    HG.player.ammo.bullets = 0;
+    HG.player.pos.set(n.wx + 0.8, 0, n.wz);
+    HG.update(2.5);
+    ok((HG.game.coins || 0) === 200 && HG.player.ammo.bullets === 0, 'standing at the counter spends nothing (' + (HG.game.coins || 0) + ')');
+    HG.closeNpcOffer();
   }
 }
 

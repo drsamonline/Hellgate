@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.7.0**, 2026-11-23.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.8.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.7.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 108, `v1.0.0` → `v2.7.0` |
+| Version | 2.8.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 109, `v1.0.0` → `v2.8.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 725 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 737 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -165,9 +165,10 @@ wiped by the next call.
 - **An offer that changes the objective writes the objective, nothing else.** The relics offer sets
   `objectiveType`, spawns the relics and shuts the door; `updateObjective()` opens it on the count, as on any
   `relics` level. Do not open the gate from the offer.
-- **The shop must not run while he has an offer for you.** It buys ammo automatically within 2.1 m, every 1.2 s,
-  and it spent the 250 coins the door costs while the player was standing there reading the offer. Found in a
-  browser, not by the suite: the test set the coins and called the handler with no frame between.
+- **The shop is on `V` and nowhere else.** It used to buy the cheapest thing you were short of within 2.1 m,
+  every 1.2 s, without asking — and spent the 250 the door costs while you read the offer. `openNpcShop()` is
+  the only way in; `updateNpc()` never sells. The prompt is `V  SHOP` when he has nothing to ask and
+  `V  TALK` when he does.
 - **He sells the door; `openExit()` opens it.** The gate still has one writer.
 
 ### The campaign, and what a level is

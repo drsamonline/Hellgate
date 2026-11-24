@@ -1681,6 +1681,7 @@ function interact() {
   const n = level && level.npc;
   if (n && npcBody && Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz) < 2.1) {
     if (openNpcOffer()) return;
+    if (openNpcShop()) return;
   }
   openLore();
 }
@@ -1876,6 +1877,13 @@ const NPC_DOOR = 250;
 /** What he pays for three relics, and how many he asks for. */
 const NPC_RELICS = { count: 3, pays: 200 };
 
+/** The shop, in the order the keys list it. Sold on `V`, never on arrival. */
+const NPC_SHOP = [
+  { kind: 'bullets', n: 20, price: 40 },
+  { kind: 'shells', n: 8, price: 60 },
+  { kind: 'rockets', n: 3, price: 100 },
+];
+
 /**
  * The quest state for the helper in this level, restored from the run's flags.
  * A resumed run must not be offered the same job twice.
@@ -1908,6 +1916,35 @@ function npcOfferKind(n) {
   const bought = (game.flags && game.flags.keshiDoor) || 0;
   if (!bought && game.objectiveType !== 'reach') return 'door';
   return null;
+}
+
+/**
+ * His shop, as a caption with three keys and a way out.
+ * @returns {boolean} True when the shop opened.
+ */
+function openNpcShop() {
+  const n = level && level.npc;
+  if (!n || npcOffer) return false;
+  npcOffer = { n, kind: 'shop' };
+  renderNpcShop();
+  return true;
+}
+
+/** The shop line, redrawn after every purchase so the coins and the stock are current. */
+function renderNpcShop() {
+  const line = document.getElementById('cineLine');
+  const name = document.getElementById('cineName');
+  const root = document.getElementById('letterbox');
+  if (name) name.textContent = 'KESHI';
+  if (line) {
+    line.textContent = NPC_SHOP
+      .map((it, i) => '[' + (i + 1) + '] ' + it.n + ' ' + it.kind + '  ' + it.price)
+      .join('   ') + '   [4] leave   ·   you have ' + (game.coins || 0) + ' coins';
+  }
+  if (root) {
+    root.classList.add('on');
+    root.classList.add('talking');
+  }
 }
 
 /** Stand next to him and he asks. */
@@ -1959,6 +1996,25 @@ function takeNpcOffer(i) {
   closeNpcOffer();
   if (!n) return true;
   game.flags = game.flags || {};
+
+  if (kind === 'shop') {
+    // the shop stays open: a counter you have to walk back to between purchases
+    // is worse than the one it replaced
+    if (i === 3 || i == null) return true;
+    const it = NPC_SHOP[i];
+    if (!it) return true;
+    if ((game.coins || 0) < it.price) {
+      hud.toast('NEED ' + it.price + ' COINS', 1.2);
+    } else {
+      game.coins -= it.price;
+      player.addAmmo(it.kind, it.n);
+      hud.toast('BOUGHT ' + it.n + ' ' + it.kind.toUpperCase() + '  -' + it.price, 1.4);
+      audio.play('pickup');
+    }
+    npcOffer = { n, kind: 'shop' };
+    renderNpcShop();
+    return true;
+  }
 
   if (kind === 'relics') {
     if (i !== 0) {
@@ -2045,32 +2101,16 @@ function updateNpc(dt) {
     const d = Math.hypot(e.pos.x - n.wx, e.pos.z - n.wz);
     if (d < bestD) { bestD = d; best = e; }
   }
-  // the shop: stand next to him with coins and he sells the cheapest thing you
-  // are short of. No new key, no new panel — the coins are the interface.
+  // the shop is on `V` now. It used to buy the cheapest thing you were short of
+  // the moment you walked up with coins in your pocket, every 1.2 s, without
+  // asking — which spent the 250 the door costs while you were reading the offer
   const pd = Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz);
   // the prompt is set after update()'s lore prompt, so it wins when both are near
-  if (pd < 2.1 && !npcOffer && npcOfferKind(n)) hud.setPrompt(TOUCH ? 'TALK' : 'V  TALK');
-  checkNpcJob();
-  n.shopCd = (n.shopCd || 0) - dt;
-  // he does not sell you ammo out of the coins he is about to ask for: standing
-  // next to him with 300 coins used to spend 60 on shells every 1.2 s, and the
-  // door he offers for 250 could never be afforded
-  if (pd < 2.1 && n.shopCd <= 0 && !npcOffer && !npcOfferKind(n)) {
-    n.shopCd = 1.2;
-    const shop = [
-      { kind: 'bullets', n: 20, price: 40 },
-      { kind: 'shells', n: 8, price: 60 },
-      { kind: 'rockets', n: 3, price: 100 },
-    ];
-    const buy = shop.find((it) => (game.coins || 0) >= it.price && (player.ammo[it.kind] || 0) < 40);
-    if (buy) {
-      game.coins -= buy.price;
-      player.addAmmo(buy.kind, buy.n);
-      hud.toast('BOUGHT ' + buy.n + ' ' + buy.kind.toUpperCase() + '  -' + buy.price, 1.4);
-    } else if ((game.coins || 0) < 40) {
-      hud.toast('NEED 40 COINS', 1.0);
-    }
+  if (pd < 2.1 && !npcOffer) {
+    const talk = !!npcOfferKind(n);
+    hud.setPrompt(TOUCH ? (talk ? 'TALK' : 'SHOP') : (talk ? 'V  TALK' : 'V  SHOP'));
   }
+  checkNpcJob();
 
   if (!best) return;
   npcBody.rotation.y = Math.atan2(best.pos.x - n.wx, best.pos.z - n.wz);
@@ -2807,8 +2847,12 @@ window.addEventListener('keydown', (e) => {
   }
   if (game.state !== 'playing') return;
   if (npcOffer) {
-    if (e.code === 'Digit1' || e.code === 'Digit2') {
-      takeNpcOffer(e.code === 'Digit1' ? 0 : 1);
+    const digit = /^Digit([1-4])$/.exec(e.code);
+    if (digit) {
+      const i = Number(digit[1]) - 1;
+      // the shop has four answers; a quest has two, and anything above its last
+      // option means "not now"
+      takeNpcOffer(npcOffer.kind === 'shop' ? i : (i > 0 ? 1 : 0));
       e.preventDefault();
       return;
     }
@@ -2931,7 +2975,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.7.0';
+const BUILD = '2.8.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3398,7 +3442,8 @@ window.HG = {
   beginZone, beginLevel, nextLevel, renderLevelMap, showZoneMap, outroPath, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
-  interact, takeNpcOffer, openNpcOffer, closeNpcOffer, npcQuestState, get npcOffer() { return npcOffer; },
+  interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
+  get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
   takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex, hideScreens, showScreen,
   history: record, awardFor, achievementProgress: () => progressOf(record),

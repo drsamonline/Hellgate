@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.8.0 — 2026-11-24
+
+**The shop asks first.** It used to buy the cheapest thing you were short of the moment you walked within 2.1 m
+with coins in your pocket, every 1.2 seconds, without asking — which spent the 250 the door costs while you
+stood there reading the offer, and made the offer unreachable. Reported from play, decided: a key press.
+
+| Piece | What it does |
+| --- | --- |
+| `V` opens the counter | `[1] 20 bullets 40   [2] 8 shells 60   [3] 3 rockets 100   [4] leave   ·   you have N coins` |
+| it stays open | a counter you have to walk back to between purchases is worse than the one it replaced. It redraws with the new balance after every buy |
+| short of the price | nothing is taken, the line says `NEED n COINS`, the shop stays open |
+| the prompt | `V  SHOP` when he has nothing to ask, `V  TALK` when he does |
+| no new key, no new panel | the brief asked for that, and it still holds: `V` is the interact key, and the caption is the letterbox |
+
+**What it costs:** the shop is no longer a thing that happens to you when you are rich. Ammo is a decision.
+
 ## 2.7.0 — 2026-11-23
 
 **The act is the difficulty curve.** Difficulty was `zone.threat`, and that is a curve over nine places rather
