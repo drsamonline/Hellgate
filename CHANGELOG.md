@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.24.0 — 2026-11-24
+
+**Harden and ship, part one.** Three things that stood between the game and a player who was not me.
+
+| What | Was | Now |
+| --- | --- | --- |
+| **The landing page's images** | `assets/arena.webp`, `combat.webp`, `exit.webp`, `rocket.webp`, `map.svg`, `favicon.svg`, `og.jpg` — none of them existed. Six 404s on the first page a visitor sees | real screenshots of the game, a map drawn from a generated level's own cells, a favicon and a 1200×630 social card |
+| **The landing page's button** | `href="./play/"` — the page lives at `docs/play/`, so "play" pointed at `docs/play/play/` and went nowhere | `../../play/`, which is the game |
+| **The flaky assertion** | "resuming restores the score" resumed the save the previous line had just written and asserted 1234 survived. A wave with no live enemy cleared on the first tick, paid the exit bonus, and moved it — for two releases | `resumeRun()` is a function of the save it is handed, so it is handed a synthetic one: `{ ...sv1, score: 4242, wave: 3 }`. The round trip is asserted separately |
+
+| And | |
+| --- | --- |
+| a new gate | `tools/check-assets.mjs` — every local file a page in `docs/` points at must exist. `check-links.mjs` skips `docs/` as a deploy artefact, which is exactly why six 404s shipped |
+| wall grain | per-pixel noise on a 64 px texture, quantised to twelve colours, read as television static at close range. The grain is drawn in 2 × 2 blocks at half the amplitude now, so it reads as a surface instead of fuzz |
+
 ## 2.23.0 — 2026-11-24
 
 **The campaign has an end.** Clearing level 32 and pressing **Next level** restarted level 32: `beginLevel()` clamps

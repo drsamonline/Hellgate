@@ -31,14 +31,30 @@ function toTex(ctx, repeat = 1) {
   return t;
 }
 
+/**
+ * Grain, in blocks.
+ *
+ * Per-pixel noise on a 64 px texture that is then quantised to twelve colours
+ * becomes television static: every pixel a different shade, and the dither step
+ * pushes the difference up rather than down. A block of 2 x 2 shares one offset,
+ * so the noise reads as the surface of a thing at close range instead of fuzz.
+ */
 function grain(ctx, amount) {
   const img = ctx.getImageData(0, 0, S, S);
   const d = img.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const n = (Math.random() - 0.5) * amount;
-    d[i] = Math.max(0, Math.min(255, d[i] + n));
-    d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
-    d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n));
+  const B = 2;
+  for (let by = 0; by < S; by += B) {
+    for (let bx = 0; bx < S; bx += B) {
+      const n = (Math.random() - 0.5) * amount;
+      for (let y = by; y < Math.min(S, by + B); y++) {
+        for (let x = bx; x < Math.min(S, bx + B); x++) {
+          const i = (y * S + x) * 4;
+          d[i] = Math.max(0, Math.min(255, d[i] + n));
+          d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + n));
+          d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + n));
+        }
+      }
+    }
   }
   ctx.putImageData(img, 0, 0);
 }
@@ -57,7 +73,7 @@ function brick() {
       c.fillRect(x + offset + 1, r * rh + 1, 30, rh - 2);
     }
   }
-  grain(c, 26);
+  grain(c, 14);
   return toTex(c);
 }
 
@@ -103,7 +119,7 @@ function tile() {
       c.fillRect(x + 2, y + 26, 28, 4);
     }
   }
-  grain(c, 22);
+  grain(c, 12);
   return toTex(c);
 }
 
@@ -120,7 +136,7 @@ function plate() {
   c.strokeStyle = '#3d3230';
   c.lineWidth = 2;
   c.strokeRect(1, 1, S - 2, S - 2);
-  grain(c, 18);
+  grain(c, 10);
   return toTex(c);
 }
 

@@ -2902,14 +2902,17 @@ HG.game.wave = 2;
 HG.saveRun();
 const sv1 = HG.loadRun();
 ok(sv1.score === 1234 && sv1.wave === 2, 'the save captures score and wave');
-HG.resumeRun(sv1);
-// the score is read before the loop runs: two frames is enough for a wave that
-// spawned no enemy to clear, and clearing pays the exit bonus, which moved the
-// score and made this the flake it has been for two releases
-ok(HG.game.score === 1234, 'resuming restores the score');
+// resumeRun is a function of the save it is handed, so hand it one: a synthetic
+// save with numbers no other block can touch. The old version resumed the save
+// the previous line had just written and asserted 1234 survived — which flaked
+// for two releases whenever a wave with no live enemy cleared on the first tick
+// and paid the exit bonus. The round trip is asserted above; this asserts the
+// function.
+HG.resumeRun({ ...sv1, score: 4242, wave: 3 });
+ok(HG.game.score === 4242, 'resuming applies the saved score (' + HG.game.score + ')');
 frames(2);
 ok(HG.game.state === 'playing', 'resuming returns to play');
-ok(HG.game.wave === 2, 'resuming restores the wave');
+ok(HG.game.wave === 3, 'and the saved wave (' + HG.game.wave + ')');
 HG.toggleInventory();
 ok(HG.game.state === 'inventory', 'tab opens the status panel');
 ok(document.getElementById('invBody').innerHTML.length > 100, 'the panel has content');

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.23.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.24.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.23.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 126, `v1.0.0` → `v2.23.0` |
+| Version | 2.24.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 127, `v1.0.0` → `v2.24.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,17 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Shippable, and the three things that were not
+
+- **`tools/check-assets.mjs`** checks every local file a page in `docs/` points at. `check-links.mjs` skips `docs/`
+  as a deploy artefact, and six 404s shipped on the landing page because of it. In CI.
+- **The landing page's CTA was `./play/`** from a page that already lives in `docs/play/` — it pointed at
+  `docs/play/play/`. The game is at `../../play/`.
+- **The flaky resume assertion is gone.** `resumeRun()` is tested with a synthetic save, not with the save the line
+  above wrote; the wave-clear side effect cannot reach it.
+- **`grain()` draws in 2 × 2 blocks at half the amplitude.** Per-pixel noise on a 64 px texture quantised to twelve
+  colours is television static at close range.
 
 ### The end of the campaign, and a test that dirtied the record
 
