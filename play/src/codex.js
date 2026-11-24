@@ -43,7 +43,11 @@ export function entries(tables) {
       kind: 'ENEMY',
       name: String(T.label || key).toUpperCase(),
       text: `${T.hp} health · ${Math.round(T.damage)} damage · ${T.telegraph}s telegraph · ${behaviour(T)}`,
-      note: killed ? killed + ' killed' : 'not yet met',
+      // a boss says which act it closes: the codex is where a player looks to
+      // find out why the thing at the end of act II hits so hard
+      note: T.boss && tables.BOSS_FOR_ACT
+        ? 'closes act ' + Object.keys(tables.BOSS_FOR_ACT).find((a) => tables.BOSS_FOR_ACT[a] === key)
+        : (killed ? killed + ' killed' : 'not yet met'),
       search: [key, T.label, behaviour(T), 'enemy'].join(' '),
     });
   }

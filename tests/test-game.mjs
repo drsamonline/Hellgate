@@ -1850,6 +1850,46 @@ console.log('\n== one boss per act ==');
   }
 }
 
+console.log('\n== the act is named where it ends ==');
+{
+  // a boss level's cleared screen says which act it closed, and the codex says
+  // which act each boss closes: the two places a player asks "what was that"
+  const saved = JSON.parse(JSON.stringify(HG.progress));
+  const { BOSS_FOR_ACT } = await import('../play/src/story-levels.js');
+  HG.beginLevel(8, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.zoneCleared();
+  ok(document.getElementById('clearedTitle').textContent === 'ACT 1 COMPLETE',
+    'clearing level 8 says ACT 1 COMPLETE (' + document.getElementById('clearedTitle').textContent + ')');
+  HG.beginLevel(9, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.zoneCleared();
+  ok(document.getElementById('clearedTitle').textContent === 'LEVEL CLEARED',
+    'and a level that is not an act ending says LEVEL CLEARED (' + document.getElementById('clearedTitle').textContent + ')');
+  for (const k of Object.keys(HG.progress)) delete HG.progress[k];
+  Object.assign(HG.progress, saved);
+
+  // the codex note
+  const { buildCodex } = await import('../play/src/codex.js');
+  const { TYPES } = await import('../play/src/enemies.js');
+  const cx = buildCodex({ TYPES, TRINKETS: [], ZONES: [], kills: {}, BOSS_FOR_ACT });
+  for (const act of [1, 2, 3, 4]) {
+    const e = cx.entries.find((x) => x.kind === 'ENEMY' && x.name === TYPES[BOSS_FOR_ACT[act]].label);
+    ok(!!e && e.note === 'closes act ' + act, 'the codex says act ' + act + ' for ' + BOSS_FOR_ACT[act] + ' (' + (e && e.note) + ')');
+  }
+  const imp = cx.entries.find((x) => x.kind === 'ENEMY' && x.name === 'IMP');
+  ok(imp && imp.note === 'not yet met', 'and an ordinary enemy still says how many you killed (' + (imp && imp.note) + ')');
+  HG.game.state = 'playing';
+}
+
 console.log('\n== every boss gets a death line ==');
 {
   // the four bosses were added in 2.27.0 and the story still had THE WARDEN

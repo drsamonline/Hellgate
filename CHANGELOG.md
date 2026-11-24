@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.31.0 — 2026-11-24
+
+**The act is named where it ends.** Beating a boss produced the same panel as beating any other level — `LEVEL
+CLEARED` — and the codex listed four bosses without saying what they were for.
+
+| Where | Before | Now |
+| --- | --- | --- |
+| the cleared screen after a boss | `LEVEL CLEARED` | `ACT 1 COMPLETE`, `ACT 2 COMPLETE`, … and still `CAMPAIGN COMPLETE` on 32 |
+| the codex | `not yet met` for every boss | `closes act 1` … `closes act 4` |
+
+Two assertions each: a boss level says the act, a level that is not one still says `LEVEL CLEARED`, and every boss's
+codex note names the right act while an ordinary enemy keeps its kill count.
+
 ## 2.30.0 — 2026-11-24
 
 **The invariants audit never played the campaign.** It ran three zones — which have three waves each — and asserted

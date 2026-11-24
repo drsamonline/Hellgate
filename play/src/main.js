@@ -2388,7 +2388,7 @@ function showCodex() {
   game.state = 'codex';
   const el = document.getElementById('codexBody');
   const input = document.getElementById('codexSearch');
-  codexState = buildCodex({ TYPES, TRINKETS, ZONES, kills: game.killsByType || {}, achievements: { table: ACHIEVEMENTS, hist: record } });
+  codexState = buildCodex({ TYPES, TRINKETS, ZONES, kills: game.killsByType || {}, BOSS_FOR_ACT, achievements: { table: ACHIEVEMENTS, hist: record } });
   if (input) input.value = '';
   renderCodex('');
   showScreen('codex');
@@ -2531,8 +2531,13 @@ function zoneCleared() {
   // the last level ends the campaign, and the screen has to say so: "Next level"
   // on level 32 used to restart level 32, because beginLevel clamps to 32
   const last = game.level === STORY_LEVELS.length;
+  const actEnd = !last && game.level && game.bossLevel === true;
   const title = document.getElementById('clearedTitle');
-  if (title) title.textContent = last ? 'CAMPAIGN COMPLETE' : game.level ? 'LEVEL CLEARED' : 'ZONE CLEARED';
+  if (title) {
+    title.textContent = last ? 'CAMPAIGN COMPLETE'
+      : actEnd ? 'ACT ' + game.bossAct + ' COMPLETE'
+        : game.level ? 'LEVEL CLEARED' : 'ZONE CLEARED';
+  }
   const nextBtn = document.getElementById('clearedNext');
   if (nextBtn) nextBtn.textContent = last ? 'Back to the title' : 'Next level';
   const el = document.getElementById('clearedStats');
@@ -3151,7 +3156,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.30.0';
+const BUILD = '2.31.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
