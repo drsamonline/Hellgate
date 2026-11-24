@@ -81,64 +81,133 @@ function gunTexture(key, firing) {
     g.arc(x, y, r, 0, Math.PI * 2);
     g.fill();
   };
+  const ring = (x, y, r, w, stroke) => {
+    g.strokeStyle = stroke;
+    g.lineWidth = w;
+    g.beginPath();
+    g.arc(x, y, r, 0, Math.PI * 2);
+    g.stroke();
+  };
+  // a body with a light top, a dark underside and a hard edge: the cheapest way
+  // to make a rectangle read as machined metal
+  const metal = (x, y, w, h) => {
+    const grad = g.createLinearGradient(0, y, 0, y + h);
+    if (grad && grad.addColorStop) {
+      grad.addColorStop(0, GUN_LIGHT);
+      grad.addColorStop(0.28, GUN_METAL);
+      grad.addColorStop(1, GUN_INK);
+      g.fillStyle = grad;
+    } else {
+      g.fillStyle = GUN_METAL;
+    }
+    g.fillRect(x, y, w, h);
+    rect(x, y, w, 2, '#8a9098');   // the lit edge
+    rect(x, y + h - 2, w, 2, '#12141a'); // the shadow under it
+  };
+  const wood = (x, y, w, h) => {
+    const grad = g.createLinearGradient(0, y, 0, y + h);
+    if (grad && grad.addColorStop) {
+      grad.addColorStop(0, '#6b4a2c');
+      grad.addColorStop(1, '#2e1f12');
+      g.fillStyle = grad;
+    } else {
+      g.fillStyle = GUN_WOOD;
+    }
+    g.fillRect(x, y, w, h);
+  };
+  // a fist: palm, four knuckles, a thumb over the top — a gun floating in the
+  // corner reads as a prop, a gun held reads as yours
+  const fist = (x, y, w, h) => {
+    poly([[x, y + h], [x + w * 0.16, y], [x + w, y - h * 0.06], [x + w, y + h]], GUN_HAND);
+    for (let i = 0; i < 3; i++) {
+      const fy = y + h * (0.22 + i * 0.24);
+      rect(x + w * 0.12, fy, w * 0.74, 3, '#6f5238');
+    }
+    rect(x + w * 0.06, y + h * 0.04, w * 0.34, 8, '#a08060');   // thumb
+    rect(x + w * 0.9, y - h * 0.02, 4, h * 0.9, '#5e452f');      // the shadowed edge
+  };
 
-  // the hand comes first so the gun sits in front of it
-  poly([[150, 200], [196, 132], [232, 144], [214, 200]], GUN_HAND);
-  rect(196, 132, 30, 22, '#9a7a58');
+  // where the fist goes for this gun, in canvas coordinates: it is drawn after
+  // the body, over the grip, because a hand behind the gun reads as a plank
+  let handAt = null;
 
   if (key === 'pistol') {
-    rect(120, 62, 96, 26, GUN_METAL);          // slide
-    rect(120, 62, 96, 7, GUN_LIGHT);           // top edge
-    rect(206, 68, 22, 16, GUN_INK);            // barrel
-    rect(126, 88, 58, 12, GUN_INK);            // frame
-    poly([[132, 88], [186, 88], [178, 150], [146, 150]], GUN_WOOD);  // grip
-    rect(150, 44, 8, 10, GUN_INK);             // hammer
-    rect(196, 54, 6, 8, GUN_INK);              // front sight
+    metal(112, 54, 104, 30);                   // slide
+    rect(118, 60, 26, 6, '#0e1014');           // ejection port
+    rect(206, 60, 26, 18, GUN_INK);            // barrel
+    metal(112, 84, 74, 14);                    // frame
+    wood(128, 96, 52, 62);                     // grip
+    for (let i = 0; i < 4; i++) rect(132, 106 + i * 12, 44, 2, '#241708');
+    poly([[112, 84], [126, 84], [126, 116], [116, 116]], GUN_INK); // trigger guard
+    rect(146, 40, 10, 14, GUN_INK);            // hammer
+    rect(198, 46, 8, 10, GUN_METAL);           // front sight
+    rect(120, 46, 8, 10, GUN_METAL);           // rear sight
+    handAt = [124, 118, 64, 82];
     if (firing) {
-      disc(232, 74, 15, GUN_FLASH);
-      poly([[228, 74], [256, 62], [256, 86]], GUN_FLASH);
+      disc(240, 68, 13, GUN_FLASH);
+      poly([[234, 68], [256, 46], [256, 90]], GUN_FLASH);
+      disc(240, 68, 6, '#fff6d8');
     }
   } else if (key === 'shotgun') {
-    rect(96, 56, 150, 16, GUN_METAL);          // top barrel
-    rect(96, 76, 150, 16, GUN_METAL);          // bottom barrel
-    rect(96, 72, 150, 4, GUN_INK);             // the seam between them
-    rect(96, 56, 150, 4, GUN_LIGHT);
-    rect(120, 90, 74, 22, GUN_INK);            // receiver
-    rect(126, 96, 62, 30, GUN_WOOD);           // pump
-    poly([[62, 96], [126, 96], [120, 168], [84, 168]], GUN_WOOD);   // stock
-    disc(240, 66, 4, GUN_LIGHT);               // bead
+    metal(78, 50, 158, 20);                    // top barrel
+    metal(78, 76, 158, 20);                    // bottom barrel
+    rect(78, 70, 158, 6, '#0e1014');           // the gap between them
+    metal(96, 96, 86, 26);                     // receiver
+    wood(104, 100, 70, 36);                    // pump
+    for (let i = 0; i < 5; i++) rect(108 + i * 13, 102, 4, 32, '#1e1409');
+    wood(46, 104, 56, 78);                     // stock
+    poly([[46, 104], [104, 104], [104, 118], [46, 182]], GUN_WOOD);
+    disc(240, 60, 4, '#c9ced6');               // bead
+    handAt = [108, 108, 66, 86];
     if (firing) {
-      disc(248, 66, 17, GUN_FLASH);
-      poly([[244, 66], [256, 50], [256, 82]], GUN_FLASH);
+      disc(246, 60, 16, GUN_FLASH);
+      poly([[240, 60], [256, 38], [256, 82]], GUN_FLASH);
+      disc(246, 60, 7, '#fff6d8');
     }
   } else if (key === 'chaingun') {
-    rect(104, 52, 84, 54, GUN_METAL);          // receiver
-    rect(104, 52, 84, 8, GUN_LIGHT);
+    metal(96, 44, 88, 62);                     // receiver
+    rect(104, 52, 72, 10, '#0e1014');          // feed cover
     for (let i = 0; i < 6; i++) {              // the barrel cluster
       const a = (i / 6) * Math.PI * 2;
-      disc(196 + Math.cos(a) * 13, 78 + Math.sin(a) * 13, 6, GUN_INK);
+      const bx = 196 + Math.cos(a) * 14;
+      const by = 76 + Math.sin(a) * 14;
+      disc(bx, by, 7, '#2a2e35');
+      ring(bx, by, 7, 2, '#12141a');
+      disc(bx, by, 3, '#0b0c10');
     }
-    rect(186, 68, 54, 20, GUN_INK);
-    rect(110, 106, 34, 46, GUN_WOOD);          // grip
-    rect(96, 108, 26, 34, GUN_INK);            // ammo box
-    rect(112, 36, 60, 10, GUN_INK);            // carry handle
+    metal(182, 62, 46, 28);                    // barrel housing
+    wood(106, 106, 36, 52);                    // grip
+    metal(84, 100, 30, 40);                    // ammo box
+    for (let i = 0; i < 4; i++) rect(88, 106 + i * 9, 22, 4, '#c9a34a'); // rounds
+    rect(104, 28, 66, 12, GUN_INK);            // carry handle
+    handAt = [100, 118, 62, 82];
     if (firing) {
-      disc(242, 78, 18, GUN_FLASH);
-      disc(242, 78, 9, '#fff4d0');
+      disc(244, 76, 20, GUN_FLASH);
+      disc(244, 76, 10, '#fff6d8');
+      poly([[236, 76], [256, 54], [256, 98]], GUN_FLASH);
     }
   } else {
-    rect(86, 62, 150, 40, GUN_METAL);          // tube
-    rect(86, 62, 150, 9, GUN_LIGHT);
-    rect(226, 54, 18, 56, GUN_INK);            // muzzle ring
-    rect(70, 70, 18, 24, GUN_INK);             // back blast
-    rect(120, 102, 26, 44, GUN_INK);           // front grip
-    rect(178, 100, 22, 40, GUN_INK);           // rear grip
-    rect(120, 46, 76, 10, GUN_INK);            // top rail
+    metal(64, 54, 176, 44);                    // tube
+    rect(96, 62, 10, 28, '#12141a');           // a band
+    rect(150, 62, 10, 28, '#12141a');
+    metal(232, 44, 20, 64);                    // muzzle ring
+    disc(252, 76, 10, '#0b0c10');              // the bore
+    metal(44, 64, 24, 26);                     // back blast
+    wood(112, 98, 30, 52);                     // front grip
+    wood(176, 94, 26, 46);                     // rear grip
+    metal(112, 34, 84, 14);                    // top rail
+    for (let i = 0; i < 4; i++) rect(118 + i * 20, 36, 8, 4, '#12141a');
+    rect(150, 26, 12, 10, GUN_METAL);          // sight
+    handAt = [104, 110, 60, 86];
     if (firing) {
-      disc(252, 82, 20, GUN_FLASH);
-      poly([[246, 82], [256, 60], [256, 104]], GUN_FLASH);
+      disc(252, 76, 18, GUN_FLASH);
+      poly([[244, 76], [256, 48], [256, 104]], GUN_FLASH);
+      disc(252, 76, 8, '#fff6d8');
     }
   }
+
+  // the hand, over the grip
+  if (handAt) fist(handAt[0], handAt[1], handAt[2], handAt[3]);
 
   const tex = new THREE.CanvasTexture(canvas);
   // the same rule the painted wall textures follow: the canvas holds sRGB, and a

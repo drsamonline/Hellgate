@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.10.0 — 2026-11-24
+
+**The guns, second pass.** The first sprite pass was flat rectangles — the right weapon at a glance, and crude
+next to the walls. This one gives each gun a machined body (a three-stop gradient, a lit top edge, a shadow
+under it), its own silhouette, and a fist over the grip.
+
+| Piece | What it does |
+| --- | --- |
+| `metal()` / `wood()` | a gradient body with a 2 px lit edge and a 2 px shadow, the cheapest way to make a rectangle read as metal |
+| the four silhouettes | pistol: slide, ejection port, trigger guard, hammer, two sights. Shotgun: twin barrels with a gap, ribbed pump, stock. Chaingun: receiver, six-barrel cluster with rims, an ammo box with rounds, carry handle. Rocket: tube with two bands, a bore, two grips, a railed top |
+| the hand | a fist with knuckles and a thumb, drawn **over** the grip — drawn behind it, it read as a plank lying on the floor |
+| the firing frame | a muzzle star with a white core, at the barrel, on every gun |
+
+**Still zero external assets:** every gun is drawn into a canvas at load.
+
 ## 2.9.0 — 2026-11-24
 
 Four answers from play, shipped together.

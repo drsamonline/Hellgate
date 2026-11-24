@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.9.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.10.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.9.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.10.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 746 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 40 in `play/src/` |
-| Releases | 110, `v1.0.0` → `v2.9.0` |
+| Releases | 111, `v1.0.0` → `v2.10.0` |
 | Roadmap | 58 shipped, 3 measured-and-rejected, 5 open of 66 |
 
 ## What shipped in this run
@@ -59,6 +59,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.7.0** | **The act is the difficulty curve — 0.8 to 1.4 across the four acts** |
 | **2.8.0** | **The shop asks first — `V` opens the counter, nothing is bought for you** |
 | **2.9.0** | **The guns are sprites; a steeper ladder; richer money; the dialogue spine finished** |
+| **2.10.0** | **The guns, second pass — machined bodies, four silhouettes, a fist on the grip** |
 
 ### 2.0.0 in detail
 
@@ -102,7 +103,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | # | Item | Where | Size |
 | --- | --- | --- | --- |
-| — | The gun art is a first pass: flat rectangles. Worth a second pass once you have seen it | `weapons.js` | S |
+| — | Deterministic replay (#56): record inputs + seed, replay a run exactly | `main.js` + a new module | L |
 | — | Sector portals (#37): a cell with two floors you can walk between | `level.js` + `levelmesh.js` | XL |
 | — | The auto-shop has no consent: decide whether it needs a key press | `main.js` | S |
 | — | The level select shows no cutscene stills; a thumbnail per act would sell the campaign | `tools/shoot.mjs` | M |
