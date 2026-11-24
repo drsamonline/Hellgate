@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.16.0 — 2026-11-24
+
+**The codex and the achievements learn the campaign.** Both were written for nine zones, and the campaign has 32
+levels: `THE GATE IS YOURS` could never fire, because it counts `progress.cleared`, which only zone clears fill.
+
+| Piece | What it does |
+| --- | --- |
+| four campaign achievements | ACT ONE (every level of act I), TEN DEEP, THE WHOLE GATE (all 32), BOUGHT AND PAID FOR (buy the door) |
+| the tally they read | `record.levels`, `record.acts`, `record.doors`, written in `zoneCleared()` from the same `progress` the map reads |
+| four codex entries | REACH, CLEAR, SURVIVE, RELICS — what each objective type means, in the words the HUD uses, so "what does BREAK THE RELICS mean" has an answer in the game |
+
+**And an assertion that was a count:** "the codex has an entry for every enemy, trinket and zone" compared the
+entry list against a hardcoded total, so adding a fifth kind of entry failed it. It checks coverage by kind now —
+eight enemies, six trinkets, nine zones, four objectives.
+
 ## 2.15.0 — 2026-11-24
 
 **The ladder, as arithmetic.** The act table moved next to the level table it belongs to, the balance report learned

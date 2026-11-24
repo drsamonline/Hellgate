@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.15.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.16.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.15.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 118, `v1.0.0` → `v2.15.0` |
+| Version | 2.16.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 119, `v1.0.0` → `v2.16.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,15 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The record, and the two tables that read it
+
+- **`record` (achievements history) now carries the campaign's tally**: `levels`, `acts`, `doors`, written in
+  `zoneCleared()` from `progress`, the same object the map draws. `THE GATE IS YOURS` reads `progress.cleared`,
+  which only *zone* clears fill — it could never fire in the campaign.
+- **The codex has an OBJECTIVE kind**: REACH, CLEAR, SURVIVE, RELICS, in the words the HUD uses.
+- **An assertion that counted entries** broke the moment a fifth kind was added. Coverage by kind is the honest
+  assertion; a total is a claim about today.
 
 ### The ladder
 

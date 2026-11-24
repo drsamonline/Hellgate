@@ -949,8 +949,14 @@ console.log('\n== the codex ==');
   const { TRINKETS } = await import('../play/src/loot.js');
   const { ZONES } = await import('../play/src/world.js');
   const cx = buildCodex({ TYPES, TRINKETS, ZONES, kills: { imp: 7 } });
-  const total = Object.keys(TYPES).length + TRINKETS.length + ZONES.length;
-  ok(cx.entries.length === total, 'the codex has an entry for every enemy, trinket and zone (' + cx.entries.length + ')');
+  // coverage, not a total: the codex also carries the objective types now, and a
+  // hardcoded count would have to be edited every time a kind of entry is added
+  const kinds = {};
+  for (const e of cx.entries) kinds[e.kind] = (kinds[e.kind] || 0) + 1;
+  ok(kinds.ENEMY === Object.keys(TYPES).length, 'the codex has an entry for every enemy (' + kinds.ENEMY + ')');
+  ok(kinds.TRINKET === TRINKETS.length, 'every trinket (' + kinds.TRINKET + ')');
+  ok(kinds.ZONE === ZONES.length, 'every zone (' + kinds.ZONE + ')');
+  ok(kinds.OBJECTIVE === 4, 'and the four objective types (' + kinds.OBJECTIVE + ')');
   ok(cx.entries.some((e) => e.note === '7 killed'), 'and counts the kills you have made');
 
   const kiln = cx.search('kiln');
@@ -1778,6 +1784,23 @@ console.log('\n== the replay reaches the player ==');
   // nothing recorded, nothing to copy
   const savedRec = HG.replayJSON();
   ok(savedRec !== null, 'the recorder is still there for the rest of the suite');
+}
+
+console.log('\n== the campaign has its own achievements ==');
+{
+  const { ACHIEVEMENTS } = await import('../play/src/achievements.js');
+  const byId = Object.fromEntries(ACHIEVEMENTS.map((a) => [a.id, a]));
+  ok(!!byId.act1 && !!byId.tenlevels && !!byId.thirtytwo && !!byId.door,
+    'four campaign achievements exist');
+  // they read the campaign's own tally, not the zone count: with 32 levels, a
+  // zone-based predicate could never fire
+  const h = { kills: 0, zones: 9, zonesCleared: 9, levels: 0, acts: 0, doors: 0 };
+  ok(byId.act1.check({}, h) === false, 'ACT ONE does not fire on a zone count');
+  ok(byId.act1.check({}, { ...h, acts: 1 }) === true, 'it fires when an act is done');
+  ok(byId.tenlevels.check({}, { ...h, levels: 9 }) === false, 'TEN DEEP needs ten levels');
+  ok(byId.tenlevels.check({}, { ...h, levels: 10 }) === true, 'and fires at ten');
+  ok(byId.thirtytwo.check({}, { ...h, levels: 31 }) === false, 'THE WHOLE GATE needs thirty-one first');
+  ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
 console.log('\n== the guns are sprites ==');

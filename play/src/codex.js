@@ -59,6 +59,23 @@ export function entries(tables) {
       search: [t.id, t.name, eff, 'trinket'].join(' '),
     });
   }
+  // what a level can ask of you: the four objective types, in the words the HUD
+  // uses, so the codex answers "what does BREAK THE RELICS mean"
+  const OBJ = {
+    reach: 'The door is open from the first frame. Walk to the pad; nothing you kill is required.',
+    clear: 'Empty the room. The door opens when the last body drops.',
+    survive: 'The door opens on a clock, whatever is still standing. Do not have to win, only to last.',
+    relics: 'Break every relic on the floor. The door answers the count, not the bodies.',
+  };
+  for (const [id, text] of Object.entries(tables.OBJECTIVES || OBJ)) {
+    out.push({
+      kind: 'OBJECTIVE',
+      name: id.toUpperCase(),
+      text,
+      note: 'what ends a level',
+      search: [id, 'objective', 'level', text].join(' '),
+    });
+  }
   for (const z of tables.ZONES || []) {
     out.push({
       kind: 'ZONE',

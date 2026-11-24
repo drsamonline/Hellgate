@@ -29,6 +29,11 @@ export const ACHIEVEMENTS = [
   { id: 'gate', name: 'THROUGH THE GATE', desc: 'Clear the first zone', check: (r, h) => h.zones >= 1 },
   { id: 'halfway', name: 'HALFWAY DOWN', desc: 'Clear five zones', check: (r, h) => h.zones >= 5 },
   { id: 'campaign', name: 'THE GATE IS YOURS', desc: 'Clear every zone in one campaign', check: (r, h) => h.zonesCleared >= 9 },
+  // the campaign's own three, in the order a player meets them
+  { id: 'act1', name: 'ACT ONE', desc: 'Clear every level of act I', check: (r, h) => h.acts >= 1 },
+  { id: 'tenlevels', name: 'TEN DEEP', desc: 'Clear ten campaign levels', check: (r, h) => h.levels >= 10 },
+  { id: 'thirtytwo', name: 'THE WHOLE GATE', desc: 'Clear all thirty-two levels', check: (r, h) => h.levels >= 32 },
+  { id: 'door', name: 'BOUGHT AND PAID FOR', desc: 'Buy the door from the helper', check: (r, h) => h.doors >= 1 },
   { id: 'wave10', name: 'TEN WAVES', desc: 'Reach wave 10 in a run', check: (r) => r.wave >= 10 },
   { id: 'wave20', name: 'TWENTY WAVES', desc: 'Reach wave 20 in a run', check: (r) => r.wave >= 20 },
   { id: 'elite', name: 'ELITE HUNTER', desc: 'Kill an elite', check: (r, h) => h.elites >= 1 },
@@ -42,7 +47,13 @@ export const ACHIEVEMENTS = [
 
 /** A fresh history. */
 export function emptyHistory() {
-  return { kills: 0, zones: 0, zonesCleared: 0, elites: 0, blade: 0, types: 0, runs: 0, unlocked: [], best: 0, byType: {} };
+  return {
+    kills: 0, zones: 0, zonesCleared: 0, elites: 0, blade: 0, types: 0, runs: 0,
+    unlocked: [], best: 0, byType: {},
+    // the campaign's own tally: how many of the 32 levels are behind you, how
+    // many acts, and whether the helper has been paid
+    levels: 0, acts: 0, doors: 0,
+  };
 }
 
 /**

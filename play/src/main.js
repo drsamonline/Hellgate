@@ -2397,6 +2397,16 @@ function zoneCleared() {
   if (audio) { audio.stopDrone(); audio.stopBed(); }
   record.zones++;
   record.zonesCleared = Math.max(record.zonesCleared, (progress.cleared || []).length + 1);
+  // the campaign's tally, from the same record the map reads: how many of the 32
+  // levels are behind you, and how many whole acts
+  record.levels = Math.max(record.levels || 0, (progress.levels || []).length);
+  if (game.level) {
+    const row = storyLevel(game.level);
+    const actDone = row ? STORY_LEVELS.filter((r) => r.act === row.act)
+      .every((r) => (progress.levels || []).includes(r.n)) : false;
+    if (actDone) record.acts = Math.max(record.acts || 0, row.act);
+  }
+  if (game.flags && game.flags.keshiDoor) record.doors = Math.max(record.doors || 0, 1);
   record.best = Math.max(record.best || 0, game.score);
   saveHistory(record);
   awardFor();
@@ -3010,7 +3020,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.15.0';
+const BUILD = '2.16.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
