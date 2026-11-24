@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.29.0 — 2026-11-24
+
+**The four bosses get their lines, and a scene written twice.** 2.27.0 added four bosses; the story still had
+**THE WARDEN** speaking on the throne floor, where the boss is **THE GATE**.
+
+| Piece | What it does |
+| --- | --- |
+| four death lines | each boss speaks on its own level's outro: the warden at 8, the cinder at 16, the spine at 24, the gate at 32 |
+| the labels | `WARDEN` → `THE WARDEN`, `CINDER` → `THE CINDER`, `SPINE` → `THE SPINE`, so the boss bar, the entrance and the dialogue all say the same name |
+| **a scene written twice** | `'the-throne-outro'` existed in the act II block *and* at the end of the table. An object literal keeps the last key, so the first one — the copy with the gate's line in it — was dead data that silently lost |
+| a test | no scene key appears twice in `dialogue.js`, checked against the source; every boss level's outro is spoken in by that level's boss |
+
+**Why the first attempt missed:** I keyed the new scenes `the-cinder-outro` and `the-spine-outro`, but those levels
+are `the-first-relic` and `the-hinge` — a level with its own outro never falls through to an act scene. The test
+caught it in one run; the keys moved into the outros those levels actually use.
+
 ## 2.28.0 — 2026-11-24
 
 **Every enemy in the campaign was an imp.** A campaign level is one wave, and `spawnWave` picked its bodies by wave

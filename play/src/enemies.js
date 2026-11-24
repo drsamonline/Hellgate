@@ -26,7 +26,7 @@ export const TYPES = {
   warden: {
     hp: 620, speed: 1.9, radius: 1.05, height: 3.0, hitRadius: 1.45,
     attackRange: 20, attackCd: 2.3, telegraph: 0.7, damage: 18,
-    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'WARDEN', pitch: 0.55, voice: 0.5,
+    melee: true, meleeRange: 3.4, meleeDamage: 26, sight: 32, color: 0x6a1020, label: 'THE WARDEN', pitch: 0.55, voice: 0.5,
     boss: true,
   },
   // ---- the four act bosses -------------------------------------------------
@@ -36,14 +36,14 @@ export const TYPES = {
     hp: 700, speed: 1.6, radius: 1.0, height: 2.8, hitRadius: 1.35,
     attackRange: 26, attackCd: 1.9, telegraph: 0.8, damage: 16,
     melee: true, meleeRange: 3.2, meleeDamage: 22, sight: 34, color: 0xc2401a,
-    label: 'CINDER', pitch: 0.62, voice: 0.55, boss: true, lob: true,
+    label: 'THE CINDER', pitch: 0.62, voice: 0.55, boss: true, lob: true,
     lobDamage: 24,
   },
   spine: {
     hp: 780, speed: 2.0, radius: 1.05, height: 3.1, hitRadius: 1.4,
     attackRange: 3.4, attackCd: 1.6, telegraph: 0.6, damage: 20,
     melee: true, meleeRange: 3.4, meleeDamage: 30, sight: 40, color: 0x8a2b6a,
-    label: 'SPINE', pitch: 0.5, voice: 0.45, boss: true,
+    label: 'THE SPINE', pitch: 0.5, voice: 0.45, boss: true,
     charges: true, chargeSpeed: 9.5,
   },
   gate: {

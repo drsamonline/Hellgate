@@ -300,7 +300,9 @@ ok(HG.enemies.boss === boss, 'the manager exposes the live boss');
 ok(boss && boss.height > 2.5, 'it is taller than the other enemies');
 frames(3);
 ok(HG.hud.elBoss.classList.contains('on'), 'the boss bar shows');
-ok(HG.hud.elBossName.textContent === 'WARDEN', 'the boss bar names it');
+// the label is the type's own, not a string in the test: it became 'THE WARDEN'
+// when the four bosses needed names that read as names
+ok(HG.hud.elBossName.textContent === boss.T.label, 'the boss bar names it (' + HG.hud.elBossName.textContent + ')');
 const frac = parseFloat(HG.hud.elBossFill.style.width);
 ok(frac > 0 && frac <= 100, 'the boss bar has a fill: ' + frac + '%');
 boss.hurt(99999, { level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, onKill: () => HG.game.kills++ }, { x: 0, y: 0, z: 1 });
@@ -1831,6 +1833,35 @@ console.log('\n== one boss per act ==');
     HG.cinematic.skip();
     HG.game.state = 'playing';
   }
+}
+
+console.log('\n== every boss gets a death line ==');
+{
+  // the four bosses were added in 2.27.0 and the story still had THE WARDEN
+  // speaking on the throne floor, where the boss is THE GATE
+  const { sceneFor } = await import('../play/src/dialogue.js');
+  const { BOSS_FOR_ACT, STORY_LEVELS } = await import('../play/src/story-levels.js');
+  const { TYPES } = await import('../play/src/enemies.js');
+  for (const n of [8, 16, 24, 32]) {
+    const row = STORY_LEVELS.find((r) => r.n === n);
+    const label = TYPES[BOSS_FOR_ACT[row.act]].label;
+    const out = sceneFor(row, 'outro');
+    ok(!!out, 'level ' + n + ' has an outro (' + (out ? out.length + ' lines' : 'none') + ')');
+    const speaks = (out || []).some((l) => l.who === label);
+    ok(speaks, 'and the ' + label + ' speaks in it (' + (out || []).map((l) => l.who).join(', ') + ')');
+  }
+  // no scene key twice: an object literal keeps the last one, so a duplicate is
+  // dead data that silently wins. 'the-throne-outro' was written twice.
+  const src = fs.readFileSync(new URL('../play/src/dialogue.js', import.meta.url), 'utf8');
+  const keys = [...src.matchAll(/^  '([a-z0-9-]+)': \[/gm)].map((m) => m[1]);
+  const dupes = keys.filter((k, i) => keys.indexOf(k) !== i);
+  ok(dupes.length === 0, 'no scene is written twice (' + (dupes.join(', ') || 'none') + ')');
+  ok(keys.length > 20, 'and there are scenes to check (' + keys.length + ')');
+
+  // and nobody speaks who is not in the level's act
+  const throne = sceneFor(STORY_LEVELS.find((r) => r.n === 32), 'intro') || [];
+  ok(!throne.some((l) => l.who === 'THE WARDEN'),
+    'the warden does not speak on the throne floor (' + throne.map((l) => l.who).join(', ') + ')');
 }
 
 console.log('\n== each act brings its own enemies ==');

@@ -61,23 +61,37 @@ export const SCENES = {
   'act2-outro': [
     { who: 'VESNA', text: 'Two relics down the road. I would rather you found them than it did.' },
   ],
+  // ---- the four bosses, and what each says on the way down ----------------
+  // keyed by the LEVEL's id, not by the boss: a level with its own outro never
+  // falls through to an act scene, so `the-cinder-outro` would never have fired
+  'the-warden-outro': [
+    { who: 'THE WARDEN', text: 'Eight rooms. That is how far a man gets on stubbornness.' },
+    { who: 'KESSLER', text: 'It is not the last of them. It is the first of them.' },
+  ],
+
   'the-first-relic-intro': [
     { who: 'VESNA', text: 'Four relics. This is the first place they were ever kept.' },
     { who: 'KESSLER', text: 'And the last thing that guarded them is still in here. Break them anyway.' },
   ],
   'the-first-relic-outro': [
-    { who: 'VESNA', text: 'One of the two. The other is deeper. You will know it when the walls start answering.' },
+    { who: 'THE CINDER', text: 'Everything down here was fired in me. You are standing in the kiln.' },
+    { who: 'VESNA', text: 'The heat is going out of the walls. One of the two relics is yours; the other is deeper.' },
   ],
   'the-second-relic-outro': [
     { who: 'VESNA', text: 'That is both. Whatever it was keeping shut is open now, and it knows you did it.' },
-    { who: 'THE WARDEN', text: 'Bring them up here. I would like to see you carry them.' },
+    { who: 'THE GATE', text: 'Bring them up here. I would like to see you carry them.' },
   ],
   'the-throne-outro': [
+    { who: 'THE GATE', text: 'I was the door. Not the reason for it.' },
     { who: 'VESNA', text: 'It is quiet. Not dead-quiet. Finished-quiet.' },
     { who: 'KESSLER', text: 'Then we walk out the way we came, and we do not look at the relics.' },
   ],
 
   // ---- act III -----------------------------------------------------------
+  'the-hinge-outro': [
+    { who: 'THE SPINE', text: 'The roof was mine to hold. See what it does without me.' },
+    { who: 'VESNA', text: 'It did not fall. That is worse than if it had.' },
+  ],
   'act3-intro': [
     { who: 'KESSLER', text: 'The spine holds the roof up. Everything above this is the same building.' },
   ],
@@ -97,12 +111,8 @@ export const SCENES = {
     { who: 'THE WARDEN', text: 'You are carrying my relics around like a purse.' },
   ],
   'the-throne-intro': [
-    { who: 'THE WARDEN', text: 'You came up the whole building to be told no.' },
+    { who: 'THE GATE', text: 'You came up the whole building to be told no.' },
     { who: 'KESSLER', text: 'Ignore it. It talks because it is losing.' },
-  ],
-  'the-throne-outro': [
-    { who: 'VESNA', text: 'It is quiet. Not dead-quiet. Finished-quiet.' },
-    { who: 'KESSLER', text: 'Then we walk out the way we came, and we do not look at the relics.' },
   ],
 };
 
