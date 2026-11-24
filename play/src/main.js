@@ -1576,7 +1576,8 @@ function chooseClass(id) {
   if (zone && zone.bed) audio.startBed(zone.bed);
   hud.setVisible(true);
   hideScreens();
-  hud.toast(getClass(id).name + '  ·  ' + zone.name, 2.4);
+  const row = game.level ? storyLevel(game.level) : null;
+  hud.toast(getClass(id).name + '  ·  ' + (row ? 'LEVEL ' + row.n + ' · ' + row.title : zone.name), 2.4);
   clock.getDelta();
   // a story level opens with its scene, and control waits for it: a caption you
   // are being shot through is not a cutscene. A zone played outside the level
@@ -2298,14 +2299,18 @@ function showDiary() {
   if (el) {
     const zoneDone = (progress.cleared || []).includes(zone.id);
     const relicsLeft = game.relicsTotal - game.relics.length;
+    // a campaign level says which level it is: the zone it is dressed in is not
+    // the thing the player is working through
+    const row = game.level ? storyLevel(game.level) : null;
+    const cleared = row ? (progress.levels || []).includes(row.n) : zoneDone;
     el.innerHTML = `
       <div class="diarycol">
-        <h4>${zone.name}</h4>
+        <h4>${row ? 'LEVEL ' + row.n + ' OF ' + STORY_LEVELS.length + ' · ' + row.title : zone.name}</h4>
         <ul>
           <li class="wide"><b>OBJECTIVE</b><span>${objectiveLine()}</span></li>
           <li><b>WAVE</b><span>${game.wave} of ${game.wavesTarget}</span></li>
           <li><b>SCORE</b><span>${game.score}</span></li>
-          <li><b>ZONE</b><span>${zoneDone ? 'cleared before' : 'not cleared yet'}</span></li>
+          <li><b>${row ? 'ACT' : 'ZONE'}</b><span>${row ? 'act ' + row.act + ' of 4 · ' + (cleared ? 'cleared before' : 'not cleared yet') : (cleared ? 'cleared before' : 'not cleared yet')}</span></li>
         </ul>
       </div>
       <div class="diarycol">
@@ -2480,6 +2485,8 @@ function zoneCleared() {
   if (game.level) clearLevel(progress, game.level, game.score);
   else clearZone(progress, zone.id, game.score);
   clearRun();
+  const title = document.getElementById('clearedTitle');
+  if (title) title.textContent = game.level ? 'LEVEL CLEARED' : 'ZONE CLEARED';
   const el = document.getElementById('clearedStats');
   if (el) {
     el.innerHTML =
@@ -3088,7 +3095,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.17.0';
+const BUILD = '2.18.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

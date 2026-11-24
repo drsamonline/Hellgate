@@ -1786,6 +1786,36 @@ console.log('\n== the replay reaches the player ==');
   ok(savedRec !== null, 'the recorder is still there for the rest of the suite');
 }
 
+console.log('\n== the game speaks in levels, not zones ==');
+{
+  // a campaign level must not call itself a zone anywhere a player reads it
+  HG.beginLevel(12, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.game.state = 'playing';
+  const row = HG.storyLevel(12);
+  HG.showDiary();
+  const diary = document.getElementById('diaryBody').innerHTML;
+  ok(diary.includes('LEVEL 12'), 'the journal names the level (' + (diary.match(/LEVEL \d+[^<]*/) || ['none'])[0] + ')');
+  ok(diary.includes(row.title), 'and its title: ' + row.title);
+  ok(/ACT/.test(diary) && diary.includes('act ' + row.act + ' of 4'),
+    'and which act it belongs to (act ' + row.act + ' of 4)');
+  HG.closeDiary();
+  HG.game.state = 'playing';
+
+  // the cleared screen says what was cleared
+  HG.game.state = 'playing';
+  HG.zoneCleared();
+  ok(document.getElementById('clearedTitle').textContent === 'LEVEL CLEARED',
+    'the cleared screen says LEVEL CLEARED (' + document.getElementById('clearedTitle').textContent + ')');
+  HG.game.level = 0;
+  HG.game.state = 'playing';
+  HG.zoneCleared();
+  ok(document.getElementById('clearedTitle').textContent === 'ZONE CLEARED',
+    'and ZONE CLEARED for a zone run (' + document.getElementById('clearedTitle').textContent + ')');
+}
+
 console.log('\n== the controls screen documents the keys ==');
 {
   const fs2 = await import('node:fs');

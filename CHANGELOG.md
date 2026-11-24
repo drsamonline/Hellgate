@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.18.0 — 2026-11-24
+
+**The game speaks in levels, not zones.** The campaign replaced the zones everywhere except the words: clearing
+level 12 said **ZONE CLEARED**, the journal was headed with the zone the level is dressed in, and the class toast
+named the place rather than the level.
+
+| Where | Before | Now |
+| --- | --- | --- |
+| the cleared screen | `ZONE CLEARED` always | `LEVEL CLEARED` on a level, `ZONE CLEARED` on a zone run |
+| the journal | headed `THE RELIQUARY` (the zone's name) | `LEVEL 12 OF 32 · The Reliquary`, with `ACT 2 of 4 · not cleared yet` |
+| the class toast | `MARINE · THE VAULT` | `MARINE · LEVEL 12 · The Reliquary` |
+
+Three assertions pin it: the journal names the level, its title and its act; the cleared screen says LEVEL for a
+level and ZONE for a zone.
+
 ## 2.17.0 — 2026-11-24
 
 **Every key is documented in the game.** The title screen listed eleven of them; the game answers twenty-one.
