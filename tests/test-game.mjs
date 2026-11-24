@@ -1786,6 +1786,43 @@ console.log('\n== the replay reaches the player ==');
   ok(savedRec !== null, 'the recorder is still there for the rest of the suite');
 }
 
+console.log('\n== a long toast wraps instead of running off the screen ==');
+{
+  const el = document.getElementById('toast');
+  HG.hud.toast('short', 1);
+  ok(!el.classList.contains('wrap'), 'a short line stays on one line');
+  HG.hud.toast('chests pay coins; coins buy ammo, a trinket and — from him — a door', 3);
+  ok(el.classList.contains('wrap'), 'a long one wraps');
+  ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
+}
+
+console.log('\n== a level teaches the first time ==');
+{
+  // a level you have not cleared queues its hints; one you have cleared does not
+  const { LEVEL_HINTS } = await import('../play/src/story-levels.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.game.state = 'playing';
+  ok(HG.hintQueue.length === (LEVEL_HINTS[1] || []).length,
+    'level 1 queues its hints (' + HG.hintQueue.length + ')');
+  // they arrive one at a time, four seconds apart
+  const before = HG.hintQueue.length;
+  HG.updateHints(1);
+  ok(HG.hintQueue.length === before, 'not all at once: one second is not four');
+  HG.updateHints(3.5);
+  ok(HG.hintQueue.length === before - 1, 'four seconds shows one (' + HG.hintQueue.length + ' left)');
+  // and they stop nagging once the level is behind you
+  HG.progress.levels = (HG.progress.levels || []).concat([1]);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  ok(HG.hintQueue.length === 0, 'a level you have cleared does not repeat itself');
+  HG.progress.levels = (HG.progress.levels || []).filter((n) => n !== 1);
+}
+
 console.log('\n== the game speaks in levels, not zones ==');
 {
   // a campaign level must not call itself a zone anywhere a player reads it

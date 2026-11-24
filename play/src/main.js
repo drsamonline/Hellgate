@@ -27,7 +27,7 @@ import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, clearLevel, isUnlocked, isLevelUnlocked } from './world.js';
-import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT } from './story-levels.js';
+import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
@@ -1578,6 +1578,7 @@ function chooseClass(id) {
   hideScreens();
   const row = game.level ? storyLevel(game.level) : null;
   hud.toast(getClass(id).name + '  ·  ' + (row ? 'LEVEL ' + row.n + ' · ' + row.title : zone.name), 2.4);
+  queueHints();
   clock.getDelta();
   // a story level opens with its scene, and control waits for it: a caption you
   // are being shot through is not a cutscene. A zone played outside the level
@@ -1880,6 +1881,30 @@ function updateLifts(dt) {
  * A stationary fighter is the drone's update loop with a room instead of a leash
  * and a target instead of a follow point.
  */
+// ---- the first time a level is played --------------------------------------
+// One line at a time, four seconds apart, on a level the player has not cleared.
+// A hint on a level you have beaten is a nag.
+let hintQueue = [];
+let hintAt = 0;
+
+/** Queue the level's hints, unless it has been cleared before. */
+function queueHints() {
+  hintQueue = [];
+  hintAt = 0;
+  if (!game.level) return;
+  if ((progress.levels || []).includes(game.level)) return;
+  hintQueue = (LEVEL_HINTS[game.level] || []).slice();
+}
+
+/** Show the next hint when its turn comes. */
+function updateHints(dt) {
+  if (!hintQueue.length) return;
+  hintAt += dt;
+  if (hintAt < 4) return;
+  hintAt = 0;
+  hud.toast(hintQueue.shift(), 3.2);
+}
+
 // ---- the controls screen ---------------------------------------------------
 // Every key the game answers, in one table, rendered into a panel. The suite
 // checks this table against the key handler: a binding added without a line here
@@ -3095,7 +3120,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.18.0';
+const BUILD = '2.19.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3385,6 +3410,7 @@ function update(dt) {
     }
   }
   if (recorder) recorder.frame(input);
+  updateHints(dt);
   player.look(input.lookDx, input.lookDy);
   input.lookDx = 0;
   input.lookDy = 0;
@@ -3686,7 +3712,8 @@ window.HG = {
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
-  CONTROLS, showControls, closeControls, renderControls,
+  CONTROLS, showControls, closeControls, renderControls, queueHints, updateHints,
+  get hintQueue() { return hintQueue; },
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
   get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,

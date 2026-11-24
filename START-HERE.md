@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.18.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.19.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.18.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.19.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 42 in `play/src/` |
-| Releases | 121, `v1.0.0` → `v2.18.0` |
+| Releases | 122, `v1.0.0` → `v2.19.0` |
 | Roadmap | 59 shipped, 3 measured-and-rejected, 4 open of 66 |
 
 ## What shipped in this run
@@ -70,6 +70,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.16.0** | **The codex and the achievements learn the campaign — four objectives, four achievements** |
 | **2.17.0** | **Every key documented in the game, and a test that keeps the list honest** |
 | **2.18.0** | **The game speaks in levels, not zones — the cleared screen, the journal, the toast** |
+| **2.19.0** | **A level teaches the first time — five hint sets, and a toast that wraps** |
 
 ### 2.0.0 in detail
 

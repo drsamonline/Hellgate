@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.18.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.19.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.18.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 121, `v1.0.0` → `v2.18.0` |
+| Version | 2.19.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 122, `v1.0.0` → `v2.19.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Teaching, and the widest text in the game
+
+- **`LEVEL_HINTS` in `story-levels.js`**, queued by `queueHints()` after the class is chosen and shown by
+  `updateHints(dt)` four seconds apart, only on a level `progress.levels` does not already contain.
+- **`#toast` wraps above 48 characters.** It was `white-space: nowrap` with no width limit, so the first hint ran off
+  both edges of the screen. `hud.toast()` adds `.wrap` past that length; the rule is `min(92vw, 860px)`.
 
 ### The vocabulary
 

@@ -362,6 +362,9 @@ export class HUD {
 
   toast(msg, seconds = 1.8) {
     this.toastEl.textContent = msg;
+    // a long line wraps rather than running off both edges: 48 characters is
+    // about what fits on one line at this letter spacing
+    this.toastEl.classList.toggle('wrap', String(msg).length > 48);
     this.toastEl.classList.add('on');
     this.toastT = seconds;
   }

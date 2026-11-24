@@ -498,8 +498,12 @@
   #toast{
     position:absolute;left:50%;top:24%;transform:translate(-50%,-6px);
     font-size:15px;letter-spacing:.3em;color:var(--amber);opacity:0;transition:opacity .18s,transform .18s;
-    text-shadow:0 2px 10px #000;white-space:nowrap;
+    text-shadow:0 2px 10px #000;
+    /* one line while it fits, two when it does not: a toast is the widest text
+       in the game and a nowrap one ran off both edges of the screen */
+    white-space:nowrap;max-width:min(92vw,860px);text-align:center;
   }
+  #toast.wrap{white-space:normal;line-height:1.5;letter-spacing:.18em}
   #toast.on{opacity:1;transform:translate(-50%,0)}
 
   /* --------------------------------------------------------------- SCREENS */

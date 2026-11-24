@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.19.0 — 2026-11-24
+
+**A level teaches the first time you play it.** The brief's complaint was "games is bit boring", and a player who
+does not know that `V` talks, that the pad is the ring on the minimap, or that a relic takes a shot rather than a
+walk is playing a worse game than the one that exists.
+
+| Piece | What it does |
+| --- | --- |
+| `LEVEL_HINTS` | one line at a time, four seconds apart, on levels 1, 4, 5, 9 and 16 — the places where a rule first bites |
+| only on a level you have not cleared | `progress.levels` decides; a hint on a beaten level is a nag |
+| **a long toast wraps** | the hint ran off both edges of the screen on its first render: `#toast` was `white-space: nowrap` with no width limit. Over 48 characters it wraps to two centred lines inside `min(92vw, 860px)` |
+
+The toast fix is the part that matters beyond this feature: it was the widest text in the game with no constraint
+on it, and any future line of that length would have done the same.
+
 ## 2.18.0 — 2026-11-24
 
 **The game speaks in levels, not zones.** The campaign replaced the zones everywhere except the words: clearing

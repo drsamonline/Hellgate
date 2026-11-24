@@ -16,6 +16,37 @@
 import { ZONES } from './world.js';
 
 /**
+ * What a level teaches the first time it is played, one line at a time.
+ *
+ * The brief's complaint was "games is bit boring", and a new player who does not
+ * know that `V` talks or that the pad is marked on the minimap is playing a worse
+ * game than the one that exists. Each line is a toast, shown only on a level the
+ * player has not cleared yet, four seconds apart.
+ */
+export const LEVEL_HINTS = {
+  1: [
+    'WASD to move, SHIFT to sprint, the pad is the ring on your minimap',
+    'V reads a terminal, talks to the helper and opens his shop',
+    'chests pay coins; coins buy ammo, a trinket and — from him — a door',
+  ],
+  4: [
+    'a relic takes a shot to break: aim, do not walk into it',
+    'break every relic and the door opens on the count',
+  ],
+  5: [
+    'SURVIVE means outlast the clock, not clear the room',
+    'the clock is the HUD line under the crosshair',
+  ],
+  9: [
+    'elites wear a rim light and hit harder; they are worth more',
+    'TAB shows your class, weapons, powers and buffs',
+  ],
+  16: [
+    'the first of two relics: the second one changes the ending',
+  ],
+};
+
+/**
  * The difficulty floor for each act, applied to enemy health, damage and count.
  * It lives beside the table because it is a property of the campaign, and a zone
  * already harder than its act keeps its own threat.
