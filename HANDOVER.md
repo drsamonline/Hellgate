@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.16.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.17.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.16.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 119, `v1.0.0` → `v2.16.0` |
+| Version | 2.17.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 120, `v1.0.0` → `v2.17.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The controls table
+
+- **`CONTROLS` in `main.js` is the list the controls screen draws**, and a test reads the key handler's source for
+  `e.code === '…'` and fails if a binding is missing from it. Add a key, add a row, or CI goes red.
+- **`showControls(from)` remembers where it came from.** Opened from the title it closes to the title; opened from
+  the pause menu it closes into the run.
 
 ### The record, and the two tables that read it
 

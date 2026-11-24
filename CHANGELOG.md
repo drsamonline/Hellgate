@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.17.0 — 2026-11-24
+
+**Every key is documented in the game.** The title screen listed eleven of them; the game answers twenty-one.
+`V` (read, talk, shop), `G` (grenade), `F` (blade), `X`, `Q E R`, `TAB`, `J`, `C`, `M`, `N`, `F3` and `F11` were
+nowhere a player would look — which is most of what "check all buttons and control" meant.
+
+| Piece | What it does |
+| --- | --- |
+| a controls screen | every key and its job, in the same row style as the journal, opened from the title and from the pause menu, closed by its own button or `ESC` |
+| one table, `CONTROLS` | the list is data, and the panel is drawn from it |
+| a test that keeps it honest | it reads the key handler's own source for `e.code === '…'` and fails if any binding is missing from the table. A control added without a line on the screen is a red run |
+| it returns where it came from | opened from the title it closes to the title; opened from pause it closes into the run |
+
+**The test is the interesting part.** A documentation table rots; a documentation table checked against the code
+that implements it cannot silently rot.
+
 ## 2.16.0 — 2026-11-24
 
 **The codex and the achievements learn the campaign.** Both were written for nine zones, and the campaign has 32

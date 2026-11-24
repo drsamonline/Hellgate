@@ -515,7 +515,7 @@
     overflow-y:auto;overscroll-behavior:contain;
   }
   /* the two screens that are taller than any window: start at the top */
-  #map,#codex{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
+  #map,#codex,#controls{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
   .screen.on{display:flex}
   .panelclose{
     position:absolute;top:10px;right:12px;width:44px;height:44px;border-radius:50%;
@@ -665,6 +665,7 @@
         <button id="levelSelectBtn" class="ghost">Levels</button>
         <button id="watchBtn" class="ghost">Watch a replay</button>
         <input id="replayFile" type="file" accept=".json,application/json" style="display:none" />
+        <button id="controlsBtnTitle" class="ghost">Controls</button>
         <button id="settingsBtnTitle" class="ghost">Settings</button>
       </div>
       <div id="best"></div>
@@ -672,7 +673,7 @@
       <p id="build" class="build"></p>
       <p class="keys">
         WASD move · SHIFT sprint · SPACE jump · MOUSE look · LMB fire<br />
-        1 pistol · 2 shotgun · 3 rocket · ESC pause · ` shows fps
+        every other key is on the controls screen
       </p>
     </section>
 
@@ -693,6 +694,13 @@
       <h2>STATUS</h2>
       <p class="sub">tab or esc to close</p>
       <div id="invBody" class="invgrid"></div>
+    </section>
+
+    <section id="controls" class="screen">
+      <button id="controlsClose" class="panelclose" aria-label="close">×</button>
+      <h2>CONTROLS</h2>
+      <p class="sub">every key the game answers</p>
+      <div id="controlsBody" class="invgrid"></div>
     </section>
 
     <section id="codex" class="screen">
@@ -742,6 +750,7 @@
       <p class="sub">the gate waits</p>
       <div class="row">
         <button id="resumeBtn">Resume</button>
+        <button id="controlsBtn" class="ghost">Controls</button>
         <button id="journalBtn" class="ghost">Journal</button>
         <button id="invBtn" class="ghost">Inventory</button>
         <button id="settingsBtnPause" class="ghost">Settings</button>

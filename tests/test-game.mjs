@@ -1786,6 +1786,37 @@ console.log('\n== the replay reaches the player ==');
   ok(savedRec !== null, 'the recorder is still there for the rest of the suite');
 }
 
+console.log('\n== the controls screen documents the keys ==');
+{
+  const fs2 = await import('node:fs');
+  const src = fs2.readFileSync(new URL('../play/src/main.js', import.meta.url), 'utf8');
+  // every key the handler answers, from the source itself
+  const codes = [...src.matchAll(/e\.code === '([A-Za-z0-9]+)'/g)].map((m) => m[1]);
+  const uniq = [...new Set(codes)];
+  const listed = HG.CONTROLS.map((c) => c.keys).join(' ').toUpperCase();
+  const NAMES = {
+    Backquote: '`', Digit1: '1', Digit2: '2', Digit3: '3', Digit4: '4', Escape: 'ESC',
+    KeyC: 'C', KeyE: 'E', KeyF: 'F', KeyG: 'G', KeyJ: 'J', KeyM: 'M', KeyN: 'N',
+    KeyQ: 'Q', KeyR: 'R', KeyV: 'V', KeyX: 'X', Space: 'SPACE', Tab: 'TAB', F3: 'F3', F11: 'F11',
+  };
+  const missing = uniq.filter((c) => !listed.includes(NAMES[c] || c));
+  ok(missing.length === 0, 'every key the game answers is on the controls screen (' + (missing.join(', ') || 'none missing') + ')');
+  ok(HG.CONTROLS.length >= 15, 'and the list is a list (' + HG.CONTROLS.length + ' rows)');
+  ok(HG.CONTROLS.every((c) => c.keys && c.does), 'every row says what to press and what it does');
+  // it renders, and it opens from a button
+  HG.showControls();
+  const body = document.getElementById('controlsBody').innerHTML;
+  ok(body.includes('W A S D') && body.includes('codex'), 'the panel draws the table');
+  ok(HG.game.state === 'controls', 'and the game knows it is in it');
+  HG.closeControls();
+  ok(HG.game.state === 'playing', 'closing returns to play');
+  // and from the title it goes back to the title, not into a run
+  HG.showControls('title');
+  HG.closeControls();
+  ok(HG.game.state === 'title', 'closing from the title returns to the title');
+  HG.game.state = 'playing';
+}
+
 console.log('\n== the campaign has its own achievements ==');
 {
   const { ACHIEVEMENTS } = await import('../play/src/achievements.js');

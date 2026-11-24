@@ -1879,6 +1879,71 @@ function updateLifts(dt) {
  * A stationary fighter is the drone's update loop with a room instead of a leash
  * and a target instead of a follow point.
  */
+// ---- the controls screen ---------------------------------------------------
+// Every key the game answers, in one table, rendered into a panel. The suite
+// checks this table against the key handler: a binding added without a line here
+// is a red run, because a control nobody documents is a control nobody uses.
+const CONTROLS = [
+  { keys: 'W A S D', does: 'move' },
+  { keys: 'MOUSE', does: 'look' },
+  { keys: 'LMB', does: 'fire' },
+  { keys: 'SHIFT', does: 'sprint' },
+  { keys: 'SPACE', does: 'jump' },
+  { keys: '1 2 3 4', does: 'pistol · shotgun · rocket · chaingun' },
+  { keys: 'X', does: 'next weapon' },
+  { keys: 'Q E R', does: 'the three powers' },
+  { keys: 'G', does: 'grenade' },
+  { keys: 'F', does: 'blade' },
+  { keys: 'V', does: 'read · talk · shop — whatever is in front of you' },
+  { keys: 'TAB', does: 'status: class, weapons, powers, buffs' },
+  { keys: 'J', does: 'journal' },
+  { keys: 'C', does: 'codex, searchable' },
+  { keys: 'M', does: 'the map' },
+  { keys: 'N', does: 'sound on or off' },
+  { keys: 'ESC', does: 'pause, or close the panel you are in' },
+  { keys: '`', does: 'frame time' },
+  { keys: 'F3', does: 'draw calls and body count' },
+  { keys: 'F11', does: 'fullscreen' },
+];
+
+/** Draw the controls table. */
+function renderControls() {
+  const body = document.getElementById('controlsBody');
+  if (!body) return;
+  // the same list the journal uses, so a key and its job read like every other
+  // row of numbers in this game
+  body.innerHTML = `<div class="diarycol"><ul>` + CONTROLS.map((c) =>
+    `<li><b>${c.keys}</b><span>${c.does}</span></li>`).join('') + `</ul></div>`;
+}
+
+/** Where the panel was opened from, so closing it goes back there. */
+let controlsFrom = 'title';
+
+/**
+ * Open the controls panel.
+ * @param {string} [from] 'title' or 'playing'; guessed from the state.
+ */
+function showControls(from) {
+  controlsFrom = from || (game.state === 'title' || game.state === 'class' ? 'title' : 'playing');
+  renderControls();
+  game.state = 'controls';
+  hud.setVisible(false);
+  showScreen('controls');
+}
+
+/** Close it, back to wherever it was opened from. */
+function closeControls() {
+  hideScreens();
+  if (controlsFrom === 'title') {
+    game.state = 'title';
+    showScreen('title');
+    return;
+  }
+  hud.setVisible(true);
+  game.state = 'playing';
+  requestLock();
+}
+
 // ---- the helper's job ------------------------------------------------------
 // He fights from his room and he sells ammo. This is the third thing the brief
 // asks of him: he asks for something, and he pays for it. The offer is a caption
@@ -2944,6 +3009,9 @@ document.getElementById('startBtn').addEventListener('click', () => {
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
 // a phone has no Escape key: the read-only panels need a visible way out
+document.getElementById('controlsBtnTitle')?.addEventListener('click', () => showControls('title'));
+document.getElementById('controlsBtn')?.addEventListener('click', () => showControls('playing'));
+document.getElementById('controlsClose')?.addEventListener('click', () => closeControls());
 document.getElementById('diaryClose')?.addEventListener('click', () => closeDiary());
 document.getElementById('invClose')?.addEventListener('click', () => toggleInventory());
 document.getElementById('codexClose')?.addEventListener('click', () => closeCodex());
@@ -3020,7 +3088,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.16.0';
+const BUILD = '2.17.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3611,6 +3679,7 @@ window.HG = {
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
+  CONTROLS, showControls, closeControls, renderControls,
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
   get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
