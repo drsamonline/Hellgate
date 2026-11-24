@@ -1796,6 +1796,30 @@ console.log('\n== a long toast wraps instead of running off the screen ==');
   ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
 }
 
+console.log('\n== a distant enemy is a figure, not a crate ==');
+{
+  // past LOD_DIST an enemy is one mesh instead of ten parts. It used to be a box,
+  // and a box at 30 m reads as a crate — the player report said exactly that.
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const p = HG.player.pos;
+  HG.enemies.spawnAt('imp', p.x + 30, p.z, 1);
+  const e = HG.enemies.list[HG.enemies.list.length - 1];
+  ok(!!e && !!e.proxy, 'a body carries a proxy');
+  const geo = e.proxy.geometry;
+  const params = geo.parameters || {};
+  // CylinderGeometry carries radiusTop/radiusBottom; the stub keeps the args
+  const tapered = params.radiusTop != null
+    ? params.radiusTop < params.radiusBottom
+    : /Cylinder/.test(geo.kind || '');
+  ok(tapered, 'the proxy tapers, so it reads as a body (' + (geo.kind || 'cylinder') + ')');
+  ok(!/Box/.test(geo.kind || ''), 'and it is not a box');
+}
+
 console.log('\n== the intro camera follows the floor ==');
 {
   // the cold open used to lerp between room centres: a straight chord through

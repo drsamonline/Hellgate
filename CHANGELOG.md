@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.21.0 — 2026-11-24
+
+**A distant enemy is a figure, not a crate.** Past 24 m an enemy is drawn as one mesh instead of ten parts. That
+mesh was a box, and a box at 30 m reads as a crate — which is what the first player report said: "enemies render
+boxes at far after near they render properly".
+
+| Piece | What it does |
+| --- | --- |
+| the proxy | a six-sided body that tapers from the shoulders up, in the enemy's own colour, instead of a cube |
+| the cost | none: one mesh before, one mesh now |
+| a test | the proxy geometry must taper and must not be a box |
+
+**What I could not do:** reproduce the "graphical glitches" you mentioned from a still frame. I looked at the game
+at 1280×720 — walls, floor, ceiling, HUD, gun — and found nothing obvious. Flicker, z-fighting and pop-in do not
+survive a screenshot, so that one needs a description or a moment: what you see and when.
+
 ## 2.20.0 — 2026-11-24
 
 Two things from play: **"the intro still cuts through walls"** and **"the guns are in side views … it seems
