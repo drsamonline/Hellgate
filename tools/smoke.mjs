@@ -569,7 +569,7 @@ for (const [id, screenId] of screens) {
       if (!(top && (top === b || b.contains(top)))) dead.push((b.id || b.textContent || '?').trim().slice(0, 16));
     }
     return { on: el.classList.contains('on'), scrolls: cs.overflowY, items: items.length, dead };
-  }, [id]);
+  }, [screenId]);   // the id in the DOM, not the label: 'dead' is '#gameover'
   ok('the ' + id + ' screen is up', r.on === true, JSON.stringify(r));
   ok('and it scrolls when it is taller than the window', r.scrolls === 'auto', JSON.stringify(r));
   ok('and all ' + r.items + ' of its controls can be pressed', r.dead.length === 0,
