@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.32.0 — 2026-11-24
+
+**The ladder, measured against the enemies it actually sends.** 2.28.0 gave each act its own roster, and the
+difficulty report still computed every wave from the imp. It uses the roster now, and the numbers are the fight.
+
+| Act | Enemies | Wave hp | Seconds of shotgun | Incoming dps | Standing-still hp |
+| --- | --- | --- | --- | --- | --- |
+| I | 5 | 220 | 2.1 | 29 | 61 |
+| II | 7 | 347 | 3.4 | 49 | 164 |
+| III | 8 | 429 | 4.1 | 76 | 315 |
+| IV | 11 | 971 | 9.4 | 148 | 1389 |
+
+| Piece | What it does |
+| --- | --- |
+| `node tools/balance-report.mjs acts` | the table above, from `ROSTER_FOR_ACT` and the real `TYPES` |
+| a guard | no act's first wave may take fifteen seconds of shotgun, and each act must take longer than the one before |
+| the footer | it explained a column that had been replaced; it explains the ones that are there |
+
+Act IV takes **9.4 seconds of sustained shotgun** to clear one wave — four and a half times act I, and under the
+fifteen-second ceiling the guard now holds it to.
+
 ## 2.31.0 — 2026-11-24
 
 **The act is named where it ends.** Beating a boss produced the same panel as beating any other level — `LEVEL

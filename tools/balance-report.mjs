@@ -124,7 +124,7 @@ if (process.argv[2] === 'acts' || !zoneArg) {
   const PLAYER_HP = 110;
   console.log('the ladder — the first wave of each act\n');
   const { ROSTER_FOR_ACT } = await import('../play/src/story-levels.js');
-  console.log('act  level  zone        enemies  hp each  damage per hit  hits to kill  roster mean hp  standing-still hp');
+  console.log('act  level  zone        enemies  wave hp  seconds  incoming dps  hp lost standing still');
   for (const act of [1, 2, 3, 4]) {
     const row = STORY_LEVELS.find((r) => r.act === act);
     const lz = storyLevelZone(row);
@@ -137,18 +137,25 @@ if (process.argv[2] === 'acts' || !zoneArg) {
     const hits = Math.ceil(PLAYER_HP / perHit);
     const incoming = n * (TYPES.imp.damage / TYPES.imp.attackCd) * d.dmg;
     const secs = (impHp * n) / dps(weapon('shotgun'));
-    // the roster is what actually walks at you; the imp column is the yardstick
+    // the roster is what actually walks at you, so the whole fight is computed
+    // from it: wave health, the seconds a shotgun needs, and what the wave can
+    // land on a player who never moves
     const roster = ROSTER_FOR_ACT[act] || ['imp'];
-    const meanHp = roster.reduce((a, t) => a + Math.round(TYPES[t].hp * d.hp), 0) / roster.length;
+    const bodyHp = roster.map((t) => Math.round(TYPES[t].hp * d.hp));
+    const meanHp = bodyHp.reduce((a, h) => a + h, 0) / bodyHp.length;
+    const waveHp = meanHp * n;
+    const secs2 = waveHp / dps(weapon('shotgun'));
+    const meanDps = roster.reduce((a, t) => a + TYPES[t].damage / TYPES[t].attackCd, 0) / roster.length;
+    const inDps = n * meanDps * d.dmg;
     console.log(
       String(act).padEnd(5) + String(row.n).padEnd(7) + String(row.zone).padEnd(12) +
-      String(n).padEnd(9) + String(impHp).padEnd(9) + String(perHit).padEnd(16) +
-      String(hits).padEnd(14) + String(Math.round(meanHp)).padEnd(16) + Math.round(incoming * secs)
+      String(n).padEnd(9) + String(Math.round(waveHp)).padEnd(9) + secs2.toFixed(1).padEnd(9) +
+      String(Math.round(inDps)).padEnd(14) + Math.round(inDps * secs2)
     );
   }
-  console.log('\n  "hits to kill" is an imp landing one hit on a player with 110 hp and no armour.');
-  console.log('  "standing-still hp" is the whole first wave landing every hit while you do nothing:');
-  console.log('  an upper bound, useful only for comparing acts with each other.\n');
+  console.log('\n  "seconds" is a shotgun at its own rate of fire against the wave\'s whole health.');
+  console.log('  "hp lost standing still" is every body in the wave landing every hit while you do');
+  console.log('  nothing: an upper bound, useful only for comparing acts with each other.\n');
 }
 
 console.log('\nammo carried at the start of a run');

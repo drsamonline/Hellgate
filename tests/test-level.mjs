@@ -414,6 +414,22 @@ console.log('\n== the ladder ==');
     if (hits < 3) bad('ladder', `an imp in act ${r.act} kills a full-health player in ${hits} hits`);
   }
   console.log('  ' + rows.map((r) => `act ${r.act}: ${r.dmg.toFixed(0)} per hit, ${Math.ceil(PLAYER_HP / r.dmg)} hits to kill`).join(' · '));
+
+  // the wave itself, from the roster the act actually sends: a finale that needs
+  // thirty seconds of shotgun to clear is a slog, not a climax
+  const { ROSTER_FOR_ACT } = await import('../play/src/story-levels.js');
+  const waveHp = (act, t) => {
+    const roster = ROSTER_FOR_ACT[act] || ['imp'];
+    const n = Math.max(2, Math.min(30, Math.round(6 * t)));
+    const mean = roster.reduce((a, k) => a + TYPES[k].hp * t, 0) / roster.length;
+    return { n, hp: mean * n };
+  };
+  const SG_DPS = 11 * 8 / 0.85;   // the shotgun's own numbers, from WEAPONS
+  const secs = [1, 2, 3, 4].map((a) => waveHp(a, rows[a - 1].t).hp / SG_DPS);
+  console.log('  wave clear time (shotgun): ' + secs.map((s2, i) => 'act ' + (i + 1) + ' ' + s2.toFixed(1) + 's').join(' · '));
+  // this suite counts failures with bad(), not with an ok() helper
+  if (!secs.every((s2) => s2 < 15)) bad('ladder', 'an act\'s first wave takes fifteen seconds of shotgun: ' + secs.map((s2) => s2.toFixed(1)).join(', '));
+  if (!(secs[3] > secs[2] && secs[2] > secs[1])) bad('ladder', 'the acts do not take longer than each other: ' + secs.map((s2) => s2.toFixed(1)).join(', '));
 }
 
 console.log(`\nseeds=${seeds.length} avgRooms=${(totalRooms / seeds.length).toFixed(1)} doors=${totalDoor}/${seeds.length} minOpenCells=${minOpen}`);

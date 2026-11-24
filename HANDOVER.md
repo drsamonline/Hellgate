@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.31.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.32.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.31.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 135, `v1.0.0` → `v2.31.0` |
+| Version | 2.32.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 136, `v1.0.0` → `v2.32.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The ladder, in the rosters' terms
+
+- **`node tools/balance-report.mjs acts`** computes each act's first wave from `ROSTER_FOR_ACT`: wave health, the
+  seconds a shotgun needs, incoming dps, and the upper-bound damage of standing still. Act IV is 971 hp and 9.4 s.
+- **The guard:** no act's wave may take fifteen seconds of shotgun, and each act must take longer than the one
+  before. A future roster change that turns the finale into a slog fails the suite.
 
 ### Naming the act
 
