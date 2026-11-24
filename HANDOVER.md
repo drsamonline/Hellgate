@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.22.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.23.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.22.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 125, `v1.0.0` → `v2.22.0` |
+| Version | 2.23.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 126, `v1.0.0` → `v2.23.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,14 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The end of the campaign, and a test that dirtied the record
+
+- **`beginLevel()` clamps to `STORY_LEVELS.length`**, so "Next level" on level 32 restarted level 32. The cleared
+  screen says `CAMPAIGN COMPLETE` on the last level and its button returns to the title.
+- **`zoneCleared()` writes `progress`** — level, cleared list, best. A test that calls it must snapshot and restore
+  the whole object, or the level-select assertion later in the same file reads a world where level 32 is already
+  cleared. A test that changes the state other tests read is a test of the order, not of the code.
 
 ### The wall invariant
 

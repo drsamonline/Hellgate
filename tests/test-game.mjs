@@ -1796,6 +1796,46 @@ console.log('\n== a long toast wraps instead of running off the screen ==');
   ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
 }
 
+console.log('\n== the campaign has an end ==');
+{
+  // "Next level" on level 32 used to restart level 32: beginLevel clamps to the
+  // table's length, so the last button in the game was a loop
+  const { STORY_LEVELS } = await import('../play/src/story-levels.js');
+  // zoneCleared() writes progress: snapshot it, or the playability suite finds
+  // level 32 already cleared and calls it a failure
+  // the whole object: zoneCleared() also moves progress.level, and the level
+  // select test reads that to decide which row must be locked
+  const savedProgress = JSON.parse(JSON.stringify(HG.progress));
+  HG.beginLevel(5, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.game.state = 'playing';
+  HG.zoneCleared();
+  const midTitle = document.getElementById('clearedTitle').textContent;
+  const midBtn = document.getElementById('clearedNext').textContent;
+  ok(midTitle === 'LEVEL CLEARED', 'a middle level says LEVEL CLEARED (' + midTitle + ')');
+  ok(midBtn === 'Next level', 'and offers the next level (' + midBtn + ')');
+  document.getElementById('clearedNext').dispatch('click');
+  ok(HG.game.level === 6, 'which starts level 6 (' + HG.game.level + ')');
+
+  HG.beginLevel(STORY_LEVELS.length, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.game.state = 'playing';
+  HG.zoneCleared();
+  ok(document.getElementById('clearedTitle').textContent === 'CAMPAIGN COMPLETE',
+    'the last level says CAMPAIGN COMPLETE (' + document.getElementById('clearedTitle').textContent + ')');
+  ok(document.getElementById('clearedNext').textContent === 'Back to the title',
+    'and its button says where it goes');
+  document.getElementById('clearedNext').dispatch('click');
+  ok(HG.game.state === 'title', 'which is the title (' + HG.game.state + ')');
+  ok(HG.game.level === 0, 'with no level left over');
+  for (const k of Object.keys(HG.progress)) delete HG.progress[k];
+  Object.assign(HG.progress, savedProgress);
+}
+
 console.log('\n== a wall is a wall ==');
 {
   // "some walls are pass through" was the first line of the first player report,

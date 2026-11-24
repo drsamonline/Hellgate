@@ -2510,8 +2510,13 @@ function zoneCleared() {
   if (game.level) clearLevel(progress, game.level, game.score);
   else clearZone(progress, zone.id, game.score);
   clearRun();
+  // the last level ends the campaign, and the screen has to say so: "Next level"
+  // on level 32 used to restart level 32, because beginLevel clamps to 32
+  const last = game.level === STORY_LEVELS.length;
   const title = document.getElementById('clearedTitle');
-  if (title) title.textContent = game.level ? 'LEVEL CLEARED' : 'ZONE CLEARED';
+  if (title) title.textContent = last ? 'CAMPAIGN COMPLETE' : game.level ? 'LEVEL CLEARED' : 'ZONE CLEARED';
+  const nextBtn = document.getElementById('clearedNext');
+  if (nextBtn) nextBtn.textContent = last ? 'Back to the title' : 'Next level';
   const el = document.getElementById('clearedStats');
   if (el) {
     el.innerHTML =
@@ -3083,7 +3088,15 @@ document.getElementById('mapBack')?.addEventListener('click', () => {
 });
 document.getElementById('mapFromCleared')?.addEventListener('click', () => { mapReturn = 'cleared'; showZoneMap(); });
 document.getElementById('clearedNext')?.addEventListener('click', () => {
-  if (game.level) { beginLevel(Math.min(STORY_LEVELS.length, game.level + 1)); return; }
+  if (game.level >= STORY_LEVELS.length) {
+    // the campaign is over: the title, not the last level again
+    game.level = 0;
+    hideScreens();
+    game.state = 'title';
+    showScreen('title');
+    return;
+  }
+  if (game.level) { beginLevel(game.level + 1); return; }
   const i = ZONES.findIndex((z) => z.id === zone.id);
   beginZone(ZONES[Math.min(ZONES.length - 1, i + 1)]);
 });
@@ -3120,7 +3133,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.22.0';
+const BUILD = '2.23.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

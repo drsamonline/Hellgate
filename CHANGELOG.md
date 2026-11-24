@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.23.0 — 2026-11-24
+
+**The campaign has an end.** Clearing level 32 and pressing **Next level** restarted level 32: `beginLevel()` clamps
+to the table's length, so the last button in the game was a loop, and the panel said `LEVEL CLEARED` as if there
+were a thirty-third.
+
+| Piece | What it does |
+| --- | --- |
+| the last level | the panel says **CAMPAIGN COMPLETE** and the button says **Back to the title** |
+| the button | on level 32 it returns to the title and clears `game.level`; on any other level it still starts the next one |
+| a test | level 5 → `LEVEL CLEARED` → click → level 6; level 32 → `CAMPAIGN COMPLETE` → click → the title, no level left over |
+
+**And a test that dirtied the record.** `zoneCleared()` writes `progress` — level, cleared list, best — so calling
+it in a test left the level-select assertion ("level 32 is locked at level 33") reading a world where level 32 was
+already cleared. The campaign test snapshots `progress` and puts it back now. A test that changes the state every
+other test reads is not a test of the code; it is a test of the order.
+
 ## 2.22.0 — 2026-11-24
 
 **"Some walls are pass through" — checked, and not reproducible.** It was the first line of the first player
