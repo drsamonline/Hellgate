@@ -75,3 +75,8 @@ jobs:
       # pages load, resolve the import map and reach a playable state.
       - name: Browser smoke test
         run: node tools/smoke.mjs
+
+      - name: Draw calls per level stay inside the budget
+        run: node tools/drawcalls.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

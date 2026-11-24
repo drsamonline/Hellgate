@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.25.0 — 2026-11-24
+
+**The performance number nobody had measured.** A draw call is not the whole frame, but it is the part this game
+controls, and no release had ever counted one.
+
+| Measured | |
+| --- | --- |
+| Median, 20 bodies on the floor | **90 draw calls** |
+| Worst level (3) | **122** |
+| Best level (6) | **14** |
+| Budget, now enforced | 200 |
+
+The level geometry is merged, so a frame is bodies and props rather than quads — which is why the numbers are this
+low with twenty imps standing in the room. 200 is 70% of headroom above the worst level; the tool fails CI above it.
+
+| Piece | What it does |
+| --- | --- |
+| `tools/drawcalls.mjs` | loads the game in a real browser, walks all 32 levels with twenty bodies each, renders one frame per level and reads `renderer.info.render.calls` |
+| in CI | after the smoke test, on the Chrome the workflow already installs |
+| why a browser | the three.js double the suites use has no renderer, so a headless count of the scene graph answers **zero for every level** — and looks exactly like a pass. It did, for one commit, before this was measured properly |
+
 ## 2.24.0 — 2026-11-24
 
 **Harden and ship, part one.** Three things that stood between the game and a player who was not me.
