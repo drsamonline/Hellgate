@@ -26,6 +26,25 @@ import { ZONES } from './world.js';
 export const BOSS_FOR_ACT = { 1: 'warden', 2: 'cinder', 3: 'spine', 4: 'gate' };
 
 /**
+ * Which boss closes each zone, for boss rush.
+ *
+ * Boss rush played the warden nine times: it spawns by zone and the boss type
+ * came from the act, which is zero outside the campaign. Four zones get their own
+ * boss now and the rest cycle through the four.
+ */
+export const BOSS_FOR_ZONE = {
+  gate: 'warden',
+  ashfall: 'warden',
+  kiln: 'cinder',
+  vault: 'cinder',
+  spine: 'spine',
+  cistern: 'spine',
+  throne: 'gate',
+  foundry: 'gate',
+  grove: 'warden',
+};
+
+/**
  * What walks towards you in each act.
  *
  * A campaign level is a single wave, so the wave-number ladder in `spawnWave`

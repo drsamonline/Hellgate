@@ -27,7 +27,7 @@ import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, clearLevel, isUnlocked, isLevelUnlocked } from './world.js';
-import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS, BOSS_FOR_ACT, ROSTER_FOR_ACT } from './story-levels.js';
+import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT, LEVEL_HINTS, BOSS_FOR_ACT, ROSTER_FOR_ACT, BOSS_FOR_ZONE } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
@@ -231,7 +231,7 @@ const MODES = {
   },
   bossrush: {
     name: 'BOSS RUSH',
-    blurb: 'One wave per zone, and it is the warden every time.',
+    blurb: 'One wave per zone, and a boss at the end of each. Four of them.',
     waves: 1,
     lives: 1,
     endless: false,
@@ -960,7 +960,9 @@ function startWave(n) {
     // put THE GATE on levels 25 to 31 as well, so a player met the act boss seven
     // times before the level it belongs to.
     boss: game.level ? bossLevel : (mode.bossRush || !!zone.boss),
-    bossType: BOSS_FOR_ACT[game.bossAct || 1],
+    // boss rush is per zone, so the zone picks the boss; a campaign level picks
+    // by its act
+    bossType: mode.bossRush ? (BOSS_FOR_ZONE[zone.id] || 'warden') : BOSS_FOR_ACT[game.bossAct || 1],
     // the act decides what walks towards you: a level is one wave, so the
     // wave-number ladder inside spawnWave never got past imps in the campaign
     roster: game.bossAct ? ROSTER_FOR_ACT[game.bossAct] : null,
@@ -3156,7 +3158,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.32.0';
+const BUILD = '2.33.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

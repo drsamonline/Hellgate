@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.33.0 — 2026-11-24
+
+**Boss rush played the warden nine times.** It spawns by zone, and the boss type came from the act — which is zero
+outside the campaign — so every zone got the warden, and its own blurb said so.
+
+| Piece | What it does |
+| --- | --- |
+| `BOSS_FOR_ZONE` | nine zones, four bosses: gate and ashfall the warden, kiln and vault the cinder, spine and cistern the spine, throne and foundry the gate, grove the warden |
+| the blurb | `One wave per zone, and a boss at the end of each. Four of them.` |
+| a test | every zone has a boss, the table names four different ones, and a boss-rush wave on the kiln brings the cinder |
+
+**And a test that set a mode by passing it as an argument.** `beginZone()` takes `(zone, level, fresh)`; the mode is
+a module variable that `selectMode()` writes. My first version passed `'bossrush'` as a fourth argument, which was
+ignored, so the wave had no boss and the test looked like a product bug for one run.
+
 ## 2.32.0 — 2026-11-24
 
 **The ladder, measured against the enemies it actually sends.** 2.28.0 gave each act its own roster, and the

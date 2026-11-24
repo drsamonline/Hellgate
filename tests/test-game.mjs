@@ -1850,6 +1850,35 @@ console.log('\n== one boss per act ==');
   }
 }
 
+console.log('\n== boss rush is four bosses, not one ==');
+{
+  // boss rush spawns by zone, and the boss type came from the act — zero outside
+  // the campaign — so it was the warden nine times
+  const { BOSS_FOR_ZONE } = await import('../play/src/story-levels.js');
+  const { ZONES } = await import('../play/src/world.js');
+  const kinds = new Set(Object.values(BOSS_FOR_ZONE));
+  ok(kinds.size === 4, 'the zone table names four different bosses (' + [...kinds].join(', ') + ')');
+  for (const z of ZONES) {
+    ok(!!BOSS_FOR_ZONE[z.id], 'every zone has a boss: ' + z.id + ' -> ' + (BOSS_FOR_ZONE[z.id] || 'none'));
+  }
+  // and a boss-rush run on the kiln brings the cinder. The mode is a module
+  // variable, not an argument to beginZone: selectMode sets it, and beginZone
+  // takes (zone, level, fresh) only.
+  HG.selectMode('bossrush');
+  HG.beginZone(ZONES.find((z) => z.id === 'kiln'), 0, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const boss = HG.enemies.list.find((e) => e.T && e.T.boss);
+  ok(!!boss, 'a boss-rush wave has a boss');
+  ok(boss && boss.type === BOSS_FOR_ZONE.kiln, 'and on the kiln it is the ' + BOSS_FOR_ZONE.kiln + ' (' + (boss && boss.type) + ')');
+  HG.selectMode('campaign');
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+}
+
 console.log('\n== the act is named where it ends ==');
 {
   // a boss level's cleared screen says which act it closed, and the codex says
