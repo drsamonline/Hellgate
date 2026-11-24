@@ -956,7 +956,10 @@ function startWave(n) {
   // the last level of each act is a boss level, and the boss is that act's own
   const bossLevel = game.bossLevel === true;
   enemies.spawnWave(n, player.pos, {
-    boss: mode.bossRush || !!zone.boss || bossLevel,
+    // On a campaign level the LEVEL decides, not the zone: the throne's zone flag
+    // put THE GATE on levels 25 to 31 as well, so a player met the act boss seven
+    // times before the level it belongs to.
+    boss: game.level ? bossLevel : (mode.bossRush || !!zone.boss),
     bossType: BOSS_FOR_ACT[game.bossAct || 1],
     // the act decides what walks towards you: a level is one wave, so the
     // wave-number ladder inside spawnWave never got past imps in the campaign
@@ -3148,7 +3151,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.29.0';
+const BUILD = '2.30.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

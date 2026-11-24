@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.30.0 — 2026-11-24
+
+**The invariants audit never played the campaign.** It ran three zones — which have three waves each — and asserted
+that nothing goes NaN, nothing leaves the level, nothing leaks. The campaign has one wave per level, its own
+objectives, its own rosters and four bosses, and none of it had ever been played by the tool built to play it.
+
+| Target | What it covers |
+| --- | --- |
+| gate, kiln, cistern | the zone path, as before |
+| levels 1, 9, 17, 25 | the four act openings — `reach`, `clear`, `survive`, `relics` |
+| levels 8, 16, 24, 32 | the four bosses |
+
+**It found a boss on level 25.** The throne's zone carries `boss: true`, and `spawnWave` read `zone.boss` on every
+level — so THE GATE appeared on levels 25, 26, 27, 28, 29, 30 and 31, and then again on the level it belongs to. A
+campaign level decides by its own row now.
+
+| And | |
+| --- | --- |
+| in CI | the audit runs after the draw-call gate, on the Chrome the workflow installs |
+| `CHROME_PATH` | the audit hardcoded this pod's path; it reads the environment first |
+
 ## 2.29.0 — 2026-11-24
 
 **The four bosses get their lines, and a scene written twice.** 2.27.0 added four bosses; the story still had

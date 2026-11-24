@@ -27,15 +27,31 @@ const server = http.createServer((q, r) => {
 await new Promise((r) => server.listen(9401, '127.0.0.1', r));
 
 const browser = await puppeteer.launch({
-  executablePath: '/usr/local/bin/chromium',
+  // CHROME_PATH first: CI installs Chrome somewhere else than this pod does
+  executablePath: process.env.CHROME_PATH
+    || ['/usr/local/bin/chromium', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p)),
   headless: 'new',
   args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
   timeout: 60000,
 });
 
-const zones = process.argv[2] ? process.argv[2].split(',') : ['gate', 'kiln', 'cistern'];
 const problems = [];
 const seeds = { gate: 'gate-238', kiln: 'kiln-112', cistern: 'cistern-32' };
+
+// The campaign is the main mode and this audit never touched it: it ran three
+// zones, which have three waves each, and the campaign has one wave per level
+// with its own objectives, rosters and bosses. A level that only exists in the
+// campaign has never been played by this.
+const arg = process.argv[2];
+const targets = arg
+  ? arg.split(',').map((t) => (/^\d+$/.test(t) ? { level: Number(t) } : { zone: t }))
+  : [
+    { zone: 'gate' }, { zone: 'kiln' }, { zone: 'cistern' },
+    // act openings and the four boss levels: the reach, relics, survive and
+    // clear objectives, with a boss on four of them
+    { level: 1 }, { level: 9 }, { level: 17 }, { level: 25 },
+    { level: 8 }, { level: 16 }, { level: 24 }, { level: 32 },
+  ];
 
 const INVARIANTS = `
 (() => {
@@ -123,13 +139,17 @@ const randomInput = `
 })()
 `;
 
-for (const zone of zones) {
+for (const t of targets) {
+  const zone = t.level ? 'level-' + t.level : t.zone;
+  const url = t.level
+    ? 'http://127.0.0.1:9401/play/?auto=1&level=' + t.level
+    : 'http://127.0.0.1:9401/play/?auto=1&zone=' + t.zone + '&seed=' + (seeds[t.zone] || t.zone) + '&wave=3';
   const page = await browser.newPage();
   page.on('pageerror', (e) => problems.push(zone + ': pageerror ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') problems.push(zone + ': console ' + m.text()); });
   await page.setViewport({ width: 800, height: 500 });
-  await page.goto('http://127.0.0.1:9401/play/?auto=1&zone=' + zone + '&seed=' + (seeds[zone] || zone) + '&wave=3', { waitUntil: 'domcontentloaded' });
-  await page.waitForFunction('window.HG && window.HG.game.state === "playing"', { timeout: 30000 });
+  await page.goto(url, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction('window.HG && window.HG.game.state === "playing"', { timeout: 60000 });
 
   let checks = 0;
   for (let block = 0; block < 9; block++) {
@@ -150,8 +170,11 @@ for (const zone of zones) {
     enemies: window.HG.enemies.list.length,
     score: window.HG.game.score,
     wave: window.HG.game.wave,
+    objective: window.HG.game.objectiveType || '-',
+    boss: (window.HG.enemies.list.find((e) => e.T && e.T.boss) || {}).type || '',
   }));
-  console.log(zone.padEnd(9), 'checks', checks, 'kills', stats.kills, 'enemies', stats.enemies, 'wave', stats.wave);
+  console.log(zone.padEnd(9), 'checks', checks, 'kills', stats.kills, 'enemies', stats.enemies,
+    'wave', stats.wave, 'objective', stats.objective, stats.boss ? 'boss ' + stats.boss : '');
   await page.close();
 }
 
@@ -164,4 +187,4 @@ if (problems.length) {
   for (const p of problems) { if (seen.has(p)) continue; seen.add(p); console.log('  - ' + p); }
   process.exit(1);
 }
-console.log('\nALL INVARIANTS HELD over 900 frames per zone');
+console.log('\nALL INVARIANTS HELD over 900 frames per target (' + targets.length + ')');

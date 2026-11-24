@@ -80,3 +80,8 @@ jobs:
         run: node tools/drawcalls.mjs
         env:
           CHROME_PATH: /usr/bin/google-chrome
+
+      - name: Invariants hold over the campaign, not just the zones
+        run: node tools/audit-invariants.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

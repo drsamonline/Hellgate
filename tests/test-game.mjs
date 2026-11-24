@@ -1833,6 +1833,21 @@ console.log('\n== one boss per act ==');
     HG.cinematic.skip();
     HG.game.state = 'playing';
   }
+
+  // and only those four: the throne's zone flag used to put THE GATE on levels
+  // 25 to 31 as well, so the act boss turned up seven times before its level
+  for (const n of [25, 28, 31]) {
+    HG.beginLevel(n, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    const boss = HG.enemies.list.find((e) => e.T && e.T.boss);
+    ok(!boss, 'level ' + n + ' is not a boss level (' + (boss ? boss.type : 'no boss') + ')');
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+  }
 }
 
 console.log('\n== every boss gets a death line ==');
