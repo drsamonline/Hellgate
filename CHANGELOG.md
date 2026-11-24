@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.22.0 — 2026-11-24
+
+**"Some walls are pass through" — checked, and not reproducible.** It was the first line of the first player
+report and, in three months of releases, nothing had ever walked a player into a wall to see. This does.
+
+| The test | Result |
+| --- | --- |
+| 32 walks: four levels, eight directions, 90 frames each, from the middle of a room | never ended up inside a solid cell, never overlapping one |
+| six bodies chasing the player for four seconds | none ended up inside a wall |
+
+So either the pass-through was fixed by `circleBlocked`'s cell-extent fix at 1.9x and never re-checked, or it is
+something the test cannot reach — a *door* left open, a *lift* mid-move, a cell whose geometry and collision
+disagree. If you can still walk through a wall, tell me which room and I will start from that cell.
+
+**And the other half of that report** — "some get stuck in wall" — is now asserted too.
+
 ## 2.21.0 — 2026-11-24
 
 **A distant enemy is a figure, not a crate.** Past 24 m an enemy is drawn as one mesh instead of ten parts. That

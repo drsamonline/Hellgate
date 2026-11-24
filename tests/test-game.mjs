@@ -1796,6 +1796,73 @@ console.log('\n== a long toast wraps instead of running off the screen ==');
   ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
 }
 
+console.log('\n== a wall is a wall ==');
+{
+  // "some walls are pass through" was the first line of the first player report,
+  // and nothing here has ever walked a player into a wall to check. This does it
+  // from the middle of a room in eight directions on four levels.
+  const dirs = [];
+  for (let i = 0; i < 8; i++) dirs.push((i / 8) * Math.PI * 2);
+  let walked = 0;
+  let escaped = 0;
+  let stuck = 0;
+  for (const n of [1, 5, 12, 26]) {
+    HG.beginLevel(n, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    HG.enemies.clear();
+    const L = HG.level;
+    const start = L.reachableCells[Math.floor(L.reachableCells.length / 2)];
+    for (const a of dirs) {
+      HG.player.pos.set(start.wx, 0, start.wz);
+      HG.player.pos.y = HG.floorHeightAt(L, start.wx, start.wz);
+      HG.player.yaw = a;
+      HG.player.pitch = 0;
+      HG.input.keys = Object.create(null);
+      HG.input.keys.KeyW = true;
+      for (let i = 0; i < 90; i++) HG.update(1 / 60);
+      HG.input.keys.KeyW = false;
+      walked++;
+      const c = HG.cellAt(L, HG.player.pos.x, HG.player.pos.z);
+      if (!c || c.solid) { escaped++; continue; }
+      // and it is not stuck inside a wall corner either
+      if (HG.circleBlocked(L, HG.player.pos.x, HG.player.pos.z, 0.42)) stuck++;
+    }
+  }
+  ok(walked === 32, 'walked into a wall 32 times (' + walked + ')');
+  ok(escaped === 0, 'and never ended up inside one (' + escaped + ')');
+  ok(stuck === 0, 'nor overlapping one (' + stuck + ')');
+
+  // the other half of that report: "some get stuck in wall". Bodies chase the
+  // player for four seconds and none of them may end up inside rock.
+  HG.beginLevel(5, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const L2 = HG.level;
+  const room = L2.reachableCells.filter((c) => c.room >= 0 && c.room !== L2.spawnRoom);
+  let inside = 0;
+  let checked = 0;
+  for (let i = 0; i < 6 && i < room.length; i++) {
+    const c = room[Math.floor((i / 6) * room.length)];
+    HG.enemies.spawnAt('imp', c.wx, c.wz, 1);
+  }
+  for (let i = 0; i < 240; i++) HG.update(1 / 60);
+  for (const e of HG.enemies.list) {
+    checked++;
+    const c = HG.cellAt(L2, e.pos.x, e.pos.z);
+    if (!c || c.solid) inside++;
+  }
+  ok(checked > 0, 'bodies to check (' + checked + ')');
+  ok(inside === 0, 'and none of them ended up inside a wall (' + inside + ')');
+}
+
 console.log('\n== a distant enemy is a figure, not a crate ==');
 {
   // past LOD_DIST an enemy is one mesh instead of ten parts. It used to be a box,

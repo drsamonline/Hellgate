@@ -4,7 +4,7 @@
 
 import * as THREE from 'three';
 import { makeRng } from './rng.js';
-import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, CELL } from './level.js';
+import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, circleBlocked, CELL } from './level.js';
 import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { humanoid, PROPORTIONS, rigMat } from './rig.js';
@@ -3120,7 +3120,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.21.0';
+const BUILD = '2.22.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3712,7 +3712,7 @@ window.HG = {
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
-  samplePath: sampleCameraPath, cellAt,
+  samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   CONTROLS, showControls, closeControls, renderControls, queueHints, updateHints,
   get hintQueue() { return hintQueue; },
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
