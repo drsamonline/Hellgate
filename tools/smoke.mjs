@@ -155,7 +155,28 @@ ok('boots to the title screen', (await page.evaluate(() => window.HG.game.state)
 const canvases = await page.evaluate(() => document.querySelectorAll('canvas').length);
 ok('canvas present', canvases >= 1, canvases + ' canvases');
 
+// the level select, from the title, with a real pointer: 2.13.0 shipped a map
+// whose list started above the top of the window, so every early level was
+// off-screen and unclickable — a flex container with justify-content:center and
+// more content than height. Nothing in the headless suite can see layout.
+await page.click('#levelSelectBtn');
+await page.waitForFunction('window.HG.game.state === "map"', { timeout: 15000 });
+const firstRow = await page.evaluate(() => {
+  const el = document.querySelector('[data-level="1"]');
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+  return { y: Math.round(r.y), inView: r.y >= 0 && r.bottom <= innerHeight, hits: !!top };
+});
+ok('the level list starts inside the window', !!firstRow && firstRow.inView, JSON.stringify(firstRow));
+ok('and a level row is the thing under the pointer', !!firstRow && firstRow.hits, JSON.stringify(firstRow));
+await page.click('[data-level="1"]');
+await page.waitForFunction('window.HG.game.state === "intro"', { timeout: 15000 });
+ok('a level row starts that level', (await page.evaluate(() => window.HG.game.level)) === 1);
+
 // start a run through the real buttons: title -> intro -> class -> play
+await page.goto(`http://127.0.0.1:${PORT}/play/`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+await page.waitForFunction('window.HG && window.HG.game.state === "title"', { timeout: 20000 });
 await page.click('#startBtn');
 await page.waitForFunction('window.HG.game.state === "intro"', { timeout: 15000 });
 ok('start plays the story intro', true);

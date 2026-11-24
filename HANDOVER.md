@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.13.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.13.1**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.13.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 114, `v1.0.0` → `v2.13.0` |
+| Version | 2.13.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 115, `v1.0.0` → `v2.13.1` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,16 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Layout, and the one gate that can see it
+
+- **`.screen` is a centred flex column.** More content than window height puts the overflow *above* the top, at a
+  negative y, where it cannot be seen or clicked. `.screen` scrolls now and `#map`/`#codex` start at the top.
+- **The headless suite has no layout engine.** Every assertion about the map was about `innerHTML`. `smoke.mjs`
+  is the only gate that can see this, and it now opens `Levels` with a real pointer, checks the first row is
+  inside the window and is the element under the pointer, and clicks it.
+- **A real pointer click is a different test from `.click()`.** `page.click` hit-tests; `element.click()` does not.
+  The map rows passed the second and failed the first for a release.
 
 ### Sectors, and what stands on them
 

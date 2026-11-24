@@ -509,7 +509,13 @@
     gap:14px;background:radial-gradient(ellipse at center,rgba(10,9,8,.9) 0%,rgba(3,3,4,.985) 72%);
     pointer-events:auto;text-align:center;padding:24px;
     -webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);
+    /* a screen whose content is taller than the window must scroll, not overflow
+       upwards: with justify-content:center the top of a tall panel sits at a
+       negative y and cannot be reached or clicked at all */
+    overflow-y:auto;overscroll-behavior:contain;
   }
+  /* the two screens that are taller than any window: start at the top */
+  #map,#codex{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
   .screen.on{display:flex}
   h1{
     font-size:clamp(38px,9vw,86px);letter-spacing:.24em;margin:0 0 2px;font-weight:800;

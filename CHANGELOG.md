@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.13.1 — 2026-11-24
+
+**The level list was off the top of the window.** Reported from play: "level selector is not accessible from main
+menu and unclickable". The button worked and the map opened — but its list started at **y = −404 px**, above the
+top of the window, so the first twenty levels could not be seen or clicked.
+
+| Cause | Fix |
+| --- | --- |
+| `.screen` is a flex column with `justify-content: center`. With 32 rows and four act headers the content is taller than the window, and a centred flex container puts the overflow **above** the top — where nothing can reach it | `.screen` scrolls (`overflow-y: auto`), and the two tall screens (`#map`, `#codex`) start at the top with padding instead of centring |
+| nothing checked layout | `smoke.mjs` now opens `Levels` from the title with a **real pointer**, asserts the first row is inside the window and is the element under the pointer, and clicks it to start level 1 |
+
+That is the first check in this project that can see a layout bug: the headless suite has no layout engine, and
+every assertion about the map up to now was about `innerHTML`.
+
 ## 2.13.0 — 2026-11-24
 
 **Catwalks are tested, marked, and no longer blocked.** The sector model — a cell with two floors, shipped at

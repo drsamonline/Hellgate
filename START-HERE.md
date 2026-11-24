@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.13.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.13.1** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.13.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.13.1 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; seven static gates; smoke, flow, run, invariants |
 | Modules | 42 in `play/src/` |
-| Releases | 114, `v1.0.0` → `v2.13.0` |
+| Releases | 115, `v1.0.0` → `v2.13.1` |
 | Roadmap | 59 shipped, 3 measured-and-rejected, 4 open of 66 |
 
 ## What shipped in this run
@@ -63,6 +63,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.11.0** | **A run is reproducible — the sim stream, the recorder, and a state hash** |
 | **2.12.0** | **The replay reaches the player — copy, watch, `?play=1` — and the missing Next button** |
 | **2.13.0** | **Catwalks tested and marked — and a crate that stood on one** |
+| **2.13.1** | **The level list was off the top of the window — the map scrolls, and smoke now checks layout** |
 
 ### 2.0.0 in detail
 
