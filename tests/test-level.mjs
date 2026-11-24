@@ -387,6 +387,35 @@ console.log('\n== catwalks ==');
   console.log(`  decks: ${decks} cells on ${levels} levels, all reachable and standable`);
 }
 
+// ---- the ladder: steep, and never a one-shot -------------------------------
+// The act is a floor on enemy health, damage and count. This is the arithmetic
+// behind the four numbers, from the same table the game reads: an imp must never
+// take more than a third of a full-health player in one hit, and the acts must
+// climb in order.
+console.log('\n== the ladder ==');
+{
+  const { STORY_LEVELS, storyLevelZone, ACT_THREAT } = await import('../play/src/story-levels.js');
+  const { TYPES } = await import('../play/src/enemies.js');
+  const PLAYER_HP = 110;
+  const rows = [];
+  for (const act of [1, 2, 3, 4]) {
+    const row = STORY_LEVELS.find((r) => r.act === act);
+    const z = storyLevelZone(row);
+    const floor = ACT_THREAT[Math.min(ACT_THREAT.length - 1, act - 1)];
+    const t = Math.max(z.threat || 1, floor);
+    rows.push({ act, level: row.n, t, dmg: TYPES.imp.damage * t, hp: TYPES.imp.hp * t });
+  }
+  for (let i = 1; i < rows.length; i++) {
+    if (rows[i].t <= rows[i - 1].t) bad('ladder', `act ${rows[i].act} is not harder than act ${rows[i - 1].act}`);
+    if (rows[i].hp <= rows[i - 1].hp) bad('ladder', `an imp in act ${rows[i].act} is not tougher than in act ${rows[i - 1].act}`);
+  }
+  for (const r of rows) {
+    const hits = Math.ceil(PLAYER_HP / r.dmg);
+    if (hits < 3) bad('ladder', `an imp in act ${r.act} kills a full-health player in ${hits} hits`);
+  }
+  console.log('  ' + rows.map((r) => `act ${r.act}: ${r.dmg.toFixed(0)} per hit, ${Math.ceil(PLAYER_HP / r.dmg)} hits to kill`).join(' · '));
+}
+
 console.log(`\nseeds=${seeds.length} avgRooms=${(totalRooms / seeds.length).toFixed(1)} doors=${totalDoor}/${seeds.length} minOpenCells=${minOpen}`);
 console.log(fails === 0 ? 'ALL LEVEL TESTS PASSED' : `${fails} FAILURES`);
 process.exit(fails ? 1 : 0);

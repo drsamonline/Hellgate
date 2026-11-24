@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.14.1**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.15.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.14.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 117, `v1.0.0` → `v2.14.1` |
+| Version | 2.15.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 118, `v1.0.0` → `v2.15.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,15 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The ladder
+
+- **`ACT_THREAT` is in `story-levels.js`**, not `main.js`: it is a property of the campaign. `0.80 / 1.10 / 1.40 /
+  1.80`, applied as a floor, so a zone already harder than its act keeps its own threat.
+- **`node tools/balance-report.mjs acts`** prints what each act costs: enemies, imp hp, damage per hit, hits to
+  kill a 110 hp player, and the upper-bound damage of the whole first wave.
+- **The guard:** acts must climb, an imp must be tougher each act, and no act may kill a full-health player in
+  fewer than three hits. That last one is the difference between steep and broken.
 
 ### Layout, and the one gate that can see it
 

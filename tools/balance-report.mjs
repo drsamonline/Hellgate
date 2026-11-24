@@ -47,13 +47,29 @@ const diffName = process.argv[2] && DIFF[process.argv[2]] ? process.argv[2] : 'n
 const base = DIFF[diffName];
 // each zone scales the preset; the report has to do the same or it describes a
 // game that no longer exists
+// a zone id or a campaign level number: a level is dressed in its zone and
+// raised to its act's floor, which is the whole of the difficulty curve
+const { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT } = await import('../play/src/story-levels.js');
 const zoneArg = process.argv[3];
-const zone = zoneArg ? ZONES.find((z) => z.id === zoneArg) : ZONES[0];
-if (!zone) {
-  console.error('unknown zone; try ' + ZONES.map((z) => z.id).join(', '));
-  process.exit(1);
+let level = null;
+let zone;
+if (zoneArg && /^\d+$/.test(zoneArg)) {
+  level = storyLevel(Number(zoneArg));
+  if (!level) {
+    console.error('unknown level; there are ' + STORY_LEVELS.length);
+    process.exit(1);
+  }
+  zone = storyLevelZone(level);
+} else {
+  zone = zoneArg ? ZONES.find((z) => z.id === zoneArg) : ZONES[0];
+  if (!zone) {
+    console.error('unknown zone; try ' + ZONES.map((z) => z.id).join(', ') + ' or a level number 1-' + STORY_LEVELS.length);
+    process.exit(1);
+  }
 }
-const t = zone.threat || 1;
+// the act is a floor, exactly as `levelThreat()` in main.js applies it
+const actFloor = level ? ACT_THREAT[Math.min(ACT_THREAT.length - 1, Math.max(0, level.act - 1))] : 0;
+const t = Math.max(zone.threat || 1, actFloor);
 const diff = { hp: base.hp * t, dmg: base.dmg * t, count: base.count * t };
 
 // wave size, mirrored from EnemyManager.spawnWave
@@ -80,7 +96,10 @@ const dps = (w) => {
 
 const weapon = (key) => WEAPONS.find((w) => w.key === key);
 
-console.log(`balance report — ${diffName} on ${zone.name} (threat x${t}: hp x${diff.hp.toFixed(2)}, count x${diff.count.toFixed(2)})\n`);
+const baseZone = ZONES.find((z) => z.id === (level ? level.zone : zone.id)) || zone;
+const where = level ? `level ${level.n} "${level.title}" (act ${level.act}) on ${baseZone.name}` : baseZone.name;
+console.log(`balance report — ${diffName} on ${where}`);
+console.log(`  threat x${t.toFixed(2)}${level ? ` (zone ${(zone.threat || 1).toFixed(2)}, act floor ${actFloor.toFixed(2)})` : ''}: hp x${diff.hp.toFixed(2)}, count x${diff.count.toFixed(2)}\n`);
 console.log('wave  enemies  total hp  shotgun dps  pistol dps  chaingun dps  rocket dps  shells needed  bullets needed');
 for (let wave = 1; wave <= 8; wave++) {
   const n = waveCount(wave, false);
@@ -99,6 +118,37 @@ for (let wave = 1; wave <= 8; wave++) {
     String(Math.round(dps(weapon('chaingun')))).padEnd(14) + String(Math.round(dps(weapon('rocket')))).padEnd(12) +
     String(shells).padEnd(15) + bullets
   );
+}
+
+// ---- the ladder, act by act ------------------------------------------------
+// A campaign level is one wave, so wave 1 is the whole fight. This is the number
+// that decides whether an act is hard or broken: how many hits kill a full-health
+// player, and how much the first wave of the act can land on you standing still.
+if (process.argv[2] === 'acts' || !zoneArg) {
+  const PLAYER_HP = 110;
+  console.log('the ladder — the first wave of each act\n');
+  console.log('act  level  zone        enemies  hp each  damage per hit  hits to kill  standing-still hp');
+  for (const act of [1, 2, 3, 4]) {
+    const row = STORY_LEVELS.find((r) => r.act === act);
+    const lz = storyLevelZone(row);
+    const floor = ACT_THREAT[Math.min(ACT_THREAT.length - 1, act - 1)];
+    const tt = Math.max(lz.threat || 1, floor);
+    const d = { hp: base.hp * tt, dmg: base.dmg * tt, count: base.count * tt };
+    const n = Math.max(2, Math.min(30, Math.round((4 + 2) * d.count)));
+    const impHp = Math.round(TYPES.imp.hp * d.hp);
+    const perHit = Math.round(TYPES.imp.damage * d.dmg);
+    const hits = Math.ceil(PLAYER_HP / perHit);
+    const incoming = n * (TYPES.imp.damage / TYPES.imp.attackCd) * d.dmg;
+    const secs = (impHp * n) / dps(weapon('shotgun'));
+    console.log(
+      String(act).padEnd(5) + String(row.n).padEnd(7) + String(row.zone).padEnd(12) +
+      String(n).padEnd(9) + String(impHp).padEnd(9) + String(perHit).padEnd(16) +
+      String(hits).padEnd(14) + Math.round(incoming * secs)
+    );
+  }
+  console.log('\n  "hits to kill" is an imp landing one hit on a player with 110 hp and no armour.');
+  console.log('  "standing-still hp" is the whole first wave landing every hit while you do nothing:');
+  console.log('  an upper bound, useful only for comparing acts with each other.\n');
 }
 
 console.log('\nammo carried at the start of a run');

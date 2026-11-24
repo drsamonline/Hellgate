@@ -27,7 +27,7 @@ import { CLASSES, getClass } from './classes.js';
 import { Powers } from './powers.js';
 import { Story, epilogueFor } from './story.js';
 import { ZONES, zoneById, loadProgress, clearZone, clearLevel, isUnlocked, isLevelUnlocked } from './world.js';
-import { STORY_LEVELS, storyLevel, storyLevelZone } from './story-levels.js';
+import { STORY_LEVELS, storyLevel, storyLevelZone, ACT_THREAT } from './story-levels.js';
 import { Props } from './props.js';
 import { Companion } from './companion.js';
 import { initTouch, isTouchDevice } from './touch.js';
@@ -1015,16 +1015,6 @@ function bossApproach(boss) {
  * the last one at the same wave number — which is how a player dies on level
  * one and never sees the other four.
  */
-/**
- * The act a campaign level belongs to, as a difficulty floor.
- *
- * The zone's own `threat` was the whole curve, and it is a curve over nine
- * places rather than over 32 levels: a level in act IV dressed in the gate was
- * as easy as the first one. The act is the floor now, and a zone that is already
- * harder than its act keeps its own number.
- */
-const ACT_THREAT = [0.8, 1.1, 1.4, 1.8];
-
 /**
  * The threat floor for the level being played, or 0 for a zone run.
  * @returns {number} A multiplier.
@@ -3020,7 +3010,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.14.1';
+const BUILD = '2.15.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

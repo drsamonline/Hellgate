@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.15.0 — 2026-11-24
+
+**The ladder, as arithmetic.** The act table moved next to the level table it belongs to, the balance report learned
+to read a level, and the four numbers the campaign actually runs on are now printed and guarded.
+
+| Act | Level | Zone | Enemies | Imp hp | Damage per hit | Hits to kill | First wave, standing still |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| I | 1 | gate | 5 | 44 | 12 | 10 | 61 |
+| II | 9 | kiln | 7 | 65 | 18 | 7 | 259 |
+| III | 17 | spine | 8 | 77 | 21 | 6 | 476 |
+| IV | 25 | throne | 11 | 99 | 27 | 5 | 1488 |
+
+| Piece | What it does |
+| --- | --- |
+| `ACT_THREAT` lives in `story-levels.js` | it is a property of the campaign, not of the loop; `main.js` imports it |
+| `node tools/balance-report.mjs acts` | the table above, derived from the constants the game reads |
+| `node tools/balance-report.mjs normal 26` | the full wave report for one campaign level, act floor included |
+| a test | the acts must climb in order, an imp must be tougher each act, and **no act may kill a full-health player in fewer than three hits** |
+
+The last column is an upper bound — the whole first wave landing every hit while you do nothing — and it exists to
+compare acts with each other, not to describe a fight. Act IV is 24× act I by that measure and 2× by hits-to-kill,
+which is what "steep" means in practice.
+
 ## 2.14.1 — 2026-11-24
 
 **Every control on every screen, checked the way a thumb checks it.** The player report said "check all buttons

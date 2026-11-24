@@ -15,6 +15,13 @@
 
 import { ZONES } from './world.js';
 
+/**
+ * The difficulty floor for each act, applied to enemy health, damage and count.
+ * It lives beside the table because it is a property of the campaign, and a zone
+ * already harder than its act keeps its own threat.
+ */
+export const ACT_THREAT = [0.8, 1.1, 1.4, 1.8];
+
 /** The four objective types a row may name. Everything else is a typo. */
 export const OBJECTIVE_TYPES = ['reach', 'clear', 'survive', 'relics'];
 
