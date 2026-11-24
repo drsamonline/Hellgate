@@ -517,6 +517,13 @@
   /* the two screens that are taller than any window: start at the top */
   #map,#codex{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
   .screen.on{display:flex}
+  .panelclose{
+    position:absolute;top:10px;right:12px;width:44px;height:44px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;font-size:26px;line-height:1;
+    background:rgba(255,255,255,.06);color:#cbbda8;border:1px solid rgba(203,189,168,.28);
+    padding:0;cursor:pointer;z-index:3;
+  }
+  .panelclose:hover,.panelclose:focus-visible{background:rgba(255,255,255,.12);color:#f4e6cc}
   h1{
     font-size:clamp(38px,9vw,86px);letter-spacing:.24em;margin:0 0 2px;font-weight:800;
     color:#f4e6cc;text-shadow:0 0 26px rgba(255,90,40,.45),0 6px 0 #2a0d08,0 10px 30px #000;
@@ -675,18 +682,21 @@
     </section>
 
     <section id="diary" class="screen">
+      <button id="diaryClose" class="panelclose" aria-label="close">×</button>
       <h2>JOURNAL</h2>
       <p class="sub">j or esc to close</p>
       <div id="diaryBody" class="invgrid"></div>
     </section>
 
     <section id="inventory" class="screen">
+      <button id="invClose" class="panelclose" aria-label="close">×</button>
       <h2>STATUS</h2>
       <p class="sub">tab or esc to close</p>
       <div id="invBody" class="invgrid"></div>
     </section>
 
     <section id="codex" class="screen">
+      <button id="codexClose" class="panelclose" aria-label="close">×</button>
       <h2>CODEX</h2>
       <p class="sub">c or esc to close · type to search</p>
       <input id="codexSearch" class="codexsearch" placeholder="search the codex" autocomplete="off" spellcheck="false" />

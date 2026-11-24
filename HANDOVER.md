@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.13.1**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.14.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.13.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 115, `v1.0.0` → `v2.13.1` |
+| Version | 2.14.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 116, `v1.0.0` → `v2.14.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -137,6 +137,10 @@ idempotent and it is the only place stats are computed. Anything that "adjusts" 
 wiped by the next call.
 
 ### Layout, and the one gate that can see it
+
+- **Every panel needs a pointer exit.** The journal, codex and status panel answered `Escape` only; a phone has no
+  `Escape`. Each carries a `.panelclose` button now, and `smoke.mjs` asserts every panel closes from its own
+  button.
 
 - **`.screen` is a centred flex column.** More content than window height puts the overflow *above* the top, at a
   negative y, where it cannot be seen or clicked. `.screen` scrolls now and `#map`/`#codex` start at the top.

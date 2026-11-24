@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.14.0 — 2026-11-24
+
+**Three panels could not be closed on a phone.** The journal, the codex and the status panel answered `Escape`
+and nothing else. A touch device has no `Escape`, so opening any of them on a phone left the player looking at a
+panel with no way out — which is what "journal and inventory doesn't work" was.
+
+| Piece | What it does |
+| --- | --- |
+| a close button on each | a 44 px target in the corner of the journal, the codex and the status panel, wired to the same close functions the keys call |
+| and a sweep that would have found it | `smoke.mjs` opens every panel a player can reach, asserts it is on, that it scrolls when it is taller than the window, that **every** button on it is the element under the pointer, and that it closes from its own button |
+
+The sweep is the first thing in this project that checks the UI the way a thumb does. Everything before it asked
+the DOM for `innerHTML` or called the handler directly.
+
 ## 2.13.1 — 2026-11-24
 
 **The level list was off the top of the window.** Reported from play: "level selector is not accessible from main

@@ -474,6 +474,68 @@ const a1 = await page.evaluate(() => {
 ok('mute drops the master gain to zero', a1.muted === 0, String(a1.muted));
 ok('unmute restores it', a1.restored > 0, String(a1.restored));
 
+// --- every screen, with a real pointer -------------------------------------
+// The headless suite has no layout engine, so a panel whose content sits above
+// the window, or under another element, is invisible to it. This opens each
+// panel a player can reach and asks two questions of the DOM: is it on, and is
+// the thing under the middle of its first button actually that button.
+console.log('\nscreens');
+const panels = [
+  ['diary', 'showDiary'],
+  ['codex', 'showCodex'],
+  ['inventory', 'toggleInventory'],
+  ['settings', 'openSettings'],
+];
+for (const [id, fn] of panels) {
+  const r = await page.evaluate(([pid, pfn]) => {
+    const HG = window.HG;
+    HG.game.state = 'playing';
+    if (typeof HG[pfn] !== 'function') return { missing: true };
+    HG[pfn]();
+    const el = document.getElementById(pid);
+    if (!el) return { missing: true };
+    const on = el.classList.contains('on');
+    // every button, not the first: "check all buttons" was in the player report,
+    // and a button under another element is a button that does not exist
+    const dead = [];
+    for (const btn of el.querySelectorAll('button')) {
+      const b = btn.getBoundingClientRect();
+      const top = document.elementFromPoint(b.x + b.width / 2, b.y + b.height / 2);
+      const reachable = !!top && (top === btn || btn.contains(top));
+      if (!reachable) dead.push((btn.id || btn.textContent || '?').trim().slice(0, 18));
+    }
+    const box = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    return {
+      on, dead, buttons: el.querySelectorAll('button').length, scrolls: cs.overflowY,
+      w: Math.round(box.width), h: Math.round(box.height), top: Math.round(box.y),
+      tall: el.scrollHeight > el.clientHeight + 1,
+    };
+  }, [id, fn]);
+  if (r.missing) { ok('the ' + id + ' panel exists', false); continue; }
+  ok('the ' + id + ' panel opens', r.on === true, JSON.stringify(r));
+  // a panel taller than the window has to scroll, or its top is unreachable
+  ok('and it scrolls when it is taller than the window', r.scrolls === 'auto', JSON.stringify(r));
+  // read-only panels have no buttons; the ones that do must all be pressable
+  ok('and every button on it can be pressed', r.dead.length === 0,
+    r.buttons + ' buttons, unreachable: ' + (r.dead.join(', ') || 'none'));
+  // and the panel can be left without a keyboard: a phone has no Escape key, and
+  // the journal, the codex and the status panel could not be closed on one
+  if (id !== 'settings') {
+    const closed = await page.evaluate((pid) => {
+      const el = document.getElementById(pid);
+      const closer = el.querySelector('.panelclose');
+      if (!closer) return 'no button';
+      closer.click();
+      return el.classList.contains('on') ? 'still open' : 'closed';
+    }, id);
+    ok('and the ' + id + ' closes from its own button', closed === 'closed', closed);
+  }
+  // close it again: Escape is the one key every panel answers
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => { if (window.HG.game.state !== 'playing') window.HG.game.state = 'playing'; });
+}
+
 // --- touch ----------------------------------------------------------------
 // Emulated phone: the overlay must appear only while playing, and every control
 // must be inside the viewport.

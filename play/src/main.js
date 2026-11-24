@@ -2943,6 +2943,10 @@ document.getElementById('startBtn').addEventListener('click', () => {
   beginZone(z);
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
+// a phone has no Escape key: the read-only panels need a visible way out
+document.getElementById('diaryClose')?.addEventListener('click', () => closeDiary());
+document.getElementById('invClose')?.addEventListener('click', () => toggleInventory());
+document.getElementById('codexClose')?.addEventListener('click', () => closeCodex());
 // the replay: a copy from the death and cleared screens, and a file to watch
 document.getElementById('replayBtn')?.addEventListener('click', () => copyReplay());
 document.getElementById('replayBtnCleared')?.addEventListener('click', () => copyReplay());
@@ -3016,7 +3020,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.13.1';
+const BUILD = '2.14.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
