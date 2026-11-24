@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.26.0 — 2026-11-24
+
+**The first five minutes, walked and asserted.** The last item of harden-and-ship that does not need you.
+
+| Step | What happens | Asserted |
+| --- | --- | --- |
+| title | 8 modes, `Enter the gate`, Levels, Watch a replay, Controls, Settings — all reachable | yes, at two sizes (2.14.1) |
+| start | the intro panel, typed at 34 characters a second over a camera that follows the floor | words appear; the camera never leaves a solid cell (2.20.0, 2.22.0) |
+| class | three cards, each pressable | yes |
+| level 1 | `reach` — the door is open from the first frame and the HUD says **REACH THE EXIT** | yes |
+| the first hint | three lines, one every four seconds, on a level you have not cleared | arrives within five seconds |
+| dying | the death screen, with Copy replay, Try again, World map | yes |
+
+**What I could not measure:** the wall-clock timings. This pod renders at about one frame a second, so the browser walk reported 15 s from Start to the intro and 71 s to playing — numbers about the renderer, not the game. The assertions are driven by `HG.update()` at a fixed step instead, so they say something true.
+
+**Two things the walk did find**, both in my own test rather than the game: the HUD is drawn by the loop, so reading it before a frame reads the previous level's line; and the intro panel types itself, so its text is empty for the first frame.
+
 ## 2.25.0 — 2026-11-24
 
 **The performance number nobody had measured.** A draw call is not the whole frame, but it is the part this game

@@ -1796,6 +1796,44 @@ console.log('\n== a long toast wraps instead of running off the screen ==');
   ok(el.textContent.startsWith('chests pay coins'), 'and still carries the whole line');
 }
 
+console.log('\n== the first run, walked ==');
+{
+  // title -> start -> intro -> class -> playing, driven by the game's own
+  // functions rather than by rAF, so the assertions do not depend on how fast
+  // the machine renders. The browser walk of the same path is in smoke.mjs.
+  HG.beginLevel(1, true);
+  ok(HG.game.state === 'intro', 'the first level opens on the intro (' + HG.game.state + ')');
+  // the panel types itself: one frame is what puts the first line on screen
+  // the panel types at 34 characters a second: two seconds is a sentence
+  HG.story.update(2, HG.level);
+  ok((document.getElementById('storyText').textContent || '').length > 20,
+    'the intro has words in it: "' + (document.getElementById('storyText').textContent || '').slice(0, 40) + '…"');
+  HG.story.skip();
+  ok(HG.game.state === 'class', 'skipping the intro asks for a class (' + HG.game.state + ')');
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  ok(HG.game.state === 'playing', 'choosing one starts the level (' + HG.game.state + ')');
+  ok(HG.game.level === 1, 'level 1');
+  ok(HG.game.objectiveType === 'reach', 'whose objective is reach (' + HG.game.objectiveType + ')');
+  // the HUD is drawn by the loop, so read it after a frame, not before
+  frames(2);
+  ok(/REACH/.test(document.getElementById('objective').textContent || ''),
+    'and the HUD says so: ' + (document.getElementById('objective').textContent || '').trim());
+  ok(HG.enemies.list.length > 0, 'with bodies in the level (' + HG.enemies.list.length + ')');
+  // the hints arrive on their own clock, driven by the same update the game runs
+  const queued = HG.hintQueue.length;
+  for (let i = 0; i < 60 * 5; i++) HG.update(1 / 60);   // five seconds
+  ok(queued > 0 && HG.hintQueue.length < queued,
+    'and the first hint arrives within five seconds (' + queued + ' -> ' + HG.hintQueue.length + ')');
+  // dying reaches the death screen, which is the other end of the first minute
+  HG.player.armor = 0;
+  HG.player.damage(999, null);
+  frames(2);
+  ok(HG.game.state === 'dead' || HG.game.state === 'gameover' || !HG.player.alive,
+    'dying ends the run (' + HG.game.state + ')');
+}
+
 console.log('\n== the campaign has an end ==');
 {
   // "Next level" on level 32 used to restart level 32: beginLevel clamps to the

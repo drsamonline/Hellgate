@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.25.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.26.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.25.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 128, `v1.0.0` → `v2.25.0` |
+| Version | 2.26.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 129, `v1.0.0` → `v2.26.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,14 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Reading the DOM in a test
+
+- **The HUD is drawn by the loop.** Reading `#objective` before a frame reads the *previous* level's line — the first
+  version of the first-run test reported `CLEAR THE WAVE` on a `reach` level because of it.
+- **The intro panel types itself** at 34 characters a second, so its text is empty on the frame the intro opens.
+- **Wall-clock timings from this pod are about the renderer** (~1 fps), not the game. Drive `HG.update()` at a fixed
+  step when the assertion is about behaviour.
 
 ### Performance, and the gate that lied
 
