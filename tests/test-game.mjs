@@ -1833,6 +1833,81 @@ console.log('\n== one boss per act ==');
   }
 }
 
+console.log('\n== the four bosses fight differently ==');
+{
+  // data can be different and the fight identical. This puts each boss in line
+  // of sight of the player and asks what it actually does: does the cinder put a
+  // lob in the air, does the spine close the distance faster than it walks.
+  const setup = (type) => {
+    HG.beginLevel(8, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    HG.enemies.clear();
+    HG.projectiles.list.length = 0;
+    // one open cell with a clear line to the player
+    const p = HG.player.pos;
+    // any open cell with a line to the player: widen until one exists, because a
+    // room is not obliged to have a spot at exactly ten metres
+    let spot = null;
+    for (const range of [[8, 11], [5, 16], [3, 24]]) {
+      for (const c of HG.level.reachableCells) {
+        const d = Math.hypot(c.wx - p.x, c.wz - p.z);
+        if (d > range[0] && d < range[1] && !HG.circleBlocked(HG.level, c.wx, c.wz, 1.0)) { spot = c; break; }
+      }
+      if (spot) break;
+    }
+    if (!spot) return null;
+    HG.enemies.spawnAt(type, spot.wx, spot.wz, 1);
+    const e = HG.enemies.list[HG.enemies.list.length - 1];
+    HG.player.yaw = Math.atan2(-(spot.wx - p.x), -(spot.wz - p.z));
+    HG.player.pitch = 0;
+    return e;
+  };
+
+  const lobs = (type) => {
+    const e = setup(type);
+    if (!e) return null;
+    let seen = 0;
+    for (let i = 0; i < 60 * 6; i++) {
+      HG.update(1 / 60);
+      seen = Math.max(seen, HG.projectiles.list.length);
+    }
+    return { e, seen };
+  };
+
+  const cinder = lobs('cinder');
+  ok(cinder && cinder.seen > 0, 'the cinder lobs (' + (cinder ? cinder.seen : 'no spot') + ' in the air at once)');
+  const warden = lobs('warden');
+  ok(warden && warden.seen === 0, 'the warden never does (' + (warden ? warden.seen : 'no spot') + ')');
+
+  // the spine closes faster than it walks when it sees you
+  const e = setup('spine');
+  if (e) {
+    const d0 = Math.hypot(e.pos.x - HG.player.pos.x, e.pos.z - HG.player.pos.z);
+    let fastest = 0;
+    for (let i = 0; i < 60 * 4; i++) {
+      HG.update(1 / 60);
+      fastest = Math.max(fastest, e.speed || 0);
+    }
+    const d1 = Math.hypot(e.pos.x - HG.player.pos.x, e.pos.z - HG.player.pos.z);
+    ok(fastest > e.T.speed + 1, 'the spine charges (' + fastest.toFixed(1) + ' m/s against a walk of ' + e.T.speed + ')');
+    ok(d1 < d0, 'and closes the distance (' + Math.round(d0) + ' m -> ' + Math.round(d1) + ' m)');
+  }
+  // the gate is the act IV boss because it does both
+  const gate = lobs('gate');
+  ok(gate && gate.seen > 0, 'the gate lobs as well (' + (gate ? gate.seen : 'no spot') + ')');
+  const g = setup('gate');
+  if (g) {
+    let fastest = 0;
+    for (let i = 0; i < 60 * 4; i++) { HG.update(1 / 60); fastest = Math.max(fastest, g.speed || 0); }
+    ok(fastest > g.T.speed + 1, 'and charges (' + fastest.toFixed(1) + ' m/s)');
+  }
+  HG.projectiles.list.length = 0;
+}
+
 console.log('\n== the first run, walked ==');
 {
   // title -> start -> intro -> class -> playing, driven by the game's own

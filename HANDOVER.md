@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.27.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.27.1**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.27.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 130, `v1.0.0` → `v2.27.0` |
+| Version | 2.27.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 131, `v1.0.0` → `v2.27.1` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -137,6 +137,10 @@ idempotent and it is the only place stats are computed. Anything that "adjusts" 
 wiped by the next call.
 
 ### The four bosses
+
+- **Behaviour is asserted, not just data.** The cinder must put a lob in the air within six seconds; the warden
+  must never lob — it is the control that proves the difference is real; the spine must exceed its walk speed and
+  close the distance; the gate must do both.
 
 - **`BOSS_FOR_ACT` in `story-levels.js`**: act → type (`warden`, `cinder`, `spine`, `gate`). The level row carries
   `boss: true` on 8, 16, 24 and 32; `buildRun` copies it to `game.bossLevel` and `startWave` passes the type.

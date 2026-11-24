@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.27.1 — 2026-11-24
+
+**The four bosses are four fights, not four stat blocks.** 2.27.0 gave them different numbers; this asks them what
+they *do*.
+
+| Boss | Asserted |
+| --- | --- |
+| CINDER | puts a lob in the air within six seconds of seeing you (1 in flight) |
+| WARDEN | never lobs (0) — so the lob is a real difference, not a property of bosses |
+| SPINE | charges at **9.5 m/s** against a walk of 2.0, and closes 10 m to 1 m in four seconds |
+| THE GATE | does both: lobs (1 in flight) and charges (8.0 m/s) |
+
+The warden is the control: a test that only showed "the cinder lobs" would pass if every boss lobbed.
+
 ## 2.27.0 — 2026-11-24
 
 **One boss per act.** The campaign had one boss and it was hardcoded: `spawnWave` built a `'warden'` and the entrance
