@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { humanoid, quadruped, PROPORTIONS, rigMat, mergeJointMeshes } from './rig.js';
 import { getModel } from './models.js';
 import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
+import { simRand } from './simrng.js';
 
 const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DEATH: 'DEATH' };
 
@@ -624,10 +625,10 @@ export class Enemy {
     this.pos = worldPos.clone();
     this.state = STATE.IDLE;
     this.stateT = 0;
-    this.attackCd = 0.6 + Math.random() * 0.8;
+    this.attackCd = 0.6 + simRand() * 0.8;
     this.fired = false;
-    this.walkPhase = Math.random() * 6.28;
-    this.wanderAngle = Math.random() * Math.PI * 2;
+    this.walkPhase = simRand() * 6.28;
+    this.wanderAngle = simRand() * Math.PI * 2;
     this.wanderT = 0;
     this.lostSight = 0;
     this.dead = false;
@@ -669,7 +670,7 @@ export class Enemy {
       return true;
     }
     ctx.audio.play('pain', this.chestPos(), { pitch: this.T.voice || 1 });
-    if (Math.random() < 0.55) this.setState(STATE.PAIN);
+    if (simRand() < 0.55) this.setState(STATE.PAIN);
     return false;
   }
 
@@ -756,8 +757,8 @@ export class Enemy {
       case STATE.IDLE: {
         this.wanderT -= dt;
         if (this.wanderT <= 0) {
-          this.wanderT = 1.2 + Math.random() * 2;
-          this.wanderAngle = Math.random() * Math.PI * 2;
+          this.wanderT = 1.2 + simRand() * 2;
+          this.wanderAngle = simRand() * Math.PI * 2;
         }
         this.moving = this.stepMove(level, Math.cos(this.wanderAngle) * 0.5, Math.sin(this.wanderAngle) * 0.5, dt);
         if (canSee) {
@@ -800,7 +801,7 @@ export class Enemy {
           this.charging = this.stateT / tg;
           this.charged = true;
           this.mesh.scale.set(1, 1 + Math.sin(this.stateT * 30) * 0.04, 1);
-          if (this.type === 'imp' && Math.random() < 0.35) {
+          if (this.type === 'imp' && simRand() < 0.35) {
             const c = this.chestPos();
             ctx.effects.burst({ x: c.x, y: c.y + 0.3, z: c.z }, 0xff7a22, 1, 1.2, 0.35, -2);
           }
@@ -1266,7 +1267,7 @@ export class EnemyManager {
     }
 
     for (let i = 0; i < count; i++) {
-      const c = pool[Math.floor(Math.random() * pool.length)];
+      const c = pool[Math.floor(simRand() * pool.length)];
       // wave 2 brings grunts, wave 4 brings hounds; after that it is a mix
       let type = 'imp';
       if (wave >= 6 && i % 11 === 10) type = 'stalker';
@@ -1280,14 +1281,14 @@ export class EnemyManager {
       // offset from a cell centre puts half of it inside the wall
       const jitter = Math.max(0, Math.min(0.3, 0.9 - TYPES[type].radius));
       const pos = new THREE.Vector3(
-        c.wx + (Math.random() - 0.5) * jitter,
+        c.wx + (simRand() - 0.5) * jitter,
         0,
-        c.wz + (Math.random() - 0.5) * jitter
+        c.wz + (simRand() - 0.5) * jitter
       );
       // from wave 4, one in eight is an elite: a harder body, a rim light, a
       // bigger drop. It is the same type, so there is nothing new to learn —
       // only something new to be afraid of.
-      const elite = wave >= 4 && !bossWave && Math.random() < 0.125;
+      const elite = wave >= 4 && !bossWave && simRand() < 0.125;
       const e = new Enemy(type, pos, wave, this.scene, { diff, elite });
       e.pos.y = floorHeightAt(this.level, pos.x, pos.z);
       e.mesh.position.y = e.pos.y;
@@ -1307,7 +1308,7 @@ export class EnemyManager {
         }
         return true;
       });
-      const c = (roomy.length ? roomy : pool)[Math.floor(Math.random() * (roomy.length || pool.length))];
+      const c = (roomy.length ? roomy : pool)[Math.floor(simRand() * (roomy.length || pool.length))];
       const pos = new THREE.Vector3(c.wx, 0, c.wz);
       const boss = new Enemy('warden', pos, wave, this.scene, { diff });
       boss.pos.y = floorHeightAt(this.level, pos.x, pos.z);
@@ -1344,7 +1345,7 @@ export class EnemyManager {
       e.stuckT = (e.stuckT || 0) + dt;
       if (e.stuckT > 14 && d > 6) {
         // put it in front of the player, on open floor
-        const a = Math.random() * Math.PI * 2;
+        const a = simRand() * Math.PI * 2;
         const r = 7;
         const x = player.pos.x + Math.cos(a) * r;
         const z = player.pos.z + Math.sin(a) * r;

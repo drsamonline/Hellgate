@@ -144,6 +144,8 @@ play/src/models.js    optional open-3-D bodies from assets/models/<type>.glb
 play/src/touch.js     mobile sticks and buttons
 play/src/settings.js  sensitivity, FOV, reduced motion, volume, difficulty — persisted
 play/src/rng.js       seeded PRNG
+play/src/simrng.js    the run's random stream: what a replay needs to be exact
+play/src/replay.js    record the input stream, hash the state, play it back
 tests/                three headless suites
 tools/                screenshot, map render, claim check, smoke, lighthouse, asset optimiser
 documentation/        architecture, level gen, combat, tuning, testing

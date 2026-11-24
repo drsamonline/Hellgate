@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { raycastWalls } from './level.js';
+import { simRand } from './simrng.js';
 
 /**
  * The four weapons: ammo, damage, cooldown, spread, range. `spin` is the time
@@ -360,7 +361,7 @@ export class Weapons {
     const held = this.models[this.current];
     if (held && held.userData.sprites && held.material) held.material.map = held.userData.sprites.fire;
     this.muzzle.visible = true;
-    this.muzzle.rotation.z = Math.random() * Math.PI;
+    this.muzzle.rotation.z = simRand() * Math.PI;
     this.audio.play(w.sound);
     this.effects.addShake(w.shake);
 
@@ -384,9 +385,9 @@ export class Weapons {
     for (let p = 0; p < w.pellets; p++) {
       const dir = tmp.copy(baseDir);
       if (w.spread > 0) {
-        dir.x += (Math.random() - 0.5) * w.spread * 2;
-        dir.y += (Math.random() - 0.5) * w.spread * 2;
-        dir.z += (Math.random() - 0.5) * w.spread * 2;
+        dir.x += (simRand() - 0.5) * w.spread * 2;
+        dir.y += (simRand() - 0.5) * w.spread * 2;
+        dir.z += (simRand() - 0.5) * w.spread * 2;
         dir.normalize();
       }
       const wallHit = raycastWalls(level, origin, dir, w.range);

@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Fifty-eight items shipped — marked **✓ shipped** below; the rest say what is left and why.
+Fifty-nine items shipped — marked **✓ shipped** below; the rest say what is left and why.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -115,7 +115,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 53. **Lightmap / baked lighting per sector** — a per-cell light value baked at generation and written into vertex colours; the cheapest way to get contrast and mood. `levelmesh.js` · L · high — ✓ shipped
 54. **Collision broadphase** — a uniform grid or BVH for enemies and projectiles instead of scanning the list. Only matters past ~50 enemies, but that is where this is headed. `enemies.js` · L · medium — **measured at 1.96.0 and left alone.** Benchmarked on the gate level, 20 000 samples each: `circleBlocked` **4.28 µs**, `hasLineOfSight` **9.22 µs**, a whole flow field **0.19 ms**. Fifty enemies doing both every frame is **0.68 ms** — 4 % of a 16.7 ms frame, before anything else runs. The scan is not the bottleneck and a broadphase would add a structure to keep in sync for it. Re-measure past a hundred enemies, or if the per-frame budget in the profiler says otherwise
 55. **Object pooling for enemies** — ✓ shipped (body pool per type, capped at 14 each; measured 16 bodies built for 36 enemies over five waves) — reuse meshes instead of building and disposing per wave. `enemies.js` · L · medium
-56. **Deterministic replay** — record the input stream + seed, replay a run exactly. Turns bug reports into test cases and enables ghost runs. `main.js` · L · medium
+56. **Deterministic replay** — record the input stream + seed, replay a run exactly. Turns bug reports into test cases and enables ghost runs. `main.js` · L · medium — ✓ shipped: the sim stream, a recorder, a state hash, and a test that proves it
 57. **Split the game loop from the renderer** — fixed-timestep simulation with an interpolated render. Removes the dt-dependent behaviour that makes 30 fps and 144 fps feel different. `main.js` · L · medium — ✓ shipped; `FIXED = 1/60`, `MAX_STEPS = 4`, backlog dropped rather than spiralled
 58. **Mobile/touch controls** — a virtual stick and a look area. Pointer lock does not exist on touch, and the fallback path is already there. `main.js` · L · medium — ✓ shipped
 

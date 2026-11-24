@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { raycastWalls } from './level.js';
+import { simRand } from './simrng.js';
 
 /**
  * Every power: cost, cooldown, key and effect.
@@ -139,9 +140,9 @@ export class Powers {
         const base = camera.getWorldDirection(new THREE.Vector3());
         for (let s = 0; s < 6; s++) {
           const dir = base.clone();
-          dir.x += (Math.random() - 0.5) * 0.05;
-          dir.y += (Math.random() - 0.5) * 0.05;
-          dir.z += (Math.random() - 0.5) * 0.05;
+          dir.x += (simRand() - 0.5) * 0.05;
+          dir.y += (simRand() - 0.5) * 0.05;
+          dir.z += (simRand() - 0.5) * 0.05;
           dir.normalize();
           const wallHit = raycastWalls(level, origin, dir, 60);
           const maxD = wallHit ? wallHit.dist : 60;

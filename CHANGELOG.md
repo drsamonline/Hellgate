@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.11.0 — 2026-11-24
+
+**A run is reproducible.** `?rec=1` records the input stream and the seed; `HG.replayJSON()` hands you the run as
+a string; `HG.loadReplay()` plays it back through the same `update()`. It works because the simulation's
+randomness now comes from a stream the seed controls.
+
+| Piece | What it does |
+| --- | --- |
+| `simrng.js` | mulberry32 seeded from the run's seed. Every random number that changes the world draws from it: enemy wander, spawn cells, pain chance, elite rolls, drops, relic and pickup placement, weapon spread |
+| `replay.js` | `Recorder` (a keys bitmask, the fire flag, two look deltas per step), `Player`, and `stateHash()` — an FNV-1a over score, kills, wave, the player's position and stats, and every enemy's type, position and hp, rounded to a centimetre |
+| the loop | a replay drives `input` at the top of `update()`; a recorder is fed the same frame before the game consumes it |
+
+**Cosmetic randomness stays on `Math.random`** — particles, music, texture noise. It changes nothing in the
+state, and routing it through the stream would spend the stream.
+
+**Two bugs, both found by the determinism test:**
+
+- **A new run began with the last run's money.** `buildRun()` reset kills and score but not `coins` or
+  `killsByType`, so a second run started rich and the codex counted every kill twice. `buildRun(seed, zone,
+  fresh)` resets both when a run starts — they still carry across levels inside a run, which is what makes the
+  shop and the codex a run.
+- **The run's clock carried over too.** `elapsed` was never reset, so a wave's time bonus at the end of a run
+  depended on how long the session had been open.
+
+**Proven, not asserted:** the same seed and the same inputs hash the same twice; a different seed does not; a
+120-frame recording replays to the identical hash (`bd73fe2a`).
+
 ## 2.10.0 — 2026-11-24
 
 **The guns, second pass.** The first sprite pass was flat rectangles — the right weapon at a glance, and crude

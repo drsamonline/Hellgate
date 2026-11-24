@@ -4,6 +4,7 @@
 
 import * as THREE from 'three';
 import { raycastWalls, floorHeightAt } from './level.js';
+import { simRand } from './simrng.js';
 
 const ROCKET = { speed: 26, radius: 0.18, splash: 4.5, damage: 95, life: 5 };
 const FIREBALL = { speed: 13, radius: 0.22, splash: 1.4, damage: 15, life: 6 };
@@ -132,10 +133,10 @@ export class Projectiles {
         if (p.kind === 'fireball') {
           const f = 0.85 + Math.sin(performance.now() * 0.03) * 0.2;
           p.mesh.scale.setScalar(f);
-          if (Math.random() < 0.5) {
+          if (simRand() < 0.5) {
             this.effects.burst({ x: p.pos.x, y: p.pos.y, z: p.pos.z }, 0xff5511, 1, 0.7, 0.3, -1);
           }
-        } else if (Math.random() < 0.7) {
+        } else if (simRand() < 0.7) {
           this.effects.burst({ x: p.pos.x, y: p.pos.y, z: p.pos.z }, 0xffaa33, 1, 0.6, 0.25, -1);
         }
       }

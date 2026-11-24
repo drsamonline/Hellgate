@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.10.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.11.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.10.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 111, `v1.0.0` → `v2.10.0` |
+| Version | 2.11.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 112, `v1.0.0` → `v2.11.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 746 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 754 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 58 shipped, 3 measured-and-rejected, 5 open of 66 |
+| Roadmap | 59 shipped, 3 measured-and-rejected, 4 open of 66 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -73,7 +73,7 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 40 modules
+### `play/src/` — 42 modules
 
 | Group | Modules |
 | --- | --- |
@@ -135,6 +135,17 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Replay, and what determinism costs
+
+- **Every random number that changes the world draws from `simrng.js`**, seeded per level from the run's seed.
+  Cosmetic randomness (particles, music, texture noise) stays on `Math.random` on purpose.
+- **`buildRun(seed, zone, fresh)`** — `fresh` resets `coins` and `killsByType`. They carry across levels inside a
+  run and must not carry across runs; without it a second run began with the first one's money.
+- **`elapsed` resets per level.** A wave's time bonus depended on how long the session had been open.
+- **`stateHash()` rounds to a centimetre.** Comparing raw floats fails for reasons nobody can see.
+- **A replay runs exactly as many steps as it recorded.** One extra `update()` advances the world past the end of
+  the recording and the hash stops meaning anything — that cost an hour of chasing a phantom.
 
 ### The guns are sprites
 

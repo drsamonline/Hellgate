@@ -38,6 +38,8 @@ import { Music } from './music.js';
 import * as Items from './items.js';
 import { Cinematic } from './cinematic.js';
 import { Dialogue, sceneFor } from './dialogue.js';
+import { simRand, simInt, seedSim, simDraws } from './simrng.js';
+import { Recorder, Player as ReplayPlayer, stateHash } from './replay.js';
 import { TRINKETS, SLOTS, SPARE_VALUE, trinketById, rollDrop, sumEffects } from './loot.js';
 
 // ---------------------------------------------------------------- renderer --
@@ -416,13 +418,29 @@ function disposeRun() {
   });
 }
 
-function buildRun(seed, zoneDef) {
+/**
+ * Build a level.
+ * @param {string} seed The map seed.
+ * @param {object} [zoneDef] The zone to dress it in.
+ * @param {boolean} [fresh] True when this is the first level of a run: the
+ *   money and the per-run counters start at zero. They carry across levels
+ *   inside a run, which is what makes the shop and the codex count a run.
+ */
+function buildRun(seed, zoneDef, fresh = false) {
   disposeRun();
   zone = zoneDef || zone;
   game.zoneId = zone.id;
   game.seed = seed;
   game.wave = 0;
   game.kills = 0;
+  if (fresh) {
+    // a new run starts with no money and a clean per-run tally. Neither was
+    // reset, so a second run began with the first one's coins and the codex
+    // counted every kill twice — which is how a replay of the same seed scored
+    // differently from the run it recorded
+    game.coins = 0;
+    game.killsByType = {};
+  }
   game.waveKills = 0;
   game.score = 0;
   game.waveStart = 0;
@@ -433,6 +451,13 @@ function buildRun(seed, zoneDef) {
   game.keycard = null;
 
   scene = newScene(zone);
+  // the run's random stream starts from the seed, so the same seed and the same
+  // inputs are the same run. `level.js` keeps its own generator stream.
+  seedSim(seed);
+  // the run's clock starts at zero: it used to carry over from the last run, so
+  // a time bonus at the end of a wave depended on how long the session had been
+  // open — which is the same as saying two identical runs scored differently
+  elapsed = 0;
   level = generateLevel(seed, zone.shape);
   // A level states what ends it. 'reach' opens the way from the first frame, so
   // the level is somewhere you cross rather than a pen you empty; 'clear' keeps
@@ -524,7 +549,7 @@ function buildRun(seed, zoneDef) {
       );
     }
     if (player.leech > 0) player.heal(player.leech);
-    const id = rollDrop(Math.random);
+    const id = rollDrop(simRand);
     // an elite always leaves something behind
     if (e && (id || e.elite)) dropTrinket(id || 'edge', e.pos);
   };
@@ -727,14 +752,14 @@ function spawnRelics(n) {
   );
   const use = pool.length ? pool : level.reachableCells;
   for (let i = 0; i < n; i++) {
-    const c = use[Math.floor(Math.random() * use.length)];
+    const c = use[simInt(0, use.length - 1)];
     const mesh = Items.relicItem();
     const baseY = (level.cells[level.idx(c.x, c.z)] || { floor: 0 }).floor + 0.7;
     mesh.position.set(c.wx, baseY, c.wz);
     scene.add(mesh);
     // hp, so a relic is something you break rather than only something you walk
     // into: the 'relics' objective is a shooting objective
-    game.relics.push({ mesh, x: c.wx, z: c.wz, baseY, t: Math.random() * 6, hp: RELIC_HP, maxHp: RELIC_HP });
+    game.relics.push({ mesh, x: c.wx, z: c.wz, baseY, t: simRand() * 6, hp: RELIC_HP, maxHp: RELIC_HP });
   }
 }
 
@@ -1107,7 +1132,7 @@ function randomCell(minDist = 0, roomsOnly = true) {
     return Math.hypot(c.wx - player.pos.x, c.wz - player.pos.z) > minDist;
   });
   const src = pool.length ? pool : level.reachableCells;
-  return src[Math.floor(Math.random() * src.length)];
+  return src[Math.floor(simRand() * src.length)];
 }
 
 function spawnBarrels() {
@@ -1240,7 +1265,7 @@ function spawnPickups(wave) {
   const count = 3 + Math.min(5, wave) + (effectsFor(game.flags).pickups || 0);
   for (let i = 0; i < count; i++) {
     const cell = randomCell(4);
-    const kind = kinds[Math.floor(Math.random() * kinds.length)];
+    const kind = kinds[Math.floor(simRand() * kinds.length)];
     addPickup(kind, cell.wx, cell.wz);
   }
 }
@@ -1252,7 +1277,7 @@ function addPickup(kind, x, z) {
   const baseY = (level.cells[level.idx(Math.round(x / CELL), Math.round(z / CELL))] || { floor: 0 }).floor + 0.45;
   mesh.position.set(x, baseY, z);
   scene.add(mesh);
-  game.pickups.push({ kind, mesh, x, z, baseY, t: Math.random() * 6 });
+  game.pickups.push({ kind, mesh, x, z, baseY, t: simRand() * 6 });
 }
 
 // the item models share their geometry and materials, so only the sprite that
@@ -1285,7 +1310,7 @@ function pickKeycardCell() {
   );
   const src = pool.length ? pool : level.reachableCells.filter((c) => c.room !== level.exitRoom);
   const use = src.length ? src : level.reachableCells;
-  return use[Math.floor(Math.random() * use.length)];
+  return use[Math.floor(simRand() * use.length)];
 }
 
 function spawnKeycard() {
@@ -1472,13 +1497,13 @@ function checkWave() {
  * @param {number} n 1-based level number.
  * @returns {boolean} False when there is no such level.
  */
-function beginLevel(n) {
+function beginLevel(n, fresh = false) {
   const row = storyLevel(n);
   const def = row ? storyLevelZone(row) : null;
   if (!def) return false;
   // the number goes in through beginZone, before buildRun: the difficulty table
   // reads it, and setting it afterwards left every level on its zone's threat
-  beginZone(def, n);
+  beginZone(def, n, fresh);
   // the box shows the level's own seed, and stops counting as a typed override
   const box = document.getElementById('seedInput');
   if (box) box.value = def.seed;
@@ -1501,7 +1526,7 @@ function nextLevel() {
  * @param {object} zoneDef The zone definition to dress the run in.
  * @param {number} [levelN] The campaign level, or 0 for a zone run.
  */
-function beginZone(zoneDef, levelN = 0) {
+function beginZone(zoneDef, levelN = 0, fresh = false) {
   audio.init();
   // a level change cancels a cutscene and a caption: they belong to the level
   // that started them, and one left running fired its callback into the next run
@@ -1514,7 +1539,7 @@ function beginZone(zoneDef, levelN = 0) {
   zone = zoneDef || zone;
   game.zoneId = zone.id;
   try { history.replaceState(null, '', '?zone=' + encodeURIComponent(zone.id)); } catch (e) { /* no history */ }
-  buildRun(zone.seed, zone);
+  buildRun(zone.seed, zone, fresh);
   game.state = 'intro';
   hud.setVisible(false);
   showScreen('intro');
@@ -2063,7 +2088,7 @@ function takeNpcOffer(i) {
   n.quest = 'taken';
   game.flags.keshi = 1;
   game.coins = (game.coins || 0) + NPC_JOB.first;
-  const id = (TRINKETS[Math.floor(Math.random() * TRINKETS.length)] || {}).id;
+  const id = (TRINKETS[Math.floor(simRand() * TRINKETS.length)] || {}).id;
   if (id) dropTrinket(id, { x: n.wx + 0.9, z: n.wz });
   hud.toast('JOB TAKEN  +' + NPC_JOB.first + ' COINS', 2.2);
   audio.play('pickup');
@@ -2499,7 +2524,7 @@ function renderUpgrades() {
   const pool = UPGRADES.slice();
   const picks = [];
   for (let i = 0; i < 3 && pool.length; i++) {
-    picks.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    picks.push(pool.splice(Math.floor(simRand() * pool.length), 1)[0]);
   }
   wrap.innerHTML = picks.map((u) => `
     <button class="card upgradecard" data-up="${u.id}">
@@ -2522,7 +2547,7 @@ function takeUpgrade(id) {
 function startGame(seed, opts = {}) {
   audio.init();
   try { history.replaceState(null, '', '?seed=' + encodeURIComponent(seed)); } catch (e) { /* no history */ }
-  buildRun(seed);
+  buildRun(seed, undefined, true);
   game.state = 'playing';
   audio.startDrone();
   if (zone && zone.bed) audio.startBed(zone.bed);
@@ -2899,7 +2924,7 @@ document.getElementById('startBtn').addEventListener('click', () => {
   // a mode that plays the campaign starts the next level, not a zone. A seed the
   // player actually typed is a deliberate override and still starts a zone.
   if (MODES[gameMode] && MODES[gameMode].levels && !seedTouched) {
-    beginLevel(nextLevel());
+    beginLevel(nextLevel(), true);   // a new run: fresh money, fresh tally
     return;
   }
   // the daily overrides the seed box: a daily you can reseed is not a daily
@@ -2975,7 +3000,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.10.0';
+const BUILD = '2.11.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3151,7 +3176,56 @@ function fireCtx() {
   };
 }
 
+// ---- replay ---------------------------------------------------------------
+// `?rec=1` records the run. The recorder is fed the input *before* the game
+// consumes it, and it is the only thing that ever reads the replay back.
+let recorder = null;
+let replayPlayer = null;
+
+/**
+ * Start recording the run that is about to begin.
+ * @returns {object} The recorder.
+ */
+function startRecording() {
+  recorder = new Recorder({
+    seed: game.seed,
+    level: game.level,
+    zone: game.zoneId,
+    classId: game.classId,
+    mode: game.mode,
+    difficulty: settings.difficulty,
+  });
+  return recorder;
+}
+
+/** The replay of the run so far, as a string, or null when nothing is recorded. */
+function replayJSON() {
+  return recorder ? recorder.toJSON() : null;
+}
+
+/**
+ * Load a replay: the meta goes into the run, the frames are played by the loop.
+ * @param {string|object} data From `replayJSON()`.
+ * @returns {boolean} True when a replay was loaded.
+ */
+function loadReplay(data) {
+  try {
+    replayPlayer = new ReplayPlayer(data);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 function update(dt) {
+  // a replay drives the input; a recording is taken before the game eats it
+  if (replayPlayer) {
+    if (!replayPlayer.apply(input)) {
+      replayPlayer = null;
+      note('replay finished');
+    }
+  }
+  if (recorder) recorder.frame(input);
   player.look(input.lookDx, input.lookDy);
   input.lookDx = 0;
   input.lookDy = 0;
@@ -3382,6 +3456,8 @@ function applyUrlOverrides() {
     player.syncCamera();
   }
   if (p.get('nohud') === '1') hud.setVisible(false);
+  // ?rec=1 records this run; the replay is on `HG.replayJSON()` when it ends
+  if (p.get('rec') === '1') startRecording();
   return true;
 }
 
@@ -3443,6 +3519,7 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
+  startRecording, replayJSON, loadReplay, stateHash, simDraws,
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
   get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,

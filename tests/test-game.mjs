@@ -1659,6 +1659,83 @@ console.log('\n== the campaign is the run ==');
 }
 
 // ---- a wave that cannot be placed is not placed on top of you --------------
+console.log('\n== a run is reproducible ==');
+{
+  const { stateHash } = await import('../play/src/replay.js');
+  const { simDraws } = await import('../play/src/simrng.js');
+
+  // the same seed and the same inputs, twice: the hash of the world must match.
+  // The stream is re-seeded by hand so the test varies the seed and nothing else.
+  const { seedSim } = await import('../play/src/simrng.js');
+  const play = (seed) => {
+    HG.beginLevel(1, true);   // a fresh run: no money or tally carried in
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    seedSim(seed);
+    for (let i = 0; i < 240; i++) {
+      HG.input.keys = Object.create(null);
+      HG.input.keys.KeyW = i % 40 < 20;
+      HG.input.keys.KeyD = i % 40 >= 20;
+      HG.input.lookDx = i % 7 === 0 ? 0.4 : 0;
+      HG.input.lookDy = 0;
+      HG.input.fire = i % 11 === 0;
+      HG.update(1 / 60);
+      HG.input.lookDx = 0;
+    }
+    return stateHash(HG.game, HG.player, HG.enemies);
+  };
+
+  const a = play('replay-a');
+  const b = play('replay-a');
+  ok(a === b, 'the same seed and the same inputs give the same run (' + a + ' vs ' + b + ')');
+  const c = play('replay-b');
+  ok(a !== c, 'a different seed gives a different run (' + a + ' vs ' + c + ')');
+
+  // and the recording plays back to the same hash: record 120 frames from a
+  // known start, then replay them into a fresh run of the same level
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.startRecording();
+  for (let i = 0; i < 120; i++) {
+    HG.input.keys = Object.create(null);
+    HG.input.keys.KeyW = true;
+    HG.input.lookDx = i % 5 === 0 ? 0.3 : 0;
+    HG.input.fire = i % 9 === 0;
+    HG.update(1 / 60);
+    HG.input.lookDx = 0;
+  }
+  const recordedHash = stateHash(HG.game, HG.player, HG.enemies);
+  const json = HG.replayJSON();
+  ok(typeof json === 'string' && json.length > 100, 'a run records to a string (' + (json && json.length) + ' bytes)');
+  const parsed = JSON.parse(json);
+  ok(parsed.frames.length === 120, 'one frame per step (' + parsed.frames.length + ')');
+  ok(!!parsed.meta.seed && parsed.meta.level === 1, 'and the header carries the seed and the level');
+
+  // replay it into a fresh run of the same level: `true`, or the money and the
+  // tally of the run that recorded it come along and the hash cannot match
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  ok(HG.loadReplay(json) === true, 'the replay loads');
+  // exactly as many steps as were recorded: one extra step advances the world
+  // past the end of the replay and the hash stops meaning anything
+  for (let i = 0; i < 120; i++) HG.update(1 / 60);
+  const replayed = stateHash(HG.game, HG.player, HG.enemies);
+  ok(replayed === recordedHash,
+    'the replay reproduces the run it recorded (' + recordedHash + ' vs ' + replayed + ')');
+  ok(simDraws() > 0, 'and the run drew from the seeded stream (' + simDraws() + ' numbers)');
+}
+
 console.log('\n== the guns are sprites ==');
 {
   const models = HG.weapons.models;
