@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.14.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.14.1**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.14.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 116, `v1.0.0` → `v2.14.0` |
+| Version | 2.14.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 117, `v1.0.0` → `v2.14.1` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -138,6 +138,10 @@ wiped by the next call.
 
 ### Layout, and the one gate that can see it
 
+- **A `display:none` control is not a broken control.** `#continueBtn` is hidden until there is a run to
+  continue; the sweep skips it rather than reporting it.
+- **The class screen draws its cards when it is opened, not when it is shown.** `showScreen('class')` alone
+  gives an empty screen; `showClassScreen()` is what a player sees.
 - **Every panel needs a pointer exit.** The journal, codex and status panel answered `Escape` only; a phone has no
   `Escape`. Each carries a `.panelclose` button now, and `smoke.mjs` asserts every panel closes from its own
   button.

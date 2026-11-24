@@ -536,6 +536,47 @@ for (const [id, fn] of panels) {
   await page.evaluate(() => { if (window.HG.game.state !== 'playing') window.HG.game.state = 'playing'; });
 }
 
+// --- every other screen, every button ---------------------------------------
+// The same question as the panels above, asked of the screens a player reaches
+// from a button: the title, class select, the pause menu, the cleared screen and
+// the death screen. "Check all buttons" was in the player report.
+console.log('\nbuttons');
+const screens = [
+  ['title', 'title'],
+  ['class', 'class'],
+  ['pause', 'pause'],
+  ['cleared', 'cleared'],
+  ['dead', 'gameover'],
+];
+for (const [id, screenId] of screens) {
+  const r = await page.evaluate(([sid]) => {
+    const HG = window.HG;
+    HG.game.state = 'playing';
+    // the class screen draws its cards when it is opened, not when it is shown
+    if (sid === 'class' && typeof HG.showClassScreen === 'function') HG.showClassScreen();
+    else HG.showScreen(sid);
+    const el = document.getElementById(sid);
+    const cs = getComputedStyle(el);
+    const all = [...el.querySelectorAll('button, [data-class]')];
+    // a control that is deliberately hidden is not a broken control: Continue is
+    // display:none until there is a run to continue
+    const items = all.filter((b) => getComputedStyle(b).display !== 'none');
+    const dead = [];
+    for (const b of items) {
+      const r2 = b.getBoundingClientRect();
+      if (r2.width === 0 || r2.height === 0) { dead.push((b.id || b.textContent || '?').trim().slice(0, 16) + ' (0px)'); continue; }
+      const top = document.elementFromPoint(r2.x + r2.width / 2, r2.y + r2.height / 2);
+      if (!(top && (top === b || b.contains(top)))) dead.push((b.id || b.textContent || '?').trim().slice(0, 16));
+    }
+    return { on: el.classList.contains('on'), scrolls: cs.overflowY, items: items.length, dead };
+  }, [id]);
+  ok('the ' + id + ' screen is up', r.on === true, JSON.stringify(r));
+  ok('and it scrolls when it is taller than the window', r.scrolls === 'auto', JSON.stringify(r));
+  ok('and all ' + r.items + ' of its controls can be pressed', r.dead.length === 0,
+    'unreachable: ' + (r.dead.join(', ') || 'none'));
+}
+await page.evaluate(() => { window.HG.game.state = 'playing'; window.HG.hideScreens(); });
+
 // --- touch ----------------------------------------------------------------
 // Emulated phone: the overlay must appear only while playing, and every control
 // must be inside the viewport.

@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.14.1 — 2026-11-24
+
+**Every control on every screen, checked the way a thumb checks it.** The player report said "check all buttons
+settings and control to work". This asks the question of all five screens a button can lead to — title, class,
+pause, cleared, death — at a desktop and a phone size.
+
+| Screen | Controls found | Unreachable |
+| --- | --- | --- |
+| title | 12 (Continue is hidden until there is a run) | 0 |
+| class | 3 cards | 0 |
+| pause | 7 | 0 |
+| cleared | 3 | 0 |
+| death | 4 | 0 |
+
+**It found nothing.** That is the point: the buttons work, and now a regression makes a red run instead of a
+bug report. The two controls that were genuinely broken this week — the level list at y = −404 and the three
+panels with no way out — would both have been caught by it.
+
+Two things it had to learn: a `display:none` control is not a broken control (Continue), and the class screen
+draws its cards when it is *opened*, not when it is *shown*.
+
 ## 2.14.0 — 2026-11-24
 
 **Three panels could not be closed on a phone.** The journal, the codex and the status panel answered `Escape`
