@@ -68,6 +68,14 @@ export const SCENES = {
   'the-first-relic-outro': [
     { who: 'VESNA', text: 'One of the two. The other is deeper. You will know it when the walls start answering.' },
   ],
+  'the-second-relic-outro': [
+    { who: 'VESNA', text: 'That is both. Whatever it was keeping shut is open now, and it knows you did it.' },
+    { who: 'THE WARDEN', text: 'Bring them up here. I would like to see you carry them.' },
+  ],
+  'the-throne-outro': [
+    { who: 'VESNA', text: 'It is quiet. Not dead-quiet. Finished-quiet.' },
+    { who: 'KESSLER', text: 'Then we walk out the way we came, and we do not look at the relics.' },
+  ],
 
   // ---- act III -----------------------------------------------------------
   'act3-intro': [

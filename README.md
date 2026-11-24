@@ -109,7 +109,7 @@ play/src/level.js     LEVEL GEN + collision + wall raycast — no Three.js, unit
 play/src/levelmesh.js sector grid → five merged BufferGeometries
 play/src/textures.js  canvas-painted textures and materials
 play/src/player.js    movement, look, step-up, damage, ammo
-play/src/weapons.js   view models, hitscan, pellets, rockets
+play/src/weapons.js   the four guns as canvas sprites, hitscan, pellets, rockets
 play/src/enemies.js   imp + grunt, FSM, LOS, attacks, gibs
 play/src/projectiles.js  rockets and fireballs
 play/src/effects.js   tracers, decals, particles, lights, shake

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.8.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.9.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.8.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 109, `v1.0.0` → `v2.8.0` |
+| Version | 2.9.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 110, `v1.0.0` → `v2.9.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 737 in the other three suites |
+| Assertions | 1391 playability (all 32 levels) + 746 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 57 shipped, 3 measured-and-rejected, 6 open of 66 |
+| Roadmap | 58 shipped, 3 measured-and-rejected, 5 open of 66 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -135,6 +135,18 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The guns are sprites
+
+- **One quad per weapon**, drawn by `gunTexture()` into a canvas at load: `userData.sprites = { idle, fire }`,
+  and `fire()` swaps the map while the muzzle timer runs. `select()` resets to idle, so a swap never leaves a
+  lit frame behind.
+- **The field is `key`, not `id`.** `WEAPONS[i].id` is undefined, and every gun drew the fallback art for a
+  while because of it. Nothing in the suite could see it — the sprite was the right size with two frames.
+- **A canvas texture needs `colorSpace = SRGBColorSpace`**, exactly as the painted wall textures do. Without it
+  the renderer treats it as linear and every dark tone lifts: the guns rendered as white slabs.
+- **Look at the render when the change is visual.** Both of those were found by taking a screenshot, not by an
+  assertion.
 
 ### Cutscenes, and the two entry points
 

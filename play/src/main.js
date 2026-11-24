@@ -998,7 +998,7 @@ function bossApproach(boss) {
  * as easy as the first one. The act is the floor now, and a zone that is already
  * harder than its act keeps its own number.
  */
-const ACT_THREAT = [0.8, 1.0, 1.2, 1.4];
+const ACT_THREAT = [0.8, 1.1, 1.4, 1.8];
 
 /**
  * The threat floor for the level being played, or 0 for a zone run.
@@ -1869,13 +1869,13 @@ function updateLifts(dt) {
 let npcOffer = null;
 
 /** The job, and what he pays for it. Two stages: taken, then done. */
-const NPC_JOB = { first: 120, second: 180 };
+const NPC_JOB = { first: 150, second: 250 };
 
 /** What he charges to open the door for you, once the job is paid. */
 const NPC_DOOR = 250;
 
 /** What he pays for three relics, and how many he asks for. */
-const NPC_RELICS = { count: 3, pays: 200 };
+const NPC_RELICS = { count: 3, pays: 300 };
 
 /** The shop, in the order the keys list it. Sold on `V`, never on arrival. */
 const NPC_SHOP = [
@@ -2975,7 +2975,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.8.0';
+const BUILD = '2.9.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3443,6 +3443,7 @@ window.HG = {
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
   selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
+  NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
   get npcOffer() { return npcOffer; },
   poolStats, buildReport, note, modelReport, installModel, uninstallModel, startWave,
   takeChoice, renderChoice, ZONE_BOOK, showCodex, closeCodex, renderCodex, hideScreens, showScreen,

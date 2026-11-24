@@ -1418,7 +1418,7 @@ console.log('\n== the helper pays ==');
     const drops0 = HG.game.drops.length;
     ok(HG.takeNpcOffer(0) === true, 'key 1 takes the job');
     ok(HG.game.flags.keshi === 1, 'which sets the run flag');
-    ok((HG.game.coins || 0) === coins0 + 120, 'and pays the first half (' + ((HG.game.coins || 0) - coins0) + ')');
+    ok((HG.game.coins || 0) === coins0 + HG.NPC_JOB.first, 'and pays the first half (' + ((HG.game.coins || 0) - coins0) + ')');
     ok(HG.game.drops.length === drops0 + 1, 'and drops the trinket he promised');
     ok(n.quest === 'taken', 'and the job is running');
     ok(!document.getElementById('letterbox').classList.contains('on'), 'and the caption is gone');
@@ -1441,7 +1441,7 @@ console.log('\n== the helper pays ==');
     }
     HG.update(0.016);
     ok(n.quest === 'done', 'a cleared room finishes the job');
-    ok((HG.game.coins || 0) === coins1 + 180, 'and he pays the rest (' + ((HG.game.coins || 0) - coins1) + ')');
+    ok((HG.game.coins || 0) === coins1 + HG.NPC_JOB.second, 'and he pays the rest (' + ((HG.game.coins || 0) - coins1) + ')');
     ok(HG.game.flags.keshi === 2, 'the flag records that he has paid');
 
     // declining is a real answer, not a dead button
@@ -1485,7 +1485,7 @@ console.log('\n== the helper pays ==');
     ok(HG.openNpcOffer() === true, 'the door offer is still on the table');
     HG.openNpcOffer();
     HG.takeNpcOffer(0);
-    ok((HG.game.coins || 0) === 50, '250 coins buys the door (' + (HG.game.coins || 0) + ')');
+    ok((HG.game.coins || 0) === 300 - HG.NPC_DOOR, HG.NPC_DOOR + ' coins buys the door (' + (HG.game.coins || 0) + ')');
     ok(HG.game.exitOpen === true, 'and the door is open');
     ok(HG.game.flags.keshiDoor === 1, 'the flag records that it was bought');
     ok(HG.openNpcOffer() === false, 'he does not sell a door that is already open');
@@ -1523,7 +1523,7 @@ console.log('\n== the helper pays ==');
     // breaking them all pays him his part, and the door follows from the count
     const coins0b = HG.game.coins || 0;
     while (HG.game.relics.length) HG.breakRelic(0);
-    ok((HG.game.coins || 0) === coins0b + 200, 'he pays 200 when the last one breaks (' + ((HG.game.coins || 0) - coins0b) + ')');
+    ok((HG.game.coins || 0) === coins0b + HG.NPC_RELICS.pays, 'he pays ' + HG.NPC_RELICS.pays + ' when the last one breaks (' + ((HG.game.coins || 0) - coins0b) + ')');
     ok(HG.game.flags.keshiRelics === 2, 'and only once');
     HG.updateObjective(0.016);
     ok(HG.game.exitOpen === true, 'and the door opens on the count, not on the coins');
@@ -1659,6 +1659,39 @@ console.log('\n== the campaign is the run ==');
 }
 
 // ---- a wave that cannot be placed is not placed on top of you --------------
+console.log('\n== the guns are sprites ==');
+{
+  const models = HG.weapons.models;
+  ok(models.length === 4, 'four weapons (' + models.length + ')');
+  ok(models.every((m) => m.isMesh === true && m.children.length === 0),
+    'each is one flat quad, not a pile of boxes');
+  ok(models.every((m) => !!(m.userData.sprites && m.userData.sprites.idle && m.userData.sprites.fire)),
+    'with two frames: the gun, and the gun firing');
+  ok(models.every((m) => m.material.map === m.userData.sprites.idle), 'and it starts on the idle frame');
+  ok(models.every((m) => m.material.transparent === true), 'drawn with transparency, so the scene shows through');
+  ok(models.every((m) => m.material.userData.shared === true), 'and survives a restart with the weapons');
+
+  // firing swaps to the lit frame, and the timer puts it back
+  HG.weapons.select(0, true);
+  HG.weapons.cd = 0;
+  HG.weapons.raise = 0;
+  HG.player.ammo.bullets = 40;
+  const held = HG.weapons.models[0];
+  HG.weapons.tryFire({ player: HG.player, level: HG.level, enemies: HG.enemies, projectiles: HG.projectiles,
+    hud: HG.hud, camera: HG.camera, onKill: () => {} });
+  ok(held.material.map === held.userData.sprites.fire, 'a shot shows the firing frame');
+  HG.weapons.update(0.1, HG.player);
+  ok(held.material.map === held.userData.sprites.idle, 'and it goes back when the flash ends');
+
+  // `.image` in three.js, `.canvas` in the stub: the same picture, two names
+  const widths = models.map((m) => {
+    const t = m.material.map;
+    const src = t && (t.image || t.canvas);
+    return (src && src.width) || 0;
+  });
+  ok(widths.every((w) => w > 0), 'every frame is a real canvas (' + widths.join(',') + ')');
+}
+
 console.log('\n== the act is the curve ==');
 {
   const diffOf = (n) => {

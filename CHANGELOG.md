@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.9.0 — 2026-11-24
+
+Four answers from play, shipped together.
+
+**The guns are sprites.** The four weapons were boxes and cylinders lit in a 3D scene — a lot of geometry for
+something that is always in the same corner of the screen and never clips. A Doom-era gun is a picture, so each
+one is drawn into a canvas in code and put on one plane, with two frames: the gun, and the gun with its muzzle
+lit. Zero external assets, as before.
+
+| Piece | What it does |
+| --- | --- |
+| `gunTexture()` | pistol, shotgun, chaingun and rocket, drawn with rectangles and discs in the palette the models used |
+| two frames each | `fire()` swaps to the lit frame, the muzzle timer swaps it back, and a weapon swap always resets to idle |
+| one quad per gun | `MeshBasicMaterial`, transparent, `depthTest: false`, 0.44 × 0.34 m at the corner |
+
+**The difficulty ladder is steeper:** `0.80 / 1.10 / 1.40 / 1.80`. Act IV is now more than double act I.
+
+**The money is richer:** the job pays 150 up front and 250 on a cleared room, the relics job pays 300 — so the
+250-coin door is one level's work rather than three. The door, the shop prices and the relic's 40 hp are
+unchanged.
+
+**The dialogue is the spine:** outros added for the first relic (16), the second relic (28) and the throne (32),
+so every scene at an act boundary, both relic levels and the finale has a written intro and outro. The other
+levels keep their act's lines.
+
+**Two traps, both found by looking at the render:**
+
+- `WEAPONS[i].id` does not exist — the field is `key`, so all four guns drew the fallback art and looked
+  identical. No test could see it: the sprite existed, was the right size, and had two frames.
+- A canvas texture needs `colorSpace = SRGBColorSpace`, the same as the painted wall textures. Without it the
+  renderer treats the canvas as linear and every dark tone lifts to grey — the guns rendered as white slabs.
+
 ## 2.8.0 — 2026-11-24
 
 **The shop asks first.** It used to buy the cheapest thing you were short of the moment you walked within 2.1 m

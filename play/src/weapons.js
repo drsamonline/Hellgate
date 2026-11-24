@@ -35,6 +35,120 @@ export const WEAPONS = [
 
 const REST = new THREE.Vector3(0.24, -0.19, -0.55);
 
+// ---- the sprites ----------------------------------------------------------
+// Every gun is a picture drawn in code, the way every texture in this game is.
+// Two frames: the gun at rest, and the gun with its muzzle lit. The palette is
+// the one the 3D models used, so the arsenal still reads as one arsenal.
+
+const GUN_W = 256;
+const GUN_H = 200;
+const GUN_INK = '#22252a';     // the darkest metal
+const GUN_METAL = '#3d4148';   // body
+const GUN_LIGHT = '#6b7178';   // top edges and highlights
+const GUN_WOOD = '#4a3320';    // grips and stocks
+const GUN_HAND = '#8a6a4a';    // a hand, because a floating gun reads as a prop
+const GUN_FLASH = '#ffd08a';
+
+/**
+ * Draw one weapon into a canvas and wrap it as a texture.
+ * @param {string} key The weapon key: pistol, shotgun, rocket, chaingun.
+ * @param {boolean} firing Whether to draw the lit-muzzle frame.
+ * @returns {object|null} A CanvasTexture, or null where there is no canvas.
+ */
+function gunTexture(key, firing) {
+  const canvas = document.createElement('canvas');
+  if (!canvas || !canvas.getContext) return null;
+  canvas.width = GUN_W;
+  canvas.height = GUN_H;
+  const g = canvas.getContext('2d');
+  if (!g) return null;
+
+  const rect = (x, y, w, h, fill) => {
+    g.fillStyle = fill;
+    g.fillRect(x, y, w, h);
+  };
+  const poly = (pts, fill) => {
+    g.fillStyle = fill;
+    g.beginPath();
+    g.moveTo(pts[0][0], pts[0][1]);
+    for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
+    g.closePath();
+    g.fill();
+  };
+  const disc = (x, y, r, fill) => {
+    g.fillStyle = fill;
+    g.beginPath();
+    g.arc(x, y, r, 0, Math.PI * 2);
+    g.fill();
+  };
+
+  // the hand comes first so the gun sits in front of it
+  poly([[150, 200], [196, 132], [232, 144], [214, 200]], GUN_HAND);
+  rect(196, 132, 30, 22, '#9a7a58');
+
+  if (key === 'pistol') {
+    rect(120, 62, 96, 26, GUN_METAL);          // slide
+    rect(120, 62, 96, 7, GUN_LIGHT);           // top edge
+    rect(206, 68, 22, 16, GUN_INK);            // barrel
+    rect(126, 88, 58, 12, GUN_INK);            // frame
+    poly([[132, 88], [186, 88], [178, 150], [146, 150]], GUN_WOOD);  // grip
+    rect(150, 44, 8, 10, GUN_INK);             // hammer
+    rect(196, 54, 6, 8, GUN_INK);              // front sight
+    if (firing) {
+      disc(232, 74, 15, GUN_FLASH);
+      poly([[228, 74], [256, 62], [256, 86]], GUN_FLASH);
+    }
+  } else if (key === 'shotgun') {
+    rect(96, 56, 150, 16, GUN_METAL);          // top barrel
+    rect(96, 76, 150, 16, GUN_METAL);          // bottom barrel
+    rect(96, 72, 150, 4, GUN_INK);             // the seam between them
+    rect(96, 56, 150, 4, GUN_LIGHT);
+    rect(120, 90, 74, 22, GUN_INK);            // receiver
+    rect(126, 96, 62, 30, GUN_WOOD);           // pump
+    poly([[62, 96], [126, 96], [120, 168], [84, 168]], GUN_WOOD);   // stock
+    disc(240, 66, 4, GUN_LIGHT);               // bead
+    if (firing) {
+      disc(248, 66, 17, GUN_FLASH);
+      poly([[244, 66], [256, 50], [256, 82]], GUN_FLASH);
+    }
+  } else if (key === 'chaingun') {
+    rect(104, 52, 84, 54, GUN_METAL);          // receiver
+    rect(104, 52, 84, 8, GUN_LIGHT);
+    for (let i = 0; i < 6; i++) {              // the barrel cluster
+      const a = (i / 6) * Math.PI * 2;
+      disc(196 + Math.cos(a) * 13, 78 + Math.sin(a) * 13, 6, GUN_INK);
+    }
+    rect(186, 68, 54, 20, GUN_INK);
+    rect(110, 106, 34, 46, GUN_WOOD);          // grip
+    rect(96, 108, 26, 34, GUN_INK);            // ammo box
+    rect(112, 36, 60, 10, GUN_INK);            // carry handle
+    if (firing) {
+      disc(242, 78, 18, GUN_FLASH);
+      disc(242, 78, 9, '#fff4d0');
+    }
+  } else {
+    rect(86, 62, 150, 40, GUN_METAL);          // tube
+    rect(86, 62, 150, 9, GUN_LIGHT);
+    rect(226, 54, 18, 56, GUN_INK);            // muzzle ring
+    rect(70, 70, 18, 24, GUN_INK);             // back blast
+    rect(120, 102, 26, 44, GUN_INK);           // front grip
+    rect(178, 100, 22, 40, GUN_INK);           // rear grip
+    rect(120, 46, 76, 10, GUN_INK);            // top rail
+    if (firing) {
+      disc(252, 82, 20, GUN_FLASH);
+      poly([[246, 82], [256, 60], [256, 104]], GUN_FLASH);
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(canvas);
+  // the same rule the painted wall textures follow: the canvas holds sRGB, and a
+  // texture that does not say so is treated as linear and every dark tone lifts
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.needsUpdate = true;
+  return tex;
+}
+
+
 /**
  * View models, firing, recoil and weapon switching.
  */
@@ -73,85 +187,37 @@ export class Weapons {
     this.select(0, true);
   }
 
+  /**
+   * The four guns, as sprites.
+   *
+   * They were boxes and cylinders lit in a 3D scene, which is a lot of geometry
+   * for something that is always in the same corner of the screen and never
+   * clips. A Doom-era gun is a picture, so each one is drawn into a canvas in
+   * code — no external art, same as every texture in the game — and put on one
+   * plane. Two frames each: the gun, and the gun with its muzzle lit.
+   */
   buildModels() {
-    const metal = new THREE.MeshLambertMaterial({ color: 0x3d4148 });
-    const dark = new THREE.MeshLambertMaterial({ color: 0x22252a });
-    const wood = new THREE.MeshLambertMaterial({ color: 0x4a3320 });
-
-    const bx = (w, h, d, m, x, y, z) => {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
-      mesh.position.set(x, y, z);
-      return mesh;
-    };
-
-    // a shared little vocabulary so the four guns read as one arsenal
-    const cyl = (rt, rb, len, m, x, y, z, rotX = Math.PI / 2) => {
-      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, len, 8), m);
-      mesh.rotation.x = rotX;
-      mesh.position.set(x, y, z);
-      return mesh;
-    };
-    const sight = (x, y, z, m = dark) => {
-      const g = new THREE.Group();
-      g.add(bx(0.012, 0.03, 0.012, m, -0.02, 0, 0));
-      g.add(bx(0.012, 0.03, 0.012, m, 0.02, 0, 0));
-      g.add(bx(0.05, 0.008, 0.012, m, 0, 0.022, 0));
-      g.position.set(x, y, z);
-      return g;
-    };
-
-    // ---- pistol: slide, grip, hammer, front sight
-    const pistol = new THREE.Group();
-    pistol.add(bx(0.085, 0.085, 0.3, metal, 0, 0.03, -0.1));
-    pistol.add(bx(0.075, 0.02, 0.3, dark, 0, 0.075, -0.1));   // slide top
-    pistol.add(bx(0.07, 0.17, 0.09, dark, 0, -0.1, 0.07));    // grip
-    pistol.add(bx(0.05, 0.03, 0.05, metal, 0, 0.1, 0.03));    // hammer
-    pistol.add(cyl(0.018, 0.018, 0.08, dark, 0, 0.035, -0.28)); // muzzle
-    pistol.add(sight(0, 0.1, -0.2));
-    this.models.push(pistol);
-
-    // ---- chaingun: receiver, six barrels, ammo box, carry handle
-    const chain = new THREE.Group();
-    chain.add(bx(0.17, 0.15, 0.38, metal, 0, 0.0, -0.08));
-    for (let i = 0; i < 6; i++) {
-      const a = (i / 6) * Math.PI * 2;
-      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.44, 6), dark);
-      b.rotation.x = Math.PI / 2;
-      b.position.set(Math.cos(a) * 0.048, Math.sin(a) * 0.048 + 0.02, -0.36);
-      chain.add(b);
+    const SIZE = { w: 0.44, h: 0.34 };
+    for (let i = 0; i < WEAPONS.length; i++) {
+      const idle = gunTexture(WEAPONS[i].key, false);
+      const fire = gunTexture(WEAPONS[i].key, true);
+      const mat = new THREE.MeshBasicMaterial({
+        map: idle, transparent: true, depthWrite: false, depthTest: false,
+      });
+      // the guns are drawn once per page and live as long as the weapons do
+      mat.userData.shared = true;
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(SIZE.w, SIZE.h), mat);
+      mesh.userData.sprites = { idle, fire };
+      mesh.userData.baseScale = 1;
+      this.models.push(mesh);
     }
-    chain.add(cyl(0.062, 0.062, 0.05, metal, 0, 0.02, -0.14)); // barrel bearing
-    chain.add(bx(0.06, 0.13, 0.09, dark, 0, -0.12, 0.06));     // grip
-    chain.add(bx(0.11, 0.09, 0.14, dark, 0.12, -0.06, 0.02));  // ammo box
-    chain.add(bx(0.09, 0.02, 0.09, metal, 0, 0.1, -0.04));     // carry handle
-    chain.add(sight(0, 0.14, -0.12));
-    this.models.push(chain);
-
-    // ---- shotgun: twin barrel, pump, wooden stock, bead sight
-    const shotgun = new THREE.Group();
-    shotgun.add(cyl(0.042, 0.042, 0.62, metal, -0.026, 0.035, -0.16));
-    shotgun.add(cyl(0.042, 0.042, 0.62, metal, 0.026, 0.035, -0.16));
-    shotgun.add(bx(0.11, 0.06, 0.34, dark, 0, 0.0, -0.02));    // receiver
-    shotgun.add(cyl(0.058, 0.058, 0.19, wood, 0, -0.005, -0.1)); // pump
-    shotgun.add(bx(0.09, 0.09, 0.2, wood, 0, -0.05, 0.17));    // stock
-    shotgun.add(bx(0.08, 0.15, 0.08, wood, 0, -0.13, 0.25));   // grip
-    shotgun.add(bx(0.006, 0.012, 0.006, metal, 0, 0.085, -0.44)); // bead
-    this.models.push(shotgun);
-
-    // ---- rocket launcher: tube, cone, two grips, top rail
-    const rocket = new THREE.Group();
-    rocket.add(cyl(0.1, 0.11, 0.62, dark, 0, 0.02, -0.14));
-    rocket.add(cyl(0.115, 0.115, 0.06, metal, 0, 0.02, -0.42));  // muzzle ring
-    rocket.add(cyl(0.1, 0.085, 0.1, metal, 0, 0.02, 0.2));       // back blast
-    rocket.add(bx(0.06, 0.16, 0.1, metal, 0, -0.13, 0.04));      // front grip
-    rocket.add(bx(0.06, 0.14, 0.09, metal, 0, -0.12, -0.16));    // rear grip
-    rocket.add(bx(0.04, 0.03, 0.3, dark, 0, 0.12, -0.1));        // top rail
-    rocket.add(sight(0, 0.16, -0.16));
-    this.models.push(rocket);
 
     for (const m of this.models) {
-      m.position.copy(REST);
-      m.rotation.set(0, -0.06, 0);
+      // fully in frame: the weapon camera's half-width at this depth is 0.51 m
+      // and its half-height 0.29 m, and a gun that runs off the corner looks
+      // like a bug rather than a view model
+      m.position.set(0.2, -0.1, -0.55);
+      m.rotation.set(0, 0, 0);
       m.visible = false;
       this.scene.add(m);
     }
@@ -182,7 +248,12 @@ export class Weapons {
   select(index, silent = false) {
     if (index < 0 || index >= WEAPONS.length) return;
     this.current = index;
-    this.models.forEach((m, i) => { m.visible = i === index; });
+    this.models.forEach((m, i) => {
+      m.visible = i === index;
+      // a swap never leaves a lit frame behind: the flash timer belongs to the
+      // gun that fired
+      if (m.userData.sprites && m.material) m.material.map = m.userData.sprites.idle;
+    });
     this.cd = 0.18; // fixed swap delay, not the old weapon's cooldown
     this.raise = 1; // dip the model out of frame and back
     if (!silent) this.audio.play('switch');
@@ -216,6 +287,9 @@ export class Weapons {
     if (w.spin) this.spinT = Math.min(w.spin, this.spinT + 0.06);
     this.kick = w.kick;
     this.muzzleTimer = 0.05;
+    // the sprite's second frame: the same gun with its muzzle lit
+    const held = this.models[this.current];
+    if (held && held.userData.sprites && held.material) held.material.map = held.userData.sprites.fire;
     this.muzzle.visible = true;
     this.muzzle.rotation.z = Math.random() * Math.PI;
     this.audio.play(w.sound);
@@ -369,7 +443,11 @@ export class Weapons {
 
     if (this.muzzleTimer > 0) {
       this.muzzleTimer -= dt;
-      if (this.muzzleTimer <= 0) this.muzzle.visible = false;
+      if (this.muzzleTimer <= 0) {
+        this.muzzle.visible = false;
+        const held = this.models[this.current];
+        if (held && held.userData.sprites && held.material) held.material.map = held.userData.sprites.idle;
+      }
     }
 
     const m = this.models[this.current];
