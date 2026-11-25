@@ -2353,6 +2353,41 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== a lift carries you ==');
+{
+  // #50: the lift cell moves its own floor and the plate follows it. The last
+  // question is whether the player rides it, which nothing had ever asked.
+  // level 8 has one: the generator only puts a lift in a tall room with room for
+  // the balcony it serves, and 12 of the 32 levels qualify
+  HG.beginLevel(8, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const lift = (HG.level.lifts || [])[0];
+  if (!lift) {
+    ok(false, 'the level has a lift to ride');
+  } else {
+    const c = lift.cell;
+    // a raw cell has x and z, not wx and wz: those are on reachableCells, and
+    // using them here put the player at NaN and the test reported a lift bug
+    const wx = c.x * 2;
+    const wz = c.z * 2;
+    HG.player.pos.set(wx, c.lift.y, wz);
+    HG.player.pos.y = c.lift.y;
+    HG.player.vel.set(0, 0, 0);
+    const y0 = HG.player.pos.y;
+    const low0 = c.lift.low;
+    for (let i = 0; i < 60 * 3; i++) HG.update(1 / 60);
+    const rise = HG.player.pos.y - y0;
+    ok(rise > 0.8, 'the player rises with the plate (' + rise.toFixed(2) + ' m in three seconds)');
+    ok(Math.abs(HG.player.pos.y - c.lift.y) < 0.35,
+      'and stays on it (foot ' + HG.player.pos.y.toFixed(2) + ', plate ' + c.lift.y.toFixed(2) + ')');
+    ok(c.lift.y > low0, 'the lift is above its own floor (' + c.lift.y.toFixed(2) + ' > ' + low0.toFixed(2) + ')');
+  }
+}
+
 console.log('\n== the guns are models ==');
 {
   // they were sprites for four releases — one flat quad per gun, drawn into a

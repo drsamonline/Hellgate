@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.35.0 — 2026-11-24
+
+**A lift carries you — and a crash under a stale flow field.** Item #50 has been on the roadmap as open since 1.98.0,
+when the lift shipped. It works; nothing had ever asked whether the *player* rides it.
+
+| Piece | What it does |
+| --- | --- |
+| the ride | a lift cell carries its own `c.lift.y`, rises and falls at 1.6 m/s with a 1.2 s dwell, and `updateLifts()` moves the plate mesh with it. **12 of the 32 levels** generate one |
+| the assertion | the player stands on the plate and is 1.97 m higher three seconds later, foot within 5 cm of it |
+| #50 | marked shipped in `ENHANCEMENTS.md` with that evidence — 60 shipped, 3 rejected, 3 open |
+| **a crash** | `buildFlowField()` threw on an out-of-range start cell (`level.cells[start].solid` of undefined) instead of returning an empty field. It returns one now |
+
+**And a test that lied for one run.** A raw cell has `x` and `z`; `wx` and `wz` live on `reachableCells`. My first
+version placed the player at `c.wx` — `undefined` — and reported "the player rises 0.00 m", which reads exactly like
+a product bug. It is the second time this session that mistake has cost a run.
+
 ## 2.34.0 — 2026-11-24
 
 **The guns are models again.** 2.9.0 replaced four 3D view models with canvas sprites — one flat quad per gun — and a

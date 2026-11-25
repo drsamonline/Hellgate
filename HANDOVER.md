@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.34.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.35.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.34.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 138, `v1.0.0` → `v2.34.0` |
+| Version | 2.35.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 139, `v1.0.0` → `v2.35.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 59 shipped, 3 measured-and-rejected, 4 open of 66 |
+| Roadmap | 60 shipped, 3 measured-and-rejected, 3 open of 66 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -135,6 +135,14 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Lifts, and the coordinates that are not there
+
+- **A lift cell carries `c.lift.y`** and `updateLifts()` moves the plate; the player rides it because
+  `floorHeightAt` reads the lift first and the player snaps up to the floor. Asserted: 1.97 m in three seconds.
+- **A raw cell has `x` and `z`, not `wx` and `wz`.** Those live on `reachableCells`. Using them in a probe puts the
+  player at `NaN` and the report reads like a product bug — it has cost two runs in this session.
+- **`buildFlowField()` guards its start cell.** An out-of-range start used to throw on `level.cells[start].solid`.
 
 ### The guns are models
 

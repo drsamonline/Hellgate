@@ -3,7 +3,7 @@
 Everything I would do next, ordered so that the cheapest, highest-value work is at the top. Nothing
 here is implemented; it is a plan, not a changelog.
 
-Fifty-nine items shipped — marked **✓ shipped** below; the rest say what is left and why.
+Sixty items shipped — marked **✓ shipped** below; three are measured and rejected with numbers, and four say what is left and why.
 
 **Tags.** `S` ≈ under 30 min · `M` ≈ an afternoon · `L` ≈ a weekend · `XL` ≈ architectural.
 Impact is judged against *how much better the game feels to play*, not how clever the code is.
@@ -106,7 +106,7 @@ Cheap, low-risk, immediately noticeable. All `S`.
 47. **Texture atlas** — one 256×256 atlas for all surfaces, so the level is one draw call instead of five. `textures.js` · M · medium — measured and rejected: the whole level is **4 draw calls of 68** (`floor_tile`, `ceil`, `wall_brick`, `decor:wall_brick`), and an atlas cannot tile. Walls use a repeat of 2.4, which an atlas cell cannot express without either a `fract()` in a custom shader or subdividing every quad into tiles. Two calls saved, a shader introduced. The real cost is enemy bodies: 21–23 meshes each, ~170 meshes for eight enemies — that is #45's job, not the atlas's
 48. **Weapon sprites instead of meshes** — a 2D canvas sprite per weapon, Doom-style, with frames for idle/fire. Cheaper and more authentic than boxes. `weapons.js` · M · medium — ✓ shipped: one quad per gun, two canvas frames, drawn in code
 49. **Better enemy models** — same box budget, more silhouette: hunched imps, a grunt with a visible backpack and muzzle. Cheap art direction. `enemies.js` · M · medium — ✓ shipped at 1.93.0: the imp is hunched with a three-spike ridge, brow and jaw; the grunt has a backpack, canister, knee pads and a muzzle brake; the brute has a trapezius wedge and fists. Every addition sits inside an existing joint, so the merged mesh count moves by one per body at most (imp 13→14, grunt 16→17) and the draw calls do not move
-50. **Animated doors and lifts as sectors** — a lift that moves between floor heights on a trigger. `level.js` · L · medium
+50. **Animated doors and lifts as sectors** — a lift that moves between floor heights on a trigger. `level.js` · L · medium — ✓ shipped: a lift cell carries its own `c.lift.y`, rises and falls at 1.6 m/s with a 1.2 s dwell, and `updateLifts()` moves the plate mesh with it. 12 of the 32 levels generate one. The player rides it — 1.97 m in three seconds with the foot within 5 cm of the plate, asserted in `tests/test-game.mjs`. Doors were already animated; the sector model carries both.
 51. **Save/resume a run** — serialise the wave, seed, player state and remaining enemies. Nice for long sessions. `main.js` · L · low — ✓ shipped; the save carries upgrades, story flags, book position, codex counts and relic count too
 
 ## Tier 3 — Large (architectural)

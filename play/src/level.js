@@ -819,6 +819,9 @@ export function buildFlowField(level, tx, tz) {
 
   // if the player is standing in a blocked cell (should not happen), search out
   let start = cz * W + cx;
+  // a level whose grid is a different size than the caller thinks — a stale
+  // level object, a resize mid-frame — used to throw here rather than return
+  if (!level.cells[start]) return dist;
   if (level.cells[start].solid) {
     let found = -1;
     for (let r = 1; r <= 3 && found < 0; r++) {
