@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.34.0 — 2026-11-24
+
+**The guns are models again.** 2.9.0 replaced four 3D view models with canvas sprites — one flat quad per gun — and a
+picture in the corner of the screen does not read as a weapon you are holding. The models are back, and framed
+properly for the first time.
+
+| Piece | What it does |
+| --- | --- |
+| the four models | restored from 2.8.0: the pistol's slide, grip, hammer and sight; the chaingun's six barrels, bearing, ammo box and carry handle; the shotgun's twin barrels, pump, wooden stock and bead; the rocket launcher's tube, muzzle ring, back blast and two grips |
+| `VIEW` | each gun framed on its own — position, yaw and scale — because a chaingun and a pistol do not want the same corner |
+| the distance | at the old 0.55 m the receiver sat under the near plane and the gun filled the screen; they are at 1.0–1.12 m now, at 0.78–0.82 scale |
+| the flash | it rides the muzzle, which moved with the gun |
+| a test | four groups of parts, not flat quads; no sprite frames left; the muzzle flash lights on a shot and goes out |
+
+**What went with the sprites:** the canvas gun art, its palette, and the two-frame texture swap. Nothing else did —
+the kick, the sway, the swap dip, the aspect scale and the muzzle flash are the same code.
+
 ## 2.33.0 — 2026-11-24
 
 **Boss rush played the warden nine times.** It spawns by zone, and the boss type came from the act — which is zero

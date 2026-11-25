@@ -2353,37 +2353,32 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
-console.log('\n== the guns are sprites ==');
+console.log('\n== the guns are models ==');
 {
+  // they were sprites for four releases — one flat quad per gun, drawn into a
+  // canvas — and the player asked for the models back: a picture in the corner
+  // of the screen does not read as a weapon you are holding
   const models = HG.weapons.models;
   ok(models.length === 4, 'four weapons (' + models.length + ')');
-  ok(models.every((m) => m.isMesh === true && m.children.length === 0),
-    'each is one flat quad, not a pile of boxes');
-  ok(models.every((m) => !!(m.userData.sprites && m.userData.sprites.idle && m.userData.sprites.fire)),
-    'with two frames: the gun, and the gun firing');
-  ok(models.every((m) => m.material.map === m.userData.sprites.idle), 'and it starts on the idle frame');
-  ok(models.every((m) => m.material.transparent === true), 'drawn with transparency, so the scene shows through');
-  ok(models.every((m) => m.material.userData.shared === true), 'and survives a restart with the weapons');
+  ok(models.every((m) => m.isGroup === true || (m.children && m.children.length > 0)),
+    'each is a group of parts, not a flat quad');
+  const parts = models.map((m) => (m.children ? m.children.length : 0));
+  ok(parts.every((n) => n >= 4), 'with a body to them: ' + parts.join(', ') + ' parts');
+  ok(models.every((m) => !m.userData.sprites), 'and no sprite frames left');
+  // the four are different shapes, not one model recoloured
+  const shapes = new Set(parts);
+  ok(shapes.size >= 3, 'and they are not all the same gun (' + [...shapes].join(', ') + ' parts)');
 
-  // firing swaps to the lit frame, and the timer puts it back
+  // firing lights the muzzle, and the timer puts it out
   HG.weapons.select(0, true);
   HG.weapons.cd = 0;
   HG.weapons.raise = 0;
   HG.player.ammo.bullets = 40;
-  const held = HG.weapons.models[0];
   HG.weapons.tryFire({ player: HG.player, level: HG.level, enemies: HG.enemies, projectiles: HG.projectiles,
     hud: HG.hud, camera: HG.camera, onKill: () => {} });
-  ok(held.material.map === held.userData.sprites.fire, 'a shot shows the firing frame');
-  HG.weapons.update(0.1, HG.player);
-  ok(held.material.map === held.userData.sprites.idle, 'and it goes back when the flash ends');
-
-  // `.image` in three.js, `.canvas` in the stub: the same picture, two names
-  const widths = models.map((m) => {
-    const t = m.material.map;
-    const src = t && (t.image || t.canvas);
-    return (src && src.width) || 0;
-  });
-  ok(widths.every((w) => w > 0), 'every frame is a real canvas (' + widths.join(',') + ')');
+  ok(HG.weapons.muzzle.visible === true, 'a shot shows the muzzle flash');
+  HG.weapons.update(0.2, HG.player);
+  ok(HG.weapons.muzzle.visible === false, 'and it goes out when the flash ends');
 }
 
 console.log('\n== the act is the curve ==');

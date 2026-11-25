@@ -34,183 +34,21 @@ export const WEAPONS = [
   },
 ];
 
-const REST = new THREE.Vector3(0.24, -0.19, -0.55);
+// Where each gun sits, in the weapon camera's own space. They are built at real
+// scale — a shotgun is 0.62 m of barrel — so they need distance: at 0.55 m the
+// receiver is under the near plane and the gun fills the screen. Each one is
+// framed on its own, because a chaingun and a pistol do not want the same corner:
+// a little yaw shows the side of the thing, which is how a view model reads.
+const VIEW = {
+  pistol: { x: 0.30, y: -0.26, z: -1.00, yaw: -0.10, scale: 0.82 },
+  shotgun: { x: 0.32, y: -0.26, z: -1.02, yaw: -0.10, scale: 0.82 },
+  rocket: { x: 0.34, y: -0.24, z: -1.06, yaw: -0.14, scale: 0.80 },
+  chaingun: { x: 0.38, y: -0.30, z: -1.12, yaw: -0.22, scale: 0.78 },
+};
+// the fallback, and the shape the flash and the sway are written against
+const REST = new THREE.Vector3(0.30, -0.26, -1.0);
+const GUN_SCALE = 0.82;
 
-// ---- the sprites ----------------------------------------------------------
-// Every gun is a picture drawn in code, the way every texture in this game is.
-// Two frames: the gun at rest, and the gun with its muzzle lit. The palette is
-// the one the 3D models used, so the arsenal still reads as one arsenal.
-
-const GUN_W = 256;
-const GUN_H = 200;
-const GUN_INK = '#22252a';     // the darkest metal
-const GUN_METAL = '#3d4148';   // body
-const GUN_LIGHT = '#6b7178';   // top edges and highlights
-const GUN_WOOD = '#4a3320';    // grips and stocks
-const GUN_HAND = '#8a6a4a';    // a hand, because a floating gun reads as a prop
-const GUN_FLASH = '#ffd08a';
-
-/**
- * Draw one weapon into a canvas and wrap it as a texture.
- * @param {string} key The weapon key: pistol, shotgun, rocket, chaingun.
- * @param {boolean} firing Whether to draw the lit-muzzle frame.
- * @returns {object|null} A CanvasTexture, or null where there is no canvas.
- */
-function gunTexture(key, firing) {
-  const canvas = document.createElement('canvas');
-  if (!canvas || !canvas.getContext) return null;
-  canvas.width = GUN_W;
-  canvas.height = GUN_H;
-  const g = canvas.getContext('2d');
-  if (!g) return null;
-  // the art is drawn in a 256 x 200 frame and placed here at 78% and pushed
-  // right: a view model sits in the corner, and one drawn edge to edge fills the
-  // screen with a barrel
-  if (g.setTransform) g.setTransform(0.78, 0, 0, 0.78, 66, 26);
-
-  // Everything here is drawn in FIRST PERSON: the near end of the gun is at the
-  // bottom right, the muzzle is away from you at the top left, and the body
-  // narrows towards it. The first pass drew each gun in profile — a side-on
-  // silhouette — which reads as a gun lying on the floor rather than one in your
-  // hands.
-  const rect = (x, y, w, h, fill) => {
-    g.fillStyle = fill;
-    g.fillRect(x, y, w, h);
-  };
-  const poly = (pts, fill) => {
-    g.fillStyle = fill;
-    g.beginPath();
-    g.moveTo(pts[0][0], pts[0][1]);
-    for (let i = 1; i < pts.length; i++) g.lineTo(pts[i][0], pts[i][1]);
-    g.closePath();
-    g.fill();
-  };
-  const disc = (x, y, r, fill) => {
-    g.fillStyle = fill;
-    g.beginPath();
-    g.arc(x, y, r, 0, Math.PI * 2);
-    g.fill();
-  };
-  const ring = (x, y, r, w, stroke) => {
-    g.strokeStyle = stroke;
-    g.lineWidth = w;
-    g.beginPath();
-    g.arc(x, y, r, 0, Math.PI * 2);
-    g.stroke();
-  };
-  // a face of the body: a quad with a light top edge and a dark bottom edge, so
-  // the shape reads as a solid seen in perspective rather than a flat cut-out
-  const face = (pts, top) => {
-    poly(pts, top ? '#5b6169' : GUN_METAL);
-    // the lit edge, drawn as a thin band along the top two points
-    if (top) poly([pts[0], pts[1], [pts[1][0], pts[1][1] + 3], [pts[0][0], pts[0][1] + 3]], '#8f959d');
-    else poly([pts[3], pts[2], [pts[2][0], pts[2][1] - 3], [pts[3][0], pts[3][1] - 3]], '#12141a');
-  };
-  // a barrel running away from the viewer: a trapezoid that narrows to the muzzle
-  const tube = (nearX, nearY, nearW, nearH, farX, farY, farW, farH) => {
-    face([
-      [nearX - nearW / 2, nearY - nearH / 2],
-      [farX - farW / 2, farY - farH / 2],
-      [farX + farW / 2, farY + farH / 2],
-      [nearX + nearW / 2, nearY + nearH / 2],
-    ], true);
-  };
-
-  // A first-person gun points UP the screen: the muzzle is at the top, the
-  // receiver fills the bottom, and the barrel is short because you are looking
-  // down it. The first two passes drew a 45° rod across the canvas, which is a
-  // gun lying on the floor however well it is shaded.
-  // A tube, not a slab: five vertical bands from a lit left edge to a shadowed
-  // right one. It is the difference between a barrel and a grey rectangle, and it
-  // costs five polygons.
-  const RAMP = ['#9aa0a8', '#7b8189', '#5b6169', '#3d4148', '#22252a'];
-  const barrel = (cx, yTop, yBot, wTop, wBot) => {
-    const bands = RAMP.length;
-    for (let i = 0; i < bands; i++) {
-      const a0 = -0.5 + i / bands;
-      const a1 = -0.5 + (i + 1) / bands;
-      poly([
-        [cx + wTop * a0, yTop], [cx + wTop * a1, yTop],
-        [cx + wBot * a1, yBot], [cx + wBot * a0, yBot],
-      ], RAMP[i]);
-    }
-    // the muzzle ring, so the far end is an end and not a cut
-    rect(cx - wTop / 2, yTop, wTop, 3, '#c9ced6');
-  };
-  const body = (x, y, w, h) => {
-    poly([[x, y + h], [x + w * 0.06, y], [x + w * 0.94, y], [x + w, y + h]], GUN_METAL);
-    poly([[x + w * 0.06, y], [x + w * 0.94, y], [x + w * 0.94, y + 6], [x + w * 0.06, y + 6]], '#8f959d');
-  };
-
-  if (key === 'pistol') {
-    barrel(150, 54, 150, 46, 62);                 // the slide, seen down its length
-    rect(150 - 24, 54, 48, 6, '#9aa0a8');         // the lit top of the slide
-    disc(150, 50, 8, '#0b0c10');                  // the bore
-    body(104, 140, 152, 46);                      // slide housing
-    rect(118, 150, 40, 8, '#0e1014');             // ejection port
-    poly([[140, 180], [232, 172], [248, 256], [150, 256]], '#2b2f36');  // grip
-    if (firing) {
-      disc(150, 46, 22, GUN_FLASH);
-      disc(150, 46, 10, '#fff6d8');
-      poly([[150, 46], [112, 8], [188, 8]], GUN_FLASH);
-    }
-  } else if (key === 'shotgun') {
-    barrel(126, 40, 150, 34, 44);
-    barrel(176, 40, 150, 34, 44);
-    rect(126 - 17, 40, 34, 5, '#9aa0a8');
-    rect(176 - 17, 40, 34, 5, '#9aa0a8');
-    body(96, 142, 168, 44);                       // receiver
-    poly([[112, 178], [244, 178], [250, 216], [104, 216]], GUN_WOOD);   // pump
-    for (let i = 0; i < 5; i++) rect(118 + i * 26, 184, 8, 26, '#1e1409');
-    poly([[150, 210], [250, 202], [256, 256], [160, 256]], GUN_WOOD);   // stock, near
-    if (firing) {
-      disc(151, 34, 26, GUN_FLASH);
-      disc(151, 34, 12, '#fff6d8');
-      poly([[151, 34], [106, -8], [196, -8]], GUN_FLASH);
-    }
-  } else if (key === 'chaingun') {
-    for (let i = 0; i < 6; i++) {                 // a cluster seen end-on
-      const a = (i / 6) * Math.PI * 2;
-      const cx = 151 + Math.cos(a) * 26;
-      const cy = 88 + Math.sin(a) * 26;
-      barrel(cx, cy - 10, 150, 15, 20);
-    }
-    body(88, 142, 180, 52);                       // receiver
-    rect(100, 150, 60, 8, '#0e1014');             // feed cover
-    rect(96, 196, 70, 12, GUN_INK);               // belt
-    for (let i = 0; i < 6; i++) rect(100 + i * 11, 197, 7, 10, '#c9a34a');
-    poly([[150, 210], [246, 202], [256, 256], [160, 256]], '#2b2f36');
-    if (firing) {
-      disc(151, 88, 26, GUN_FLASH);
-      disc(151, 88, 12, '#fff6d8');
-    }
-  } else {
-    barrel(151, 30, 150, 76, 92);                 // the tube, fat and short
-    poly([[104, 24], [198, 24], [204, 40], [98, 40]], '#2b2f36');       // muzzle ring
-    disc(151, 34, 16, '#0b0c10');                 // the bore
-    body(92, 142, 172, 46);                       // tube housing
-    rect(104, 150, 148, 6, '#8f959d');
-    poly([[120, 180], [214, 180], [220, 220], [112, 220]], GUN_WOOD);   // front grip
-    poly([[150, 212], [248, 204], [256, 256], [160, 256]], '#2b2f36');
-    if (firing) {
-      disc(151, 30, 26, GUN_FLASH);
-      disc(151, 30, 12, '#fff6d8');
-      poly([[151, 30], [104, -8], [198, -8]], GUN_FLASH);
-    }
-  }
-
-  // the hand: a fist over the grip at the bottom, where your hand actually is
-  poly([[150, 214], [250, 206], [256, 256], [146, 256]], GUN_HAND);
-  for (let i = 0; i < 3; i++) rect(168, 220 + i * 11, 66, 4, '#6f5238');
-  rect(152, 210, 34, 10, '#a08060');
-
-  const tex = new THREE.CanvasTexture(canvas);
-  // the same rule the painted wall textures follow: the canvas holds sRGB, and a
-  // texture that does not say so is treated as linear and every dark tone lifts
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.needsUpdate = true;
-  return tex;
-}
 
 
 /**
@@ -251,47 +89,99 @@ export class Weapons {
     this.select(0, true);
   }
 
-  /**
-   * The four guns, as sprites.
-   *
-   * They were boxes and cylinders lit in a 3D scene, which is a lot of geometry
-   * for something that is always in the same corner of the screen and never
-   * clips. A Doom-era gun is a picture, so each one is drawn into a canvas in
-   * code — no external art, same as every texture in the game — and put on one
-   * plane. Two frames each: the gun, and the gun with its muzzle lit.
-   */
   buildModels() {
-    const SIZE = { w: 0.38, h: 0.30 };
-    for (let i = 0; i < WEAPONS.length; i++) {
-      const idle = gunTexture(WEAPONS[i].key, false);
-      const fire = gunTexture(WEAPONS[i].key, true);
-      const mat = new THREE.MeshBasicMaterial({
-        map: idle, transparent: true, depthWrite: false, depthTest: false,
-      });
-      // the guns are drawn once per page and live as long as the weapons do
-      mat.userData.shared = true;
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(SIZE.w, SIZE.h), mat);
-      mesh.userData.sprites = { idle, fire };
-      mesh.userData.baseScale = 1;
-      this.models.push(mesh);
-    }
+    const metal = new THREE.MeshLambertMaterial({ color: 0x3d4148 });
+    const dark = new THREE.MeshLambertMaterial({ color: 0x22252a });
+    const wood = new THREE.MeshLambertMaterial({ color: 0x4a3320 });
 
-    for (const m of this.models) {
-      // fully in frame: the weapon camera's half-width at this depth is 0.51 m
-      // and its half-height 0.29 m, and a gun that runs off the corner looks
-      // like a bug rather than a view model
-      m.position.set(0.22, -0.12, -0.55);
-      m.rotation.set(0, 0, 0);
+    const bx = (w, h, d, m, x, y, z) => {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
+
+    // a shared little vocabulary so the four guns read as one arsenal
+    const cyl = (rt, rb, len, m, x, y, z, rotX = Math.PI / 2) => {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, len, 8), m);
+      mesh.rotation.x = rotX;
+      mesh.position.set(x, y, z);
+      return mesh;
+    };
+    const sight = (x, y, z, m = dark) => {
+      const g = new THREE.Group();
+      g.add(bx(0.012, 0.03, 0.012, m, -0.02, 0, 0));
+      g.add(bx(0.012, 0.03, 0.012, m, 0.02, 0, 0));
+      g.add(bx(0.05, 0.008, 0.012, m, 0, 0.022, 0));
+      g.position.set(x, y, z);
+      return g;
+    };
+
+    // ---- pistol: slide, grip, hammer, front sight
+    const pistol = new THREE.Group();
+    pistol.add(bx(0.085, 0.085, 0.3, metal, 0, 0.03, -0.1));
+    pistol.add(bx(0.075, 0.02, 0.3, dark, 0, 0.075, -0.1));   // slide top
+    pistol.add(bx(0.07, 0.17, 0.09, dark, 0, -0.1, 0.07));    // grip
+    pistol.add(bx(0.05, 0.03, 0.05, metal, 0, 0.1, 0.03));    // hammer
+    pistol.add(cyl(0.018, 0.018, 0.08, dark, 0, 0.035, -0.28)); // muzzle
+    pistol.add(sight(0, 0.1, -0.2));
+    this.models.push(pistol);
+
+    // ---- chaingun: receiver, six barrels, ammo box, carry handle
+    const chain = new THREE.Group();
+    chain.add(bx(0.17, 0.15, 0.38, metal, 0, 0.0, -0.08));
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.021, 0.021, 0.44, 6), dark);
+      b.rotation.x = Math.PI / 2;
+      b.position.set(Math.cos(a) * 0.048, Math.sin(a) * 0.048 + 0.02, -0.36);
+      chain.add(b);
+    }
+    chain.add(cyl(0.062, 0.062, 0.05, metal, 0, 0.02, -0.14)); // barrel bearing
+    chain.add(bx(0.06, 0.13, 0.09, dark, 0, -0.12, 0.06));     // grip
+    chain.add(bx(0.11, 0.09, 0.14, dark, 0.12, -0.06, 0.02));  // ammo box
+    chain.add(bx(0.09, 0.02, 0.09, metal, 0, 0.1, -0.04));     // carry handle
+    chain.add(sight(0, 0.14, -0.12));
+    this.models.push(chain);
+
+    // ---- shotgun: twin barrel, pump, wooden stock, bead sight
+    const shotgun = new THREE.Group();
+    shotgun.add(cyl(0.042, 0.042, 0.62, metal, -0.026, 0.035, -0.16));
+    shotgun.add(cyl(0.042, 0.042, 0.62, metal, 0.026, 0.035, -0.16));
+    shotgun.add(bx(0.11, 0.06, 0.34, dark, 0, 0.0, -0.02));    // receiver
+    shotgun.add(cyl(0.058, 0.058, 0.19, wood, 0, -0.005, -0.1)); // pump
+    shotgun.add(bx(0.09, 0.09, 0.2, wood, 0, -0.05, 0.17));    // stock
+    shotgun.add(bx(0.08, 0.15, 0.08, wood, 0, -0.13, 0.25));   // grip
+    shotgun.add(bx(0.006, 0.012, 0.006, metal, 0, 0.085, -0.44)); // bead
+    this.models.push(shotgun);
+
+    // ---- rocket launcher: tube, cone, two grips, top rail
+    const rocket = new THREE.Group();
+    rocket.add(cyl(0.1, 0.11, 0.62, dark, 0, 0.02, -0.14));
+    rocket.add(cyl(0.115, 0.115, 0.06, metal, 0, 0.02, -0.42));  // muzzle ring
+    rocket.add(cyl(0.1, 0.085, 0.1, metal, 0, 0.02, 0.2));       // back blast
+    rocket.add(bx(0.06, 0.16, 0.1, metal, 0, -0.13, 0.04));      // front grip
+    rocket.add(bx(0.06, 0.14, 0.09, metal, 0, -0.12, -0.16));    // rear grip
+    rocket.add(bx(0.04, 0.03, 0.3, dark, 0, 0.12, -0.1));        // top rail
+    rocket.add(sight(0, 0.16, -0.16));
+    this.models.push(rocket);
+
+    this.models.forEach((m, i) => {
+      const v = VIEW[WEAPONS[i].key] || { x: REST.x, y: REST.y, z: REST.z, yaw: -0.06, scale: GUN_SCALE };
+      m.userData.rest = new THREE.Vector3(v.x, v.y, v.z);
+      m.userData.baseScale = v.scale;
+      m.position.copy(m.userData.rest);
+      m.rotation.set(0, v.yaw, 0);
+      m.scale.setScalar(v.scale);
       m.visible = false;
       this.scene.add(m);
-    }
+    });
   }
 
   /** Scale the view model for the aspect: a portrait phone gets a smaller gun. */
   setAspectScale(k) {
     if (!Number.isFinite(k) || k <= 0) return;
     this.aspectScale = k;
-    for (const m of this.models) m.scale.setScalar(k);
+    for (const m of this.models) m.scale.setScalar(k * (m.userData.baseScale || GUN_SCALE));
   }
 
   buildMuzzleFlash() {
@@ -303,7 +193,7 @@ export class Weapons {
     spike.rotation.x = -Math.PI / 2;
     spike.position.z = -0.12;
     g.add(spike);
-    g.position.copy(REST).add(new THREE.Vector3(0, 0.03, -0.34));
+    g.position.copy(REST).add(new THREE.Vector3(0, 0.03, -0.34 * GUN_SCALE));
     g.visible = false;
     this.scene.add(g);
     this.muzzle = g;
@@ -316,7 +206,6 @@ export class Weapons {
       m.visible = i === index;
       // a swap never leaves a lit frame behind: the flash timer belongs to the
       // gun that fired
-      if (m.userData.sprites && m.material) m.material.map = m.userData.sprites.idle;
     });
     this.cd = 0.18; // fixed swap delay, not the old weapon's cooldown
     this.raise = 1; // dip the model out of frame and back
@@ -353,7 +242,6 @@ export class Weapons {
     this.muzzleTimer = 0.05;
     // the sprite's second frame: the same gun with its muzzle lit
     const held = this.models[this.current];
-    if (held && held.userData.sprites && held.material) held.material.map = held.userData.sprites.fire;
     this.muzzle.visible = true;
     this.muzzle.rotation.z = simRand() * Math.PI;
     this.audio.play(w.sound);
@@ -510,17 +398,17 @@ export class Weapons {
       if (this.muzzleTimer <= 0) {
         this.muzzle.visible = false;
         const held = this.models[this.current];
-        if (held && held.userData.sprites && held.material) held.material.map = held.userData.sprites.idle;
       }
     }
 
     const m = this.models[this.current];
     if (!m) return;
     const sway = Math.min(1, Math.hypot(player.vel.x, player.vel.z) / 5.4);
+    const rest = m.userData.rest || REST;
     m.position.set(
-      REST.x + Math.sin(this.bob) * 0.012 * sway,
-      REST.y + Math.cos(this.bob * 2) * 0.01 * sway - this.kick * 0.2 - this.raise * 0.42,
-      REST.z + this.kick
+      rest.x + Math.sin(this.bob) * 0.012 * sway,
+      rest.y + Math.cos(this.bob * 2) * 0.01 * sway - this.kick * 0.2 - this.raise * 0.42,
+      rest.z + this.kick
     );
     m.rotation.x = this.kick * 1.6;
     m.rotation.y = -0.06 + Math.sin(this.bob) * 0.01 * sway;
