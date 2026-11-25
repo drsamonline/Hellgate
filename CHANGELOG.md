@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.38.0 — 2026-11-24
+
+**The editor keeps your work, takes it back, and changes size.** Three of the four things 2.37.0 was missing.
+
+| Piece | What it does |
+| --- | --- |
+| **undo, redo** | one step per *stroke*, not per cell: a drag across twenty cells is one undo. Forty states deep — a 24 × 24 grid is 576 characters, so the whole stack is 23 kB |
+| **save** | the grid goes to `localStorage` on every stroke end, every resize and on the Save button, and comes back when you open the editor. Verified across a full page reload |
+| **resize** | 16 / 24 / 32 / 40, keeping whatever fits and rocking the new edge. Undoable, like everything else |
+| the tests | a six-cell drag undoes in one step; redo puts it back; the stack says when it is empty; a painted exit survives a resize; a grid under 8 is refused; save and load round-trip through a stubbed `localStorage` |
+
+**What is still missing:** per-cell heights. A map is one flat room at 3.4 m, so there are no balconies and the lifts
+in it go nowhere. That is the next slice, and it is the one that turns this into a level designer rather than a room
+painter.
+
 ## 2.37.0 — 2026-11-24
 
 **The editor.** #63, second slice: a grid you can paint, and the two buttons that matter — play it, and take it away.

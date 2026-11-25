@@ -34,6 +34,9 @@ export function blankGrid(w = 24, h = 24) {
   return { w, h, grid };
 }
 
+/** How many states the undo stack keeps. */
+const UNDO_MAX = 40;
+
 /** The editor's state: a grid of codes, a palette choice, and a canvas. */
 export class Editor {
   /**
@@ -49,6 +52,77 @@ export class Editor {
     this.grid = blankGrid(24, 24).grid;
     this.brush = '.';
     this.cell = 16;
+    // undo is a stack of whole grids: 24 x 24 is 576 characters, so forty of
+    // them is 23 kB — cheaper than a diff, and impossible to get wrong
+    this.undoStack = [];
+    this.redoStack = [];
+    this.stroke = false;
+  }
+
+  /** Remember the grid before a change, once per stroke. */
+  snapshot() {
+    this.undoStack.push({ w: this.w, h: this.h, grid: this.grid.join('') });
+    if (this.undoStack.length > UNDO_MAX) this.undoStack.shift();
+    this.redoStack.length = 0;
+  }
+
+  /** A stroke begins at pointer-down: one undo step per drag, not per cell. */
+  beginStroke() {
+    if (this.stroke) return;
+    this.stroke = true;
+    this.snapshot();
+  }
+
+  /** And ends at pointer-up. */
+  endStroke() {
+    this.stroke = false;
+  }
+
+  /** Undo one stroke. */
+  undo() {
+    const prev = this.undoStack.pop();
+    if (!prev) return false;
+    this.redoStack.push({ w: this.w, h: this.h, grid: this.grid.join('') });
+    this.w = prev.w;
+    this.h = prev.h;
+    this.grid = prev.grid.split('');
+    this.render();
+    return true;
+  }
+
+  /** Redo one stroke. */
+  redo() {
+    const next = this.redoStack.pop();
+    if (!next) return false;
+    this.undoStack.push({ w: this.w, h: this.h, grid: this.grid.join('') });
+    this.w = next.w;
+    this.h = next.h;
+    this.grid = next.grid.split('');
+    this.render();
+    return true;
+  }
+
+  /**
+   * Resize the grid, keeping whatever fits.
+   * @param {number} w
+   * @param {number} h
+   */
+  resize(w, h) {
+    if (!Number.isFinite(w) || !Number.isFinite(h) || w < 8 || h < 8 || w > 64 || h > 64) return false;
+    this.snapshot();
+    const next = [];
+    for (let z = 0; z < h; z++) {
+      for (let x = 0; x < w; x++) {
+        // the edge of the new grid is rock, whatever was there
+        const edge = x === 0 || z === 0 || x === w - 1 || z === h - 1;
+        next.push(edge ? '#' : (this.at(x, z) || '.'));
+      }
+    }
+    this.w = w;
+    this.h = h;
+    this.grid = next;
+    this.render();
+    return true;
   }
 
   /** Start from a map or a blank grid. */
@@ -86,6 +160,8 @@ export class Editor {
     if (cx < 0 || cz < 0 || cx >= this.w || cz >= this.h) return false;
     const i = cz * this.w + cx;
     if (this.grid[i] === code) return false;
+    // a paint outside a stroke (a test, a keyboard nudge) is its own step
+    if (!this.stroke) this.snapshot();
     this.grid[i] = code;
     if (this.onPaint) this.onPaint(cx, cz, code);
     return true;

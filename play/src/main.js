@@ -1937,10 +1937,47 @@ function editorState() {
       const py = ((e.clientY - r.top) / r.height) * cv.height;
       if (editor.paintAt(px, py)) { editor.render(); renderEditorCounts(); }
     };
-    cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); paint(e); });
+    cv.addEventListener('pointerdown', (e) => {
+      cv.setPointerCapture(e.pointerId);
+      editor.beginStroke();
+      paint(e);
+    });
     cv.addEventListener('pointermove', (e) => { if (e.buttons) paint(e); });
+    // one undo step per drag: the stroke ends when the pointer does
+    cv.addEventListener('pointerup', () => { editor.endStroke(); saveEditor(); });
+    cv.addEventListener('pointercancel', () => { editor.endStroke(); saveEditor(); });
+  }
+  const sizeRow = document.getElementById('editorSize');
+  if (sizeRow) {
+    for (const b of sizeRow.querySelectorAll('[data-size]')) {
+      b.addEventListener('click', () => {
+        const n = Number(b.getAttribute('data-size'));
+        if (editor.resize(n, n)) {
+          for (const o of sizeRow.querySelectorAll('[data-size]')) o.classList.toggle('on', o === b);
+          renderEditorCounts();
+          saveEditor();
+        }
+      });
+    }
   }
   return editor;
+}
+
+/**
+ * Keep the grid between visits. localStorage is the same place the best run and
+ * the campaign live, and a map is 6 kB at its largest.
+ */
+function saveEditor() {
+  if (!editor) return;
+  try { localStorage.setItem('hellgate.editor', mapToJSON(editor.toMap())); } catch (e) { /* private mode */ }
+}
+
+/** The saved grid, or null. */
+function loadEditor() {
+  try {
+    const text = localStorage.getItem('hellgate.editor');
+    return text ? mapFromJSON(text) : null;
+  } catch (e) { return null; }
 }
 
 /** The read-out under the canvas: what is on the grid. */
@@ -1955,7 +1992,10 @@ function renderEditorCounts() {
 /** Open the editor, seeded from the level you are on if there is one. */
 function openEditor() {
   const ed = editorState();
-  if (level) ed.fromLevel(level);
+  // the grid you left, then the level you are standing in, then a blank one
+  const saved = loadEditor();
+  if (saved) ed.load({ w: saved.W, h: saved.H, grid: saved.cells.map((c) => (c.solid ? '#' : c.exit ? 'X' : c.door ? '+' : c.stair ? '=' : c.lift ? '^' : c.crate ? '~' : '.')).join('') });
+  else if (level) ed.fromLevel(level);
   else ed.load(null);
   renderEditorCounts();
   game.state = 'editor';
@@ -3151,6 +3191,14 @@ document.getElementById('editorClose')?.addEventListener('click', () => {
   showScreen('title');
 });
 document.getElementById('editorPlay')?.addEventListener('click', () => playEditorMap());
+document.getElementById('editorSave')?.addEventListener('click', () => {
+  saveEditor();
+  hud.toast('MAP SAVED', 1.8);
+});
+document.getElementById('editorUndo')?.addEventListener('click', () => {
+  if (editorState().undo()) { renderEditorCounts(); saveEditor(); }
+  else hud.toast('NOTHING TO UNDO', 1.4);
+});
 document.getElementById('editorClear')?.addEventListener('click', () => {
   const ed = editorState();
   ed.load(null);
@@ -3253,7 +3301,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.37.0';
+const BUILD = '2.38.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3865,6 +3913,9 @@ window.HG = {
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
   openEditor, playEditorMap, get editor() { return editor; },
+  // the editor's save and load, for the suite: they are two localStorage calls
+  editorSaveTest(ed) { const keep = editor; editor = ed; saveEditor(); editor = keep; },
+  editorLoadTest() { return loadEditor(); },
   setPendingMap(m) { pendingMap = m; },
   CONTROLS, showControls, closeControls, renderControls, queueHints, updateHints,
   get hintQueue() { return hintQueue; },

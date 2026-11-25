@@ -2353,6 +2353,49 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the editor undoes, resizes and saves ==');
+{
+  const { Editor } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  const w0 = ed.w;
+  // one drag is one undo step, however many cells it touched
+  ed.beginStroke();
+  for (let x = 3; x < 9; x++) ed.paint(x, 4, '#');
+  ed.endStroke();
+  ok(ed.at(3, 4) === '#' && ed.at(8, 4) === '#', 'a drag painted six cells');
+  ok(ed.undo() === true, 'undo takes it back');
+  ok(ed.at(3, 4) === '.' && ed.at(8, 4) === '.', 'all six at once, not one per cell');
+  ok(ed.redo() === true && ed.at(8, 4) === '#', 'and redo puts them back');
+  ok(ed.undo() && ed.undo() === false, 'the stack runs out and says so');
+
+  // resize keeps what fits and rocks the new edge
+  ed.load(null);
+  ed.paint(2, 2, 'X');
+  ok(ed.resize(32, 32) === true, 'the grid can grow to 32');
+  ok(ed.w === 32 && ed.h === 32, 'and it is 32 square');
+  ok(ed.at(2, 2) === 'X', 'the painted exit survived the resize');
+  ok(ed.at(0, 0) === '#' && ed.at(31, 31) === '#', 'and the new edge is rock');
+  ok(ed.resize(4, 4) === false, 'a grid smaller than eight is refused');
+  ok(ed.undo() === true && ed.w === w0, 'resize is undoable too');
+
+  // saving keeps it for the next visit
+  const store = new Map();
+  const realLS = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+  };
+  ed.load(null);
+  ed.paint(6, 6, 'X');
+  HG.editorSaveTest(ed);
+  ok(store.has('hellgate.editor'), 'the grid is written to storage');
+  const back = HG.editorLoadTest();
+  ok(!!back && back.exit.cx === 6 && back.exit.cz === 6, 'and reads back with the exit where it was painted');
+  globalThis.localStorage = realLS;
+}
+
 console.log('\n== the editor paints and plays ==');
 {
   // #63's second slice: a grid you can paint, and the two buttons that matter
