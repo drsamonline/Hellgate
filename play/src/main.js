@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { makeRng } from './rng.js';
 import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, circleBlocked, CELL } from './level.js';
+import { exportMap, importMap, mapToJSON, mapFromJSON } from './maps.js';
 import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { humanoid, PROPORTIONS, rigMat } from './rig.js';
@@ -289,6 +290,8 @@ const MODES = {
 };
 
 let gameMode = 'campaign';
+// a map handed in by `?map=`, played instead of a generated level
+let pendingMap = null;
 
 // a relic takes this much damage to break: three pistol shots or two blasts.
 // High enough that breaking one is a decision, low enough that it is not a chore.
@@ -458,7 +461,9 @@ function buildRun(seed, zoneDef, fresh = false) {
   // a time bonus at the end of a wave depended on how long the session had been
   // open — which is the same as saying two identical runs scored differently
   elapsed = 0;
-  level = generateLevel(seed, zone.shape);
+  // a shared map is played as it is; everything else is generated from the seed
+  level = pendingMap || generateLevel(seed, zone.shape);
+  pendingMap = null;
   // A level states what ends it. 'reach' opens the way from the first frame, so
   // the level is somewhere you cross rather than a pen you empty; 'clear' keeps
   // the wave arena's rule and the pad opens when the room is empty.
@@ -3158,7 +3163,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.35.0';
+const BUILD = '2.36.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3681,6 +3686,23 @@ function applyUrlOverrides() {
   if (p.get('nohud') === '1') hud.setVisible(false);
   // ?rec=1 records this run; the replay is on `HG.replayJSON()` when it ends
   if (p.get('rec') === '1') startRecording();
+  // ?map=<json> or ?map=<base64 json>: play somebody else's level. The map is a
+  // grid of characters and a few numbers — 6.8 kB at the largest — so it fits in
+  // a URL, which is the whole point of a shareable map.
+  const mapArg = p.get('map');
+  if (mapArg) {
+    let text = mapArg;
+    if (!text.trim().startsWith('{')) {
+      try { text = decodeURIComponent(escape(atob(text))); } catch (e) { text = ''; }
+    }
+    const lv = text ? mapFromJSON(text) : null;
+    if (lv) {
+      pendingMap = lv;
+      note('map: ' + lv.W + 'x' + lv.H);
+    } else {
+      hud.toast('NOT A MAP', 2);
+    }
+  }
   // ?play=1 plays the replay left in localStorage by the last copy
   if (p.get('play') === '1') {
     try {
@@ -3751,6 +3773,8 @@ window.HG = {
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
+  exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
+  setPendingMap(m) { pendingMap = m; },
   CONTROLS, showControls, closeControls, renderControls, queueHints, updateHints,
   get hintQueue() { return hintQueue; },
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,

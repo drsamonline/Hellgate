@@ -2353,6 +2353,49 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== a level is a document ==');
+{
+  // #63's foundation: the grid as a string you can carry, and back again. The
+  // round trip has to be exact or a shared map is a different level.
+  const { exportMap, importMap, mapToJSON, mapFromJSON } = await import('../play/src/maps.js');
+  const { generateLevel } = await import('../play/src/level.js');
+  const { STORY_LEVELS, storyLevelZone } = await import('../play/src/story-levels.js');
+  let worst = 0;
+  let largest = 0;
+  for (const row of STORY_LEVELS) {
+    const L = generateLevel(storyLevelZone(row).seed, storyLevelZone(row).shape);
+    const map = exportMap(L);
+    largest = Math.max(largest, mapToJSON(map).length);
+    const back = importMap(map);
+    for (let i = 0; i < L.cells.length; i++) {
+      const a = L.cells[i];
+      const b = back.cells[i];
+      if (a.solid !== b.solid || (a.floor || 0) !== (b.floor || 0) || (a.ceil || 0) !== (b.ceil || 0)
+        || !!a.door !== !!b.door || !!a.exit !== !!b.exit || !!a.secret !== !!b.secret) worst++;
+    }
+  }
+  ok(worst === 0, 'all 32 levels survive the round trip (' + worst + ' cells differ)');
+  ok(largest < 8000, 'and the largest is a URL, not a file (' + largest + ' bytes)');
+  ok(importMap(null) === null && importMap({ v: 2 }) === null && importMap({ v: 1, w: 3, h: 3, grid: '..' }) === null,
+    'a map that is not one is refused');
+
+  // and the game plays a map it was handed
+  const L = generateLevel(storyLevelZone(STORY_LEVELS[0]).seed, storyLevelZone(STORY_LEVELS[0]).shape);
+  const shared = mapFromJSON(mapToJSON(exportMap(L)));
+  HG.setPendingMap(shared);
+  HG.beginLevel(1, true);
+  ok(HG.level.cells.length === L.cells.length, 'a shared map builds the same grid (' + HG.level.cells.length + ' cells)');
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  frames(3);
+  ok(HG.game.state === 'playing', 'and plays');
+  ok(HG.level.reachableCells.length > 50, 'with somewhere to walk (' + HG.level.reachableCells.length + ' cells)');
+  ok(HG.pendingMap === null, 'and it is consumed once, not on every level');
+}
+
 console.log('\n== a lift carries you ==');
 {
   // #50: the lift cell moves its own floor and the plate follows it. The last

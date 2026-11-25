@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.35.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.36.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.35.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.36.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; eight static gates; smoke, flow, run, invariants |
-| Modules | 42 in `play/src/` |
-| Releases | 139, `v1.0.0` → `v2.35.0` |
+| Modules | 43 in `play/src/` |
+| Releases | 140, `v1.0.0` → `v2.36.0` |
 | Performance | 90 draw calls a frame at the median, 122 at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 60 shipped, 3 measured-and-rejected, 3 open of 66 |
 
@@ -89,6 +89,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.33.0** | **Boss rush is four bosses — it played the warden nine times** |
 | **2.34.0** | **The guns are 3D models again — the sprites are gone** |
 | **2.35.0** | **A lift carries you — #50 shipped with evidence, and a flow-field crash fixed** |
+| **2.36.0** | **A level is a document — the map format #63 needs, and `?map=` to play one** |
 
 ### 2.0.0 in detail
 

@@ -124,6 +124,7 @@ play/src/props.js     instanced trees, rocks and grass; animals that bolt
 play/src/companion.js the drone that follows you and shoots
 play/src/lore.js      wall terminals you can read with V
 play/src/loot.js      trinkets: what a kill can drop, and what they do
+play/src/maps.js      a level as a document: grid to JSON and back, for shared maps
 play/src/minimap.js   the floor plan, drawn once with live markers
 play/src/bloom.js     the post pass: bright pixels blurred and added back
 play/src/music.js     generated music: a scale, a tempo and a rule for the next note

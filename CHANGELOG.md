@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.36.0 — 2026-11-24
+
+**A level is a document.** #63 has been the roadmap's biggest item for a year — a level editor — and the thing it
+needs first is a level that can leave the generator: a grid you can write down, send, and play.
+
+| Piece | What it does |
+| --- | --- |
+| `play/src/maps.js` | `exportMap(level)` → a grid of one character per cell (`#` solid, `.` open, `+` door, `X` exit, `=` stair, `^` lift, `~` crate, `s` secret, `c` chest, `n` the helper) plus run-length encoded floor/ceiling heights |
+| the round trip | **all 32 levels, 0 cells differ** — solid, floor, ceiling, door, exit and secret all survive |
+| the size | the largest is **6,812 bytes** of JSON, which is a URL, not a file |
+| `?map=<json>` or `?map=<base64>` | the game plays a map it was handed instead of generating one, once, and only for that run |
+| a test | the round trip over every level, a map that is not one refused, and a shared map played: same 1,600 cells, 429 of them walkable |
+
+**Two bugs the round trip found, both in the map, not the game:** a secret wall came back solid (it is walk-through
+after it breaks), and crates and secrets came back without their grid index, which the mesh builder reads. The mesh
+builder threw on both — which is exactly what a test that *plays* the imported level is for.
+
 ## 2.35.0 — 2026-11-24
 
 **A lift carries you — and a crash under a stale flow field.** Item #50 has been on the roadmap as open since 1.98.0,

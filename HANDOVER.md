@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.35.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.36.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.35.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 139, `v1.0.0` → `v2.35.0` |
+| Version | 2.36.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 140, `v1.0.0` → `v2.36.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -73,7 +73,7 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 42 modules
+### `play/src/` — 43 modules
 
 | Group | Modules |
 | --- | --- |
@@ -135,6 +135,15 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Maps, and what a level cannot carry
+
+- **`play/src/maps.js`** exports a level as a grid of characters plus run-length heights: 6,812 bytes at the
+  largest, 0 cells different on the way back for all 32 levels. `?map=` plays one.
+- **A map does not carry reachability**, so `importMap` treats every open cell as reachable. That is right for a
+  hand-drawn map and wrong for a generated one with sealed rooms — if a map format ever needs it, flood-fill on
+  import.
+- **Crates and secrets need `idx`**: the mesh builder indexes `level.cells` by it.
 
 ### Lifts, and the coordinates that are not there
 
