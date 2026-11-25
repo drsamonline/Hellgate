@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.37.0 — 2026-11-24
+
+**The editor.** #63, second slice: a grid you can paint, and the two buttons that matter — play it, and take it away.
+
+| Piece | What it does |
+| --- | --- |
+| `play/src/editor.js` | a flat grid of cell codes, a brush, a canvas, and `toMap()` — the same document format 2.36.0 shipped |
+| the palette | open, rock, door, exit, stair, lift, crate, secret |
+| the canvas | pointer down and drag paints; a pointer position is converted to a cell and back, so it works on a phone at any size |
+| the read-out | `24 × 24 · 476 open · 100 rock`, live under the canvas |
+| play it | the painted grid becomes a map, the map becomes a level, and the game plays it — 24×24, the size you painted |
+| copy it | the map JSON on the clipboard, which is also what `?map=` takes |
+| seeded | opened from a run, the editor starts from the level you are standing in |
+
+**What it is not yet:** there is no save, no undo, no resize, and no way to set a cell's height. A map is one flat
+room at 3.4 m. Those are the next three slices, in that order.
+
 ## 2.36.0 — 2026-11-24
 
 **A level is a document.** #63 has been the roadmap's biggest item for a year — a level editor — and the thing it

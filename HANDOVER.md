@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.36.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.37.0**, 2026-11-24.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.36.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 140, `v1.0.0` → `v2.36.0` |
+| Version | 2.37.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 141, `v1.0.0` → `v2.37.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -73,7 +73,7 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 43 modules
+### `play/src/` — 44 modules
 
 | Group | Modules |
 | --- | --- |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The editor
+
+- **`play/src/editor.js`** holds a grid of codes, a brush and a canvas; `toMap()` writes the format `maps.js` reads,
+  so an edited level and a generated one are the same kind of thing. Opened from the title, or seeded from the run
+  you are in.
+- **What it does not have yet:** save, undo, resize, and per-cell heights. A map is one flat room at 3.4 m.
 
 ### Maps, and what a level cannot carry
 

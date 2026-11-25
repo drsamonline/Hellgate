@@ -519,7 +519,12 @@
     overflow-y:auto;overscroll-behavior:contain;
   }
   /* the two screens that are taller than any window: start at the top */
-  #map,#codex,#controls{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
+  #map,#codex,#controls,#editor{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
+  #editorCanvas{
+    width:min(384px,80vw);height:auto;image-rendering:pixelated;
+    border:1px solid var(--amber-faint);border-radius:var(--r);background:#07070a;
+    touch-action:none;cursor:crosshair;
+  }
   .screen.on{display:flex}
   .panelclose{
     position:absolute;top:10px;right:12px;width:44px;height:44px;border-radius:50%;
@@ -669,6 +674,7 @@
         <button id="levelSelectBtn" class="ghost">Levels</button>
         <button id="watchBtn" class="ghost">Watch a replay</button>
         <input id="replayFile" type="file" accept=".json,application/json" style="display:none" />
+        <button id="editorBtnTitle" class="ghost">Editor</button>
         <button id="controlsBtnTitle" class="ghost">Controls</button>
         <button id="settingsBtnTitle" class="ghost">Settings</button>
       </div>
@@ -698,6 +704,20 @@
       <h2>STATUS</h2>
       <p class="sub">tab or esc to close</p>
       <div id="invBody" class="invgrid"></div>
+    </section>
+
+    <section id="editor" class="screen">
+      <button id="editorClose" class="panelclose" aria-label="close">×</button>
+      <h2>EDITOR</h2>
+      <p class="sub">paint the grid · play it · share it</p>
+      <div id="editorPalette" class="modes"></div>
+      <canvas id="editorCanvas" width="384" height="384"></canvas>
+      <p id="editorCounts" class="sub"></p>
+      <div class="row">
+        <button id="editorPlay">Play this map</button>
+        <button id="editorCopy" class="ghost">Copy map</button>
+        <button id="editorClear" class="ghost">Blank</button>
+      </div>
     </section>
 
     <section id="controls" class="screen">

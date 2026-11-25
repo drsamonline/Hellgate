@@ -2353,6 +2353,50 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the editor paints and plays ==');
+{
+  // #63's second slice: a grid you can paint, and the two buttons that matter
+  const { Editor, PALETTE, blankGrid } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ok(ed.w > 8 && ed.h > 8, 'a blank grid to paint (' + ed.w + 'x' + ed.h + ')');
+  const before = ed.at(5, 5);
+  ok(before === '.', 'the middle is open to start (' + before + ')');
+  ok(ed.paint(5, 5, '#') === true, 'painting rock works');
+  ok(ed.at(5, 5) === '#', 'and it is rock now');
+  ok(ed.paint(5, 5, '#') === false, 'painting the same cell again changes nothing');
+  ok(ed.paint(-1, 5, '#') === false && ed.paint(999, 999, '#') === false, 'and off the grid is refused');
+  ok(ed.paintAt(ed.cell * 7 + 2, ed.cell * 3 + 2, 'X') === true, 'a pointer position paints the cell under it');
+  ok(ed.at(7, 3) === 'X', 'which is the cell at 7,3');
+  const counts = ed.counts();
+  ok(counts['#'] >= 1 && counts['X'] === 1, 'the read-out counts what is there');
+
+  // the map it makes is one the game can build
+  const map = ed.toMap();
+  ok(map.v === 1 && map.grid.length === ed.w * ed.h, 'the grid becomes a map (' + map.grid.length + ' cells)');
+  const { importMap } = await import('../play/src/maps.js');
+  const lv = importMap(map);
+  ok(!!lv, 'and the map imports');
+  ok(lv.cells.filter((c) => c.solid).length === counts['#'], 'with the same number of solid cells (' + counts['#'] + ')');
+  const exit = lv.cells.find((c) => c.exit);
+  ok(!!exit && exit.x === 7 && exit.z === 3, 'and the exit where it was painted');
+
+  // playing it
+  HG.setPendingMap(lv);
+  HG.beginLevel(1, true);
+  ok(HG.level.W === ed.w && HG.level.H === ed.h, 'the game builds the painted size (' + HG.level.W + 'x' + HG.level.H + ')');
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  frames(3);
+  ok(HG.game.state === 'playing', 'and plays it');
+  // a blank grid is a room: the player must be inside it
+  const c = HG.cellAt(HG.level, HG.player.pos.x, HG.player.pos.z);
+  ok(!!c && !c.solid, 'standing in the painted room');
+}
+
 console.log('\n== a level is a document ==');
 {
   // #63's foundation: the grid as a string you can carry, and back again. The

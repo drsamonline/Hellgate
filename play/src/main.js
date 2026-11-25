@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { makeRng } from './rng.js';
 import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, circleBlocked, CELL } from './level.js';
 import { exportMap, importMap, mapToJSON, mapFromJSON } from './maps.js';
+import { Editor, PALETTE, blankGrid } from './editor.js';
 import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { humanoid, PROPORTIONS, rigMat } from './rig.js';
@@ -1906,6 +1907,73 @@ function updateLifts(dt) {
  * A stationary fighter is the drone's update loop with a room instead of a leash
  * and a target instead of a follow point.
  */
+// ---- the editor ------------------------------------------------------------
+// A grid you can paint, and the two buttons that matter: play it, and take it
+// away. Everything it makes is a map, so it is the same kind of thing as a
+// generated level.
+let editor = null;
+
+/** Build the editor on first open, and keep it after. */
+function editorState() {
+  if (editor) return editor;
+  const canvas = document.getElementById('editorCanvas');
+  editor = new Editor(canvas, { onPaint: () => renderEditorCounts() });
+  const pal = document.getElementById('editorPalette');
+  if (pal) {
+    pal.innerHTML = PALETTE.map((p) =>
+      `<button class="mode${p.code === editor.brush ? ' on' : ''}" data-code="${p.code}">${p.name}</button>`).join('');
+    for (const b of pal.querySelectorAll('[data-code]')) {
+      b.addEventListener('click', () => {
+        editor.brush = b.getAttribute('data-code');
+        for (const o of pal.querySelectorAll('[data-code]')) o.classList.toggle('on', o === b);
+      });
+    }
+  }
+  const cv = document.getElementById('editorCanvas');
+  if (cv) {
+    const paint = (e) => {
+      const r = cv.getBoundingClientRect();
+      const px = ((e.clientX - r.left) / r.width) * cv.width;
+      const py = ((e.clientY - r.top) / r.height) * cv.height;
+      if (editor.paintAt(px, py)) { editor.render(); renderEditorCounts(); }
+    };
+    cv.addEventListener('pointerdown', (e) => { cv.setPointerCapture(e.pointerId); paint(e); });
+    cv.addEventListener('pointermove', (e) => { if (e.buttons) paint(e); });
+  }
+  return editor;
+}
+
+/** The read-out under the canvas: what is on the grid. */
+function renderEditorCounts() {
+  const el = document.getElementById('editorCounts');
+  if (!el || !editor) return;
+  const c = editor.counts();
+  el.textContent = editor.w + ' × ' + editor.h + '  ·  ' +
+    PALETTE.filter((p) => c[p.code]).map((p) => c[p.code] + ' ' + p.name.toLowerCase()).join('  ·  ');
+}
+
+/** Open the editor, seeded from the level you are on if there is one. */
+function openEditor() {
+  const ed = editorState();
+  if (level) ed.fromLevel(level);
+  else ed.load(null);
+  renderEditorCounts();
+  game.state = 'editor';
+  hud.setVisible(false);
+  showScreen('editor');
+}
+
+/** Play what is on the grid, now. */
+function playEditorMap() {
+  if (!editor) return;
+  const map = importMap(editor.toMap());
+  if (!map) { hud.toast('THE MAP IS NOT PLAYABLE', 2); return; }
+  pendingMap = map;
+  hideScreens();
+  beginLevel(1, true);
+  hud.toast('YOUR MAP', 2);
+}
+
 // ---- the first time a level is played --------------------------------------
 // One line at a time, four seconds apart, on a level the player has not cleared.
 // A hint on a level you have beaten is a nag.
@@ -3076,6 +3144,28 @@ document.getElementById('startBtn').addEventListener('click', () => {
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
 // a phone has no Escape key: the read-only panels need a visible way out
+document.getElementById('editorBtnTitle')?.addEventListener('click', () => openEditor());
+document.getElementById('editorClose')?.addEventListener('click', () => {
+  hideScreens();
+  game.state = 'title';
+  showScreen('title');
+});
+document.getElementById('editorPlay')?.addEventListener('click', () => playEditorMap());
+document.getElementById('editorClear')?.addEventListener('click', () => {
+  const ed = editorState();
+  ed.load(null);
+  renderEditorCounts();
+});
+document.getElementById('editorCopy')?.addEventListener('click', () => {
+  const ed = editorState();
+  const json = mapToJSON(ed.toMap());
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(json);
+      hud.toast('MAP COPIED  ·  ' + (json.length / 1024).toFixed(1) + ' KB', 2.4);
+    }
+  } catch (e) { hud.toast('COULD NOT COPY', 2); }
+});
 document.getElementById('controlsBtnTitle')?.addEventListener('click', () => showControls('title'));
 document.getElementById('controlsBtn')?.addEventListener('click', () => showControls('playing'));
 document.getElementById('controlsClose')?.addEventListener('click', () => closeControls());
@@ -3163,7 +3253,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.36.0';
+const BUILD = '2.37.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3774,6 +3864,7 @@ window.HG = {
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
+  openEditor, playEditorMap, get editor() { return editor; },
   setPendingMap(m) { pendingMap = m; },
   CONTROLS, showControls, closeControls, renderControls, queueHints, updateHints,
   get hintQueue() { return hintQueue; },
