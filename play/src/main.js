@@ -963,6 +963,18 @@ function startWave(n) {
 
   clearPickups();
   enemies.clear(); // defensive: a wave always starts from an empty arena
+  // A map that places its own bodies spawns exactly those: a level's encounters
+  // are a design decision, and a roster rolled from a seed is not one. No wave,
+  // no roster, no boss unless one was placed.
+  if (level.enemies && level.enemies.length) {
+    for (const e of level.enemies) {
+      enemies.spawnAt(e.type, e.x * CELL, e.z * CELL, n);
+    }
+    saveRun();
+    hud.toast('WAVE ' + n, 2);
+    audio.play('wave');
+    return;
+  }
   const mode = MODES[game.mode] || MODES.campaign;
   // the last level of each act is a boss level, and the boss is that act's own
   const bossLevel = game.bossLevel === true;
@@ -2052,6 +2064,7 @@ function renderEditorCounts() {
     PALETTE.filter((p) => c[p.code]).map((p) => c[p.code] + ' ' + p.name.toLowerCase()).join('  ·  ') +
     (raised ? '  ·  ' + raised + ' raised' : '') +
     (editor.heightMode ? '  ·  heights: floor ' + editor.brushFloor + ', ceil ' + editor.brushCeil : '') +
+    (editor.enemies.length ? '  ·  ' + editor.enemies.length + ' placed' : '') +
     '  ·  objective: ' + editor.objective.type;
 }
 
@@ -3398,7 +3411,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.42.0';
+const BUILD = '2.43.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

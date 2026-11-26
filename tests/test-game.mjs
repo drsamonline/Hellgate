@@ -2353,6 +2353,46 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the editor places the bodies ==');
+{
+  // a level's encounters are a design decision; a roster rolled from a seed is not
+  const { Editor, PALETTE } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ok(PALETTE.some((p) => p.enemy === 'imp'), 'the palette has bodies to place');
+  ok(ed.paint(6, 6, 'i') === true, 'an imp can be placed');
+  ok(ed.paint(8, 6, 'h') === true, 'a hound too');
+  ok(ed.paint(6, 6, 'g') === true, 'placing on an occupied cell replaces it');
+  ok(ed.enemies.length === 2, 'so there are two bodies, not three (' + ed.enemies.length + ')');
+  const counts = ed.enemyCounts();
+  ok(counts.grunt === 1 && counts.hound === 1 && !counts.imp, 'and the counts say which: ' + JSON.stringify(counts));
+  ok(ed.at(6, 6) === '.', 'the cell under a body stays what it was');
+
+  const map = ed.toMap();
+  ok(Array.isArray(map.enemies) && map.enemies.length === 2, 'the map carries them');
+  // undo goes back one step: the replace, so the imp at 6,6 is an imp again and
+  // there are still two bodies
+  ok(ed.undo() === true && ed.enemies.length === 2, 'undo takes the replacement back (' + ed.enemies.length + ')');
+  ok(ed.enemies.find((e) => e.x === 6 && e.z === 6).type === 'imp', 'and the imp is an imp again');
+
+  // and the game spawns exactly those
+  ed.paint(8, 6, 'h');
+  ed.paint(10, 6, 'i');
+  const m2 = ed.toMap();
+  HG.setPendingMap(m2);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const types = HG.enemies.list.map((e) => e.type).sort();
+  ok(HG.enemies.list.length === 3, 'three bodies, no roster (' + HG.enemies.list.length + ')');
+  ok(types.join(',') === 'hound,imp,imp', 'of the types placed: ' + types.join(','));
+  // the map's own objective still applies
+  ok(HG.game.objectiveType === 'reach', 'and the map objective holds (' + HG.game.objectiveType + ')');
+}
+
 console.log('\n== a custom map carries its objective ==');
 {
   // a painted map was always "reach the exit", because the campaign level it was

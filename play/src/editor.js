@@ -23,6 +23,11 @@ export const PALETTE = [
   // the spawn is not a cell code: you stand on it, so the cell stays open and the
   // marker is carried beside the grid
   { code: '@', name: 'SPAWN', color: '#e8dcc8' },
+  // and neither is an enemy: it is a body with a type, not a kind of floor
+  { code: 'i', name: 'IMP', color: '#8a3524', enemy: 'imp' },
+  { code: 'g', name: 'GRUNT', color: '#53603c', enemy: 'grunt' },
+  { code: 'h', name: 'HOUND', color: '#8a1f6a', enemy: 'hound' },
+  { code: 'B', name: 'BRUTE', color: '#5a3a2a', enemy: 'brute' },
 ];
 
 /** A blank room: rock around the edge, open inside. */
@@ -66,6 +71,9 @@ export class Editor {
     this.floors = new Array(this.w * this.h).fill(0);
     this.ceils = new Array(this.w * this.h).fill(DEFAULT_CEIL);
     this.spawn = null;         // where the player starts, or null for the first open cell
+    // bodies you put there yourself: a level's encounters are a design decision,
+    // and a roster rolled from a seed is not one
+    this.enemies = [];
     // what ends the level. 'reach' is the default because a painted exit is the
     // one objective a grid already answers
     this.objective = { type: 'reach', time: 60, relics: 3 };
@@ -83,6 +91,7 @@ export class Editor {
       w: this.w, h: this.h, grid: this.grid.join(''),
       floors: Array.from(this.floors), ceils: Array.from(this.ceils),
       spawn: this.spawn ? { ...this.spawn } : null,
+      enemies: this.enemies.map((e) => ({ ...e })),
     });
     if (this.undoStack.length > UNDO_MAX) this.undoStack.shift();
     this.redoStack.length = 0;
@@ -108,12 +117,14 @@ export class Editor {
       w: this.w, h: this.h, grid: this.grid.join(''),
       floors: Array.from(this.floors), ceils: Array.from(this.ceils),
       spawn: this.spawn ? { ...this.spawn } : null,
+      enemies: this.enemies.map((e) => ({ ...e })),
     });
     this.w = prev.w;
     this.h = prev.h;
     this.grid = prev.grid.split('');
     if (prev.floors) { this.floors = prev.floors.slice(); this.ceils = prev.ceils.slice(); }
     this.spawn = prev.spawn ? { ...prev.spawn } : null;
+    if (prev.enemies) this.enemies = prev.enemies.map((e) => ({ ...e }));
     this.render();
     return true;
   }
@@ -126,12 +137,14 @@ export class Editor {
       w: this.w, h: this.h, grid: this.grid.join(''),
       floors: Array.from(this.floors), ceils: Array.from(this.ceils),
       spawn: this.spawn ? { ...this.spawn } : null,
+      enemies: this.enemies.map((e) => ({ ...e })),
     });
     this.w = next.w;
     this.h = next.h;
     this.grid = next.grid.split('');
     if (next.floors) { this.floors = next.floors.slice(); this.ceils = next.ceils.slice(); }
     this.spawn = next.spawn ? { ...next.spawn } : null;
+    if (next.enemies) this.enemies = next.enemies.map((e) => ({ ...e }));
     this.render();
     return true;
   }
@@ -175,6 +188,7 @@ export class Editor {
       this.ceils = new Array(this.w * this.h).fill(DEFAULT_CEIL);
       // the spawn comes back as a cell, because that is how a map carries it
       this.spawn = map.spawn ? { x: Math.round(map.spawn.x / 2), z: Math.round(map.spawn.z / 2) } : null;
+      this.enemies = Array.isArray(map.enemies) ? map.enemies.map((e) => ({ ...e })) : [];
       this.objective = map.objective && map.objective.type
         ? { type: map.objective.type, time: map.objective.time || 60, relics: map.objective.relics || 3 }
         : { type: 'reach', time: 60, relics: 3 };
@@ -251,6 +265,16 @@ export class Editor {
    */
   paint(cx, cz, code = this.brush) {
     if (cx < 0 || cz < 0 || cx >= this.w || cz >= this.h) return false;
+    // an enemy is placed, not painted: the cell stays whatever it was
+    const brush = PALETTE.find((p) => p.code === code);
+    if (brush && brush.enemy) {
+      if (!this.stroke) this.snapshot();
+      // one body per cell: placing on an occupied cell replaces it
+      this.enemies = this.enemies.filter((e) => !(e.x === cx && e.z === cz));
+      this.enemies.push({ type: brush.enemy, x: cx, z: cz });
+      if (this.onPaint) this.onPaint(cx, cz, code);
+      return true;
+    }
     // the spawn is one cell, and it has to be a cell you can stand in
     if (code === '@') {
       if (!this.stroke) this.snapshot();
@@ -288,6 +312,13 @@ export class Editor {
     return { x: 1, z: 1 };
   }
 
+  /** How many of each type are placed. */
+  enemyCounts() {
+    const out = {};
+    for (const e of this.enemies) out[e.type] = (out[e.type] || 0) + 1;
+    return out;
+  }
+
   /** The exit: the first painted one, or the far corner. */
   exitCell() {
     for (let z = 0; z < this.h; z++) {
@@ -311,6 +342,7 @@ export class Editor {
       heights: this.heightRuns(),
       spawn: { x: spawn.x * 2, z: spawn.z * 2 },
       objective: { ...this.objective },
+      enemies: this.enemies.map((e) => ({ ...e })),
       exit: { x: exit.x * 2, z: exit.z * 2 },
       rooms: [[1, 1, this.w - 2, this.h - 2, this.w >> 1, this.h >> 1, 3.4]],
       spawnRoom: 0,
@@ -352,6 +384,14 @@ export class Editor {
         g.fillRect(x * S, z * S, S - 1, S - 1);
         // a raised floor is brighter: a balcony you cannot see is a balcony you
         // will not build
+        const enemy = this.enemies.find((e) => e.x === x && e.z === z);
+        if (enemy) {
+          const brush = PALETTE.find((p) => p.enemy === enemy.type);
+          g.fillStyle = (brush && brush.color) || '#8a3524';
+          g.beginPath();
+          g.arc(x * S + S / 2, z * S + S / 2, Math.max(2, S * 0.3), 0, Math.PI * 2);
+          g.fill();
+        }
         if (this.spawn && this.spawn.x === x && this.spawn.z === z) {
           g.fillStyle = '#e8dcc8';
           g.beginPath();

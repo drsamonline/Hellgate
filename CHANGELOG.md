@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.43.0 — 2026-11-26
+
+**The editor places the bodies.** A custom map fought the act's roster — the same four imps a generated level gets.
+A level's encounters are a design decision, and a roster rolled from a seed is not one.
+
+| Piece | What it does |
+| --- | --- |
+| four bodies in the palette | IMP, GRUNT, HOUND, BRUTE — one per cell, and placing on an occupied cell replaces what is there |
+| the cell under a body | stays what it was: a body is not a kind of floor |
+| the map | `enemies: [{ type, x, z }]`, carried by `importMap` |
+| the game | `startWave()` spawns exactly those and skips the roster entirely — no wave, no boss, unless one was placed |
+| the canvas | a body is a dot in its type's colour |
+| the read-out | `24 × 24 · 484 open · 92 rock · 3 placed · objective: reach` |
+| a test | placed, replaced, counted, carried by the map, undone, and played: **three bodies, no roster, of the types placed** |
+
 ## 2.42.0 — 2026-11-26
 
 **A custom map carries its objective.** A painted map was always "reach the exit", because it was played as campaign
