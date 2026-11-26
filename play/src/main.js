@@ -1935,7 +1935,9 @@ function editorState() {
       const r = cv.getBoundingClientRect();
       const px = ((e.clientX - r.left) / r.width) * cv.width;
       const py = ((e.clientY - r.top) / r.height) * cv.height;
-      if (editor.paintAt(px, py)) { editor.render(); renderEditorCounts(); }
+      // the brush paints a cell, or the heights of one, depending on the toggle
+      const changed = editor.heightMode ? editor.paintHeightAt(px, py) : editor.paintAt(px, py);
+      if (changed) { editor.render(); renderEditorCounts(); }
     };
     cv.addEventListener('pointerdown', (e) => {
       cv.setPointerCapture(e.pointerId);
@@ -1946,6 +1948,35 @@ function editorState() {
     // one undo step per drag: the stroke ends when the pointer does
     cv.addEventListener('pointerup', () => { editor.endStroke(); saveEditor(); });
     cv.addEventListener('pointercancel', () => { editor.endStroke(); saveEditor(); });
+  }
+  // heights: a toggle and two rows of presets. A floor is what you stand on, a
+  // ceiling is how much air is above it — the two numbers a sector has.
+  const heightRow = document.getElementById('editorHeight');
+  if (heightRow) {
+    const toggle = document.getElementById('editorHeightToggle');
+    if (toggle) {
+      toggle.addEventListener('click', () => {
+        editor.heightMode = !editor.heightMode;
+        toggle.classList.toggle('on', editor.heightMode);
+        hud.toast(editor.heightMode ? 'PAINTING HEIGHTS' : 'PAINTING CELLS', 1.6);
+      });
+    }
+    for (const b of heightRow.querySelectorAll('[data-floor]')) {
+      b.addEventListener('click', () => {
+        editor.brushFloor = Number(b.getAttribute('data-floor'));
+        editor.heightMode = true;
+        if (toggle) toggle.classList.add('on');
+        for (const o of heightRow.querySelectorAll('[data-floor]')) o.classList.toggle('on', o === b);
+      });
+    }
+    for (const b of heightRow.querySelectorAll('[data-ceil]')) {
+      b.addEventListener('click', () => {
+        editor.brushCeil = Number(b.getAttribute('data-ceil'));
+        editor.heightMode = true;
+        if (toggle) toggle.classList.add('on');
+        for (const o of heightRow.querySelectorAll('[data-ceil]')) o.classList.toggle('on', o === b);
+      });
+    }
   }
   const sizeRow = document.getElementById('editorSize');
   if (sizeRow) {
@@ -1985,8 +2016,14 @@ function renderEditorCounts() {
   const el = document.getElementById('editorCounts');
   if (!el || !editor) return;
   const c = editor.counts();
+  // how many cells stand above the floor: the number that says whether this is a
+  // room or a level
+  let raised = 0;
+  for (let i = 0; i < editor.floors.length; i++) if (editor.floors[i] > 0.01) raised++;
   el.textContent = editor.w + ' × ' + editor.h + '  ·  ' +
-    PALETTE.filter((p) => c[p.code]).map((p) => c[p.code] + ' ' + p.name.toLowerCase()).join('  ·  ');
+    PALETTE.filter((p) => c[p.code]).map((p) => c[p.code] + ' ' + p.name.toLowerCase()).join('  ·  ') +
+    (raised ? '  ·  ' + raised + ' raised' : '') +
+    (editor.heightMode ? '  ·  heights: floor ' + editor.brushFloor + ', ceil ' + editor.brushCeil : '');
 }
 
 /** Open the editor, seeded from the level you are on if there is one. */
@@ -3301,7 +3338,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.38.0';
+const BUILD = '2.39.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

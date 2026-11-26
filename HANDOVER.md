@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.38.0**, 2026-11-24.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.39.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.38.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 142, `v1.0.0` → `v2.38.0` |
+| Version | 2.39.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 143, `v1.0.0` → `v2.39.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -136,13 +136,22 @@ Four separate bugs in this project came from **one value written in two places t
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
 
+### Observed once, not reproduced
+
+- **`and none within 12 m of the spawn point`** failed once on 2.38.0's tree and has not failed in ten runs since.
+  That is a hard constraint — nothing may spawn within 12 m — so if it ever fails twice in a row it is a real bug in
+  `spawnWave`'s pool, not a flake. Re-run before believing it; then look at the pool, not the test.
+- **`enemy owns cloned flash materials` / `enemy flashes white-hot on a hit`** failed once, same day, same pattern.
+
 ### The editor
 
 - **Undo is one step per stroke.** `beginStroke()` snapshots on pointer-down, `endStroke()` closes it; a paint
   outside a stroke snapshots on its own. Forty states deep.
 - **Save writes `localStorage['hellgate.editor']`** on stroke end, on resize and on the button; `openEditor()` reads
   it before it looks at the level you are standing in.
-- **Still missing: per-cell heights.** A map is one flat room at 3.4 m.
+- **Heights are per cell now**: `paintHeight(cx, cz, floor, ceil)`, four floor presets and two ceilings, carried
+  through `toMap()` run-length, undo and resize. Stored in plain arrays — a `Float32Array` makes 2.4 into
+  2.4000000953674316 and every equality in the format wrong.
 
 - **`play/src/editor.js`** holds a grid of codes, a brush and a canvas; `toMap()` writes the format `maps.js` reads,
   so an edited level and a generated one are the same kind of thing. Opened from the title, or seeded from the run

@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.38.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.39.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.38.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.39.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; eight static gates; smoke, flow, run, invariants |
 | Modules | 44 in `play/src/` |
-| Releases | 142, `v1.0.0` → `v2.38.0` |
+| Releases | 143, `v1.0.0` → `v2.39.0` |
 | Performance | 90 draw calls a frame at the median, 122 at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 60 shipped, 3 measured-and-rejected, 3 open of 66 |
 
@@ -92,6 +92,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.36.0** | **A level is a document — the map format #63 needs, and `?map=` to play one** |
 | **2.37.0** | **The editor — paint the grid, play it, copy it** |
 | **2.38.0** | **The editor keeps your work — undo, save, resize** |
+| **2.39.0** | **The editor paints heights — a floor that is not the floor** |
 
 ### 2.0.0 in detail
 

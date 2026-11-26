@@ -2353,6 +2353,39 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the editor paints heights ==');
+{
+  // the last thing the editor could not do: a floor that is not the floor. This
+  // is what turns a room painter into a level designer — a balcony, a step, a
+  // cell you have to climb to.
+  const { Editor } = await import('../play/src/editor.js');
+  const { importMap } = await import('../play/src/maps.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ok(ed.floorAt(4, 4) === 0 && ed.ceilAt(4, 4) === 3.4, 'a blank grid is one flat room (0 to 3.4)');
+  ok(ed.paintHeight(4, 4, 2.4, 6) === true, 'a cell can be raised to 2.4 with six metres of air');
+  ok(ed.floorAt(4, 4) === 2.4 && ed.ceilAt(4, 4) === 6, 'and it holds both numbers');
+  ok(ed.paintHeight(4, 4, 2.4, 6) === false, 'painting the same height twice changes nothing');
+  ok(ed.paintHeight(5, 5, 2.4, 1.0) === true && ed.ceilAt(5, 5) === 3.6,
+    'a ceiling below its floor is lifted above it (' + ed.ceilAt(5, 5) + ')');
+
+  // the map carries them, and the game builds them
+  const map = ed.toMap();
+  ok(Array.isArray(map.heights) && map.heights.length > 0, 'the heights are in the map (' + map.heights.length + ' runs)');
+  const lv = importMap(map);
+  const cell = lv.cells[4 * ed.w + 4];
+  ok(cell.floor === 2.4 && cell.ceil === 6, 'and come back on the right cell (' + cell.floor + '/' + cell.ceil + ')');
+  ok(HG.floorHeightAt(lv, 4 * 2, 4 * 2, 2.4) === 2.4, 'the game puts a body at 2.4 there');
+  ok(HG.floorHeightAt(lv, 4 * 2, 4 * 2, 0) === 2.4, 'and at 2.4 from the ground too, because the cell is one sector');
+
+  // undo carries heights, not just cells
+  ok(ed.undo() === true, 'undo works after a height stroke');
+  ok(ed.floorAt(5, 5) === 0, 'and puts the height back (' + ed.floorAt(5, 5) + ')');
+  ok(ed.redo() === true && ed.floorAt(5, 5) === 2.4, 'redo brings it back');
+  // resize keeps them
+  ok(ed.resize(32, 32) === true && ed.floorAt(4, 4) === 2.4, 'a resize keeps the heights it had');
+}
+
 console.log('\n== the editor undoes, resizes and saves ==');
 {
   const { Editor } = await import('../play/src/editor.js');

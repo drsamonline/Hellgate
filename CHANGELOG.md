@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.39.0 — 2026-11-26
+
+**The editor paints heights.** The last thing it could not do, and the one that turns a room painter into a level
+designer: a cell that is not at floor level.
+
+| Piece | What it does |
+| --- | --- |
+| the height brush | a HEIGHTS toggle, four floor presets (0, 1.2, 2.4, 3.6) and two ceilings (3.4, 6.0) |
+| the map | `toMap()` writes the real per-cell heights, run-length encoded, so a flat level is still five numbers |
+| the canvas | a raised floor is drawn amber, brighter the higher it is — a balcony you cannot see is a balcony you will not build |
+| the read-out | `24 × 24 · 484 open · 92 rock · 11 raised · heights: floor 2.4, ceil 3.4` |
+| undo and resize | both carry heights, not just cells |
+| a test | a cell raised to 2.4 with six metres of air survives the map, imports as a sector, and `floorHeightAt` puts a body at 2.4 there |
+
+**A float cost a run.** Heights were stored in a `Float32Array`, where 2.4 is 2.4000000953674316 — every equality in
+the map, the import and the test was wrong, and `2.4 + 1.2` came out as 3.5999999999999996. Plain arrays, and the
+ceiling is rounded to a centimetre. A format that must round-trip cannot lose the number on the way through.
+
 ## 2.38.0 — 2026-11-24
 
 **The editor keeps your work, takes it back, and changes size.** Three of the four things 2.37.0 was missing.
