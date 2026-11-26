@@ -146,6 +146,8 @@ export function importMap(map) {
   const exit = { x: map.exit.x, z: map.exit.z, cx: Math.round(map.exit.x / 2), cz: Math.round(map.exit.z / 2) };
   return {
     seed: 'map',
+    // what ends the level: the map says, and the editor is where it is chosen
+    objective: map.objective && map.objective.type ? { ...map.objective } : null,
     W, H, cells, rooms,
     spawn,
     exit,

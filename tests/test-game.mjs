@@ -2353,6 +2353,46 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== a custom map carries its objective ==');
+{
+  // a painted map was always "reach the exit", because the campaign level it was
+  // played as is a reach level. The designer decides now.
+  const { Editor } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ed.paint(4, 4, 'X');
+  ok(ed.objective.type === 'reach', 'a new map starts as reach');
+
+  const play = (obj) => {
+    ed.objective = obj;
+    const map = ed.toMap();
+    ok(map.objective && map.objective.type === obj.type, 'the map carries ' + obj.type);
+    HG.setPendingMap(map);
+    HG.beginLevel(1, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    return { type: HG.game.objectiveType, t: HG.game.objectiveT, relics: HG.game.relicsTotal, open: HG.game.exitOpen };
+  };
+
+  const reach = play({ type: 'reach' });
+  ok(reach.type === 'reach' && reach.open === true, 'reach opens the exit from the first frame');
+  const clear = play({ type: 'clear' });
+  ok(clear.type === 'clear' && clear.open === false, 'clear shuts it until the room is empty');
+  const survive = play({ type: 'survive', time: 45 });
+  ok(survive.type === 'survive' && survive.t === 45, 'survive carries its clock (' + survive.t + 's)');
+  const relics = play({ type: 'relics', relics: 5 });
+  ok(relics.type === 'relics' && relics.relics === 5, 'relics carries its count (' + relics.relics + ')');
+  // relics live on the run, not on the level: game.relics, and relicsTotal counts
+  ok(HG.game.relics.length === 5, 'and five relics are on the floor (' + HG.game.relics.length + ')');
+  // the HUD says the right thing for each
+  frames(2);
+  ok(/RELICS/.test(document.getElementById('objective').textContent || ''),
+    'the HUD reads the objective: ' + (document.getElementById('objective').textContent || '').trim());
+}
+
 console.log('\n== the editor places the spawn ==');
 {
   // a map's spawn was the first open cell, which is fine for a room and wrong for

@@ -66,6 +66,9 @@ export class Editor {
     this.floors = new Array(this.w * this.h).fill(0);
     this.ceils = new Array(this.w * this.h).fill(DEFAULT_CEIL);
     this.spawn = null;         // where the player starts, or null for the first open cell
+    // what ends the level. 'reach' is the default because a painted exit is the
+    // one objective a grid already answers
+    this.objective = { type: 'reach', time: 60, relics: 3 };
     this.heightMode = false;   // the brush paints heights instead of cells
     this.brushFloor = 0;
     this.brushCeil = DEFAULT_CEIL;
@@ -172,6 +175,9 @@ export class Editor {
       this.ceils = new Array(this.w * this.h).fill(DEFAULT_CEIL);
       // the spawn comes back as a cell, because that is how a map carries it
       this.spawn = map.spawn ? { x: Math.round(map.spawn.x / 2), z: Math.round(map.spawn.z / 2) } : null;
+      this.objective = map.objective && map.objective.type
+        ? { type: map.objective.type, time: map.objective.time || 60, relics: map.objective.relics || 3 }
+        : { type: 'reach', time: 60, relics: 3 };
       let i = 0;
       for (const run of map.heights || []) {
         const [n, floor, ceil] = run;
@@ -304,6 +310,7 @@ export class Editor {
       grid: this.grid.join(''),
       heights: this.heightRuns(),
       spawn: { x: spawn.x * 2, z: spawn.z * 2 },
+      objective: { ...this.objective },
       exit: { x: exit.x * 2, z: exit.z * 2 },
       rooms: [[1, 1, this.w - 2, this.h - 2, this.w >> 1, this.h >> 1, 3.4]],
       spawnRoom: 0,

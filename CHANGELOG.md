@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.42.0 — 2026-11-26
+
+**A custom map carries its objective.** A painted map was always "reach the exit", because it was played as campaign
+level 1 and level 1 is a reach level. The designer decides now.
+
+| Piece | What it does |
+| --- | --- |
+| four objectives | REACH, CLEAR, SURVIVE 60s, 3 RELICS — one row in the editor, and the choice is written into the map |
+| the map | `objective: { type, time, relics }`, carried through `importMap` |
+| the game | `buildRun()` reads the map's objective instead of the level row's: the door state, the clock and the relic count all follow it |
+| the read-out | the editor's line ends with `objective: relics` |
+| a test | each of the four plays as itself — reach opens the door at once, clear shuts it, survive carries 45 s, relics puts five on the floor and the HUD reads `BREAK THE RELICS · 5 LEFT` |
+
+**And two things the test caught in my own plumbing:** `setPendingMap()` was handed a map document and `buildRun()`
+wanted a level (it threw on `level.cells`), and relics live on `game.relics`, not on `level.relics`. Both fixed, and
+`setPendingMap()` now imports a map document on the way in.
+
 ## 2.41.0 — 2026-11-26
 
 **The editor places the spawn.** A map's spawn was the first open cell, top left — fine for a room, wrong for a level:

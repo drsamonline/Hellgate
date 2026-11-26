@@ -465,16 +465,20 @@ function buildRun(seed, zoneDef, fresh = false) {
   elapsed = 0;
   // a shared map is played as it is; everything else is generated from the seed
   level = pendingMap || generateLevel(seed, zone.shape);
+  // a shared map carries its own objective: the editor asks the designer what
+  // ends the level, and this is where that answer is applied
+  const mapObjective = pendingMap && pendingMap.objective ? pendingMap.objective : null;
   pendingMap = null;
   // A level states what ends it. 'reach' opens the way from the first frame, so
   // the level is somewhere you cross rather than a pen you empty; 'clear' keeps
   // the wave arena's rule and the pad opens when the room is empty.
-  level.doorOpen = zone.objectiveType === 'reach';
-  game.exitOpen = zone.objectiveType === 'reach';
+  const objType = (mapObjective && mapObjective.type) || zone.objectiveType;
+  level.doorOpen = objType === 'reach';
+  game.exitOpen = objType === 'reach';
   // 'survive': the pad opens when the clock runs out, whatever is still standing
   // 'relics': the pad opens when the last relic is broken, whatever is standing
-  game.objectiveType = zone.objectiveType || 'clear';
-  game.objectiveT = zone.objectiveTime || 0;
+  game.objectiveType = objType || 'clear';
+  game.objectiveT = (mapObjective && mapObjective.time) || zone.objectiveTime || 0;
   game.storyLevel = zone.storyLevel || 0;
   // the helper: a body, a coat, and a room he never leaves. He shoots what walks
   // in, and he is where the coins get spent.
@@ -634,7 +638,7 @@ function buildRun(seed, zoneDef, fresh = false) {
   game.bossSeen = false;
   // a level gated on relics must have some even if the zone forgot a count: an
   // objective with nothing to break is a door that never opens
-  const relicCount = zone.relics || (zone.objectiveType === 'relics' ? 3 : 0);
+  const relicCount = (mapObjective && mapObjective.relics) || zone.relics || (game.objectiveType === 'relics' ? 3 : 0);
   spawnRelics(relicCount);
   applyClass(game.classId);
   applySettings();
@@ -1979,6 +1983,19 @@ function editorState() {
       });
     }
   }
+  // what ends the level: four objectives, and the map carries the choice
+  const objRow = document.getElementById('editorObjective');
+  if (objRow) {
+    for (const b of objRow.querySelectorAll('[data-obj]')) {
+      b.addEventListener('click', () => {
+        const type = b.getAttribute('data-obj');
+        editor.objective = { type, time: 60, relics: 3 };
+        for (const o of objRow.querySelectorAll('[data-obj]')) o.classList.toggle('on', o === b);
+        renderEditorCounts();
+        saveEditor();
+      });
+    }
+  }
   const sizeRow = document.getElementById('editorSize');
   if (sizeRow) {
     for (const b of sizeRow.querySelectorAll('[data-size]')) {
@@ -2034,7 +2051,8 @@ function renderEditorCounts() {
   el.textContent = editor.w + ' × ' + editor.h + '  ·  ' +
     PALETTE.filter((p) => c[p.code]).map((p) => c[p.code] + ' ' + p.name.toLowerCase()).join('  ·  ') +
     (raised ? '  ·  ' + raised + ' raised' : '') +
-    (editor.heightMode ? '  ·  heights: floor ' + editor.brushFloor + ', ceil ' + editor.brushCeil : '');
+    (editor.heightMode ? '  ·  heights: floor ' + editor.brushFloor + ', ceil ' + editor.brushCeil : '') +
+    '  ·  objective: ' + editor.objective.type;
 }
 
 /** Open the editor, seeded from the level you are on if there is one. */
@@ -3380,7 +3398,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.41.0';
+const BUILD = '2.42.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3995,7 +4013,8 @@ window.HG = {
   // the editor's save and load, for the suite: they are two localStorage calls
   editorSaveTest(ed) { const keep = editor; editor = ed; saveEditor(); editor = keep; },
   editorLoadTest() { return loadEditor(); },
-  setPendingMap(m) { pendingMap = m; },
+  // a map document is imported on the way in: buildRun wants a level
+  setPendingMap(m) { pendingMap = m && m.v === 1 ? importMap(m) : m; },
   CONTROLS, showControls, closeControls, renderControls, queueHints, updateHints,
   get hintQueue() { return hintQueue; },
   NPC_JOB, NPC_DOOR, NPC_RELICS, NPC_SHOP, ACT_THREAT,
