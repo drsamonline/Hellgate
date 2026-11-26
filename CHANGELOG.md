@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.45.0 — 2026-11-26
+
+**Try again replays the map, and #63 is closed.** Dying on a custom map and pressing **Try again** called
+`startGame(game.seed)`, which builds campaign level 1 from a seed — so the death screen silently replaced the level
+you were in with a generated one.
+
+| Piece | What it does |
+| --- | --- |
+| `playingMap` | the run remembers the map it is playing, not only the one it was handed |
+| Try again | replays the map, by name and by grid — asserted: 24 × 24, `retry me`, still the map |
+| **#63** | marked shipped in `ENHANCEMENTS.md`: 61 shipped, 3 rejected, **2 open** — WebGPU and co-op, both XL |
+
+**The editor, end to end, in nine releases:** a map format that round-trips all 32 generated levels with zero cell
+differences; `?map=` to play one; a paint-the-cells editor with undo, save and resize; per-cell floor and ceiling
+heights; a named library; a placed spawn; four objectives; hand-placed bodies; a share link; and a name in the HUD.
+
 ## 2.44.0 — 2026-11-26
 
 **A map can be sent to somebody, and it has a name.** `?map=` has taken a base64 map since 2.36.0; nothing in the

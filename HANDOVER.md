@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.44.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.45.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,14 +24,14 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.44.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 148, `v1.0.0` → `v2.44.0` |
+| Version | 2.45.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 149, `v1.0.0` → `v2.45.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
-| Roadmap | 60 shipped, 3 measured-and-rejected, 3 open of 66 |
+| Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
 | Audit tail | **closed** at 1.91.0 — all 37 modules read line by line |
 
 ## 3. Run it
@@ -135,6 +135,11 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### A custom map is a run
+
+- **`playingMap`** holds the map the current run is playing, so **Try again** replays it. `startGame(game.seed)` would
+  build campaign level 1 from a seed and silently replace the level.
 
 ### Sharing, and the name
 

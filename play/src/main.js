@@ -294,6 +294,9 @@ const MODES = {
 let gameMode = 'campaign';
 // a map handed in by `?map=`, played instead of a generated level
 let pendingMap = null;
+// and the one being played now: Try again has to replay the map, not the seed the
+// campaign level would have used
+let playingMap = null;
 
 // a relic takes this much damage to break: three pistol shots or two blasts.
 // High enough that breaking one is a decision, low enough that it is not a chore.
@@ -465,6 +468,7 @@ function buildRun(seed, zoneDef, fresh = false) {
   elapsed = 0;
   // a shared map is played as it is; everything else is generated from the seed
   level = pendingMap || generateLevel(seed, zone.shape);
+  playingMap = pendingMap || null;
   // a shared map carries its own objective: the editor asks the designer what
   // ends the level, and this is where that answer is applied
   const mapObjective = pendingMap && pendingMap.objective ? pendingMap.objective : null;
@@ -3422,7 +3426,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.44.0';
+const BUILD = '2.45.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3524,7 +3528,16 @@ document.getElementById('setVol').addEventListener('input', (e) => changeSetting
 document.getElementById('setMotion').addEventListener('change', (e) => changeSetting('reducedMotion', e.target.checked));
 document.getElementById('setMute').addEventListener('change', (e) => changeSetting('muted', e.target.checked));
 document.getElementById('setDiff').addEventListener('change', (e) => changeSetting('difficulty', e.target.value));
-document.getElementById('retryBtn').addEventListener('click', () => startGame(game.seed));
+document.getElementById('retryBtn').addEventListener('click', () => {
+  // a custom map is replayed as itself: startGame(game.seed) would build campaign
+  // level 1 from a seed and quietly replace the level the player was in
+  if (playingMap) {
+    pendingMap = playingMap;
+    beginLevel(1, true);
+    return;
+  }
+  startGame(game.seed);
+});
 document.getElementById('menuBtn').addEventListener('click', toMenu);
 
 // ---- debug overlay (Backquote or F3) --------------------------------------
@@ -4035,6 +4048,7 @@ window.HG = {
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
   openEditor, playEditorMap, get editor() { return editor; }, mapLib,
+  get playingMap() { return playingMap; },
   // the editor's save and load, for the suite: they are two localStorage calls
   editorSaveTest(ed) { const keep = editor; editor = ed; saveEditor(); editor = keep; },
   editorLoadTest() { return loadEditor(); },

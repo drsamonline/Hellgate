@@ -2353,6 +2353,42 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== try again replays the map ==');
+{
+  // Try again called startGame(game.seed), which builds campaign level 1 from a
+  // seed: a custom map's death screen silently replaced the level with a
+  // generated one
+  const { Editor } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ed.paint(4, 4, 'X');
+  ed.name = 'retry me';
+  HG.setPendingMap(ed.toMap());
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const w0 = HG.level.W;
+  const name0 = HG.level.mapName;
+  ok(!!HG.playingMap, 'the run remembers the map it is playing');
+  ok(name0 === 'retry me', 'and the level is the map (' + name0 + ')');
+
+  // die, then press the button a player presses
+  HG.player.armor = 0;
+  HG.player.damage(999, null);
+  frames(2);
+  document.getElementById('retryBtn').dispatch('click');
+  ok(HG.level.W === w0, 'Try again builds the same map (' + HG.level.W + 'x' + HG.level.H + ')');
+  ok(HG.level.mapName === 'retry me', 'with its name (' + HG.level.mapName + ')');
+  ok(!!HG.playingMap, 'and it is still the map being played');
+  HG.story.skip();
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+}
+
 console.log('\n== a map can be shared, and it has a name ==');
 {
   const { Editor } = await import('../play/src/editor.js');
