@@ -2411,6 +2411,39 @@ console.log('\n== the peer has a body ==');
   HG.game.state = 'playing';
 }
 
+console.log('\n== the peer is on the HUD ==');
+{
+  // a second body whose state you cannot see is a second body you cannot help
+  const el = document.getElementById('coop');
+  ok(!!el, 'the HUD has a line for the peer');
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  frames(2);
+  ok(/PEER 110 \/ 110/.test(el.textContent), 'it shows the peer at full health: ' + el.textContent);
+  HG.coop.damage(37);
+  frames(2);
+  ok(/PEER 73 \/ 110/.test(el.textContent), 'and follows the damage: ' + el.textContent);
+  HG.coop.damage(999);
+  frames(2);
+  ok(/PEER DOWN/.test(el.textContent), 'and says when the peer is down: ' + el.textContent);
+  // no co-op, no line
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  frames(2);
+  ok(el.textContent === '', 'and it is empty when nobody else is playing: "' + el.textContent + '"');
+}
+
 console.log('\n== the peer can be hurt ==');
 {
   // a second body that cannot be hit is not in the fight

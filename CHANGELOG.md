@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.50.0 — 2026-11-26
+
+**The peer is on the HUD.** A second body whose state you cannot see is a second body you cannot help.
+
+| Piece | What it does |
+| --- | --- |
+| the line | `PEER 110 / 110` under the zone line, in the same lettering, and `PEER DOWN` when the peer is out |
+| the state | `coop: { hp, max, alive }` on the HUD state, so the HUD reads the peer rather than reaching for it |
+| a test | full health, then `PEER 73 / 110` after 37 damage, then `PEER DOWN`, then empty when nobody else is playing |
+
+**It took three placements to be readable.** At `bottom: 78px` it sat across the armour and ammo row; at `132px` it
+sat behind the ability bar; both looked fine in the code and were unreadable in the screenshot. Top left, under the
+zone line, is the only place on this HUD with room.
+
 ## 2.49.0 — 2026-11-26
 
 **The peer can be hurt.** A second body that cannot be hit is not in the fight.

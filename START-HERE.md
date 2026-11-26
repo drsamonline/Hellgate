@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.49.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.50.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.49.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.50.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; eight static gates; smoke, flow, run, invariants |
 | Modules | 47 in `play/src/` |
-| Releases | 153, `v1.0.0` → `v2.49.0` |
+| Releases | 154, `v1.0.0` → `v2.50.0` |
 | Performance | 90 draw calls a frame at the median, 122 at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
 
@@ -103,6 +103,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.47.0** | **The peer has a body — `?coop=1` puts a second player in the arena** |
 | **2.48.0** | **The peer can shoot — a hitscan through the same wall test** |
 | **2.49.0** | **The peer can be hurt — enemy fire hits whoever is in the way** |
+| **2.50.0** | **The peer is on the HUD — `PEER 110 / 110`, and `PEER DOWN`** |
 
 ### 2.0.0 in detail
 

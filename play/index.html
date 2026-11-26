@@ -411,6 +411,7 @@
     .pslot span{font-size:7px}
     #topbar{font-size:8px;gap:6px;padding:4px 6px;flex-wrap:nowrap;overflow:hidden}
     #relics{font-size:8px;top:34px;left:10px}
+    #coop{font-size:8px;top:48px;left:10px}
     /* on a phone the HUD keeps the three numbers you act on and drops the rest */
     #keycard{display:none}
     #objective{font-size:9px;padding:3px 9px;top:64px;letter-spacing:.16em}
@@ -525,6 +526,15 @@
     border-radius:var(--r);padding:8px 10px;font:inherit;font-size:11px;letter-spacing:.12em;
   }
   #editorName{width:150px}
+  /* the peer's health sits under the zone line, top left: the bottom of the screen
+     is the health panel and the ability bar, and a third line there overlapped
+     both before it was readable */
+  #coop{
+    position:absolute;top:58px;left:16px;
+    font-size:11px;letter-spacing:.18em;color:#8fd0ff;
+    text-shadow:0 2px 6px #000;pointer-events:none;
+  }
+  #coop:empty{display:none}
   #editorCanvas{
     width:min(384px,80vw);height:auto;image-rendering:pixelated;
     border:1px solid var(--amber-faint);border-radius:var(--r);background:#07070a;
@@ -629,6 +639,7 @@
     <div id="prompt"></div>
     <div id="buffs"></div>
     <div id="relics"></div>
+    <div id="coop"></div>
     <div id="toast"></div>
     <div id="powerbar">
       <div id="energyWrap"><div id="energy"></div></div>

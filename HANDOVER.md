@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.49.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.50.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.49.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 153, `v1.0.0` → `v2.49.0` |
+| Version | 2.50.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 154, `v1.0.0` → `v2.50.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -137,6 +137,9 @@ idempotent and it is the only place stats are computed. Anything that "adjusts" 
 wiped by the next call.
 
 ### Co-op's body
+
+- **The peer's health is on the HUD** (`#coop`, top left under the zone line). The bottom of the screen is the health
+  panel and the ability bar; two placements there looked right in code and were unreadable on screen.
 
 - **The peer has 110 hp** and `damage()`; enemy projectiles hit whoever is in the way
   (`projectiles.update(dt, player, enemies, other)`), so the peer can body-block.

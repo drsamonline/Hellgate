@@ -27,6 +27,7 @@ export class HUD {
     this.elEnergy = document.getElementById('energy');
     this.elSlots = document.getElementById('powerSlots');
     this.elRelics = document.getElementById('relics');
+    this.elCoop = document.getElementById('coop');
     this.elBoss = document.getElementById('bossbar');
     this.elBossFill = document.getElementById('bossfill');
     this.elBossName = document.getElementById('bossname');
@@ -219,6 +220,16 @@ export class HUD {
         el.querySelector('i').style.height = (frac * 100).toFixed(0) + '%';
         el.classList.toggle('cool', cd > 0 || pw.energy < p.cost);
         el.classList.toggle('ready', cd <= 0 && pw.energy >= p.cost);
+      }
+
+      // co-op: the other player's health, because a second body you cannot see the
+      // state of is a second body you cannot help
+      if (this.elCoop) {
+        if (state.coop && state.coop.max > 0) {
+          this.elCoop.textContent = state.coop.alive
+            ? 'PEER ' + Math.max(0, Math.round(state.coop.hp)) + ' / ' + Math.round(state.coop.max)
+            : 'PEER DOWN';
+        } else this.elCoop.textContent = '';
       }
 
       if (this.elRelics) {

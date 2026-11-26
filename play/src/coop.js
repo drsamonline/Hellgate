@@ -54,6 +54,7 @@ export class Coop {
     this.shots = 0;
     this.fireCd = 0;
     this.hp = PEER_HP;
+    this.hpMax = PEER_HP;
     this.alive = true;
     this.downedAt = -1;
 
