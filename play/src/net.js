@@ -19,9 +19,10 @@
 /** How far ahead of the confirmed frame a local input may be buffered. */
 export const LOOKAHEAD = 12;
 
-/** One input: which keys are down, and where the mouse is looking. */
-export function makeInput(keys = {}, look = null) {
-  return { keys: { ...keys }, look: look ? { x: look.x, y: look.y } : null };
+/** One input: which keys are down, where the mouse is looking, and whether the
+ * trigger is held. */
+export function makeInput(keys = {}, look = null, fire = false) {
+  return { keys: { ...keys }, look: look ? { x: look.x, y: look.y } : null, fire: !!fire };
 }
 
 /**

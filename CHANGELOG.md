@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.48.0 — 2026-11-26
+
+**The peer can shoot.** A second body that cannot hurt anything is scenery.
+
+| Piece | What it does |
+| --- | --- |
+| the trigger | `makeInput(keys, look, fire)` — the local side sends its trigger with its input, so both machines know when the other is firing |
+| the shot | a hitscan down the peer's own look, through `raycastWalls()` like everything else, stopping at the nearest body inside its hit radius |
+| the numbers | the pistol's 11 damage and a 0.28 s cooldown, so the two sides are the same weight of gun until there is a second arsenal |
+| a test | no trigger, no damage · a shot fires once and hits the body in front for 11 · a held trigger does not fire twice in a frame · a body behind the peer is not hit · **a body behind a wall is not hit** |
+
+**Three things the test found, all mine.** The first target was six metres out, behind the spawn room's far wall at
+5.06 m — a shot that stops at a wall, which is the system working. The second was 1.7 m *below* the peer's eye line,
+because the spawn cell is 1.1 m up and I placed the body on the floor below it. The third was that `coop.pos.y` is
+only correct after the peer's first update, so the target has to be placed with `floorHeightAt()`.
+
 ## 2.47.0 — 2026-11-26
 
 **The peer has a body.** 2.46.0 shipped the lockstep session; this puts something on the other side of it. `?coop=1`

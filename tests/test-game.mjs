@@ -2411,6 +2411,78 @@ console.log('\n== the peer has a body ==');
   HG.game.state = 'playing';
 }
 
+console.log('\n== the peer can shoot ==');
+{
+  // a second body that cannot hurt anything is scenery. The peer's shot is a
+  // hitscan through the same wall test everything else uses.
+  const { Coop, PEER_DAMAGE, PEER_COOLDOWN } = await import('../play/src/coop.js');
+  const { makeInput } = await import('../play/src/net.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+
+  const coop = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  const p = coop.pos;
+  // a body six metres along the peer's nose
+  coop.body.yaw = 0;
+  // three metres, not six: the spawn room's far wall is at 5.06 m in this level,
+  // and a shot that stops at a wall is the system working, not a miss
+  const ex = p.x, ez = p.z - 3;
+  HG.enemies.spawnAt('imp', ex, ez, 1);
+  const target = HG.enemies.list[HG.enemies.list.length - 1];
+  // on the floor the peer stands on — the spawn cell is 1.1 m up, and the peer's
+  // own y is only set once its first update has run. A body 1.7 m below the eye
+  // line is a miss by geometry, not by bug.
+  const floorY = HG.floorHeightAt(HG.level, ex, ez);
+  target.pos.set(ex, floorY, ez);
+  target.mesh.position.set(ex, floorY, ez);
+  const ctx = { enemies: HG.enemies, effects: HG.effects, audio: HG.audio, hud: HG.hud, camera: HG.camera, level: HG.level };
+  const hp0 = target.hp;
+
+  // no trigger, no shot
+  coop.step(1 / 60, makeInput({}, { x: 0, y: 0 }, false), ctx);
+  ok(target.hp === hp0, 'no trigger, no damage');
+  ok(coop.shots === 0, 'and no shot fired');
+
+  // the trigger, and the body in front of it
+  const hit = coop.shoot(ctx);
+  ok(coop.shots === 1, 'a shot is fired');
+  ok(!!hit, 'and it finds the body in front');
+  ok(target.hp === hp0 - PEER_DAMAGE, 'for the pistol\'s damage (' + hp0 + ' -> ' + target.hp + ')');
+  // the cooldown holds the next one
+  coop.step(1 / 60, makeInput({}, { x: 0, y: 0 }, true), ctx);
+  ok(coop.shots === 1, 'a held trigger does not fire twice in a frame');
+  ok(coop.fireCd > 0 && coop.fireCd <= PEER_COOLDOWN, 'there is a cooldown to wait out (' + coop.fireCd.toFixed(2) + 's)');
+
+  // a body behind the peer, and a body behind a wall: neither is shot
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', p.x, p.z + 6, 1);
+  const behind = HG.enemies.list[HG.enemies.list.length - 1];
+  behind.pos.set(p.x, floorY, p.z + 6);
+  behind.mesh.position.set(p.x, floorY, p.z + 6);
+  coop.fireCd = 0;
+  const hpB = behind.hp;
+  ok(coop.shoot(ctx) === null, 'a body behind the peer is not hit');
+  ok(behind.hp === hpB, 'and takes no damage');
+
+  // the wall in front of the spawn is 5.06 m out: a body past it is out of sight
+  HG.enemies.clear();
+  HG.enemies.spawnAt('imp', p.x, p.z - 8, 1);
+  const past = HG.enemies.list[HG.enemies.list.length - 1];
+  past.pos.set(p.x, floorY, p.z - 8);
+  past.mesh.position.set(p.x, floorY, p.z - 8);
+  coop.fireCd = 0;
+  const hpP = past.hp;
+  ok(coop.shoot(ctx) === null, 'a body behind a wall is not hit');
+  ok(past.hp === hpP, 'and takes no damage');
+  coop.dispose();
+  HG.enemies.clear();
+}
+
 console.log('\n== two players, one tick ==');
 {
   // #60's foundation: lockstep input exchange. A frame is played when both

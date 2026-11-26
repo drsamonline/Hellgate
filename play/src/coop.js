@@ -16,9 +16,17 @@ import * as THREE from 'three';
 import { Player } from './player.js';
 import { humanoid } from './rig.js';
 import { Session } from './net.js';
+import { raycastWalls } from './level.js';
 
 /** The colour the second player is drawn in: a body you can tell from the NPC. */
 export const PEER_COLOR = 0x4a8a9a;
+/** What one of the peer's shots does: the pistol's damage, so the two sides are
+ * the same weight of gun until there is a second arsenal. */
+export const PEER_DAMAGE = 11;
+/** Seconds between the peer's shots. */
+export const PEER_COOLDOWN = 0.28;
+/** How far a peer's shot reaches, in metres. */
+export const PEER_RANGE = 45;
 
 /**
  * A second player: a body, a player, and the input the peer sent.
@@ -41,6 +49,8 @@ export class Coop {
     this.session = new Session({ player: this.player });
     this.frames = 0;
     this.starved = 0;
+    this.shots = 0;
+    this.fireCd = 0;
 
     // the mesh: the same humanoid the NPC is built from, in a colour of its own
     const built = humanoid({
@@ -70,14 +80,61 @@ export class Coop {
    * @param {number} dt
    * @param {object} input The peer's input: `{ keys, look, move }`.
    */
-  step(dt, input) {
+  step(dt, input, ctx = null) {
     if (!input) { this.starved++; return false; }
+    this.fireCd = Math.max(0, this.fireCd - dt);
     this.body.update(dt, input, this.level);
+    if (input.fire && this.fireCd <= 0 && ctx) this.shoot(ctx);
     this.mesh.position.set(this.body.pos.x, this.body.pos.y, this.body.pos.z);
     // the body faces where the peer is looking
     if (input.look) this.mesh.rotation.y = -input.look.x;
     this.frames++;
     return true;
+  }
+
+  /**
+   * The peer's shot: a hitscan down the barrel of their look, through the same
+   * wall test everything else uses. The nearest body in front takes it.
+   * @param {object} ctx `{ enemies, effects, audio, hud, camera, level }`
+   * @returns {object|null} The body that was hit.
+   */
+  shoot(ctx) {
+    this.fireCd = PEER_COOLDOWN;
+    this.shots++;
+    const eye = { x: this.body.pos.x, y: this.body.pos.y + 1.6, z: this.body.pos.z };
+    const yaw = this.body.yaw;
+    const pitch = this.body.pitch || 0;
+    const dir = {
+      x: -Math.sin(yaw) * Math.cos(pitch),
+      y: Math.sin(pitch),
+      z: -Math.cos(yaw) * Math.cos(pitch),
+    };
+    // what the walls allow
+    const wall = ctx.level ? raycastWalls(ctx.level, eye, dir, PEER_RANGE) : null;
+    const limit = wall && Number.isFinite(wall.dist) ? wall.dist : PEER_RANGE;
+    let best = null;
+    let bestT = limit;
+    for (const e of (ctx.enemies && ctx.enemies.list) || []) {
+      if (!e.alive) continue;
+      const c = e.chestPos();
+      const t = (c.x - eye.x) * dir.x + (c.y - eye.y) * dir.y + (c.z - eye.z) * dir.z;
+      if (t <= 0 || t > bestT) continue;
+      // how far the body is from the ray, sideways
+      const px = eye.x + dir.x * t;
+      const py = eye.y + dir.y * t;
+      const pz = eye.z + dir.z * t;
+      const off = Math.hypot(c.x - px, c.y - py, c.z - pz);
+      if (off > (e.T.hitRadius || 0.6) + 0.25) continue;
+      best = e;
+      bestT = t;
+    }
+    if (best) {
+      best.hurt(PEER_DAMAGE, ctx, { x: dir.x, y: dir.y, z: dir.z });
+      if (ctx.audio) ctx.audio.play('hit', best.chestPos());
+    } else if (ctx.audio) {
+      ctx.audio.play('shot', eye);
+    }
+    return best;
   }
 
   /** Where the peer is, for a HUD or a test. */

@@ -313,7 +313,7 @@ function disposeCoop() {
  */
 function updateCoop(dt) {
   if (!coop) return;
-  const mine = makeInput(input.keys || {}, { x: player.yaw, y: player.pitch });
+  const mine = makeInput(input.keys || {}, { x: player.yaw, y: player.pitch }, !!input.firing);
   coop.session.put(coop.session.frame, mine);
   coop.session.flush();
   const tick = coop.session.tick();
@@ -3469,7 +3469,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.47.0';
+const BUILD = '2.48.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

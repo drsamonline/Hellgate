@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.47.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.48.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.47.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 151, `v1.0.0` → `v2.47.0` |
+| Version | 2.48.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 152, `v1.0.0` → `v2.48.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -137,6 +137,11 @@ idempotent and it is the only place stats are computed. Anything that "adjusts" 
 wiped by the next call.
 
 ### Co-op's body
+
+- **The peer shoots** a hitscan down its own look through `raycastWalls()`, for the pistol's 11 damage on a 0.28 s
+  cooldown. The trigger rides in the input (`makeInput(keys, look, fire)`).
+- **Placing a target in a test**: the spawn cell may be metres up, and `coop.pos.y` is only right after the peer's
+  first update — use `floorHeightAt()`. A body below the eye line is a miss by geometry, not a bug.
 
 - **`play/src/coop.js`**: a second `Player` and a mesh; the peer's input goes through the same `Player.update()`.
   `?coop=1` spawns it once per level from `buildRun` — the flag is read at the **top** of `applyUrlOverrides()`,
