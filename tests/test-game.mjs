@@ -2353,6 +2353,38 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the editor places the spawn ==');
+{
+  // a map's spawn was the first open cell, which is fine for a room and wrong for
+  // a level: the far corner is a different game from the middle
+  const { Editor, PALETTE } = await import('../play/src/editor.js');
+  const { importMap } = await import('../play/src/maps.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ok(PALETTE.some((p) => p.code === '@'), 'the palette has a spawn');
+  ok(ed.spawnCell().x === 1 && ed.spawnCell().z === 1, 'with nothing placed, the spawn is the first open cell');
+  ok(ed.paint(12, 9, '@') === true, 'the spawn can be placed');
+  ok(ed.spawnCell().x === 12 && ed.spawnCell().z === 9, 'and that is where it is now');
+  // placing it on rock opens the rock: you have to be able to stand on it
+  ed.paint(0, 0, '#');
+  ed.paint(0, 0, '@');
+  ok(ed.at(0, 0) === '.', 'a spawn on rock opens the rock (' + ed.at(0, 0) + ')');
+
+  // it survives the map, the import and the game
+  ed.paint(12, 9, '@');
+  const map = ed.toMap();
+  ok(map.spawn.x === 24 && map.spawn.z === 18, 'the map carries it in world coordinates (' + map.spawn.x + ',' + map.spawn.z + ')');
+  const lv = importMap(map);
+  ok(lv.spawn.x === 24 && lv.spawn.z === 18, 'and the level starts there');
+  // and comes back when the map is loaded into the editor
+  const ed2 = new Editor(document.getElementById('editorCanvas'));
+  ed2.load(map);
+  ok(ed2.spawnCell().x === 12 && ed2.spawnCell().z === 9, 'loading the map puts the marker back');
+  // undo covers it
+  ed2.paint(4, 4, '@');
+  ok(ed2.undo() === true && ed2.spawnCell().x === 12, 'and undo puts it back where it was');
+}
+
 console.log('\n== the editor keeps more than one map ==');
 {
   // one slot is the wrong shape for the thing people do: keep four ideas and

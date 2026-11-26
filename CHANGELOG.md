@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.41.0 — 2026-11-26
+
+**The editor places the spawn.** A map's spawn was the first open cell, top left — fine for a room, wrong for a level:
+where you start is the first thing a designer decides and the last thing a corner can guess.
+
+| Piece | What it does |
+| --- | --- |
+| a SPAWN brush | one marker, carried beside the grid rather than painted into it, because you stand on it and the cell has to stay open |
+| on rock | placing it on rock opens the rock: a spawn you cannot stand on is not a spawn |
+| the canvas | drawn as a pale dot, so you can see where it is |
+| the map | carried as `spawn: { x, z }` in world coordinates, which `importMap` already read |
+| undo, resize, load | all carry it: undo puts the marker back where it was |
+| a test | placed, carried by the map, restored on import and on load into the editor, and undone |
+
 ## 2.40.0 — 2026-11-26
 
 **The editor keeps more than one map.** One slot is the wrong shape for the thing people do: keep four ideas and play

@@ -20,6 +20,9 @@ export const PALETTE = [
   { code: '^', name: 'LIFT', color: '#8fd0ff' },
   { code: '~', name: 'CRATE', color: '#a07a4a' },
   { code: 's', name: 'SECRET', color: '#8a7a66' },
+  // the spawn is not a cell code: you stand on it, so the cell stays open and the
+  // marker is carried beside the grid
+  { code: '@', name: 'SPAWN', color: '#e8dcc8' },
 ];
 
 /** A blank room: rock around the edge, open inside. */
@@ -62,6 +65,7 @@ export class Editor {
     // format that must round-trip cannot lose the number on the way through.
     this.floors = new Array(this.w * this.h).fill(0);
     this.ceils = new Array(this.w * this.h).fill(DEFAULT_CEIL);
+    this.spawn = null;         // where the player starts, or null for the first open cell
     this.heightMode = false;   // the brush paints heights instead of cells
     this.brushFloor = 0;
     this.brushCeil = DEFAULT_CEIL;
@@ -75,6 +79,7 @@ export class Editor {
     this.undoStack.push({
       w: this.w, h: this.h, grid: this.grid.join(''),
       floors: Array.from(this.floors), ceils: Array.from(this.ceils),
+      spawn: this.spawn ? { ...this.spawn } : null,
     });
     if (this.undoStack.length > UNDO_MAX) this.undoStack.shift();
     this.redoStack.length = 0;
@@ -99,11 +104,13 @@ export class Editor {
     this.redoStack.push({
       w: this.w, h: this.h, grid: this.grid.join(''),
       floors: Array.from(this.floors), ceils: Array.from(this.ceils),
+      spawn: this.spawn ? { ...this.spawn } : null,
     });
     this.w = prev.w;
     this.h = prev.h;
     this.grid = prev.grid.split('');
     if (prev.floors) { this.floors = prev.floors.slice(); this.ceils = prev.ceils.slice(); }
+    this.spawn = prev.spawn ? { ...prev.spawn } : null;
     this.render();
     return true;
   }
@@ -115,11 +122,13 @@ export class Editor {
     this.undoStack.push({
       w: this.w, h: this.h, grid: this.grid.join(''),
       floors: Array.from(this.floors), ceils: Array.from(this.ceils),
+      spawn: this.spawn ? { ...this.spawn } : null,
     });
     this.w = next.w;
     this.h = next.h;
     this.grid = next.grid.split('');
     if (next.floors) { this.floors = next.floors.slice(); this.ceils = next.ceils.slice(); }
+    this.spawn = next.spawn ? { ...next.spawn } : null;
     this.render();
     return true;
   }
@@ -161,6 +170,8 @@ export class Editor {
       this.grid = map.grid.split('');
       this.floors = new Array(this.w * this.h).fill(0);
       this.ceils = new Array(this.w * this.h).fill(DEFAULT_CEIL);
+      // the spawn comes back as a cell, because that is how a map carries it
+      this.spawn = map.spawn ? { x: Math.round(map.spawn.x / 2), z: Math.round(map.spawn.z / 2) } : null;
       let i = 0;
       for (const run of map.heights || []) {
         const [n, floor, ceil] = run;
@@ -234,6 +245,15 @@ export class Editor {
    */
   paint(cx, cz, code = this.brush) {
     if (cx < 0 || cz < 0 || cx >= this.w || cz >= this.h) return false;
+    // the spawn is one cell, and it has to be a cell you can stand in
+    if (code === '@') {
+      if (!this.stroke) this.snapshot();
+      this.spawn = { x: cx, z: cz };
+      const j = cz * this.w + cx;
+      if (this.grid[j] === '#') this.grid[j] = '.';
+      if (this.onPaint) this.onPaint(cx, cz, code);
+      return true;
+    }
     const i = cz * this.w + cx;
     if (this.grid[i] === code) return false;
     // a paint outside a stroke (a test, a keyboard nudge) is its own step
@@ -250,8 +270,9 @@ export class Editor {
     return this.paint(cx, cz, code);
   }
 
-  /** The spawn: the first open cell, top left. */
+  /** The spawn: the one you placed, or the first open cell, top left. */
   spawnCell() {
+    if (this.spawn && this.at(this.spawn.x, this.spawn.z) !== '#') return this.spawn;
     for (let z = 0; z < this.h; z++) {
       for (let x = 0; x < this.w; x++) {
         const c = this.grid[z * this.w + x];
@@ -324,6 +345,12 @@ export class Editor {
         g.fillRect(x * S, z * S, S - 1, S - 1);
         // a raised floor is brighter: a balcony you cannot see is a balcony you
         // will not build
+        if (this.spawn && this.spawn.x === x && this.spawn.z === z) {
+          g.fillStyle = '#e8dcc8';
+          g.beginPath();
+          g.arc(x * S + S / 2, z * S + S / 2, Math.max(2, S * 0.26), 0, Math.PI * 2);
+          g.fill();
+        }
         const f = this.floorAt(x, z);
         if (f > 0.01) {
           g.fillStyle = 'rgba(255,180,84,' + Math.min(0.5, 0.12 * f) + ')';
