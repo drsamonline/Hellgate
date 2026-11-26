@@ -27,6 +27,8 @@ export const PEER_DAMAGE = 11;
 export const PEER_COOLDOWN = 0.28;
 /** How far a peer's shot reaches, in metres. */
 export const PEER_RANGE = 45;
+/** The peer's health: the same body as the local player. */
+export const PEER_HP = 110;
 
 /**
  * A second player: a body, a player, and the input the peer sent.
@@ -51,6 +53,9 @@ export class Coop {
     this.starved = 0;
     this.shots = 0;
     this.fireCd = 0;
+    this.hp = PEER_HP;
+    this.alive = true;
+    this.downedAt = -1;
 
     // the mesh: the same humanoid the NPC is built from, in a colour of its own
     const built = humanoid({
@@ -135,6 +140,22 @@ export class Coop {
       ctx.audio.play('shot', eye);
     }
     return best;
+  }
+
+  /**
+   * Take damage. The peer dies the same way the local player does — at zero, and
+   * not before.
+   * @returns {number} What landed.
+   */
+  damage(amount, from = null) {
+    if (!this.alive) return 0;
+    const n = Math.max(0, Number(amount) || 0);
+    this.hp = Math.max(0, this.hp - n);
+    if (this.hp <= 0) {
+      this.alive = false;
+      this.downedAt = this.frames;
+    }
+    return n;
   }
 
   /** Where the peer is, for a HUD or a test. */

@@ -71,7 +71,14 @@ export class Projectiles {
     });
   }
 
-  update(dt, player, enemies) {
+  /**
+   * @param {number} dt
+   * @param {object} player The local player.
+   * @param {object} enemies
+   * @param {object} [other] A second body — co-op's peer — that enemy fire can
+   *   hit. Its `damage()` and `pos` are all this needs.
+   */
+  update(dt, player, enemies, other = null) {
     for (const p of this.list) {
       if (p.dead) continue;
       p.life -= dt;
@@ -125,6 +132,17 @@ export class Projectiles {
           const eye = { x: player.pos.x, y: player.pos.y + 1.2, z: player.pos.z };
           const d = Math.hypot(eye.x - p.pos.x, eye.y - p.pos.y, eye.z - p.pos.z);
           if (d < 0.85) { this.explode(p, player, enemies); break; }
+          // and the second body, if there is one: enemy fire hits whoever is in
+          // the way, which is the whole point of a second player
+          if (other && other.alive !== false) {
+            const o = { x: other.pos.x, y: other.pos.y + 1.2, z: other.pos.z };
+            const od = Math.hypot(o.x - p.pos.x, o.y - p.pos.y, o.z - p.pos.z);
+            if (od < 0.85) {
+              other.damage(p.damage || 10, { x: p.pos.x, y: p.pos.y, z: p.pos.z });
+              this.explode(p, player, enemies);
+              break;
+            }
+          }
         }
       }
 

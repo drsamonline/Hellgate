@@ -3469,7 +3469,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.48.0';
+const BUILD = '2.49.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3798,7 +3798,7 @@ function update(dt) {
 
   enemies.update(dt, player, projectiles);
   enemies.unstuck(dt, player);
-  projectiles.update(dt, player, enemies);
+  projectiles.update(dt, player, enemies, coop && coop.alive ? coop : null);
   if (companion) {
     // the drone's kills count: a kill the player did not make is still a kill
     // the run made, and the feed should say DRONE rather than nothing

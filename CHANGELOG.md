@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.49.0 — 2026-11-26
+
+**The peer can be hurt.** A second body that cannot be hit is not in the fight.
+
+| Piece | What it does |
+| --- | --- |
+| the peer's health | 110 hp, the same body as the local player; `damage()` takes it off, zero downs it, and a downed peer takes nothing more |
+| enemy fire | `projectiles.update(dt, player, enemies, other)` — an enemy projectile hits **whoever is in the way**, so a peer standing between the imp and the player is the one who takes the fireball |
+| the loop | `update()` hands the projectiles the peer, and only while it is alive |
+| a test | 30 damage off 110, still standing · a lethal hit downs it · nothing lands on a downed peer · **a fireball hits the peer in the way for 12 and leaves the local player untouched** |
+
+**Two test mistakes, both mine again:** the fireball was spawned four metres back, which is through the spawn room's
+wall — a projectile that hits a wall reaches nobody — and the test built its own `Coop` while `HG.update()` hands the
+*module's* one to the projectiles. Both are the same lesson: a probe that sets up state the game does not have is not
+a probe.
+
 ## 2.48.0 — 2026-11-26
 
 **The peer can shoot.** A second body that cannot hurt anything is scenery.

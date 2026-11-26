@@ -2411,6 +2411,67 @@ console.log('\n== the peer has a body ==');
   HG.game.state = 'playing';
 }
 
+console.log('\n== the peer can be hurt ==');
+{
+  // a second body that cannot be hit is not in the fight
+  const { Coop, PEER_HP } = await import('../play/src/coop.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  HG.projectiles.list.length = 0;
+
+  const coop = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  const floorY = HG.floorHeightAt(HG.level, coop.pos.x, coop.pos.z);
+  coop.body.pos.y = floorY;
+  ok(coop.hp === PEER_HP && coop.alive === true, 'the peer starts alive with ' + coop.hp + ' hp');
+
+  // damage lands, and death is at zero and not before
+  ok(coop.damage(30) === 30 && coop.hp === PEER_HP - 30, 'damage comes off the peer\'s health');
+  ok(coop.alive === true, 'and it is still standing');
+  coop.damage(PEER_HP * 2);
+  ok(coop.hp === 0 && coop.alive === false, 'at zero it is down');
+  ok(coop.damage(10) === 0, 'and a downed peer takes nothing more');
+
+  // enemy fire aimed at the peer hits the peer, not the local player. This has to
+  // be the module's own coop — HG.update() hands `coop` to the projectiles, and a
+  // Coop built here is a different object the loop never sees.
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  HG.projectiles.list.length = 0;
+  const coop2 = HG.coop;
+  ok(!!coop2, 'the loop has a peer to hand the projectiles');
+  const fy = HG.floorHeightAt(HG.level, HG.player.pos.x, HG.player.pos.z - 3);
+  coop2.body.pos.set(HG.player.pos.x, fy, HG.player.pos.z - 3);
+  const hp0 = coop2.hp;
+  const playerHp0 = HG.player.health;
+  // a fireball travelling from beyond the peer towards the player
+  // spawn() wants a THREE.Vector3 for the position and the direction
+  const THREE = (await import('three'));
+  HG.projectiles.spawn('fireball',
+    // one metre short of the peer: four metres back is through the room's wall,
+    // and a projectile that hits a wall never reaches anybody
+    new THREE.Vector3(coop2.pos.x, coop2.pos.y + 1.2, coop2.pos.z - 1),
+    new THREE.Vector3(0, 0, 1), { damage: 12, owner: 'enemy' });
+  for (let i = 0; i < 30; i++) HG.update(1 / 60);
+  ok(coop2.hp < hp0, 'enemy fire hits the peer in the way (' + hp0 + ' -> ' + coop2.hp + ')');
+  ok(HG.player.health === playerHp0, 'and the local player is untouched');
+  coop.dispose();
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.projectiles.list.length = 0;
+  HG.enemies.clear();
+}
+
 console.log('\n== the peer can shoot ==');
 {
   // a second body that cannot hurt anything is scenery. The peer's shot is a
