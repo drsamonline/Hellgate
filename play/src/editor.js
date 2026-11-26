@@ -74,6 +74,9 @@ export class Editor {
     // bodies you put there yourself: a level's encounters are a design decision,
     // and a roster rolled from a seed is not one
     this.enemies = [];
+    // what the map is called: it is the HUD's line while you play it, and the name
+    // the library files it under
+    this.name = 'untitled';
     // what ends the level. 'reach' is the default because a painted exit is the
     // one objective a grid already answers
     this.objective = { type: 'reach', time: 60, relics: 3 };
@@ -189,6 +192,7 @@ export class Editor {
       // the spawn comes back as a cell, because that is how a map carries it
       this.spawn = map.spawn ? { x: Math.round(map.spawn.x / 2), z: Math.round(map.spawn.z / 2) } : null;
       this.enemies = Array.isArray(map.enemies) ? map.enemies.map((e) => ({ ...e })) : [];
+      this.name = map.name || 'untitled';
       this.objective = map.objective && map.objective.type
         ? { type: map.objective.type, time: map.objective.time || 60, relics: map.objective.relics || 3 }
         : { type: 'reach', time: 60, relics: 3 };
@@ -343,6 +347,7 @@ export class Editor {
       spawn: { x: spawn.x * 2, z: spawn.z * 2 },
       objective: { ...this.objective },
       enemies: this.enemies.map((e) => ({ ...e })),
+      name: String(this.name || 'untitled').slice(0, 24),
       exit: { x: exit.x * 2, z: exit.z * 2 },
       rooms: [[1, 1, this.w - 2, this.h - 2, this.w >> 1, this.h >> 1, 3.4]],
       spawnRoom: 0,
@@ -364,6 +369,20 @@ export class Editor {
       }
     }
     return runs;
+  }
+
+  /**
+   * A URL that carries this map, for somebody else to open.
+   * @param {string} [base] Where the game lives; defaults to this page.
+   * @returns {string}
+   */
+  shareUrl(base) {
+    const json = JSON.stringify(this.toMap());
+    // btoa needs one byte per character, and a map is ASCII by construction
+    let b64 = '';
+    try { b64 = globalThis.btoa(json); } catch (e) { b64 = ''; }
+    const root = base || (globalThis.location ? String(globalThis.location.href).split('?')[0] : '');
+    return root + '?map=' + encodeURIComponent(b64);
   }
 
   /** Draw the grid. */

@@ -3275,11 +3275,22 @@ document.getElementById('editorSave')?.addEventListener('click', () => {
   saveEditor();
   hud.toast('MAP SAVED', 1.8);
 });
+document.getElementById('editorShare')?.addEventListener('click', () => {
+  const ed = editorState();
+  const url = ed.shareUrl();
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url);
+      hud.toast('LINK COPIED  ·  ' + (url.length / 1024).toFixed(1) + ' KB', 2.6);
+    }
+  } catch (e) { hud.toast('COULD NOT COPY', 2); }
+});
 document.getElementById('editorSaveAs')?.addEventListener('click', () => {
   const ed = editorState();
   const input = document.getElementById('editorName');
   const name = (input && input.value || '').trim();
   if (!name) { hud.toast('NAME IT FIRST', 1.8); return; }
+  ed.name = name;
   if (mapLib.save(name, ed.toMap())) {
     hud.toast('SAVED AS ' + name.toUpperCase(), 2);
     renderMapLib();
@@ -3411,7 +3422,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.43.0';
+const BUILD = '2.44.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3782,6 +3793,7 @@ function update(dt) {
     score: game.score,
     powers,
     zone,
+    mapName: level && level.mapName ? level.mapName : null,
     relics: game.relicsTotal - game.relics.length,
     relicsTotal: game.relicsTotal,
     objectiveType: game.objectiveType,

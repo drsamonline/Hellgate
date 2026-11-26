@@ -2353,6 +2353,42 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== a map can be shared, and it has a name ==');
+{
+  const { Editor } = await import('../play/src/editor.js');
+  const { mapFromJSON } = await import('../play/src/maps.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ed.paint(5, 5, 'X');
+  ed.name = 'the yard';
+  const map = ed.toMap();
+  ok(map.name === 'the yard', 'the map carries its name');
+
+  // the share link is a URL that carries the whole grid
+  const url = ed.shareUrl('https://example.test/play/');
+  ok(url.startsWith('https://example.test/play/?map='), 'the link is the page and a map (' + url.slice(0, 40) + '…)');
+  const b64 = decodeURIComponent(url.split('?map=')[1]);
+  let json = '';
+  try { json = Buffer.from(b64, 'base64').toString('utf8'); } catch (e) { json = ''; }
+  const back = mapFromJSON(json);
+  ok(!!back, 'and it decodes back into a level');
+  ok(back.W === ed.w && back.H === ed.h, 'with the same size (' + back.W + 'x' + back.H + ')');
+  ok(back.mapName === 'the yard', 'and the same name');
+  ok(back.exit.x === 5 * 2, 'and the same exit');
+
+  // the HUD says the map's name, not the zone it was dressed in
+  HG.setPendingMap(back);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  frames(2);
+  const line = document.getElementById('relics').textContent || '';
+  ok(/THE YARD/.test(line), 'the HUD reads the map name: ' + line.trim().slice(0, 40));
+}
+
 console.log('\n== the editor places the bodies ==');
 {
   // a level's encounters are a design decision; a roster rolled from a seed is not

@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.44.0 — 2026-11-26
+
+**A map can be sent to somebody, and it has a name.** `?map=` has taken a base64 map since 2.36.0; nothing in the
+editor ever produced one.
+
+| Piece | What it does |
+| --- | --- |
+| **Share link** | `editor.shareUrl()` builds `<page>?map=<base64 of the whole map>` and puts it on the clipboard. A 24 × 24 map is about 1 kB of URL |
+| the name | `toMap()` carries `name`, the map keeps it, `importMap` passes it as `mapName` |
+| the HUD | reads the map's name instead of the zone it was dressed in: `THE YARD · RELICS 0/3` |
+| Save as | sets the map's name too, so the library entry and the HUD agree |
+| a test | the link decodes back into the same grid, the same size, the same exit, the same name — and the HUD reads `THE YARD` |
+
+**And the name went into the wrong object first.** My patch put `name:` in the undo *snapshot* rather than in
+`toMap()`, so the map had no name, the link carried none, and the HUD showed the zone. The test caught all three at
+once, which is what a test that follows the data from the editor to the HUD is for.
+
 ## 2.43.0 — 2026-11-26
 
 **The editor places the bodies.** A custom map fought the act's roster — the same four imps a generated level gets.

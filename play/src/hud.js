@@ -223,7 +223,9 @@ export class HUD {
 
       if (this.elRelics) {
         const parts = [];
-        if (state.zone) parts.push(state.zone.name);
+        // a custom map has a name of its own, and it is the more useful one
+        if (state.mapName) parts.push(String(state.mapName).toUpperCase());
+        else if (state.zone) parts.push(state.zone.name);
         if (state.relicsTotal > 0) parts.push('RELICS ' + state.relics + '/' + state.relicsTotal);
         if (state.sideDone) parts.push('SIDE CLEAR');
         this.elRelics.textContent = parts.join('  ·  ');

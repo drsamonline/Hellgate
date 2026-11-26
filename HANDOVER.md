@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.43.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.44.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.43.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 147, `v1.0.0` → `v2.43.0` |
+| Version | 2.44.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 148, `v1.0.0` → `v2.44.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Sharing, and the name
+
+- **`editor.shareUrl()`** is `<page>?map=<base64>`; `?map=` has read that since 2.36.0. A 24 × 24 map is about 1 kB
+  of URL.
+- **A map carries `name`**, `importMap` passes it as `mapName`, and the HUD's zone line reads it instead of the zone
+  the level was dressed in.
 
 ### Placed bodies
 

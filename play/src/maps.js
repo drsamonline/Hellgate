@@ -148,6 +148,8 @@ export function importMap(map) {
     seed: 'map',
     // what ends the level: the map says, and the editor is where it is chosen
     objective: map.objective && map.objective.type ? { ...map.objective } : null,
+    // a custom map has a name, and the HUD says it while you play
+    mapName: map.name || null,
     // bodies the designer placed; the wave spawner uses them instead of a roster
     enemies: Array.isArray(map.enemies) ? map.enemies.map((e) => ({ ...e })) : [],
     W, H, cells, rooms,
