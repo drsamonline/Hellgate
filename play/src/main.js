@@ -7,6 +7,7 @@ import { makeRng } from './rng.js';
 import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, circleBlocked, CELL } from './level.js';
 import { exportMap, importMap, mapToJSON, mapFromJSON } from './maps.js';
 import { Editor, PALETTE, blankGrid } from './editor.js';
+import * as mapLib from './maplib.js';
 import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
 import { humanoid, PROPORTIONS, rigMat } from './rig.js';
@@ -2011,6 +2012,16 @@ function loadEditor() {
   } catch (e) { return null; }
 }
 
+/** Fill the library picker with the names there are. */
+function renderMapLib() {
+  const pick = document.getElementById('editorPick');
+  if (!pick) return;
+  const names = mapLib.names();
+  pick.innerHTML = names.length
+    ? names.map((n) => `<option value="${n}">${n}</option>`).join('')
+    : '<option value="">no saved maps</option>';
+}
+
 /** The read-out under the canvas: what is on the grid. */
 function renderEditorCounts() {
   const el = document.getElementById('editorCounts');
@@ -2035,6 +2046,7 @@ function openEditor() {
   else if (level) ed.fromLevel(level);
   else ed.load(null);
   renderEditorCounts();
+  renderMapLib();
   game.state = 'editor';
   hud.setVisible(false);
   showScreen('editor');
@@ -3232,6 +3244,36 @@ document.getElementById('editorSave')?.addEventListener('click', () => {
   saveEditor();
   hud.toast('MAP SAVED', 1.8);
 });
+document.getElementById('editorSaveAs')?.addEventListener('click', () => {
+  const ed = editorState();
+  const input = document.getElementById('editorName');
+  const name = (input && input.value || '').trim();
+  if (!name) { hud.toast('NAME IT FIRST', 1.8); return; }
+  if (mapLib.save(name, ed.toMap())) {
+    hud.toast('SAVED AS ' + name.toUpperCase(), 2);
+    renderMapLib();
+    // the name is spent: clear the box and point the picker at what was saved,
+    // or the next name types onto the end of this one
+    if (input) input.value = '';
+    const pick = document.getElementById('editorPick');
+    if (pick) pick.value = name;
+  } else hud.toast('COULD NOT SAVE', 2);
+});
+document.getElementById('editorLoad')?.addEventListener('click', () => {
+  const pick = document.getElementById('editorPick');
+  const name = pick && pick.value;
+  const map = name ? mapLib.load(name) : null;
+  if (!map) { hud.toast('NO MAP PICKED', 1.8); return; }
+  editorState().load(map);
+  renderEditorCounts();
+  hud.toast('LOADED ' + name.toUpperCase(), 1.8);
+});
+document.getElementById('editorDelete')?.addEventListener('click', () => {
+  const pick = document.getElementById('editorPick');
+  const name = pick && pick.value;
+  if (!name) { hud.toast('NO MAP PICKED', 1.8); return; }
+  if (mapLib.remove(name)) { hud.toast('DELETED ' + name.toUpperCase(), 1.8); renderMapLib(); }
+});
 document.getElementById('editorUndo')?.addEventListener('click', () => {
   if (editorState().undo()) { renderEditorCounts(); saveEditor(); }
   else hud.toast('NOTHING TO UNDO', 1.4);
@@ -3338,7 +3380,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.39.0';
+const BUILD = '2.40.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3949,7 +3991,7 @@ window.HG = {
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
-  openEditor, playEditorMap, get editor() { return editor; },
+  openEditor, playEditorMap, get editor() { return editor; }, mapLib,
   // the editor's save and load, for the suite: they are two localStorage calls
   editorSaveTest(ed) { const keep = editor; editor = ed; saveEditor(); editor = keep; },
   editorLoadTest() { return loadEditor(); },

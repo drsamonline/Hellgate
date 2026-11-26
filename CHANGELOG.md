@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.40.0 — 2026-11-26
+
+**The editor keeps more than one map.** One slot is the wrong shape for the thing people do: keep four ideas and play
+them in turn.
+
+| Piece | What it does |
+| --- | --- |
+| `play/src/maplib.js` | a named library in `localStorage['hellgate.maps']`: `save`, `load`, `remove`, `names`. Twelve maps, 24 kB each, newest first |
+| the UI | a name box, **Save as**, a picker, **Load**, **Delete** |
+| the name box | cleared after a save and the picker pointed at what was saved — otherwise the next name types onto the end of the last one, which is exactly what happened in the browser walk |
+| a corrupt store | reads as empty, not as a crash: the store is JSON in localStorage and localStorage can be anything |
+| a test | two maps save, both list newest-first, each loads by name, a nameless map is refused, a long name is cut to 24, delete works twice-safely, and a corrupt store reads empty |
+
+**And the dead-export audit could not see a namespace import.** `import * as mapLib` then `mapLib.save()` is a use of
+`save`, but the audit only parsed named imports and reported four exports of the new module as unused. It understands
+`import * as` now.
+
 ## 2.39.0 — 2026-11-26
 
 **The editor paints heights.** The last thing it could not do, and the one that turns a room painter into a level

@@ -520,6 +520,11 @@
   }
   /* the two screens that are taller than any window: start at the top */
   #map,#codex,#controls,#editor{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
+  #editorName,#editorPick{
+    background:rgba(255,255,255,.04);color:var(--ink);border:1px solid var(--amber-faint);
+    border-radius:var(--r);padding:8px 10px;font:inherit;font-size:11px;letter-spacing:.12em;
+  }
+  #editorName{width:150px}
   #editorCanvas{
     width:min(384px,80vw);height:auto;image-rendering:pixelated;
     border:1px solid var(--amber-faint);border-radius:var(--r);background:#07070a;
@@ -728,6 +733,13 @@
         <button class="mode" data-floor="3.6">3.6</button>
         <button class="mode" data-ceil="3.4">CEIL 3.4</button>
         <button class="mode" data-ceil="6">6.0</button>
+      </div>
+      <div class="row" id="editorLib">
+        <input id="editorName" maxlength="24" placeholder="name this map" spellcheck="false" autocomplete="off" />
+        <button id="editorSaveAs" class="ghost">Save as</button>
+        <select id="editorPick"></select>
+        <button id="editorLoad" class="ghost">Load</button>
+        <button id="editorDelete" class="ghost">Delete</button>
       </div>
       <div class="modes" id="editorSize">
         <button class="mode" data-size="16">16</button>

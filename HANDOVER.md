@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.39.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.40.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.39.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 143, `v1.0.0` → `v2.39.0` |
+| Version | 2.40.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 144, `v1.0.0` → `v2.40.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -73,7 +73,7 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 44 modules
+### `play/src/` — 45 modules
 
 | Group | Modules |
 | --- | --- |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The map library
+
+- **`play/src/maplib.js`** holds named maps in `localStorage['hellgate.maps']`: twelve of them, 24 kB each, newest
+  first, and a corrupt store reads as empty rather than throwing.
+- **`audit-dead.mjs` understands `import * as`** now: a namespace import then `alias.name()` is a use. It reported
+  four live exports as dead before that.
 
 ### Observed once, not reproduced
 

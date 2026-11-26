@@ -26,6 +26,16 @@ for (const [, text] of texts) {
     }
   }
 }
+// a namespace import is a use of whatever it calls: `import * as mapLib` then
+// `mapLib.save()` means `save` is not dead. Without this the audit reported four
+// exports of maplib.js as unused while main.js was calling all four.
+for (const [, text] of texts) {
+  for (const m of text.matchAll(/import\s*\*\s*as\s+(\w+)\s*from/g)) {
+    const alias = m[1];
+    const re = new RegExp('\\b' + alias + '\\.(\\w+)', 'g');
+    for (const u of text.matchAll(re)) imported.add(u[1]);
+  }
+}
 // tools and tests may import too
 for (const dir of ['tools', 'tests']) {
   const full = path.join(ROOT, dir);

@@ -2353,6 +2353,49 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the editor keeps more than one map ==');
+{
+  // one slot is the wrong shape for the thing people do: keep four ideas and
+  // play them in turn
+  const lib = HG.mapLib;
+  const store = new Map();
+  const realLS = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem: (k) => (store.has(k) ? store.get(k) : null),
+    setItem: (k, v) => store.set(k, String(v)),
+    removeItem: (k) => store.delete(k),
+  };
+  const { Editor } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ed.paint(3, 3, 'X');
+  const a = ed.toMap();
+  ed.load(null);
+  ed.paint(9, 9, 'X');
+  const b = ed.toMap();
+
+  ok(lib.names().length === 0, 'the library starts empty');
+  ok(lib.save('first', a) === true && lib.save('second', b) === true, 'two maps save');
+  ok(lib.names().length === 2, 'and both are listed (' + lib.names().join(', ') + ')');
+  ok(lib.names()[0] === 'second', 'newest first');
+  // a stored map is the map, not an imported level: it carries world coordinates
+  ok(lib.load('first').exit.x === 3 * 2, 'a map comes back by name');
+  ok(lib.load('second').exit.x === 9 * 2, 'and so does the other');
+  ok(lib.save('', a) === false, 'a map with no name is refused');
+  ok(lib.save('x'.repeat(40), a) === true && lib.names().includes('x'.repeat(24)),
+    'a long name is cut to 24 characters');
+  ok(lib.remove('first') === true, 'a map can be deleted');
+  ok(lib.load('first') === null, 'and is gone');
+  ok(lib.remove('first') === false, 'deleting it twice says so');
+
+  // a corrupt store is a store with nothing in it, not a crash
+  store.set('hellgate.maps', '{not json');
+  ok(Array.isArray(lib.names()) && lib.names().length === 0, 'a corrupt store reads as empty');
+  store.set('hellgate.maps', JSON.stringify({ bad: { v: 9 } }));
+  ok(lib.names().length === 0, 'and so does a store full of things that are not maps');
+  globalThis.localStorage = realLS;
+}
+
 console.log('\n== the editor paints heights ==');
 {
   // the last thing the editor could not do: a floor that is not the floor. This
