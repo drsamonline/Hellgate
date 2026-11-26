@@ -7,6 +7,9 @@ import { makeRng } from './rng.js';
 import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, circleBlocked, CELL } from './level.js';
 import { exportMap, importMap, mapToJSON, mapFromJSON } from './maps.js';
 import { Editor, PALETTE, blankGrid } from './editor.js';
+import { Coop } from './coop.js';
+import { makeInput } from './net.js';
+import { broadcastTransport } from './net.js';
 import * as mapLib from './maplib.js';
 import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
@@ -292,6 +295,34 @@ const MODES = {
 };
 
 let gameMode = 'campaign';
+// ?coop=1 puts a second body in the arena, driven by whatever comes over the
+// channel. With no peer it stands still and the session reports a stall.
+let coop = null;
+let coopWanted = false;
+let coopTransport = null;
+
+/** Drop the peer body and its channel. */
+function disposeCoop() {
+  if (coop) { coop.dispose(); coop = null; }
+  if (coopTransport) { coopTransport.close(); coopTransport = null; }
+}
+
+/**
+ * One frame of co-op: send what this side is doing, and step the peer's body by
+ * whatever the peer sent. No peer, no step — a guess is a desync.
+ */
+function updateCoop(dt) {
+  if (!coop) return;
+  const mine = makeInput(input.keys || {}, { x: player.yaw, y: player.pitch });
+  coop.session.put(coop.session.frame, mine);
+  coop.session.flush();
+  const tick = coop.session.tick();
+  if (tick) {
+    // player order, not local order: the peer is the other slot
+    coop.step(dt, tick.inputs[coop.player === 0 ? 1 : 0]);
+  }
+}
+
 // a map handed in by `?map=`, played instead of a generated level
 let pendingMap = null;
 // and the one being played now: Try again has to replay the map, not the seed the
@@ -646,7 +677,19 @@ function buildRun(seed, zoneDef, fresh = false) {
   spawnRelics(relicCount);
   applyClass(game.classId);
   applySettings();
+  spawnCoopIfWanted();
   startWave(1);
+}
+
+/** Put the peer body in the arena, once per level, when `?coop=1` asked for one. */
+function spawnCoopIfWanted() {
+  if (!coopWanted) return;
+  disposeCoop();
+  coop = new Coop({ scene, level, player: 0, proportions: PROPORTIONS.grunt });
+  coopTransport = broadcastTransport('hellgate-coop');
+  coopTransport.onmessage = (m) => coop && coop.session.receive(m);
+  coop.session.send = (m) => coopTransport && coopTransport.send(m);
+  coop.place(level.spawn.x + 1.5, level.spawn.z);
 }
 
 function resumeRun(save) {
@@ -3426,7 +3469,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.46.0';
+const BUILD = '2.47.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3726,6 +3769,7 @@ function update(dt) {
   }
   if (recorder) recorder.frame(input);
   updateHints(dt);
+  updateCoop(dt);
   player.look(input.lookDx, input.lookDy);
   input.lookDx = 0;
   input.lookDy = 0;
@@ -3899,6 +3943,11 @@ function loop() {
 function applyUrlOverrides() {
   const p = new URLSearchParams(location.search);
 
+  // ?coop=1 is read first: the run below is started by this function, and a flag
+  // read after the level was built never reaches it — which is how ?coop=1 spent
+  // one release putting no body in the arena
+  if (p.get('coop') === '1') coopWanted = true;
+
   // ?level=N dresses a campaign row on top of its zone: the same palette and
   // props, the row's seed, shape and objective. The zone id stays, so unlocks and
   // the save format do not learn a second kind of key. It is resolved before the
@@ -4048,6 +4097,10 @@ window.HG = {
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
   openEditor, playEditorMap, get editor() { return editor; }, mapLib,
+  get coop() { return coop; },
+  // the flag `?coop=1` sets, for the suite: one body, one channel, per level
+  setCoopWanted(v) { coopWanted = !!v; },
+  disposeCoop,
   get playingMap() { return playingMap; },
   // the editor's save and load, for the suite: they are two localStorage calls
   editorSaveTest(ed) { const keep = editor; editor = ed; saveEditor(); editor = keep; },

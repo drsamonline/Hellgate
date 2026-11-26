@@ -2353,6 +2353,64 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== the peer has a body ==');
+{
+  // 2.46.0 shipped the session; this is the body on the other side of it. The
+  // peer's input runs through the same Player.update() the local player uses —
+  // a second body with its own physics is a second game.
+  const { Coop, PEER_COLOR } = await import('../play/src/coop.js');
+  const { makeInput } = await import('../play/src/net.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+
+  const coop = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  ok(!!coop.mesh && !!coop.mesh.children, 'the peer is a body in the scene (' + (coop.mesh.children || []).length + ' parts)');
+  ok(coop.mesh.position.x === coop.pos.x, 'and it is where its player is');
+  const x0 = coop.pos.x;
+  const z0 = coop.pos.z;
+
+  // walk the peer forward for a second
+  const forward = makeInput({ KeyW: true }, { x: 0, y: 0 });
+  let steps = 0;
+  for (let i = 0; i < 60; i++) if (coop.step(1 / 60, forward)) steps++;
+  ok(steps === 60, 'sixty steps of the peer\'s input (' + steps + ')');
+  const moved = Math.hypot(coop.pos.x - x0, coop.pos.z - z0);
+  ok(moved > 0.5, 'and the peer moved (' + moved.toFixed(2) + ' m)');
+  ok(coop.mesh.position.x === coop.pos.x && coop.mesh.position.z === coop.pos.z,
+    'the mesh follows the player');
+  // the peer is on the floor, not under it
+  ok(coop.pos.y >= 0, 'and stands on the floor (' + coop.pos.y.toFixed(2) + ')');
+  // a step with no input is a stall, not a teleport
+  const before = { x: coop.pos.x, z: coop.pos.z };
+  ok(coop.step(1 / 60, null) === false, 'no input, no step');
+  ok(coop.pos.x === before.x && coop.pos.z === before.z, 'and the peer does not move');
+  // the local player is untouched by any of it
+  ok(HG.player.pos.x !== coop.pos.x || HG.player.pos.z !== coop.pos.z,
+    'the local player is a different body (' + HG.player.pos.x.toFixed(1) + ',' + HG.player.pos.z.toFixed(1) + ')');
+  ok(typeof PEER_COLOR === 'number', 'the peer has a colour of its own');
+  coop.dispose();
+
+  // and ?coop=1 is wired: a level start puts the body in the arena
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  ok(!!HG.coop, 'a level start spawns the peer when the flag is on');
+  ok(HG.coop && HG.coop.player === 0, 'this side is player 0 (' + (HG.coop && HG.coop.player) + ')');
+  ok(HG.coop && Math.abs(HG.coop.pos.x - HG.level.spawn.x) < 4, 'and it stands near the spawn');
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.beginLevel(1, true);
+  ok(!HG.coop, 'and no flag, no body');
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+}
+
 console.log('\n== two players, one tick ==');
 {
   // #60's foundation: lockstep input exchange. A frame is played when both
@@ -2416,7 +2474,10 @@ console.log('\n== two players, one tick ==');
     s2.put(0, makeInput({ KeyA: true }));
     s1.flush();
     s2.flush();
-    await new Promise((r) => setTimeout(r, 30));
+    // a channel delivers on its own thread, so poll rather than assume a delay:
+    // the suite has been running synchronously for a while before this line
+    const deadline = Date.now() + 1000;
+    while (!s1.ready(0) && Date.now() < deadline) await new Promise((r) => setTimeout(r, 10));
     ok(s1.ready(0) === true, 'an input crosses a real BroadcastChannel');
     const got = s1.tick();
     ok(!!got && got.inputs[1].keys.KeyA === true, 'and arrives as player two\'s');

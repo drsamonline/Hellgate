@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.47.0 — 2026-11-26
+
+**The peer has a body.** 2.46.0 shipped the lockstep session; this puts something on the other side of it. `?coop=1`
+spawns a second player in the arena, driven by whatever arrives over the channel.
+
+| Piece | What it does |
+| --- | --- |
+| `play/src/coop.js` | a second `Player`, a mesh, and a session. The peer's input runs through **the same `Player.update()`** the local player runs through — the same movement, the same collision, the same steps |
+| the body | the humanoid the NPC is built from, in a colour of its own, facing where the peer looks |
+| no peer, no step | `updateCoop()` sends this side's input and steps the peer only when the session has both. With nobody there it stands still and `starved` counts the frames — a guess is a desync |
+| `?coop=1` | spawns the body once per level, next to the spawn, with a `BroadcastChannel` for a transport |
+| a test | the body exists, moves 4.5 m on a second of forward input, follows with its mesh, stands on the floor, stalls with no input, and does not move the local player |
+
+**A flag read too late.** `?coop=1` was parsed *after* `startGame()` inside `applyUrlOverrides()`, so the level was
+built before the flag was set and no body appeared. The browser probe caught it; the flag is read first now.
+
+**What it is still not:** there is no shooting from the second body, no health, no second camera, and no signalling
+between machines. Two tabs on one machine is the whole of it.
+
 ## 2.46.0 — 2026-11-26
 
 **The floor co-op is built on.** #60 is two players in one arena. It needs three things: agreement on the starting

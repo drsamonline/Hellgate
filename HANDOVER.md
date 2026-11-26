@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.46.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.47.0**, 2026-11-26.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.46.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 150, `v1.0.0` → `v2.46.0` |
+| Version | 2.47.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 151, `v1.0.0` → `v2.47.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -73,7 +73,7 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 46 modules
+### `play/src/` — 47 modules
 
 | Group | Modules |
 | --- | --- |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Co-op's body
+
+- **`play/src/coop.js`**: a second `Player` and a mesh; the peer's input goes through the same `Player.update()`.
+  `?coop=1` spawns it once per level from `buildRun` — the flag is read at the **top** of `applyUrlOverrides()`,
+  because the run is started inside that function and a flag read after it never reaches the level.
+- **No peer, no step**: `updateCoop()` stalls and counts `starved` rather than guessing.
 
 ### Co-op's floor
 
