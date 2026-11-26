@@ -26,6 +26,19 @@ for (const [, text] of texts) {
     }
   }
 }
+// a dynamic import with destructuring is a use too:
+//   const { Session } = await import('../play/src/net.js')
+// Tests reach for modules this way, and without it the audit called a module's
+// whole surface dead.
+for (const [, text] of texts) {
+  // the destructuring may be indented, so match the braces anywhere on the line
+  for (const m of text.matchAll(/\{([^{}]+)\}\s*=\s*await\s+import\(/g)) {
+    for (const part of m[1].split(',')) {
+      const name = part.trim().split(':').pop().trim();
+      if (name) imported.add(name);
+    }
+  }
+}
 // a namespace import is a use of whatever it calls: `import * as mapLib` then
 // `mapLib.save()` means `save` is not dead. Without this the audit reported four
 // exports of maplib.js as unused while main.js was calling all four.
@@ -43,6 +56,13 @@ for (const dir of ['tools', 'tests']) {
   for (const f of fs.readdirSync(full)) {
     if (!f.endsWith('.mjs')) continue;
     const text = fs.readFileSync(path.join(full, f), 'utf8');
+    // a test that reaches for a module dynamically is still a use of it
+    for (const m of text.matchAll(/\{([^{}]+)\}\s*=\s*await\s+import\(/g)) {
+      for (const part of m[1].split(',')) {
+        const name = part.trim().split(':').pop().trim();
+        if (name) imported.add(name);
+      }
+    }
     for (const m of text.matchAll(/import\s*\{([^}]+)\}\s*from/g)) {
       for (const part of m[1].split(',')) {
         const name = part.trim().split(/\s+as\s+/)[0].trim();

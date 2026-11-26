@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.46.0 — 2026-11-26
+
+**The floor co-op is built on.** #60 is two players in one arena. It needs three things: agreement on the starting
+state, a way to exchange input, and a way to know the machines are still in the same world. 2.11.0's determinism gave
+the first and the third; this is the middle one.
+
+| Piece | What it does |
+| --- | --- |
+| `play/src/net.js` | a **lockstep** session: a frame is played only when both players' input for it is in hand. Neither machine can run ahead, and neither trusts the other's physics |
+| player order | inputs come back **player 0 first on both machines**, not local-first — the first version did it local-first and the two machines disagreed about who was player one |
+| a stall, not a guess | a frame with no peer input is counted (`starved`) and skipped. A guess is a desync |
+| the desync check | `hash(frame, stateHash)` and `receiveHash()` — a mismatch is a fact at a frame, not a suspicion |
+| the transport | `broadcastTransport()` over `BroadcastChannel`: two tabs today, a data channel later |
+| a test | two sessions exchange inputs, agree on player order, stall rather than guess, detect a desync, and one real message crosses a real `BroadcastChannel` |
+
+**What it is not:** co-op. There is no second body on screen, no rendering of the other player, and no signalling for
+two machines. This is the part that has to be right before any of that can be built, and it is the part that can be
+tested without a second person.
+
 ## 2.45.0 — 2026-11-26
 
 **Try again replays the map, and #63 is closed.** Dying on a custom map and pressing **Try again** called

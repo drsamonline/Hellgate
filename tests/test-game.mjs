@@ -2353,6 +2353,80 @@ console.log('\n== the campaign has its own achievements ==');
   ok(byId.door.check({}, { ...h, doors: 1 }) === true, 'BOUGHT AND PAID FOR fires on a bought door');
 }
 
+console.log('\n== two players, one tick ==');
+{
+  // #60's foundation: lockstep input exchange. A frame is played when both
+  // sides' input is in hand, so neither machine can run ahead of the other.
+  const { Session, makeInput, LOOKAHEAD } = await import('../play/src/net.js');
+  const a = new Session({ player: 0 });
+  const b = new Session({ player: 1 });
+  // a wire between them: what one sends, the other receives
+  a.send = (m) => b.receive(m);
+  b.send = (m) => a.receive(m);
+
+  a.put(0, makeInput({ KeyW: true }));
+  a.flush();
+  ok(a.ready(0) === false, 'one side alone is not ready');
+  b.put(0, makeInput({ KeyD: true }));
+  b.flush();
+  ok(a.ready(0) === true && b.ready(0) === true, 'both sides in hand, both ready');
+
+  const t1 = a.tick();
+  const t2 = b.tick();
+  ok(!!t1 && !!t2, 'both machines can play the frame');
+  ok(t1.frame === 0 && t2.frame === 0, 'the same frame (' + t1.frame + ')');
+  ok(t1.inputs.length === 2 && t2.inputs.length === 2, 'with two inputs each');
+  // the order is fixed so both machines agree which body is whose
+  ok(t1.inputs[0].keys.KeyW === true && t2.inputs[0].keys.KeyW === true,
+    'player one is player one on both machines');
+  ok(t1.inputs[1].keys.KeyD === true && t2.inputs[1].keys.KeyD === true,
+    'and player two is player two');
+
+  // a frame the peer has not sent is a stall, not a guess
+  a.put(1, makeInput({}));
+  a.flush();
+  const before = a.stats().starved;
+  ok(a.tick() === null, 'a frame with no peer input does not play');
+  ok(a.stats().starved === before + 1, 'and it is counted as a stall (' + a.stats().starved + ')');
+  ok(a.frame === 1, 'the frame number does not move');
+
+  // hashes: agreement is checked, disagreement is a fact
+  a.hash(0, 'abc');
+  a.receiveHash({ frame: 0, hash: 'abc' });
+  ok(a.stats().inSync === true, 'the same hash is in sync');
+  a.hash(1, 'def');
+  a.receiveHash({ frame: 1, hash: 'xyz' });
+  ok(a.stats().inSync === false && a.stats().desyncAt === 1,
+    'a different hash is a desync at that frame (' + a.stats().desyncAt + ')');
+  ok(LOOKAHEAD > 0, 'and there is a lookahead constant to bound the buffer');
+
+  // and the transport itself: two tabs on one machine, over a real channel
+  const { broadcastTransport } = await import('../play/src/net.js');
+  if (typeof BroadcastChannel === 'function') {
+    const name = 'hellgate-coop-test-' + Math.random().toString(36).slice(2, 8);
+    const t1 = broadcastTransport(name);
+    const t2 = broadcastTransport(name);
+    const s1 = new Session({ player: 0 });
+    const s2 = new Session({ player: 1 });
+    s1.send = (m) => t1.send(m);
+    s2.send = (m) => t2.send(m);
+    t1.onmessage = (m) => s1.receive(m);
+    t2.onmessage = (m) => s2.receive(m);
+    s1.put(0, makeInput({ KeyW: true }));
+    s2.put(0, makeInput({ KeyA: true }));
+    s1.flush();
+    s2.flush();
+    await new Promise((r) => setTimeout(r, 30));
+    ok(s1.ready(0) === true, 'an input crosses a real BroadcastChannel');
+    const got = s1.tick();
+    ok(!!got && got.inputs[1].keys.KeyA === true, 'and arrives as player two\'s');
+    t1.close();
+    t2.close();
+  } else {
+    ok(true, 'no BroadcastChannel in this runtime, transport not exercised');
+  }
+}
+
 console.log('\n== try again replays the map ==');
 {
   // Try again called startGame(game.seed), which builds campaign level 1 from a
