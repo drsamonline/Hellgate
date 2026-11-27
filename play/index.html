@@ -521,6 +521,11 @@
   }
   /* the two screens that are taller than any window: start at the top */
   #map,#codex,#controls,#editor{justify-content:flex-start;padding-top:4vh;padding-bottom:6vh}
+  /* the editor is the tallest screen: at 1280x800 the objective row fell below the
+     fold, so its gaps and the canvas are tighter than the rest */
+  #editor{gap:9px;padding-top:2.4vh;padding-bottom:3vh}
+  #editor h2{font-size:26px;margin:0}
+  button[disabled]{opacity:.38;cursor:not-allowed}
   #editorName,#editorPick{
     background:rgba(255,255,255,.04);color:var(--ink);border:1px solid var(--amber-faint);
     border-radius:var(--r);padding:8px 10px;font:inherit;font-size:11px;letter-spacing:.12em;
@@ -541,7 +546,7 @@
     font:inherit;font-size:10px;letter-spacing:.06em;resize:vertical;
   }
   #editorCanvas{
-    width:min(384px,80vw);height:auto;image-rendering:pixelated;
+    width:min(384px,80vw);max-height:46vh;height:auto;image-rendering:pixelated;
     border:1px solid var(--amber-faint);border-radius:var(--r);background:#07070a;
     touch-action:none;cursor:crosshair;
   }
@@ -732,6 +737,7 @@
       <button id="coopClose" class="panelclose" aria-label="close">×</button>
       <h2>CO-OP</h2>
       <p class="sub">two machines · no server · two pastes</p>
+      <p class="sub" style="max-width:560px">one of you presses <b>Host</b> and sends the string · the other pastes it into <b>Join</b> and sends the answer back · then the host presses <b>Connect</b></p>
       <div class="row">
         <button id="coopHost">Host · make an offer</button>
         <button id="coopJoin" class="ghost">Join · paste an offer</button>
@@ -740,7 +746,7 @@
       <div class="row">
         <button id="coopConnect" class="ghost">Connect</button>
         <button id="coopCopy" class="ghost">Copy</button>
-        <button id="coopStart" class="ghost">Start the run</button>
+        <button id="coopStart" class="ghost" disabled title="connect first">Start the run</button>
       </div>
       <textarea id="coopOut" rows="3" readonly placeholder="what to send back"></textarea>
       <p id="coopState" class="sub"></p>

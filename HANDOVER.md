@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.61.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.62.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.61.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 165, `v1.0.0` → `v2.61.0` |
-| Modules | 40 in `play/src/`, ~13,100 lines |
-| Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
+| Version | 2.62.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 166, `v1.0.0` → `v2.62.0` |
+| Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
+| Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -135,6 +135,13 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Audit findings, 2.62.0
+
+- **`Editor.fromLevel()`** read `this.maps` (never set) and seeded nothing. **`Session.put()`** had no bound, so an
+  unanswered session grew 36,000 entries in ten minutes. **`Coop.place()`** put the peer at y=0 on a raised floor.
+- **Co-op's Start** was pressable before connecting; **the editor clipped** its objective row at 1280×800.
+- A flaky assertion on a hard constraint is not a flake — see the 12 m rule, 2.56.0.
 
 ### `HG.scene` is a getter
 

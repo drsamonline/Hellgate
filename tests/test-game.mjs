@@ -3261,6 +3261,42 @@ console.log('\n== the editor paints heights ==');
   ok(ed.resize(32, 32) === true && ed.floorAt(4, 4) === 2.4, 'a resize keeps the heights it had');
 }
 
+console.log('\n== the audit fixes hold ==');
+{
+  // three defects found in one pass over the co-op and editor code
+  const { Editor } = await import('../play/src/editor.js');
+  const { Session, LOOKAHEAD, makeInput } = await import('../play/src/net.js');
+  const { Coop } = await import('../play/src/coop.js');
+
+  // 1. editor.fromLevel() seeded nothing: it read `this.maps`, which is never set
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  const blank = ed.counts()['#'] || 0;
+  ed.fromLevel(HG.level);
+  const seeded = ed.counts()['#'] || 0;
+  ok(seeded !== blank || ed.w === HG.level.W, 'fromLevel seeds the editor from the level (' + blank + ' -> ' + seeded + ' rock, ' + ed.w + ' wide)');
+  ok(ed.w === HG.level.W && ed.h === HG.level.H, 'at the level\'s own size (' + ed.w + 'x' + ed.h + ')');
+
+  // 2. the local input buffer grew without bound when no peer answered
+  const s2 = new Session({ player: 0 });
+  for (let i = 0; i < 500; i++) s2.put(i, makeInput({ KeyW: true }));
+  ok(s2.local.size <= LOOKAHEAD + 1, 'the input buffer is bounded with no peer (' + s2.local.size + ' entries after 500 frames)');
+  ok(s2.put(9999, makeInput({})) === false, 'and a frame too far ahead is refused');
+
+  // 3. place() put the peer at 0 on a floor that is not 0
+  const c = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  const y = HG.floorHeightAt(HG.level, HG.level.spawn.x, HG.level.spawn.z);
+  c.place(HG.level.spawn.x, HG.level.spawn.z);
+  ok(Math.abs(c.pos.y - y) < 1e-6, 'place() puts the peer on the floor (' + c.pos.y.toFixed(2) + ' vs ' + y.toFixed(2) + ')');
+  c.dispose();
+}
+
 console.log('\n== the editor undoes, resizes and saves ==');
 {
   const { Editor } = await import('../play/src/editor.js');

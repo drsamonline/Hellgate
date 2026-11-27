@@ -10,6 +10,8 @@
 // `exportMap` writes and `importMap` reads.
 // ---------------------------------------------------------------------------
 
+import { exportMap } from './maps.js';
+
 /** The cells a person can paint, in the order the palette shows them. */
 export const PALETTE = [
   { code: '.', name: 'OPEN', color: '#241a16' },
@@ -252,9 +254,10 @@ export class Editor {
 
   /** Start from a generated level. */
   fromLevel(level) {
-    const { exportMap } = this.maps || {};
-    if (exportMap && level) return this.load(exportMap(level));
-    return this;
+    // `this.maps` was never set, so this returned `this` and seeded nothing: the
+    // editor opened blank on a first visit instead of from the level you were in
+    if (!level) return this;
+    return this.load(exportMap(level));
   }
 
   /** The code at a cell, or null when it is off the grid. */

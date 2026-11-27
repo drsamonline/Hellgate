@@ -54,11 +54,19 @@ export class Session {
     this.desyncAt = -1;
   }
 
-  /** Record the local input for a frame. */
+  /**
+   * Record the local input for a frame.
+   *
+   * Bounded by LOOKAHEAD: with no peer ever answering, `tick()` never consumes a
+   * frame, and an unbounded map grew by one entry per frame for as long as the
+   * session ran — 36,000 entries in ten minutes at 60 fps.
+   * @returns {boolean} False when the frame is too far ahead to buffer.
+   */
   put(frame, input) {
+    if (Number.isFinite(frame) && frame > this.frame + LOOKAHEAD) return false;
     this.local.set(frame, input);
     this.pending = { frame, input };
-    return this;
+    return true;
   }
 
   /** Accept the peer's input for a frame. */

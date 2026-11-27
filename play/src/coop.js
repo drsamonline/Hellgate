@@ -16,7 +16,7 @@ import * as THREE from 'three';
 import { Player } from './player.js';
 import { humanoid } from './rig.js';
 import { Session } from './net.js';
-import { raycastWalls } from './level.js';
+import { raycastWalls, floorHeightAt } from './level.js';
 
 /** The colour the second player is drawn in: a body you can tell from the NPC. */
 export const PEER_COLOR = 0x4a8a9a;
@@ -82,8 +82,9 @@ export class Coop {
 
   /** Put the body somewhere, and its mesh with it. */
   place(x, z) {
-    this.body.pos.set(x, this.level.spawn ? 0 : 0, z);
-    this.body.pos.y = this.body.pos.y || 0;
+    // the floor of the cell it is standing in, not a hard-coded zero: `?coop=1`
+    // put the peer at 0 on a level whose spawn cell is 1.1 m up
+    this.body.pos.set(x, floorHeightAt(this.level, x, z), z);
     this.mesh.position.set(this.body.pos.x, this.body.pos.y, this.body.pos.z);
     return this;
   }

@@ -2007,6 +2007,10 @@ function coopLinkOnce() {
   coopLink.onopen = () => {
     coopNote('connected — start the run');
     coopWanted = true;
+    // the run button was pressable before there was a connection, and pressing it
+    // started a level with a peer that could never arrive
+    const start = document.getElementById('coopStart');
+    if (start) { start.disabled = false; start.classList.add('on'); }
   };
   coopLink.onclose = () => coopNote('connection closed');
   coopLink.onmessage = (m) => { if (coop) coop.session.receive(m); };
@@ -3401,6 +3405,7 @@ document.getElementById('coopCopy')?.addEventListener('click', () => {
   } catch (e) { coopNote('could not copy: select the text and copy it'); }
 });
 document.getElementById('coopStart')?.addEventListener('click', () => {
+  if (!coopLink || !coopLink.ready) { coopNote('connect first — two pastes and a channel'); return; }
   coopWanted = true;
   hideScreens();
   beginLevel(1, true);
@@ -3566,7 +3571,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.61.0';
+const BUILD = '2.62.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

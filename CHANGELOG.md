@@ -1,5 +1,35 @@
 # Changelog
 
+## 2.62.0 — 2026-11-27
+
+**An audit pass: five defects, one dead end, one clipped screen.** Nothing was added. Everything below was already
+shipped and already wrong.
+
+### Code
+
+| # | Finding | Fix |
+| --- | --- | --- |
+| 1 | **`Editor.fromLevel()` did nothing.** It read `this.maps`, which is never set, so it returned `this` and seeded no grid — the editor opened blank instead of from the run you were in | it imports `exportMap` and seeds the grid (92 → **1168** rock cells at 40×40) |
+| 2 | **The lockstep input buffer grew without bound.** With no peer answering, `tick()` never consumes a frame, so `local` grew by one entry per frame — **36,000 entries in ten minutes** | `put()` refuses frames past `frame + LOOKAHEAD`; `LOOKAHEAD` finally does the job its name promised (13 entries after 500 frames) |
+| 3 | **`Coop.place()` put the peer at y = 0** — both branches of a ternary passed 0 — so `?coop=1` stood the peer at 0 on a spawn cell 1.1 m up | it uses `floorHeightAt()` (1.10 vs 1.10) |
+
+### Interface
+
+| # | Finding | Fix |
+| --- | --- | --- |
+| 4 | **Co-op's `Start the run` was pressable before connecting**, which started a level with a peer that could never arrive | disabled until the channel opens, and a line of copy says who hosts and who joins |
+| 5 | **The editor clipped its objective row** at 1280×800 — the most common laptop size | tighter gaps, canvas capped at 46vh: the size row now ends at **780 of 800** |
+| 6 | Two `#editorCanvas` CSS blocks | one |
+
+### Docs
+
+| # | Finding | Fix |
+| --- | --- | --- |
+| 7 | `HANDOVER.md` claimed **40 modules and ~13,100 lines**; it is 48 and ~17,600, and its assertion count was three releases stale | corrected |
+
+**Verified:** suite green three runs, eight static gates, a four-route browser sweep with no page or console errors, and
+both changed screens measured in a real browser.
+
 ## 2.61.0 — 2026-11-27
 
 **The peer survives a level change — and `HG.scene` was a snapshot.** A co-op run is more than one level, and nobody
