@@ -73,6 +73,9 @@ export class Coop {
       },
     });
     this.mesh = built.group;
+    // the joints the walk swings, from the same rig the NPC is built from
+    this.joints = built.parts || {};
+    this.stride = 0;
     this.mesh.position.set(this.body.pos.x, this.body.pos.y, this.body.pos.z);
     this.scene.add(this.mesh);
   }
@@ -94,6 +97,15 @@ export class Coop {
     if (!input) { this.starved++; return false; }
     this.fireCd = Math.max(0, this.fireCd - dt);
     this.body.update(dt, input, this.level);
+    // the legs walk when the body does: a peer that slides is a peer that reads
+    // as a bug, however correct its position is
+    const speed = Math.hypot(this.body.vel.x, this.body.vel.z);
+    this.stride += dt * Math.min(11, speed * 2.2);
+    const swing = Math.sin(this.stride) * Math.min(0.62, speed * 0.16);
+    if (this.joints.legL) this.joints.legL.rotation.x = swing;
+    if (this.joints.legR) this.joints.legR.rotation.x = -swing;
+    if (this.joints.armL) this.joints.armL.rotation.x = -swing * 0.7;
+    if (this.joints.armR) this.joints.armR.rotation.x = swing * 0.7;
     if (input.fire && this.fireCd <= 0 && ctx) this.shoot(ctx);
     this.mesh.position.set(this.body.pos.x, this.body.pos.y, this.body.pos.z);
     // the body faces where the peer is looking

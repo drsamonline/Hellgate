@@ -524,6 +524,31 @@ console.log('\n== no enemy spawns in the start room ==');
   HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
 }
 
+console.log('\n== no wave is ever empty ==');
+{
+  // the 12 m margin shrinks the pool. An empty pool spawns nothing by design, and
+  // a level that spawns nothing is a level you walk through: this is the assertion
+  // that would catch the margin going too far.
+  const { generateLevel } = await import('../play/src/level.js');
+  const { STORY_LEVELS, storyLevelZone } = await import('../play/src/story-levels.js');
+  let empties = 0;
+  let smallest = 1e9;
+  let smallestLevel = 0;
+  for (const row of STORY_LEVELS) {
+    const z = storyLevelZone(row);
+    const lvl = generateLevel(z.seed, z.shape);
+    const pool = (lvl.reachableCells || []).filter((c) => {
+      if (c.room < 0 || c.room === (lvl.spawnRoom || 0)) return false;
+      if (c.x === lvl.exit.cx && c.z === lvl.exit.cz) return false;
+      return Math.hypot(c.wx - lvl.spawn.x, c.wz - lvl.spawn.z) > 13.4;
+    });
+    if (!pool.length) empties++;
+    if (pool.length < smallest) { smallest = pool.length; smallestLevel = row.n; }
+  }
+  ok(empties === 0, 'every campaign level has somewhere to spawn (' + empties + ' empty)');
+  ok(smallest > 100, 'and the smallest pool is ' + smallest + ' cells, on level ' + smallestLevel);
+}
+
 console.log('\n== the charge lane ==');
 {
   HG.enemies.clear();
@@ -2565,6 +2590,38 @@ console.log('\n== two machines, no server ==');
   const dead = rtcTransport({ RTCPeerConnection: null });
   ok(dead.send({}) === false && dead.offer() === '' && dead.close() === undefined,
     'no WebRTC is an inert transport, not a crash');
+}
+
+console.log('\n== the peer walks ==');
+{
+  // a peer that slides reads as a bug however correct its position is
+  const { Coop } = await import('../play/src/coop.js');
+  const { makeInput } = await import('../play/src/net.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const coop = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  ok(!!coop.joints.legL && !!coop.joints.legR, 'the peer has legs to swing');
+  const restL = coop.joints.legL.rotation.x;
+  // standing still: no stride
+  for (let i = 0; i < 20; i++) coop.step(1 / 60, makeInput({}), null);
+  ok(Math.abs(coop.joints.legL.rotation.x - restL) < 1e-6, 'standing still, the legs rest');
+  // walking: the legs swing, and the two legs disagree
+  const forward = makeInput({ KeyW: true });
+  const seen = [];
+  for (let i = 0; i < 40; i++) {
+    coop.step(1 / 60, forward, null);
+    seen.push(coop.joints.legL.rotation.x);
+  }
+  const swing = Math.max(...seen) - Math.min(...seen);
+  ok(swing > 0.05, 'walking, the legs swing (' + swing.toFixed(2) + ' rad)');
+  ok(Math.abs(coop.joints.legL.rotation.x + coop.joints.legR.rotation.x) < 1e-6,
+    'and the two legs are always opposite');
+  coop.dispose();
 }
 
 console.log('\n== a downed peer can be picked up ==');

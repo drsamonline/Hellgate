@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.57.0 — 2026-11-27
+
+**The peer walks.** Its position was right and its legs were frozen, so it slid across the floor — a thing that reads
+as a bug however correct the numbers are.
+
+| Piece | What it does |
+| --- | --- |
+| the stride | the legs swing from the body's own speed: `sin(stride)` at up to 0.62 rad, and the arms counter-swing |
+| standing still | no stride, no swing: the legs rest |
+| a test | the peer has legs to swing · standing still the legs rest · walking they swing **1.24 rad** through the cycle · and the two legs are always exactly opposite |
+| **and a guard** | every campaign level still has somewhere to spawn after 2.56.0's margin: **0 empty pools**, smallest **154 cells** (level 24) |
+
 ## 2.56.0 — 2026-11-27
 
 **The 12 m rule was flaky because it was broken.** `and none within 12 m of the spawn point` failed twice this month.
