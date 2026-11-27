@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.70.0 — 2026-11-27
+
+**Every brush says what it does.** Thirteen buttons with no explanation is thirteen guesses — and a `title` tooltip
+does not exist on a touch screen, which is where a third of these screens are opened.
+
+| Piece | What it does |
+| --- | --- |
+| `hint` on every palette entry | one line each: *"ROCK — wall: nothing gets through it"*, *"EXIT — the way out; paint one, or the map has no end"*, *"LIFT — a plate that rises and falls; stand on it"* |
+| the line | under the canvas, above the counts, and it follows the brush you are holding **and** the button you are hovering |
+| a test | all 13 brushes have a hint · the spawn and exit say what they are for · an unknown code has none · the line names the brush you hold |
+| the fit | the canvas cap dropped 46vh → **41vh** so the new line does not push the size row below the fold: 783 of 800 |
+
+**The copy is the feature.** An editor that needs a manual has already failed; these are the thirteen sentences that
+replace it.
+
 ## 2.69.0 — 2026-11-27
 
 **The fix from 2.68.0 is a gate now.** `balance-report.mjs` gained a `check` mode, and it runs in CI beside the suites:

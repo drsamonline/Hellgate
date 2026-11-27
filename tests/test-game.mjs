@@ -3407,6 +3407,26 @@ console.log('\n== the editor undoes, resizes and saves ==');
   globalThis.localStorage = realLS;
 }
 
+console.log('\n== every brush says what it does ==');
+{
+  // thirteen buttons with no explanation is thirteen guesses
+  const { PALETTE, hintFor } = await import('../play/src/editor.js');
+  const missing = PALETTE.filter((p) => !p.hint || p.hint.length < 8);
+  ok(missing.length === 0, 'every brush has a hint (' + PALETTE.length + ' brushes' +
+    (missing.length ? ', missing: ' + missing.map((p) => p.name).join(',') : '') + ')');
+  ok(hintFor('@').includes('starts'), 'the spawn says what it is for: "' + hintFor('@') + '"');
+  ok(hintFor('X').includes('end'), 'and the exit says what happens without one');
+  ok(hintFor('nope') === '', 'an unknown code has no hint');
+  // and it is on screen
+  HG.openEditor();
+  const el = document.getElementById('editorHint');
+  ok(!!el, 'the editor has a hint line');
+  HG.editor.brush = '#';
+  HG.renderEditorHintForTest();
+  ok(/ROCK/.test(el.textContent), 'and it names the brush you are holding: ' + el.textContent);
+  document.getElementById('editor').classList.remove('on');
+}
+
 console.log('\n== the editor paints and plays ==');
 {
   // #63's second slice: a grid you can paint, and the two buttons that matter

@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { makeRng } from './rng.js';
 import { generateLevel, raycastWalls, floorHeightAt, hasLineOfSight, isBlocked, cellAt, circleBlocked, CELL } from './level.js';
 import { exportMap, importMap, mapToJSON, mapFromJSON } from './maps.js';
-import { Editor, PALETTE, blankGrid } from './editor.js';
+import { Editor, PALETTE, blankGrid, hintFor } from './editor.js';
 import { Coop } from './coop.js';
 import { makeInput } from './net.js';
 import { broadcastTransport } from './net.js';
@@ -2043,7 +2043,12 @@ function editorState() {
       b.addEventListener('click', () => {
         editor.brush = b.getAttribute('data-code');
         for (const o of pal.querySelectorAll('[data-code]')) o.classList.toggle('on', o === b);
+        renderEditorHint();
       });
+      // the hint follows the pointer too: thirteen buttons and no explanation is
+      // thirteen guesses, and a title tooltip does not exist on a touch screen
+      b.addEventListener('pointerenter', () => renderEditorHint(b.getAttribute('data-code')));
+      b.addEventListener('pointerleave', () => renderEditorHint());
     }
   }
   const cv = document.getElementById('editorCanvas');
@@ -2151,6 +2156,15 @@ function renderMapLib() {
     : '<option value="">no saved maps</option>';
 }
 
+/** The line under the palette: what the brush you are holding does. */
+function renderEditorHint(code) {
+  const el = document.getElementById('editorHint');
+  if (!el || !editor) return;
+  const c = code || editor.brush;
+  const hit = PALETTE.find((p) => p.code === c);
+  el.textContent = hit ? hit.name + ' — ' + hintFor(c) : '';
+}
+
 /** The read-out under the canvas: what is on the grid. */
 function renderEditorCounts() {
   const el = document.getElementById('editorCounts');
@@ -2177,6 +2191,7 @@ function openEditor() {
   else if (level) ed.fromLevel(level);
   else ed.load(null);
   renderEditorCounts();
+  renderEditorHint();
   renderMapLib();
   game.state = 'editor';
   hud.setVisible(false);
@@ -3571,7 +3586,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.69.0';
+const BUILD = '2.70.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -4203,6 +4218,7 @@ window.HG = {
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
   openEditor, playEditorMap, get editor() { return editor; }, mapLib,
+  renderEditorHintForTest: () => renderEditorHint(),
   get coop() { return coop; },
   openCoop, get coopLink() { return coopLink; }, coopUseLink,
   // the flag `?coop=1` sets, for the suite: one body, one channel, per level

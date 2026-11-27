@@ -546,7 +546,7 @@
     font:inherit;font-size:10px;letter-spacing:.06em;resize:vertical;
   }
   #editorCanvas{
-    width:min(384px,80vw);max-height:46vh;height:auto;image-rendering:pixelated;
+    width:min(384px,80vw);max-height:41vh;height:auto;image-rendering:pixelated;
     border:1px solid var(--amber-faint);border-radius:var(--r);background:#07070a;
     touch-action:none;cursor:crosshair;
   }
@@ -758,6 +758,7 @@
       <p class="sub">paint the grid · play it · share it</p>
       <div id="editorPalette" class="modes"></div>
       <canvas id="editorCanvas" width="384" height="384"></canvas>
+      <p id="editorHint" class="sub"></p>
       <p id="editorCounts" class="sub"></p>
       <div class="row">
         <button id="editorPlay">Play this map</button>

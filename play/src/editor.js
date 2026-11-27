@@ -14,23 +14,31 @@ import { exportMap } from './maps.js';
 
 /** The cells a person can paint, in the order the palette shows them. */
 export const PALETTE = [
-  { code: '.', name: 'OPEN', color: '#241a16' },
-  { code: '#', name: 'ROCK', color: '#6b5a4a' },
-  { code: '+', name: 'DOOR', color: '#ffb454' },
-  { code: 'X', name: 'EXIT', color: '#39ff9a' },
-  { code: '=', name: 'STAIR', color: '#4a3a2c' },
-  { code: '^', name: 'LIFT', color: '#8fd0ff' },
-  { code: '~', name: 'CRATE', color: '#a07a4a' },
-  { code: 's', name: 'SECRET', color: '#8a7a66' },
+  // `hint` is the line under the palette: thirteen buttons with no explanation is
+  // thirteen guesses, and a title tooltip is invisible on a touch screen
+  { code: '.', name: 'OPEN', color: '#241a16', hint: 'floor you can walk on' },
+  { code: '#', name: 'ROCK', color: '#6b5a4a', hint: 'wall: nothing gets through it' },
+  { code: '+', name: 'DOOR', color: '#ffb454', hint: 'a door: opens when the room is clear' },
+  { code: 'X', name: 'EXIT', color: '#39ff9a', hint: 'the way out — paint one, or the map has no end' },
+  { code: '=', name: 'STAIR', color: '#4a3a2c', hint: 'a step up to the next floor' },
+  { code: '^', name: 'LIFT', color: '#8fd0ff', hint: 'a plate that rises and falls — stand on it' },
+  { code: '~', name: 'CRATE', color: '#a07a4a', hint: 'a crate: cover, and it breaks' },
+  { code: 's', name: 'SECRET', color: '#8a7a66', hint: 'a wall that breaks for a secret' },
   // the spawn is not a cell code: you stand on it, so the cell stays open and the
   // marker is carried beside the grid
-  { code: '@', name: 'SPAWN', color: '#e8dcc8' },
+  { code: '@', name: 'SPAWN', color: '#e8dcc8', hint: 'where the player starts — one per map' },
   // and neither is an enemy: it is a body with a type, not a kind of floor
-  { code: 'i', name: 'IMP', color: '#8a3524', enemy: 'imp' },
-  { code: 'g', name: 'GRUNT', color: '#53603c', enemy: 'grunt' },
-  { code: 'h', name: 'HOUND', color: '#8a1f6a', enemy: 'hound' },
-  { code: 'B', name: 'BRUTE', color: '#5a3a2a', enemy: 'brute' },
+  { code: 'i', name: 'IMP', color: '#8a3524', enemy: 'imp', hint: 'an imp: throws fire, dies fast' },
+  { code: 'g', name: 'GRUNT', color: '#53603c', enemy: 'grunt', hint: 'a grunt: closes in and shoots' },
+  { code: 'h', name: 'HOUND', color: '#8a1f6a', enemy: 'hound', hint: 'a hound: fast, bites, dies fast' },
+  { code: 'B', name: 'BRUTE', color: '#5a3a2a', enemy: 'brute', hint: 'a brute: slow, and it hurts' },
 ];
+
+/** The line under a palette button: what the brush does. */
+export function hintFor(code) {
+  const hit = PALETTE.find((p) => p.code === code);
+  return hit ? hit.hint : '';
+}
 
 /** A blank room: rock around the edge, open inside. */
 export function blankGrid(w = 24, h = 24) {
