@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.68.0 — 2026-11-27
+
+**Act 4 was a wall, and the arithmetic said so.** `tools/balance-report.mjs` measured the act ladder — the hp a player
+loses standing still in the first wave of each act:
+
+| act | before | after |
+| --- | --- | --- |
+| 1 | 61 | 61 |
+| 2 | 164 (2.7×) | 164 (2.7×) |
+| 3 | 315 (1.9×) | 315 (1.9×) |
+| 4 | **1389 (4.4×)** | **689 (2.2×)** |
+
+| Piece | What it does |
+| --- | --- |
+| the cause | act 4 doubled twice at once: `ACT_THREAT` up **29%** *and* the roster widened from five body types to **seven**, adding the brute and the stalker |
+| the fix | act 4's threat 1.8 → **1.55**. The roster stays: seven types is what act 4 is *for* |
+| a test | the ladder's shape, not its numbers: four acts, each harder than the last, the last step under **2×**, and act 4 still the hardest |
+
+**This is arithmetic, not a playtest.** It says act 4 was 4.4× act 3 while the acts before it were 2.7× and 1.9×; it does
+not say 689 is the right number. A playtest says that.
+
 ## 2.67.0 — 2026-11-27
 
 **A downed peer stops walking.** It was still driven by the peer's input after it died, so a dead body strolled around

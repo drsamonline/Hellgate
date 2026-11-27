@@ -94,7 +94,14 @@ export const LEVEL_HINTS = {
  * It lives beside the table because it is a property of the campaign, and a zone
  * already harder than its act keeps its own threat.
  */
-export const ACT_THREAT = [0.8, 1.1, 1.4, 1.8];
+export const ACT_THREAT = [0.8, 1.1, 1.4, 1.55];
+// Act 4 used to be 1.8, and it doubled twice at the same time: the threat went up
+// 29% AND the roster widened from five body types to seven, adding the brute and
+// the stalker. `node tools/balance-report.mjs` measured the ladder as
+// 61 / 164 / 315 / **1389** hp lost standing still — a 4.4x step where the two
+// before it were 2.7x and 1.9x. At 1.55 the ladder is 61 / 164 / 315 / **689**: a
+// 2.2x step, in line with the acts before it, and still the hardest act with the
+// widest roster.
 
 /** The four objective types a row may name. Everything else is a typo. */
 export const OBJECTIVE_TYPES = ['reach', 'clear', 'survive', 'relics'];

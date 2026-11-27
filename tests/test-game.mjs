@@ -3557,6 +3557,22 @@ console.log('\n== the guns are models ==');
   ok(HG.weapons.muzzle.visible === false, 'and it goes out when the flash ends');
 }
 
+console.log('\n== no act is a wall ==');
+{
+  // the ladder is arithmetic (tools/balance-report.mjs), not a playtest: act 4 used
+  // to double twice at once — threat up 29% AND the roster from five body types to
+  // seven — which measured as a 4.4x step where the two before it were 2.7x and
+  // 1.9x. This asserts the shape, not the exact numbers.
+  const { ACT_THREAT } = await import('../play/src/story-levels.js');
+  ok(ACT_THREAT.length === 4, 'four acts (' + ACT_THREAT.length + ')');
+  const steps = [];
+  for (let i = 1; i < ACT_THREAT.length; i++) steps.push(ACT_THREAT[i] / ACT_THREAT[i - 1]);
+  ok(steps.every((x) => x > 1), 'each act is harder than the one before: ' + steps.map((x) => x.toFixed(2)).join(', '));
+  const last = steps[steps.length - 1];
+  ok(last < 2.0, 'and the last step is a step, not a wall (' + last.toFixed(2) + 'x)');
+  ok(ACT_THREAT[3] > ACT_THREAT[2], 'act 4 is still the hardest');
+}
+
 console.log('\n== the act is the curve ==');
 {
   const diffOf = (n) => {

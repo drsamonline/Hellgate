@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.67.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.68.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.67.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 172, `v1.0.0` → `v2.67.0` |
+| Version | 2.68.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 173, `v1.0.0` → `v2.68.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -167,6 +167,13 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### The act ladder is arithmetic
+
+- **`node tools/balance-report.mjs`** prints hp lost standing still per act. Act 4 was **1389** against act 3's 315 —
+  4.4× where the acts before were 2.7× and 1.9× — because threat rose 29% *and* the roster widened to seven types.
+  `ACT_THREAT` is `[0.8, 1.1, 1.4, 1.55]` now; the ladder is 61 / 164 / 315 / 689.
+- **It is not a playtest.** It compares acts with each other; it does not say 689 is right.
 
 ### Down is a state, not a health value
 
