@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.50.0**, 2026-11-26.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.51.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.50.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 154, `v1.0.0` → `v2.50.0` |
+| Version | 2.51.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 155, `v1.0.0` → `v2.51.0` |
 | Modules | 40 in `play/src/`, ~13,100 lines |
 | Assertions | 1391 playability (all 32 levels) + 764 in the other three suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -73,7 +73,7 @@ node tools/soak.mjs            # 90 s per difficulty, "did it fall over"
 
 ## 4. The map
 
-### `play/src/` — 47 modules
+### `play/src/` — 48 modules
 
 | Group | Modules |
 | --- | --- |
@@ -135,6 +135,14 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### The wire between machines
+
+- **`play/src/rtc.js`** is a serverless handshake: `offer()` → a paste-able string, `accept()` → another,
+  `finish()` → done. The signal is base64 JSON with `v` and `app` tags, so a foreign paste is refused.
+- **A data channel can arrive already open** — read `readyState` on attach; an `onopen` that has already fired never
+  comes again.
+- **Not wired into the game yet**: no `?rtc=`, no lobby.
 
 ### Co-op's body
 

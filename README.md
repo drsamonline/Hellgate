@@ -129,6 +129,7 @@ play/src/editor.js    paint the grid: the palette, the canvas, and the map it ma
 play/src/maplib.js    the map library: several named grids, not one
 play/src/net.js       lockstep input exchange: the floor co-op is built on
 play/src/coop.js      the peer's body: their input, the same movement, one mesh
+play/src/rtc.js       two machines, no server: an offer and an answer, pasted
 play/src/minimap.js   the floor plan, drawn once with live markers
 play/src/bloom.js     the post pass: bright pixels blurred and added back
 play/src/music.js     generated music: a scale, a tempo and a rule for the next note

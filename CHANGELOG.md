@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.51.0 — 2026-11-27
+
+**Two machines, no server.** `BroadcastChannel` is a wire for two tabs on one machine. This is the wire for two
+machines, built with nothing to host — because this project hosts nothing.
+
+| Piece | What it does |
+| --- | --- |
+| `play/src/rtc.js` | an offer becomes a **string you can paste**; the other side answers with another; the first pastes it back. Two pastes and a data channel |
+| the signal | base64 JSON with a version and an app tag, so a paste from another build or another project is **refused**, not half-accepted, and whitespace from a chat window is not a failure |
+| the transport | `send`, `onmessage`, `close` — the same shape as `broadcastTransport()`, so `Session` does not know which wire it is on |
+| no WebRTC | an inert transport rather than a crash: the game can ask for one and carry on |
+| a test | the codec round-trips, rubbish and foreign signals are refused, and the plumbing is exercised against a fake peer connection: offer → answer → finish, remote descriptions set, send after close goes nowhere |
+
+**One fix the fake found:** a data channel can arrive **already open** (`ondatachannel` fires after the handshake), and
+waiting for an `onopen` that has been and gone never ends. The transport reads `readyState` on attach now.
+
+**What it is not yet:** there is no lobby, no matchmaking, and no `?rtc=` in the game — the transport exists and is
+tested, and wiring it to the paste flow is the next slice.
+
 ## 2.50.0 — 2026-11-26
 
 **The peer is on the HUD.** A second body whose state you cannot see is a second body you cannot help.

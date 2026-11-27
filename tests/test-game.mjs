@@ -2411,6 +2411,57 @@ console.log('\n== the peer has a body ==');
   HG.game.state = 'playing';
 }
 
+console.log('\n== two machines, no server ==');
+{
+  // the last piece: a wire between machines. No signalling server — two pastes,
+  // an offer and an answer — because this project hosts nothing.
+  const { encodeSignal, decodeSignal, rtcTransport, SIGNAL_VERSION } = await import('../play/src/rtc.js');
+  const s1 = encodeSignal('offer', 'v=0\r\no=- 1 1 IN IP4 127.0.0.1\r\n');
+  ok(typeof s1 === 'string' && s1.length > 20, 'an offer becomes a paste-able string (' + s1.length + ' chars)');
+  const d1 = decodeSignal(s1);
+  ok(!!d1 && d1.kind === 'offer' && /v=0/.test(d1.sdp), 'and decodes back to the offer');
+  ok(decodeSignal('not base64 !!!') === null, 'rubbish is refused');
+  ok(decodeSignal('') === null && decodeSignal(null) === null, 'and so is nothing');
+  // a paste from another app or another build is refused, not half-accepted
+  const other = globalThis.btoa(JSON.stringify({ v: SIGNAL_VERSION, app: 'something-else', kind: 'offer', sdp: 'x' }));
+  ok(decodeSignal(other) === null, 'a signal from another app is refused');
+  const old = globalThis.btoa(JSON.stringify({ v: 99, app: 'hellgate', kind: 'offer', sdp: 'x' }));
+  ok(decodeSignal(old) === null, 'and one from another version');
+  // whitespace from a chat window is not a failure
+  ok(!!decodeSignal('  ' + s1 + '\n'), 'a paste with spaces and a newline still decodes');
+
+  // the transport, against a fake peer connection: the plumbing, not the network
+  const made = [];
+  class FakePC {
+    constructor() { this.localDescription = null; this.remote = []; made.push(this); }
+    createDataChannel() { this.channel = { readyState: 'open', send() {}, close() {} }; return this.channel; }
+    async createOffer() { return { type: 'offer', sdp: 'OFFER-SDP' }; }
+    async createAnswer() { return { type: 'answer', sdp: 'ANSWER-SDP' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    async setRemoteDescription(d) { this.remote.push(d); }
+    close() { this.closed = true; }
+  }
+  const a = rtcTransport({ RTCPeerConnection: FakePC });
+  const b = rtcTransport({ RTCPeerConnection: FakePC });
+  const offerStr = await a.offer();
+  ok(decodeSignal(offerStr).kind === 'offer', 'the offering side produces an offer string');
+  const answerStr = await b.accept(offerStr);
+  ok(decodeSignal(answerStr).kind === 'answer', 'the answering side answers it');
+  ok(await a.finish(answerStr) === true, 'and the offering side finishes the handshake');
+  ok(b.pc.remote.length === 1 && b.pc.remote[0].type === 'offer', 'the answerer set the offer as remote');
+  ok(a.pc.remote.length === 1 && a.pc.remote[0].type === 'answer', 'and the offerer set the answer');
+  // a message before the channel opens is dropped, not queued into the void
+  ok(a.send({ frame: 0 }) === true, 'the offerer can send once its channel is open');
+  a.close();
+  ok(a.ready === false, 'and closing drops it');
+  ok(a.send({ frame: 1 }) === false, 'so a send after close goes nowhere');
+
+  // with no WebRTC in the runtime, the transport is inert rather than throwing
+  const dead = rtcTransport({ RTCPeerConnection: null });
+  ok(dead.send({}) === false && dead.offer() === '' && dead.close() === undefined,
+    'no WebRTC is an inert transport, not a crash');
+}
+
 console.log('\n== the peer is on the HUD ==');
 {
   // a second body whose state you cannot see is a second body you cannot help
