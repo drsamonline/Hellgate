@@ -1789,6 +1789,13 @@ function showZoneMap() {
  */
 function interact() {
   if (game.state !== 'playing') return;
+  // a downed peer is the first thing V picks up: it is the most urgent thing on
+  // the floor, and it is within reach or it is not
+  if (coop && coop.inReviveRange(player.pos.x, player.pos.z) && coop.revive(player.pos.x, player.pos.z)) {
+    hud.toast('PEER BACK UP', 2);
+    audio.play('pickup');
+    return;
+  }
   const n = level && level.npc;
   if (n && npcBody && Math.hypot(player.pos.x - n.wx, player.pos.z - n.wz) < 2.1) {
     if (openNpcOffer()) return;
@@ -3559,7 +3566,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.54.0';
+const BUILD = '2.55.0';
 
 // ---------------------------------------------------------------------------
 // REPORT

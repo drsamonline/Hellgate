@@ -29,6 +29,10 @@ export const PEER_COOLDOWN = 0.28;
 export const PEER_RANGE = 45;
 /** The peer's health: the same body as the local player. */
 export const PEER_HP = 110;
+/** How close you have to be to pick a downed peer up, in metres. */
+export const REVIVE_RANGE = 2.4;
+/** What a revive gives back: half a body, not a whole one. */
+export const REVIVE_HP = 55;
 
 /**
  * A second player: a body, a player, and the input the peer sent.
@@ -157,6 +161,27 @@ export class Coop {
       this.downedAt = this.frames;
     }
     return n;
+  }
+
+  /** True when you are close enough to pick the peer up. */
+  inReviveRange(x, z) {
+    if (this.alive) return false;
+    return Math.hypot(this.pos.x - x, this.pos.z - z) <= REVIVE_RANGE;
+  }
+
+  /**
+   * Pick a downed peer up. Half health, and only within reach: a revive you can
+   * do from across the room is not a revive.
+   * @param {number} x
+   * @param {number} z
+   * @returns {boolean} True when the peer is back up.
+   */
+  revive(x, z) {
+    if (!this.inReviveRange(x, z)) return false;
+    this.alive = true;
+    this.hp = REVIVE_HP;
+    this.downedAt = -1;
+    return true;
   }
 
   /** Where the peer is, for a HUD or a test. */

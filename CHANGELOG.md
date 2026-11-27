@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.55.0 — 2026-11-27
+
+**A downed peer can be picked up.** The peer could die and then lay there for the rest of the run, which made dying
+the end of the partnership.
+
+| Piece | What it does |
+| --- | --- |
+| `V` next to a downed peer | brings it back at **55 hp** — half a body, not a whole one |
+| the reach | **2.4 m**: a revive you can do from across the room is not a revive |
+| the order | a downed peer is the first thing `V` picks up, before the helper and before a terminal, because it is the most urgent thing on the floor |
+| a test | a standing peer cannot be revived · one across the room is out of reach and cannot be picked up · one at arm's length can · it comes back at exactly 55 · and `V` on a standing peer still does what `V` always did |
+
 ## 2.54.0 — 2026-11-27
 
 **Two runs of the same seed are the same run — asserted.** Co-op and every replay rest on that sentence, and nothing

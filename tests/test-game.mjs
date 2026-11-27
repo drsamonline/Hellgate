@@ -2553,6 +2553,49 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== a downed peer can be picked up ==');
+{
+  const { Coop, PEER_HP, REVIVE_HP, REVIVE_RANGE } = await import('../play/src/coop.js');
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const peer = HG.coop;
+  ok(!!peer, 'there is a peer');
+  ok(peer.revive(HG.player.pos.x, HG.player.pos.z) === false, 'a standing peer cannot be revived');
+  peer.damage(PEER_HP * 2);
+  ok(peer.alive === false, 'down it goes');
+  // out of reach is not a revive
+  const far = REVIVE_RANGE + 2;
+  ok(peer.inReviveRange(peer.pos.x + far, peer.pos.z) === false, 'a peer across the room is out of reach');
+  ok(peer.revive(peer.pos.x + far, peer.pos.z) === false, 'and cannot be picked up from there');
+  ok(peer.alive === false, 'still down');
+  // in reach is
+  ok(peer.inReviveRange(peer.pos.x + 0.5, peer.pos.z) === true, 'a peer at arm\'s length is in reach');
+  ok(peer.revive(peer.pos.x + 0.5, peer.pos.z) === true, 'and can be picked up');
+  ok(peer.alive === true && peer.hp === REVIVE_HP, 'back up with ' + peer.hp + ' hp, not a full body');
+
+  // and the key: V, standing next to it
+  peer.damage(PEER_HP * 2);
+  HG.player.pos.set(peer.pos.x + 0.6, peer.pos.y, peer.pos.z);
+  keyDown('KeyV');
+  frames(1);
+  ok(peer.alive === true, 'V picks the peer up');
+  ok(peer.hp === REVIVE_HP, 'for half a body (' + peer.hp + ')');
+  // V with a standing peer still does what V always did
+  const before = peer.hp;
+  keyDown('KeyV');
+  frames(1);
+  ok(peer.hp === before, 'and V on a standing peer changes nothing');
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== the peer is on the HUD ==');
 {
   // a second body whose state you cannot see is a second body you cannot help
