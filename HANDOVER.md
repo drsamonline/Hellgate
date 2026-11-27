@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.64.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.65.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.64.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 168, `v1.0.0` → `v2.64.0` |
+| Version | 2.65.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 169, `v1.0.0` → `v2.65.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -381,6 +381,13 @@ wiped by the next call.
 - **The intro panel types itself** at 34 characters a second, so its text is empty on the frame the intro opens.
 - **Wall-clock timings from this pod are about the renderer** (~1 fps), not the game. Drive `HG.update()` at a fixed
   step when the assertion is about behaviour.
+
+### Duplicate keys are dead data
+
+- **`audit-dead.mjs` fails on a duplicate key in `window.HG`.** An object literal keeps the last one; the dead `scene`
+  was what the draw-call gate read for 39 releases. Two more (`camera`, `dropTrinket`) were found and removed.
+- **`audit-invariants.mjs` traverses `HG.scene`** for stray enemy meshes — that traversal was of the stale scene, so it
+  was green because it looked at nothing. It is real now.
 
 ### Performance, and the two ways the gate lied
 

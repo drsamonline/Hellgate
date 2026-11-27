@@ -3571,7 +3571,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.64.0';
+const BUILD = '2.65.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -4197,7 +4197,7 @@ window.HG = {
   get zone() { return zone; },
   beginZone, beginLevel, nextLevel, renderLevelMap, showZoneMap, outroPath, showClassScreen, chooseClass, castPower, zoneCleared,
   resumeRun, saveRun, loadRun, clearRun, toggleInventory, throwGrenade, swingBlade,
-  selectMode, get mode() { return gameMode; }, MODES, addPickup, dropTrinket, cinematic, dialogue, openExit,
+  selectMode, get mode() { return gameMode; }, MODES, addPickup, cinematic, dialogue, openExit,
   interact, takeNpcOffer, openNpcOffer, openNpcShop, renderNpcShop, closeNpcOffer, npcQuestState,
   startRecording, replayJSON, replayFileName, copyReplay, watchReplay, loadReplay, stateHash, simDraws,
   samplePath: sampleCameraPath, cellAt, floorHeightAt, circleBlocked,
@@ -4228,7 +4228,11 @@ window.HG = {
   get perfState() { return { ratio: perf.ratio, bloomDropped: perf.bloomDropped }; },
   takeUpgrade, UPGRADES, TRINKETS, PICKUP_DEFS, dropTrinket, recomputeStats, applyClass,
   // the simulation step, for tools that advance the game without a display
-  update, effects, projectiles, level, enemies, camera, renderer,
+  // no `scene`, `level`, `enemies`, `effects` or `projectiles` here: they are
+  // getters below. An object literal keeps the LAST duplicate key, so a snapshot
+  // written here would be silently dead — which is exactly how `scene` handed out
+  // the first level's scene for 39 releases
+  update, renderer,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate, damageRelic,
   spawnRelics, breakRelic, updateObjective, STORY_LEVELS, storyLevel, storyLevelZone,
   runStats, topRuns, recordRun, gameOver,

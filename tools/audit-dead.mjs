@@ -49,6 +49,31 @@ for (const [, text] of texts) {
     for (const u of text.matchAll(re)) imported.add(u[1]);
   }
 }
+// a duplicate key in an object literal is dead data: the last one wins, and the
+// one before it is silently unreachable. `window.HG` shipped `scene`, `level`,
+// `enemies`, `effects` and `projectiles` twice — the snapshots were dead, and the
+// dead `scene` was the one the draw-call gate had been reading for 39 releases.
+const dupes = [];
+for (const [f, text] of texts) {
+  const at = text.indexOf('window.HG = {');
+  if (at < 0) continue;
+  const block = text.slice(at, text.indexOf('\n};', at));
+  const keys = [];
+  for (const line of block.split('\n')) {
+    // getter bodies carry commas (`get x() { return { a: 1, b: 2 }; }`)
+    const clean = line.replace(/\{[^{}]*\}/g, '{}').replace(/^\s*/, '');
+    if (!clean || clean.startsWith('//') || clean.startsWith('window.HG')) continue;
+    for (const piece of clean.split(',')) {
+      const m = piece.match(/^\s*(?:get\s+)?([A-Za-z_$][\w$]*)/);
+      if (m && m[1] !== 'get') keys.push(m[1]);
+    }
+  }
+  const seen = new Set();
+  for (const k of keys) {
+    if (seen.has(k)) dupes.push(`${f}: ${k}`);
+    seen.add(k);
+  }
+}
 // tools and tests may import too
 for (const dir of ['tools', 'tests']) {
   const full = path.join(ROOT, dir);
@@ -106,5 +131,10 @@ if (conflicts.length) {
   console.log('same constant name, different values:');
   for (const [k, list] of conflicts) console.log('  ' + k + ' → ' + list.map((x) => `${x.f}=${x.val}`).join(', '));
 }
-console.log(`${files.length} modules · ${dead.length} unused export(s) · ${conflicts.length} constant conflict(s)`);
+if (dupes.length) {
+  bad++;
+  console.log('duplicate keys in an object literal (the last one wins, the rest are dead):');
+  for (const d of dupes) console.log('  ' + d);
+}
+console.log(`${files.length} modules · ${dead.length} unused export(s) · ${conflicts.length} constant conflict(s) · ${dupes.length} duplicate key(s)`);
 process.exit(bad ? 1 : 0);

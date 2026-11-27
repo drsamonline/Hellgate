@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.65.0 — 2026-11-27
+
+**The class of bug behind 2.64.0 is now a gate.** `window.HG` had **five** duplicate keys — `scene`, `level`, `enemies`,
+`effects`, `projectiles` — and an object literal keeps the last one, so the earlier copies were dead. The dead `scene`
+was the one the draw-call gate read for 39 releases.
+
+| Piece | What it does |
+| --- | --- |
+| `audit-dead.mjs` | parses `window.HG`'s keys and **fails on a duplicate** — "the last one wins, the rest are dead" |
+| proved | a duplicate introduced on purpose makes it exit 1 and name the key; the clean tree exits 0 |
+| **two more found** | `camera` and `dropTrinket` were each written twice; both removed |
+| the export block | the five dead snapshots are gone, with a comment saying why nothing may be added back |
+
+**Also verified, because 2.64.0 implied it:** `audit-invariants.mjs` traverses `HG.scene` to look for enemy meshes that
+belong to no enemy. Until 2.61.0 that traversal was of the stale scene, which contains no enemies — the check was
+passing because it was looking at nothing. It looks at the live scene now, and it is green.
+
 ## 2.64.0 — 2026-11-27
 
 **The draw-call gate had been measuring the wrong scene for 39 releases.** `window.HG.scene` was a snapshot taken at
