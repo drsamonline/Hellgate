@@ -19,7 +19,9 @@ await page.setViewport({ width: 1000, height: 620 });
 page.on('pageerror', (e) => console.log('pageerror', e.message));
 await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle0', timeout: 40000 });
 await page.goto(`http://127.0.0.1:${PORT}/play/`, { waitUntil: 'domcontentloaded', timeout: 40000 });
-await page.waitForFunction('typeof window.HG === "object"', { timeout: 25000 });
+// a slow software renderer takes longer than 25 s to boot the game: this timed
+// out on every run under SwiftShader and passed only on a real GPU
+await page.waitForFunction('typeof window.HG === "object"', { timeout: 90000 });
 await page.click('#startBtn');
 await page.waitForFunction('window.HG.game.state === "intro"', { timeout: 15000 });
 await page.click('#storySkip');

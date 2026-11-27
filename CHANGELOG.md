@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.66.0 — 2026-11-27
+
+**Two gates nobody ran had rotted, and now they run in CI.** `audit-flow` (the journey: title → intro → class → play →
+every panel → cleared → death) and `audit-run` (every zone, every mode) existed and were never wired into the pipeline.
+
+| Finding | Detail |
+| --- | --- |
+| **a 1.x build number in a 2.x game** | `audit-flow` asserted `/build\s+1\./` against the report's build line. It had been failing since 2.0.0, on a regex nobody re-read |
+| **a panel read before it arrives** | it asserted the cleared screen's two choice cards on the frame `zoneCleared()` returns — but the panel arrives after the camera's walk back across the room. It waits for the cards now |
+| **a boot window too short for a software renderer** | `audit-controls` waited 25 s for `window.HG`; it needs 90 s under SwiftShader — and even then it does not finish here, so it stays a by-hand tool and `HANDOVER.md` says so |
+| **the pipeline** | `audit-flow` and `audit-run` are CI steps now, next to `smoke`, `drawcalls` and `audit-invariants` |
+
+Both gates pass locally: **13 journey steps** and **every zone and mode**, in one run each.
+
+**The pattern, for the third time this week:** a check that is not run is not a check. The draw-call gate read a stale
+scene for 39 releases; these two asserted a version that no longer exists. What they have in common is that nobody was
+reading their output.
+
 ## 2.65.0 — 2026-11-27
 
 **The class of bug behind 2.64.0 is now a gate.** `window.HG` had **five** duplicate keys — `scene`, `level`, `enemies`,

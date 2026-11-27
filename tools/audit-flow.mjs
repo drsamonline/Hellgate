@@ -110,12 +110,22 @@ await step('pause and resume', async () => {
 
 await step('copy report', async () => {
   const rep = await page.evaluate(() => window.HG.buildReport());
-  if (!/build\s+1\./.test(rep)) throw new Error('the report has no build line');
+  // the build number is not 1.x any more: this asserted /build\s+1\./ and had
+  // been failing on a stale regex since 2.0.0
+  const build = await page.evaluate(() => window.HG.BUILD || window.HG.build || '');
+  if (!/build\s+\d+\.\d+\.\d+/.test(rep)) throw new Error('the report has no build line');
+  if (build && !rep.includes(build)) throw new Error('the report does not carry this build (' + build + ')');
 });
 
 await step('cleared, choice, upgrade, map', async () => {
   await page.evaluate(() => window.HG.zoneCleared());
   await page.waitForFunction('window.HG.game.state === "cleared"', { timeout: 10000 });
+  // the panel arrives after the camera's walk back across the room, so this waits
+  // for it: asserting on the frame zoneCleared() returns read an empty panel
+  await page.waitForFunction(
+    'document.querySelectorAll("#upgradeCards [data-choice]").length === 2'
+    + ' || document.querySelectorAll("#upgradeCards [data-up]").length > 0',
+    { timeout: 15000 });
   const cards = await page.evaluate(() => document.querySelectorAll('#upgradeCards [data-choice]').length);
   if (cards !== 2) throw new Error('the cleared screen offered ' + cards + ' choices, not 2');
   await page.evaluate(() => document.querySelector('#upgradeCards [data-choice]').click());

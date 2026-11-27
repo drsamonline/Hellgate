@@ -85,3 +85,16 @@ jobs:
         run: node tools/audit-invariants.mjs
         env:
           CHROME_PATH: /usr/bin/google-chrome
+
+      # Two gates that existed and were never run by CI, which is how one of them
+      # came to assert a 1.x build number in a 2.x game. Both pass locally; if
+      # either fails here, it is the game or the gate, not the browser.
+      - name: The journey holds, end to end
+        run: node tools/audit-flow.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+
+      - name: Every zone and every mode starts
+        run: node tools/audit-run.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome

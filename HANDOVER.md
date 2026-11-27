@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.65.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.66.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,11 +24,11 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.65.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 169, `v1.0.0` → `v2.65.0` |
+| Version | 2.66.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 170, `v1.0.0` → `v2.66.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
-| Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
+| Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
@@ -381,6 +381,12 @@ wiped by the next call.
 - **The intro panel types itself** at 34 characters a second, so its text is empty on the frame the intro opens.
 - **Wall-clock timings from this pod are about the renderer** (~1 fps), not the game. Drive `HG.update()` at a fixed
   step when the assertion is about behaviour.
+
+### A gate that is not run is not a gate
+
+- **`audit-flow` and `audit-run` were written and never wired into CI.** Both had rotted: `audit-flow` asserted a 1.x
+  build number against a 2.x game, and read the cleared screen's choice cards on the frame `zoneCleared()` returns,
+  before the panel arrives. Both are CI steps now.
 
 ### Duplicate keys are dead data
 
