@@ -150,6 +150,9 @@ export class Coop {
       best = e;
       bestT = t;
     }
+    // the muzzle: you have to be able to see your friend firing, or their shots
+    // arrive from nowhere and read as a bug
+    if (ctx.effects) ctx.effects.burst(eye, 0xffd24a, 5, 1.6, 0.14, 2, 0.7);
     if (best) {
       best.hurt(PEER_DAMAGE, ctx, { x: dir.x, y: dir.y, z: dir.z });
       if (ctx.audio) ctx.audio.play('hit', best.chestPos());

@@ -2808,6 +2808,12 @@ console.log('\n== the peer can shoot ==');
   ok(coop.shots === 1, 'a held trigger does not fire twice in a frame');
   ok(coop.fireCd > 0 && coop.fireCd <= PEER_COOLDOWN, 'there is a cooldown to wait out (' + coop.fireCd.toFixed(2) + 's)');
 
+  // and it is visible: a shot with no muzzle flash arrives from nowhere
+  const spawnedBefore = HG.effects.spawned || 0;
+  coop.fireCd = 0;
+  coop.shoot(ctx);
+  ok((HG.effects.spawned || 0) > spawnedBefore, 'a shot throws a muzzle flash (' + ((HG.effects.spawned || 0) - spawnedBefore) + ' particles)');
+
   // a body behind the peer, and a body behind a wall: neither is shot
   HG.enemies.clear();
   HG.enemies.spawnAt('imp', p.x, p.z + 6, 1);

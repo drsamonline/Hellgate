@@ -1,5 +1,15 @@
 # Changelog
 
+## 2.58.0 — 2026-11-27
+
+**The peer's shot is visible.** It damaged what it hit and made a sound, and nothing on screen said a shot had
+happened — so on your machine your friend's kills arrived from nowhere.
+
+| Piece | What it does |
+| --- | --- |
+| the muzzle | a five-particle flash at the peer's eye, every shot, hit or miss |
+| a test | a shot throws a muzzle flash — **17 particles** against the effects counter, which exists so a test can trust it |
+
 ## 2.57.0 — 2026-11-27
 
 **The peer walks.** Its position was right and its legs were frozen, so it slid across the floor — a thing that reads
