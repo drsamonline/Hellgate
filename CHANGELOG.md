@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.61.0 — 2026-11-27
+
+**The peer survives a level change — and `HG.scene` was a snapshot.** A co-op run is more than one level, and nobody
+had ever walked the peer across a boundary.
+
+| Asserted | Result |
+| --- | --- |
+| the peer exists on the first level | ✓ |
+| and again on the second, as a **new** body | ✓ |
+| with a fresh frame count, at full health, in the scene | ✓ |
+| the old body was removed | ✓ |
+| the scene did not grow by a body per level | `145 → 145` |
+| standing near the new spawn | `59.5` against `58` |
+
+**The bug the test found was in the debug API, not the game.** `window.HG` exported `scene` **by value**, and `scene`
+is replaced on every level (`scene = newScene(zone)`), so `HG.scene` handed out the *first* level's scene forever. Any
+probe that added a mesh to it added to a scene nobody renders. It is a live getter now.
+
 ## 2.60.0 — 2026-11-27
 
 **The front page caught up with the game.** Two months of work were invisible to anyone who had not been following the

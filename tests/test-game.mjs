@@ -2592,6 +2592,45 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== the peer survives a level change ==');
+{
+  // a run is more than one level: the peer has to be rebuilt for each, without
+  // losing the wire it is talking over
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const first = HG.coop;
+  ok(!!first, 'the peer exists on the first level');
+  const meshCount0 = HG.scene.children.length;
+
+  // the next level: the old body goes, a new one arrives
+  HG.beginLevel(2, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const second = HG.coop;
+  ok(!!second, 'and again on the second level');
+  ok(second !== first, 'it is a new body, not the old one');
+  ok(second.frames === 0, 'with a fresh frame count');
+  ok(second.hp === second.hpMax, 'at full health');
+  ok(second.mesh.parent === HG.scene, 'and in the scene');
+  // the old body is not still in the scene: a level change that leaks a body
+  // leaks one per level
+  ok(HG.scene.children.filter((c) => c === first.mesh).length === 0, 'the old body was removed');
+  ok(HG.scene.children.length <= meshCount0 + 40, 'and the scene did not grow by a body per level (' + meshCount0 + ' -> ' + HG.scene.children.length + ')');
+  // and it is near the new level's spawn
+  ok(Math.abs(second.pos.x - HG.level.spawn.x) < 6, 'standing near the new spawn (' + second.pos.x.toFixed(1) + ' vs ' + HG.level.spawn.x + ')');
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== co-op on a map somebody painted ==');
 {
   // three features that were built separately, together: a painted map, the

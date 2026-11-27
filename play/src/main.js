@@ -3566,7 +3566,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.60.0';
+const BUILD = '2.61.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -4182,6 +4182,9 @@ loop();
 
 // exposed for console debugging and for the headless test harness
 window.HG = {
+  // `scene` is replaced per level: a snapshot export would hand out the first
+  // level's scene forever, which is a trap for any probe that adds to it
+  get scene() { return scene; },
   game, player, camera, hud, audio, input, settings, perf,
   powers, story, progress, zones: ZONES,
   get props() { return props; },
@@ -4220,7 +4223,7 @@ window.HG = {
   get perfState() { return { ratio: perf.ratio, bloomDropped: perf.bloomDropped }; },
   takeUpgrade, UPGRADES, TRINKETS, PICKUP_DEFS, dropTrinket, recomputeStats, applyClass,
   // the simulation step, for tools that advance the game without a display
-  update, effects, projectiles, level, enemies, scene, camera, renderer,
+  update, effects, projectiles, level, enemies, camera, renderer,
   explodeBarrel, damageBarrels, spawnBarrels, damageSecret, damageCrate, damageRelic,
   spawnRelics, breakRelic, updateObjective, STORY_LEVELS, storyLevel, storyLevelZone,
   runStats, topRuns, recordRun, gameOver,
