@@ -1,5 +1,29 @@
 # Changelog
 
+## 2.64.0 — 2026-11-27
+
+**The draw-call gate had been measuring the wrong scene for 39 releases.** `window.HG.scene` was a snapshot taken at
+module load; `scene` is replaced on every level. Every number the gate printed from 2.25.0 to 2.63.0 was of a scene
+nobody renders.
+
+| | Old claim | Real |
+| --- | --- | --- |
+| median | 90 | **131** |
+| worst | 122 | **170** (level 9) |
+| headroom to 200 | "70%" | **18%** |
+
+On level 9 the stale scene draws **77** calls; the live one draws **170**. The 2.61.0 getter fixed the API; this release
+corrects the numbers, the budget's rationale, the docs that quoted them, and adds the measurement nothing had made:
+
+| Piece | What it does |
+| --- | --- |
+| **co-op measured** | `drawcalls.mjs` also renders level 9 with the peer in the room and **fails** over budget |
+| **the peer was expensive** | 32 draw calls unmerged, which put level 9 at **202** — over the budget. `mergeJointMeshes()`, which the enemy bodies already do, brings it to **190** |
+| a test | the peer costs about what an enemy body costs (27 meshes against a grunt's 40) |
+
+**Nothing about the game got slower.** It was always 131 and 170; the gate was reading a scene with no level geometry
+in it and reporting a comfortable number about nothing.
+
 ## 2.63.0 — 2026-11-27
 
 **The shotgun read as a grey block.** The model was right — twin barrels, receiver, pump, wooden stock, bead sight — and

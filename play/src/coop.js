@@ -14,7 +14,7 @@
 
 import * as THREE from 'three';
 import { Player } from './player.js';
-import { humanoid } from './rig.js';
+import { humanoid, mergeJointMeshes } from './rig.js';
 import { Session } from './net.js';
 import { raycastWalls, floorHeightAt } from './level.js';
 
@@ -73,6 +73,9 @@ export class Coop {
       },
     });
     this.mesh = built.group;
+    // one mesh per joint instead of one per box: the peer cost 32 draw calls
+    // unmerged, which put a co-op level 9 at 202 against a budget of 200
+    mergeJointMeshes(this.mesh);
     // the joints the walk swings, from the same rig the NPC is built from
     this.joints = built.parts || {};
     this.stride = 0;

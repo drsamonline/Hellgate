@@ -2677,6 +2677,34 @@ console.log('\n== co-op on a map somebody painted ==');
   HG.enemies.clear();
 }
 
+console.log('\n== the peer is cheap to draw ==');
+{
+  // the peer cost 32 draw calls unmerged, which put a co-op level 9 at 202 against
+  // a budget of 200. mergeJointMeshes() is what the enemy bodies already do.
+  const { Coop } = await import('../play/src/coop.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const coop = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  let meshes = 0;
+  coop.mesh.traverse((o) => { if (o.isMesh) meshes++; });
+  // the same rig the enemies use: a body is a mesh per joint part, and
+  // mergeJointMeshes() folds the ones that share a material. The real budget is
+  // the draw-call gate (190 of 200 with a peer on level 9), not this number.
+  HG.enemies.clear();
+  HG.enemies.spawnAt('grunt', HG.level.spawn.x + 3, HG.level.spawn.z, 1);
+  const foe = HG.enemies.list[HG.enemies.list.length - 1];
+  let foeMeshes = 0;
+  foe.mesh.traverse((o) => { if (o.isMesh) foeMeshes++; });
+  ok(meshes <= foeMeshes + 6, 'the peer costs about what an enemy body costs (' + meshes + ' vs ' + foeMeshes + ')');
+  ok(!!coop.joints.legL, 'and the joints survived the merge');
+  HG.enemies.clear();
+  coop.dispose();
+}
+
 console.log('\n== the peer walks ==');
 {
   // a peer that slides reads as a bug however correct its position is

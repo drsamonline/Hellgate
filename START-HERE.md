@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.63.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.64.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,12 +36,12 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.63.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.64.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; eight static gates; smoke, flow, run, invariants |
 | Modules | 48 in `play/src/` |
-| Releases | 167, `v1.0.0` → `v2.63.0` |
-| Performance | 90 draw calls a frame at the median, 122 at the worst level, budget 200 — `node tools/drawcalls.mjs` |
+| Releases | 168, `v1.0.0` → `v2.64.0` |
+| Performance | **131** draw calls a frame at the median, **170** at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
 
 ## What shipped in this run
@@ -77,7 +77,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.22.0** | **"Some walls are pass through" — walked into 32 times, never reproduced** |
 | **2.23.0** | **The campaign has an end — CAMPAIGN COMPLETE, and the last button goes home** |
 | **2.24.0** | **Harden and ship: real screenshots, a working landing CTA, the flake killed, coarser grain** |
-| **2.25.0** | **Draw calls measured per level: median 90, worst 122, budget 200, in CI** |
+| **2.25.0** | **Draw calls measured per level, budget 200, in CI** (the numbers until 2.64.0 were of the wrong scene: median 90 was really 131) |
 | **2.26.0** | **The first five minutes, walked and asserted — harden-and-ship complete** |
 | **2.27.0** | **One boss per act — the warden, the cinder, the spine and the gate** |
 | **2.27.1** | **The four bosses are four fights, asserted by behaviour** |
@@ -117,6 +117,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.61.0** | **The peer survives a level change — and `HG.scene` is a live getter** |
 | **2.62.0** | **An audit pass — five defects, one dead end, one clipped screen** |
 | **2.63.0** | **The shotgun read as a grey block — the view was 1.02 m from a 0.34 m receiver** |
+| **2.64.0** | **The draw-call gate had measured the wrong scene for 39 releases — real numbers, and co-op measured** |
 
 ### 2.0.0 in detail
 

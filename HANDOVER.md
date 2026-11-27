@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.63.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.64.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.63.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 167, `v1.0.0` → `v2.63.0` |
+| Version | 2.64.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 168, `v1.0.0` → `v2.64.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -382,12 +382,15 @@ wiped by the next call.
 - **Wall-clock timings from this pod are about the renderer** (~1 fps), not the game. Drive `HG.update()` at a fixed
   step when the assertion is about behaviour.
 
-### Performance, and the gate that lied
+### Performance, and the two ways the gate lied
 
-- **`node tools/drawcalls.mjs`** measures `renderer.info.render.calls` per level in a real browser: median 90, worst
-  122 (level 3) with twenty bodies on the floor. Budget 200, enforced in CI.
+- **`node tools/drawcalls.mjs`** measures `renderer.info.render.calls` per level in a real browser: **median 131, worst
+  170** (level 9) with twenty bodies on the floor, and **190** with a co-op peer. Budget 200, enforced in CI.
 - **It has to be a browser.** The three.js double has no renderer, so a headless scene-graph count answered zero for
   every level and reported "ok every level is inside the budget" — a gate that passes because it measured nothing.
+- **And it measured the wrong scene until 2.64.0.** `window.HG.scene` was a snapshot taken at module load, so every
+  number from 2.25.0 to 2.63.0 was of a scene nobody renders — 77 calls against the real 170 on level 9. The 2.61.0
+  getter fixed the API; 2.64.0 corrected the numbers, the budget rationale and the docs that quoted them.
 
 ### Shippable, and the three things that were not
 
