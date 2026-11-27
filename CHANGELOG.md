@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.53.0 — 2026-11-27
+
+**#59 measured, and deferred with numbers.** The roadmap said "measure before committing". Measured.
+
+| Question | Answer |
+| --- | --- |
+| Is WebGPU a renderer swap? | **No.** The vendored three is **r187**, which ships its WebGPU backend as a *third* file (`three.webgpu.js`) that is not vendored here |
+| What breaks under `WebGPURenderer`? | the classic materials are not the path: **51** `MeshLambertMaterial`/`MeshBasicMaterial` constructions across `play/src/` each become a node material, and **3** hand-written `ShaderMaterial`s in `bloom.js` become TSL |
+| What else moves? | `renderer.info.render.calls`, which the draw-call gate reads, is a different shape there — the gate would need a rewrite to keep measuring the same thing |
+| What would it buy? | nothing measured: the game runs at **88 draw calls median, 115 worst**, against a budget of 200 |
+
+**Deferred, not rejected.** Three to five days of material work for a renderer the game does not need at this draw
+count. If a future level or effect pushes the count past 200, that is the signal to reopen it — with the number.
+
+**And the sweep that came first:** title, level 1, level 32 (boss) and `?coop=1` all load and play with no page
+errors, and the draw-call gate still passes across all 32 levels after seven co-op releases.
+
 ## 2.52.0 — 2026-11-27
 
 **A panel two people can use.** 2.51.0 built the wire; nothing carried the strings. Now there is a screen for it.
