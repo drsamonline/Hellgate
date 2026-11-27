@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.56.0 — 2026-11-27
+
+**The 12 m rule was flaky because it was broken.** `and none within 12 m of the spawn point` failed twice this month.
+Both times it was a real bug, not a flake.
+
+| What | Detail |
+| --- | --- |
+| the rule | nothing spawns within 12 m of the spawn point — a hard constraint |
+| the bug | the pool filter excluded cells whose **centre** was within 12 m. A body is jittered up to **0.3 m** and a brute is **0.78 m** wide, so part of a body could sit inside the rule |
+| the fix | a **1.4 m margin** on both exclusions in `spawnWave()` — the largest jitter plus the widest body |
+| the pool | still healthy: smallest is **154 cells** (level 24), and no level empties |
+| the test | now asserts the body **edge**, not only its centre: `distance − radius <= 12` must never happen |
+
+**The lesson, again:** a flaky assertion on a hard constraint is not a flake. Re-run once to rule out timing, and if it
+comes back, look at the code the assertion describes.
+
 ## 2.55.0 — 2026-11-27
 
 **A downed peer can be picked up.** The peer could die and then lay there for the rest of the run, which made dying

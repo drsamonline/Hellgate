@@ -506,6 +506,20 @@ console.log('\n== no enemy spawns in the start room ==');
   }
   ok(inSpawnRoom === 0, 'no enemy spawned in the start room across six waves (' + inSpawnRoom + ')');
   ok(tooClose === 0, 'and none within 12 m of the spawn point (' + tooClose + ')');
+  // and the body, not only its centre: a 0.78 m brute centred at 12.01 m has part
+  // of itself inside the rule. This is the assertion that was flaky until the
+  // filter grew a margin for the widest body plus the spawn jitter.
+  let edgeTooClose = 0;
+  for (let w = 1; w <= 6; w++) {
+    HG.enemies.clear();
+    HG.enemies.spawnWave(w, HG.player.pos, { waves: 99 });
+    frames(1);
+    for (const e of HG.enemies.list) {
+      const edge = Math.hypot(e.pos.x - lvl.spawn.x, e.pos.z - lvl.spawn.z) - (e.T.radius || 0);
+      if (edge <= 12) edgeTooClose++;
+    }
+  }
+  ok(edgeTooClose === 0, 'and no body edge inside 12 m either (' + edgeTooClose + ')');
   HG.enemies.clear();
   HG.enemies.spawnAt('imp', HG.player.pos.x + 20, HG.player.pos.z + 20, 1);
 }

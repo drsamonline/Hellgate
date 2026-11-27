@@ -1262,6 +1262,11 @@ export class EnemyManager {
   }
 
   spawnWave(wave, playerPos, opts = {}) {
+    // The rule is about a body, not about a cell centre: a cell at 12.01 m with a
+    // 0.3 m jitter and a 0.78 m brute puts part of a body inside 12 m. The margin
+    // is the largest jitter plus the widest body, so the rule holds for the thing
+    // that can shoot at you.
+    const MARGIN = 1.4;
     const diff = this.diff || { hp: 1, dmg: 1, count: 1 };
     const bossWave = !!opts.boss && wave >= (opts.waves || 3);
     const base = bossWave ? 3 : 4 + wave * 2;
@@ -1277,8 +1282,8 @@ export class EnemyManager {
       if (c.room === spawnRoom) return false;
       if (c.x === this.level.exit.cx && c.z === this.level.exit.cz) return false;
       const d = Math.hypot(c.wx - playerPos.x, c.wz - playerPos.z);
-      if (d <= 12) return false;
-      return Math.hypot(c.wx - spawnX, c.wz - spawnZ) > 12;
+      if (d <= 12 + MARGIN) return false;
+      return Math.hypot(c.wx - spawnX, c.wz - spawnZ) > 12 + MARGIN;
     });
     // The rule has no fallback. The pool used to fall back to every reachable
     // cell when the filter emptied — a small level, or a player standing in the

@@ -230,12 +230,15 @@ wiped by the next call.
 - **`audit-dead.mjs` understands `import * as`** now: a namespace import then `alias.name()` is a use. It reported
   four live exports as dead before that.
 
-### Observed once, not reproduced
+### The 12 m rule, and why it was flaky
 
-- **`and none within 12 m of the spawn point`** failed once on 2.38.0's tree and has not failed in ten runs since.
-  That is a hard constraint — nothing may spawn within 12 m — so if it ever fails twice in a row it is a real bug in
-  `spawnWave`'s pool, not a flake. Re-run before believing it; then look at the pool, not the test.
-- **`enemy owns cloned flash materials` / `enemy flashes white-hot on a hit`** failed once, same day, same pattern.
+- **`and none within 12 m of the spawn point`** failed twice, months apart, and it was a real bug both times: the pool
+  filter excluded cells whose *centre* was within 12 m, but the body is jittered up to 0.3 m and a brute is 0.78 m
+  wide, so part of a body could be inside the rule. The filter now uses a 1.4 m margin (`spawnWave`'s `MARGIN`), and
+  the suite asserts the body **edge**, not only its centre. Smallest pool after the margin: 154 cells, level 24; no
+  level empties.
+- **`enemy owns cloned flash materials` / `enemy flashes white-hot on a hit`** failed once, 2026-11-26, and has not
+  repeated. Re-run before believing it.
 
 ### The editor
 
