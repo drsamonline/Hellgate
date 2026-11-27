@@ -120,8 +120,13 @@ for (let wave = 1; wave <= 8; wave++) {
 // A campaign level is one wave, so wave 1 is the whole fight. This is the number
 // that decides whether an act is hard or broken: how many hits kill a full-health
 // player, and how much the first wave of the act can land on you standing still.
-if (process.argv[2] === 'acts' || !zoneArg) {
+// `node tools/balance-report.mjs check` is the gate: the ladder's shape, not its
+// numbers. An act that lands more than 2.5x what the act before it lands is a wall,
+// and act 4 was 4.4x until 2.68.0.
+const CHECK = process.argv[2] === 'check';
+if (CHECK || process.argv[2] === 'acts' || !zoneArg) {
   const PLAYER_HP = 110;
+  const ladder = [];
   console.log('the ladder — the first wave of each act\n');
   const { ROSTER_FOR_ACT } = await import('../play/src/story-levels.js');
   console.log('act  level  zone        enemies  wave hp  seconds  incoming dps  hp lost standing still');
@@ -147,11 +152,32 @@ if (process.argv[2] === 'acts' || !zoneArg) {
     const secs2 = waveHp / dps(weapon('shotgun'));
     const meanDps = roster.reduce((a, t) => a + TYPES[t].damage / TYPES[t].attackCd, 0) / roster.length;
     const inDps = n * meanDps * d.dmg;
+    const hpLost = Math.round(inDps * secs2);
+    ladder.push({ act, hpLost });
     console.log(
       String(act).padEnd(5) + String(row.n).padEnd(7) + String(row.zone).padEnd(12) +
       String(n).padEnd(9) + String(Math.round(waveHp)).padEnd(9) + secs2.toFixed(1).padEnd(9) +
-      String(Math.round(inDps)).padEnd(14) + Math.round(inDps * secs2)
+      String(Math.round(inDps)).padEnd(14) + hpLost
     );
+  }
+  if (CHECK) {
+    // the step between acts: each may be harder, none may be a wall
+    // the first step is the tutorial ramp and is allowed to be steeper: act 1 is
+    // five imps and act 2 is the first real wave
+    const MAX_STEP = 2.5;
+    const MAX_FIRST = 3.2;
+    let bad = 0;
+    for (let i = 1; i < ladder.length; i++) {
+      const limit = i === 1 ? MAX_FIRST : MAX_STEP;
+      const step = ladder[i].hpLost / ladder[i - 1].hpLost;
+      if (step > limit) {
+        console.log(`\nFAIL act ${ladder[i].act} lands ${step.toFixed(1)}x what act ${ladder[i - 1].act} lands`
+          + ` (${ladder[i - 1].hpLost} -> ${ladder[i].hpLost}); the limit is ${limit}x`);
+        bad++;
+      }
+    }
+    console.log(bad ? `\n${bad} act step(s) over the limit` : `\nladder ok: every act step is under ${MAX_STEP}x, the first under ${MAX_FIRST}x`);
+    process.exit(bad ? 1 : 0);
   }
   console.log('\n  "seconds" is a shotgun at its own rate of fire against the wave\'s whole health.');
   console.log('  "hp lost standing still" is every body in the wave landing every hit while you do');

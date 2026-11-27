@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.69.0 — 2026-11-27
+
+**The fix from 2.68.0 is a gate now.** `balance-report.mjs` gained a `check` mode, and it runs in CI beside the suites:
+no act may land more than **2.5×** what the act before it lands, and the first step — the tutorial ramp — is allowed
+**3.2×**.
+
+| | |
+| --- | --- |
+| the rule | arithmetic over `play/src`, no browser, about a second |
+| the first step | act 1 is five imps and act 2 is the first real wave, so it is allowed to be steeper |
+| proved | with act 4 back at 1.8 the gate exits 1: *"act 4 lands 4.4x what act 3 lands (315 -> 1389)"*; at 1.55 it exits 0 |
+| the docs | `HANDOVER.md` lists it under a new **Arithmetic gates** row |
+
+**Why it belongs in CI and the act-shape test does not:** the test reads `ACT_THREAT`, which is the knob. The gate
+reads the *measured* ladder, which is what a player meets — and it moves when a roster changes, not only when a
+multiplier does.
+
 ## 2.68.0 — 2026-11-27
 
 **Act 4 was a wall, and the arithmetic said so.** `tools/balance-report.mjs` measured the act ladder — the hp a player

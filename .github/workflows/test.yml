@@ -73,6 +73,11 @@ jobs:
 
       # The suites stub the browser. This is the only step that proves the real
       # pages load, resolve the import map and reach a playable state.
+      # Arithmetic, no browser: the act ladder may be steep, but no act may land
+      # more than 2.5x what the act before it lands. Act 4 was 4.4x until 2.68.0.
+      - name: No act is a wall
+        run: node tools/balance-report.mjs check
+
       - name: Browser smoke test
         run: node tools/smoke.mjs
 

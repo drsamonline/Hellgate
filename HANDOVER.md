@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.68.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.69.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,11 +24,12 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.68.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 173, `v1.0.0` → `v2.68.0` |
+| Version | 2.69.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 174, `v1.0.0` → `v2.69.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
+| Arithmetic gates | `balance-report.mjs check` — no act lands more than 2.5x the act before it (in CI) |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
@@ -169,6 +170,9 @@ wiped by the next call.
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
 
 ### The act ladder is arithmetic
+
+- **`node tools/balance-report.mjs check`** is the gate: no act may land more than 2.5x the act before it (3.2x for the
+  tutorial ramp). It reads the measured ladder, not `ACT_THREAT`, so a roster change moves it too.
 
 - **`node tools/balance-report.mjs`** prints hp lost standing still per act. Act 4 was **1389** against act 3's 315 —
   4.4× where the acts before were 2.7× and 1.9× — because threat rose 29% *and* the roster widened to seven types.

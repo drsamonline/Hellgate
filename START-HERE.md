@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.68.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.69.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.68.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.69.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | 1391 playability (all 32 levels) + 764 in the other three suites; eight static gates; smoke, flow, run, invariants |
 | Modules | 48 in `play/src/` |
-| Releases | 173, `v1.0.0` → `v2.68.0` |
+| Releases | 174, `v1.0.0` → `v2.69.0` |
 | Performance | **131** draw calls a frame at the median, **170** at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
 
@@ -123,6 +123,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.66.1** | **The new CI steps hard-coded this machine's Chromium — they read `CHROME_PATH` now** |
 | **2.67.0** | **A downed peer stops walking — and lies over** |
 | **2.68.0** | **Act 4 was a wall — 4.4× the act before it, now 2.2×** |
+| **2.69.0** | **No act is a wall — the balance check runs in CI** |
 
 ### 2.0.0 in detail
 
