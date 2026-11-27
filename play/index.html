@@ -535,6 +535,11 @@
     text-shadow:0 2px 6px #000;pointer-events:none;
   }
   #coop:empty{display:none}
+  #coopPaste,#coopOut{
+    width:min(560px,84vw);background:rgba(255,255,255,.04);color:var(--ink);
+    border:1px solid var(--amber-faint);border-radius:var(--r);padding:8px 10px;
+    font:inherit;font-size:10px;letter-spacing:.06em;resize:vertical;
+  }
   #editorCanvas{
     width:min(384px,80vw);height:auto;image-rendering:pixelated;
     border:1px solid var(--amber-faint);border-radius:var(--r);background:#07070a;
@@ -690,6 +695,7 @@
         <button id="levelSelectBtn" class="ghost">Levels</button>
         <button id="watchBtn" class="ghost">Watch a replay</button>
         <input id="replayFile" type="file" accept=".json,application/json" style="display:none" />
+        <button id="coopBtnTitle" class="ghost">Co-op</button>
         <button id="editorBtnTitle" class="ghost">Editor</button>
         <button id="controlsBtnTitle" class="ghost">Controls</button>
         <button id="settingsBtnTitle" class="ghost">Settings</button>
@@ -720,6 +726,24 @@
       <h2>STATUS</h2>
       <p class="sub">tab or esc to close</p>
       <div id="invBody" class="invgrid"></div>
+    </section>
+
+    <section id="coopscreen" class="screen">
+      <button id="coopClose" class="panelclose" aria-label="close">×</button>
+      <h2>CO-OP</h2>
+      <p class="sub">two machines · no server · two pastes</p>
+      <div class="row">
+        <button id="coopHost">Host · make an offer</button>
+        <button id="coopJoin" class="ghost">Join · paste an offer</button>
+      </div>
+      <textarea id="coopPaste" rows="3" placeholder="paste what they sent you" spellcheck="false"></textarea>
+      <div class="row">
+        <button id="coopConnect" class="ghost">Connect</button>
+        <button id="coopCopy" class="ghost">Copy</button>
+        <button id="coopStart" class="ghost">Start the run</button>
+      </div>
+      <textarea id="coopOut" rows="3" readonly placeholder="what to send back"></textarea>
+      <p id="coopState" class="sub"></p>
     </section>
 
     <section id="editor" class="screen">

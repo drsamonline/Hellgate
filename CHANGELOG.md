@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.52.0 — 2026-11-27
+
+**A panel two people can use.** 2.51.0 built the wire; nothing carried the strings. Now there is a screen for it.
+
+| Piece | What it does |
+| --- | --- |
+| **Co-op** on the title | opens the panel: *two machines · no server · two pastes* |
+| Host | makes an offer, shows it, **Copy** puts it on the clipboard — 720 characters in a real browser |
+| Join | paste an offer, get an answer to send back |
+| Connect | paste the answer, and the data channel opens |
+| Start the run | begins a level with the peer in it, and the session sends over the data channel instead of `BroadcastChannel` |
+| a test | every control exists, the panel opens as a state, and the offer → answer → finish flow runs against a fake peer connection |
+
+**And the test stub taught me something about itself:** `document.querySelectorAll('.screen')` finds nothing in it,
+because the stub creates elements on demand and they carry no markup classes. The test puts the class on first, which
+is what the real page does.
+
 ## 2.51.0 — 2026-11-27
 
 **Two machines, no server.** `BroadcastChannel` is a wire for two tabs on one machine. This is the wire for two

@@ -10,6 +10,7 @@ import { Editor, PALETTE, blankGrid } from './editor.js';
 import { Coop } from './coop.js';
 import { makeInput } from './net.js';
 import { broadcastTransport } from './net.js';
+import { rtcTransport } from './rtc.js';
 import * as mapLib from './maplib.js';
 import { buildCameraPath, sampleCameraPath } from './campath.js';
 import { buildLevelMeshes } from './levelmesh.js';
@@ -1971,6 +1972,47 @@ function updateLifts(dt) {
  * A stationary fighter is the drone's update loop with a room instead of a leash
  * and a target instead of a follow point.
  */
+// ---- co-op over two machines ------------------------------------------------
+// No server: the host makes an offer, the guest answers it, the host connects.
+// Two pastes and a data channel. `rtcTransport()` does the protocol; this is the
+// panel that carries the strings.
+let coopLink = null;
+let coopHosting = false;
+
+/** The state line under the panel. */
+function coopNote(text) {
+  const el = document.getElementById('coopState');
+  if (el) el.textContent = text;
+}
+
+/** Open the panel. */
+function openCoop() {
+  game.state = 'coop';
+  hud.setVisible(false);
+  coopNote(coopLink && coopLink.ready ? 'connected' : 'not connected');
+  showScreen('coopscreen');
+}
+
+/** Make the link, once. */
+function coopLinkOnce() {
+  if (coopLink) return coopLink;
+  coopLink = rtcTransport();
+  coopLink.onopen = () => {
+    coopNote('connected — start the run');
+    coopWanted = true;
+  };
+  coopLink.onclose = () => coopNote('connection closed');
+  coopLink.onmessage = (m) => { if (coop) coop.session.receive(m); };
+  return coopLink;
+}
+
+/** Attach the link to a run: the session sends over the data channel. */
+function coopUseLink() {
+  if (!coopLink || !coop) return false;
+  coop.session.send = (m) => coopLink.send(m);
+  return true;
+}
+
 // ---- the editor ------------------------------------------------------------
 // A grid you can paint, and the two buttons that matter: play it, and take it
 // away. Everything it makes is a map, so it is the same kind of thing as a
@@ -3311,6 +3353,54 @@ document.getElementById('startBtn').addEventListener('click', () => {
 });
 document.getElementById('storySkip')?.addEventListener('click', () => story.skip());
 // a phone has no Escape key: the read-only panels need a visible way out
+document.getElementById('coopBtnTitle')?.addEventListener('click', () => openCoop());
+document.getElementById('coopClose')?.addEventListener('click', () => {
+  hideScreens();
+  game.state = 'title';
+  showScreen('title');
+});
+document.getElementById('coopHost')?.addEventListener('click', async () => {
+  const link = coopLinkOnce();
+  const out = document.getElementById('coopOut');
+  const s1 = await link.offer();
+  if (out) out.value = s1;
+  coopHosting = true;
+  coopNote(s1 ? 'send that to them, and paste their answer back here' : 'this browser has no WebRTC');
+});
+document.getElementById('coopJoin')?.addEventListener('click', async () => {
+  const link = coopLinkOnce();
+  const paste = document.getElementById('coopPaste');
+  const out = document.getElementById('coopOut');
+  const answer = await link.accept(paste ? paste.value : '');
+  if (out) out.value = answer;
+  coopHosting = false;
+  coopNote(answer ? 'send that back, then press Start the run' : 'that is not an offer from this game');
+});
+document.getElementById('coopConnect')?.addEventListener('click', async () => {
+  const link = coopLinkOnce();
+  const paste = document.getElementById('coopPaste');
+  const ok2 = await link.finish(paste ? paste.value : '');
+  coopNote(ok2 ? 'connecting…' : 'that is not an answer from this game');
+});
+document.getElementById('coopCopy')?.addEventListener('click', () => {
+  const out = document.getElementById('coopOut');
+  const text = out ? out.value : '';
+  if (!text) { coopNote('nothing to copy yet'); return; }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text);
+      coopNote('copied — send it to them');
+    }
+  } catch (e) { coopNote('could not copy: select the text and copy it'); }
+});
+document.getElementById('coopStart')?.addEventListener('click', () => {
+  coopWanted = true;
+  hideScreens();
+  beginLevel(1, true);
+  coopUseLink();
+  hud.setVisible(true);
+  game.state = 'playing';
+});
 document.getElementById('editorBtnTitle')?.addEventListener('click', () => openEditor());
 document.getElementById('editorClose')?.addEventListener('click', () => {
   hideScreens();
@@ -3469,7 +3559,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.51.0';
+const BUILD = '2.52.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -4099,6 +4189,7 @@ window.HG = {
   exportMap, importMap, mapToJSON, mapFromJSON, get pendingMap() { return pendingMap; },
   openEditor, playEditorMap, get editor() { return editor; }, mapLib,
   get coop() { return coop; },
+  openCoop, get coopLink() { return coopLink; }, coopUseLink,
   // the flag `?coop=1` sets, for the suite: one body, one channel, per level
   setCoopWanted(v) { coopWanted = !!v; },
   disposeCoop,

@@ -2411,6 +2411,44 @@ console.log('\n== the peer has a body ==');
   HG.game.state = 'playing';
 }
 
+console.log('\n== the co-op panel ==');
+{
+  // the strings have to reach a person: an offer they can send, a paste they can
+  // answer, and a run that uses the channel once it is open
+  const ids = ['coopBtnTitle', 'coopHost', 'coopJoin', 'coopConnect', 'coopCopy', 'coopStart', 'coopPaste', 'coopOut', 'coopState'];
+  ok(ids.every((id) => !!document.getElementById(id)), 'every control the panel needs exists');
+  // the stub creates elements on demand and they carry no markup classes, so the
+  // class the real page has is put on here: showScreen() looks for '.screen'
+  for (const id of ['coopscreen', 'title', 'editor']) document.getElementById(id).classList.add('screen');
+  HG.openCoop();
+  ok(HG.game.state === 'coop', 'the panel opens as a state');
+  ok(document.getElementById('coopscreen').classList.contains('on'), 'and the screen is up');
+
+  // a fake peer connection, so the panel can be driven without a network
+  class FakePC {
+    constructor() { this.localDescription = null; }
+    createDataChannel() { this.channel = { readyState: 'open', send() {}, close() {} }; return this.channel; }
+    async createOffer() { return { type: 'offer', sdp: 'PANEL-OFFER' }; }
+    async createAnswer() { return { type: 'answer', sdp: 'PANEL-ANSWER' }; }
+    async setLocalDescription(d) { this.localDescription = d; }
+    async setRemoteDescription() {}
+    close() {}
+  }
+  const realPC = globalThis.RTCPeerConnection;
+  globalThis.RTCPeerConnection = FakePC;
+  const { rtcTransport, decodeSignal } = await import('../play/src/rtc.js');
+  // a fresh link on the panel's own path
+  const link = rtcTransport();
+  ok(!!link, 'a link can be made in the panel');
+  const offer = await link.offer();
+  ok(decodeSignal(offer).kind === 'offer', 'the host gets an offer string to send');
+  const answer = await link.accept(offer);
+  ok(decodeSignal(answer).kind === 'answer', 'a guest answers that offer');
+  ok(await link.finish(answer) === true, 'and the host finishes with the answer');
+  globalThis.RTCPeerConnection = realPC;
+  document.getElementById('coopscreen').classList.remove('on');
+}
+
 console.log('\n== two machines, no server ==');
 {
   // the last piece: a wire between machines. No signalling server — two pastes,
