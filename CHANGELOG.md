@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.59.0 — 2026-11-27
+
+**Co-op on a map somebody painted.** Three features built in different weeks, exercised together for the first time: a
+painted map, the bodies placed in it, and a second player in the same room.
+
+| Asserted | Result |
+| --- | --- |
+| the level is the painted map | `coop yard` |
+| the spawn is the one that was placed | `6,6` |
+| the two bodies that were placed, and no roster | `hound,imp` |
+| the peer is in the room, near the spawn | ✓ |
+| its health is on the HUD | `PEER 110 / 110` |
+| **its shot lands on a body that was painted in** | `37 -> 26` |
+
+**One thing this caught:** my first version aimed the peer with `yaw = π` at a body in front of it. `yaw 0` looks down
+`-z`; `π` looks down `+z`. The shot went the other way, which is a test bug — but it is the same sign error that
+would have shipped a peer that shoots backwards.
+
 ## 2.58.0 — 2026-11-27
 
 **The peer's shot is visible.** It damaged what it hit and made a sound, and nothing on screen said a shot had

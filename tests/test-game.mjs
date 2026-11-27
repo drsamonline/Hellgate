@@ -2592,6 +2592,52 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== co-op on a map somebody painted ==');
+{
+  // three features that were built separately, together: a painted map, the
+  // bodies placed in it, and a second player in the same room
+  const { Editor } = await import('../play/src/editor.js');
+  const ed = new Editor(document.getElementById('editorCanvas'));
+  ed.load(null);
+  ed.name = 'coop yard';
+  ed.paint(4, 4, 'X');
+  ed.paint(6, 6, 'i');
+  ed.paint(8, 6, 'h');
+  ed.paint(3, 3, '@');
+
+  HG.setPendingMap(ed.toMap());
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+
+  ok(HG.level.mapName === 'coop yard', 'the level is the painted map (' + HG.level.mapName + ')');
+  ok(HG.level.spawn.x === 6 && HG.level.spawn.z === 6, 'the spawn is the one that was placed (' + HG.level.spawn.x + ',' + HG.level.spawn.z + ')');
+  ok(HG.enemies.list.length === 2, 'the two bodies that were placed, and no roster (' + HG.enemies.list.length + ')');
+  const types = HG.enemies.list.map((e) => e.type).sort().join(',');
+  ok(types === 'hound,imp', 'of the types placed: ' + types);
+  ok(!!HG.coop, 'and the peer is in the room');
+  ok(HG.coop && Math.abs(HG.coop.pos.x - HG.level.spawn.x) < 4, 'near the spawn');
+  frames(2);
+  ok(/PEER 110 \/ 110/.test(document.getElementById('coop').textContent || ''),
+    'with its health on the HUD: ' + (document.getElementById('coop').textContent || ''));
+  // and it can shoot the placed bodies
+  const target = HG.enemies.list[0];
+  // yaw 0 looks down -z, so a peer at z + 2.5 faces the body at z
+  HG.coop.body.pos.set(target.pos.x, target.pos.y, target.pos.z + 2.5);
+  HG.coop.body.yaw = 0;
+  HG.coop.fireCd = 0;
+  const hp0 = target.hp;
+  HG.coop.shoot({ enemies: HG.enemies, effects: HG.effects, audio: HG.audio, hud: HG.hud, camera: HG.camera, level: HG.level });
+  ok(target.hp < hp0, 'and its shot lands on a body that was painted in (' + hp0 + ' -> ' + target.hp + ')');
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== the peer walks ==');
 {
   // a peer that slides reads as a bug however correct its position is
