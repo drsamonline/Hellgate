@@ -2411,6 +2411,59 @@ console.log('\n== the peer has a body ==');
   HG.game.state = 'playing';
 }
 
+console.log('\n== two runs of the same seed are the same run ==');
+{
+  // the property co-op and every replay rest on: a seed and a list of inputs
+  // decide the run, with no state carried over from the run before it. The RNG is
+  // a module global, so this is exactly where a leak would live.
+  const { seedSim, simRand, simDraws } = await import('../play/src/simrng.js');
+  const { generateLevel } = await import('../play/src/level.js');
+  const { stateHash } = await import('../play/src/replay.js');
+  const { Player } = await import('../play/src/player.js');
+  const THREE = await import('three');
+
+  // a scripted input: forward for thirty frames, then strafe, then stop
+  const script = [];
+  for (let i = 0; i < 90; i++) {
+    const keys = i < 30 ? { KeyW: true } : i < 60 ? { KeyD: true } : {};
+    script.push({ keys, look: { x: 0.4, y: 0 }, move: null });
+  }
+
+  const runOnce = (seed) => {
+    seedSim(seed);
+    const level = generateLevel(seed);
+    const cam = new THREE.PerspectiveCamera(76, 1, 0.05, 90);
+    const p = new Player(cam);
+    p.pos.set(level.spawn.x, 0, level.spawn.z);
+    p.pos.y = HG.floorHeightAt(level, p.pos.x, p.pos.z);
+    // stateHash reads relics and coins, so the stand-in run has to have them
+    const game = { score: 0, kills: 0, wave: 1, exitOpen: false, relics: [], coins: 0 };
+    const enemies = { list: [], aliveCount: 0 };
+    for (const input of script) p.update(1 / 60, input, level);
+    // and the run's own randomness, drawn the way a wave would draw it
+    const draws = [];
+    for (let i = 0; i < 20; i++) draws.push(simRand().toFixed(6));
+    return {
+      hash: stateHash(game, p, enemies),
+      draws,
+      n: simDraws(),
+      pos: [p.pos.x.toFixed(3), p.pos.z.toFixed(3)].join(','),
+    };
+  };
+
+  const a = runOnce('coop-determinism');
+  const b = runOnce('coop-determinism');
+  ok(a.hash === b.hash, 'the same seed and inputs give the same state hash');
+  ok(a.pos === b.pos, 'the same position, to a millimetre (' + a.pos + ')');
+  ok(a.draws.join() === b.draws.join(), 'and the same twenty random numbers');
+  ok(a.n === b.n, 'having drawn the same number of them (' + a.n + ')');
+
+  // a different seed is a different run: the test is not comparing a constant
+  const c = runOnce('another-seed');
+  ok(c.hash !== a.hash || c.pos !== a.pos || c.draws.join() !== a.draws.join(),
+    'and another seed is another run');
+}
+
 console.log('\n== the co-op panel ==');
 {
   // the strings have to reach a person: an offer they can send, a paste they can

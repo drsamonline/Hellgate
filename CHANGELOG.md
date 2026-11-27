@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.54.0 — 2026-11-27
+
+**Two runs of the same seed are the same run — asserted.** Co-op and every replay rest on that sentence, and nothing
+had ever tested it end to end: the RNG is a module global, so a run that leaves it dirty changes the next one.
+
+| What is asserted | How |
+| --- | --- |
+| the same seed and inputs give the same state hash | a scripted 90-frame input (forward, then strafe, then stop) through `Player.update()` on a level built from the seed |
+| the same position, to a millimetre | `22.561,11.410` both times |
+| the same twenty random numbers | drawn the way a wave would draw them, compared digit for digit |
+| and the same number of draws | `simDraws()` |
+| another seed is another run | so the test is not comparing a constant |
+
+**What this would have caught:** any `simRand()` drawn from a stream left over from the previous run — the exact
+failure mode that makes two machines drift apart while both look correct locally.
+
 ## 2.53.0 — 2026-11-27
 
 **#59 measured, and deferred with numbers.** The roadmap said "measure before committing". Measured.
