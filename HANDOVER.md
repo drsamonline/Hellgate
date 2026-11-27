@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.62.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.63.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.62.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 166, `v1.0.0` → `v2.62.0` |
+| Version | 2.63.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 167, `v1.0.0` → `v2.63.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | `smoke`, `audit-run`, `audit-flow`, `audit-invariants`, `soak` |
@@ -135,6 +135,11 @@ Four separate bugs in this project came from **one value written in two places t
 **The rule**: `recomputeStats()` is a pure derivation from class + upgrades + trinkets + story flags. It is
 idempotent and it is the only place stats are computed. Anything that "adjusts" a stat afterwards will be
 wiped by the next call.
+
+### Viewmodels: distance is the whole trick
+
+- **A view model is read by its silhouette**, and a long receiver at 1 m from the eye reads as a rectangle. The
+  shotgun sits at `z −1.34 · yaw −0.24` now; the pistol and rocket were already further out.
 
 ### Audit findings, 2.62.0
 

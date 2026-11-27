@@ -41,7 +41,10 @@ export const WEAPONS = [
 // a little yaw shows the side of the thing, which is how a view model reads.
 const VIEW = {
   pistol: { x: 0.30, y: -0.26, z: -1.00, yaw: -0.10, scale: 0.82 },
-  shotgun: { x: 0.32, y: -0.26, z: -1.02, yaw: -0.10, scale: 0.82 },
+  // the shotgun's receiver is 0.34 m deep and the camera was 1.02 m from it, so
+  // the receiver filled the corner and the twin barrels read as one grey block.
+  // Further back, lower, and yawed so the barrels are seen along their length.
+  shotgun: { x: 0.34, y: -0.32, z: -1.34, yaw: -0.24, scale: 0.80 },
   rocket: { x: 0.34, y: -0.24, z: -1.06, yaw: -0.14, scale: 0.80 },
   chaingun: { x: 0.38, y: -0.30, z: -1.12, yaw: -0.22, scale: 0.78 },
 };

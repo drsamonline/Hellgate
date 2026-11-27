@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.63.0 — 2026-11-27
+
+**The shotgun read as a grey block.** The model was right — twin barrels, receiver, pump, wooden stock, bead sight — and
+the camera was 1.02 m from a receiver 0.34 m deep, so the receiver filled the corner and the barrels were seen end-on.
+
+| | Before | After |
+| --- | --- | --- |
+| view | `z −1.02 · yaw −0.10 · scale 0.82` | `z −1.34 · yaw −0.24 · scale 0.80` |
+| what you see | one grey rectangle, barrels invisible | the barrels along their length, the bead, the pump |
+
+**The rest of the audit, in the same release:** the invariants gate ran over eight targets locally (gate, kiln, cistern,
+levels 1, 9, 17, 25 and 8 with the warden) — nine checks each, no NaN, no leak, nothing under the floor — before the
+local Chromium gave out under SwiftShader, which is the known limit here. CI runs the same gate on a real Chrome and is
+green.
+
 ## 2.62.0 — 2026-11-27
 
 **An audit pass: five defects, one dead end, one clipped screen.** Nothing was added. Everything below was already
