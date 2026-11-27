@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.60.0 — 2026-11-27
+
+**The front page caught up with the game.** Two months of work were invisible to anyone who had not been following the
+releases: the landing page still described waves, a keycard and five cards of combat, and said nothing about 32 levels,
+four bosses, the editor, or co-op.
+
+| Card added | Says |
+| --- | --- |
+| 32 LEVELS · Four acts, four bosses | the warden, the cinder, the spine and the gate — and each level states what ends it |
+| BUILD ONE · Level editor | paint a grid, set heights, place the spawn, the bodies and the objective, play it or send it as a link |
+| TWO PLAYERS · Co-op, no server | lockstep: a frame plays when both players' input is in; two pastes to connect |
+| the heading | `Clear the wave, open the exit` was one of four objectives — now `Every level says how it ends` |
+
+**Why it matters:** `check-claims.js` keeps the page honest about numbers, but nothing keeps it honest about *scope*.
+Three features shipped this month and the page did not mention one of them.
+
 ## 2.59.0 — 2026-11-27
 
 **Co-op on a map somebody painted.** Three features built in different weeks, exercised together for the first time: a
