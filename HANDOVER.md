@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.66.0**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.66.1**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.66.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 170, `v1.0.0` → `v2.66.0` |
+| Version | 2.66.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 171, `v1.0.0` → `v2.66.1` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -383,6 +383,9 @@ wiped by the next call.
   step when the assertion is about behaviour.
 
 ### A gate that is not run is not a gate
+
+- **A browser gate must read `CHROME_PATH`.** `audit-flow` and `audit-run` hard-coded `/usr/local/bin/chromium` and
+  failed on the CI runner the first time they ran there.
 
 - **`audit-flow` and `audit-run` were written and never wired into CI.** Both had rotted: `audit-flow` asserted a 1.x
   build number against a 2.x game, and read the cleared screen's choice cards on the frame `zoneCleared()` returns,

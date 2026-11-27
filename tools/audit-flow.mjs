@@ -26,7 +26,11 @@ const server = http.createServer((q, r) => {
 await new Promise((r) => server.listen(9301, '127.0.0.1', r));
 
 const browser = await puppeteer.launch({
-  executablePath: '/usr/local/bin/chromium',
+  // CHROME_PATH first, then the usual places: this was hard-coded to this
+  // machine's Chromium and threw "Browser was not found" on the CI runner the
+  // first time it ran there
+  executablePath: process.env.CHROME_PATH
+    || ['/usr/local/bin/chromium', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p)),
   headless: 'new',
   args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
   timeout: 60000,

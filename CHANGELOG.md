@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.66.1 — 2026-11-27
+
+**The new CI steps failed on their first run, for a reason worth keeping.** Both gates hard-coded
+`executablePath: '/usr/local/bin/chromium'` — this machine's browser. On the runner the file does not exist, and the job
+died with *"Browser was not found at the configured executablePath"*.
+
+| Piece | What it does |
+| --- | --- |
+| `audit-flow`, `audit-run` | read `CHROME_PATH` first, then look in the three usual places — the pattern `smoke.mjs` and `drawcalls.mjs` already used |
+| the reason | a gate that works only on the machine it was written on is not a gate; it is a note to self |
+
+Both pass locally after the change: **13 journey steps**, and **every zone and mode**.
+
 ## 2.66.0 — 2026-11-27
 
 **Two gates nobody ran had rotted, and now they run in CI.** `audit-flow` (the journey: title → intro → class → play →
