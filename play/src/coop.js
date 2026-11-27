@@ -99,6 +99,13 @@ export class Coop {
    */
   step(dt, input, ctx = null) {
     if (!input) { this.starved++; return false; }
+    // a downed peer does not walk, shoot or keep its feet: it was still being
+    // driven by the peer's input after it died, so a dead body strolled around
+    if (!this.alive) {
+      this.mesh.position.set(this.body.pos.x, this.body.pos.y, this.body.pos.z);
+      this.frames++;
+      return false;
+    }
     this.fireCd = Math.max(0, this.fireCd - dt);
     this.body.update(dt, input, this.level);
     // the legs walk when the body does: a peer that slides is a peer that reads
@@ -178,6 +185,7 @@ export class Coop {
     if (this.hp <= 0) {
       this.alive = false;
       this.downedAt = this.frames;
+      this.slump();
     }
     return n;
   }
@@ -200,7 +208,20 @@ export class Coop {
     this.alive = true;
     this.hp = REVIVE_HP;
     this.downedAt = -1;
+    this.standUp();
     return true;
+  }
+
+  /** Lie the body down: a peer at zero health that stands up straight reads as a bug. */
+  slump() {
+    this.mesh.rotation.z = Math.PI / 2.2;
+    this.mesh.position.y = this.body.pos.y + 0.3;
+  }
+
+  /** And stand it up again. */
+  standUp() {
+    this.mesh.rotation.z = 0;
+    this.mesh.position.y = this.body.pos.y;
   }
 
   /** Where the peer is, for a HUD or a test. */

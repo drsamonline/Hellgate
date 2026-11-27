@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.66.1**, 2026-11-27.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.67.0**, 2026-11-27.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.66.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 171, `v1.0.0` → `v2.66.1` |
+| Version | 2.67.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 172, `v1.0.0` → `v2.67.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -167,6 +167,11 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### Down is a state, not a health value
+
+- **`Coop.step()` returns early while the peer is down**: it was still being driven by the peer's input after death, so
+  a corpse walked around the arena. `slump()` lays the mesh over; `revive()` stands it back up.
 
 ### The peer's walk
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.67.0 — 2026-11-27
+
+**A downed peer stops walking.** It was still driven by the peer's input after it died, so a dead body strolled around
+the arena and the player had to chase a corpse to revive it.
+
+| Piece | What it does |
+| --- | --- |
+| down | `step()` returns early while the peer is down: no walk, no shoot, no feet |
+| the body | it **lies over** (`rotation.z` 1.43 rad, lifted 0.3 m) — a peer at zero health standing up straight reads as a bug |
+| up | a revive stands it back up before it takes a step |
+| a test | alive it walks 0.59 m · down it lies over · **thirty frames of the peer's own input move it zero** · a downed peer reports no step · revived it stands, holds 55 hp, and walks again |
+
 ## 2.66.1 — 2026-11-27
 
 **The new CI steps failed on their first run, for a reason worth keeping.** Both gates hard-coded

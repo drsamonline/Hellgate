@@ -2677,6 +2677,45 @@ console.log('\n== co-op on a map somebody painted ==');
   HG.enemies.clear();
 }
 
+console.log('\n== a downed peer stops ==');
+{
+  // it was still driven by the peer's input after it died, so a dead body walked
+  // around the arena
+  const { Coop, PEER_HP, REVIVE_HP } = await import('../play/src/coop.js');
+  const { makeInput } = await import('../play/src/net.js');
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const coop = new Coop({ scene: HG.scene, level: HG.level, player: 1 });
+  coop.body.pos.set(HG.level.spawn.x, HG.floorHeightAt(HG.level, HG.level.spawn.x, HG.level.spawn.z), HG.level.spawn.z);
+  const forward = makeInput({ KeyW: true });
+  for (let i = 0; i < 10; i++) coop.step(1 / 60, forward, null);
+  const walked = Math.hypot(coop.pos.x - HG.level.spawn.x, coop.pos.z - HG.level.spawn.z);
+  ok(walked > 0.2, 'alive, it walks (' + walked.toFixed(2) + ' m)');
+
+  coop.damage(PEER_HP * 2);
+  const at = { x: coop.pos.x, z: coop.pos.z };
+  ok(coop.mesh.rotation.z > 0.5, 'down, it lies over (' + coop.mesh.rotation.z.toFixed(2) + ' rad)');
+  for (let i = 0; i < 30; i++) coop.step(1 / 60, forward, null);
+  ok(Math.abs(coop.pos.x - at.x) < 1e-6 && Math.abs(coop.pos.z - at.z) < 1e-6,
+    'and the peer\'s input no longer moves it');
+  ok(coop.step(1 / 60, forward, null) === false, 'a downed peer reports no step');
+
+  // revived, it stands up and walks again
+  ok(coop.revive(coop.pos.x + 0.4, coop.pos.z) === true, 'revive works');
+  ok(Math.abs(coop.mesh.rotation.z) < 1e-6, 'and it stands up (' + coop.mesh.rotation.z + ')');
+  ok(coop.hp === REVIVE_HP, 'at half health');
+  const x0 = coop.pos.x, z0 = coop.pos.z;
+  for (let i = 0; i < 20; i++) coop.step(1 / 60, forward, null);
+  ok(Math.hypot(coop.pos.x - x0, coop.pos.z - z0) > 0.2, 'and walks again');
+  coop.dispose();
+  HG.enemies.clear();
+}
+
 console.log('\n== the peer is cheap to draw ==');
 {
   // the peer cost 32 draw calls unmerged, which put a co-op level 9 at 202 against
