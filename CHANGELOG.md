@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.76.0 — 2026-11-28
+
+**Enemies hunt the nearer player.** 2.75.0 made the peer hittable; it was still not a *target* — a brute across the room
+from you walked past your friend, because the flow field and every distance in the state machine were built from the
+local player's cell.
+
+| Piece | What it does |
+| --- | --- |
+| the target | `Enemy.update()` picks the nearer body: the local player, or co-op's peer |
+| the field | a **second flow field** to the peer, rebuilt with the first every 0.35 s |
+| the damage | `doAttack()` takes the target and damages **the body it measured** — the melee and hitscan branches reached for `ctx.player` |
+| a test | a grunt closes to **1.0 m** of the peer, never goes near the player **28 m** away, and the peer takes it (**110 → 85**) |
+
+**And a bug this introduced and the suite caught in the same run:** with the target threaded but the damage still
+pointing at `ctx.player`, a melee body hit the player from **across the room** — distance measured to the peer, damage
+applied to the player. `victim = target || player` is the whole fix, and it is the kind of line that only looks obvious
+afterwards.
+
+**Single player is untouched by construction:** every branch hangs off `ctx.other`, which is `null` without co-op.
+
 ## 2.75.0 — 2026-11-28
 
 **A melee body can hit the peer.** Every melee branch reached for `ctx.player`, so a brute swinging next to your friend

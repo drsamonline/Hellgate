@@ -771,11 +771,22 @@ export class Enemy {
       }
     }
 
-    const dx = player.pos.x - this.pos.x;
-    const dz = player.pos.z - this.pos.z;
+    // who this body is hunting: the local player, or co-op's peer when the peer is
+    // the nearer body. Without a peer this is the same code it always was — the
+    // whole co-op path hangs off `ctx.other`, which is null in single player.
+    let target = player;
+    if (ctx.other && ctx.other.alive !== false) {
+      const pd = Math.hypot(ctx.other.pos.x - this.pos.x, ctx.other.pos.z - this.pos.z);
+      const ld = Math.hypot(player.pos.x - this.pos.x, player.pos.z - this.pos.z);
+      if (pd < ld) target = ctx.other;
+    }
+    const dx = target.pos.x - this.pos.x;
+    const dz = target.pos.z - this.pos.z;
     const dist = Math.hypot(dx, dz);
-    const playerEye = { x: player.pos.x, y: player.pos.y + 1.6 - 0.57 * (player.crouch || 0), z: player.pos.z };
-    const canSee = player.alive && dist < this.T.sight && hasLineOfSight(level, this.eyePos(), playerEye);
+    const playerEye = { x: target.pos.x, y: target.pos.y + 1.6 - 0.57 * (target.crouch || 0), z: target.pos.z };
+    const canSee = target.alive !== false && dist < this.T.sight && hasLineOfSight(level, this.eyePos(), playerEye);
+    // the flow field is built to whoever the body is hunting
+    const field = target === player ? ctx.field : (ctx.fieldPeer || ctx.field);
 
     this.attackCd -= dt;
 
@@ -802,7 +813,7 @@ export class Enemy {
           if (this.attackCd <= 0) this.setState(STATE.ATTACK);
           break;
         }
-        const nav = this.navDir(level, ctx.field, dx, dz, dist);
+        const nav = this.navDir(level, field, dx, dz, dist);
         if (this.T.charges && canSee && dist < 12) this.speed = this.T.chargeSpeed;
         else if (this.T.charges) this.speed = this.T.speed;
         if (dist > 0.9 && nav) this.moving = this.stepMove(level, nav.x, nav.z, dt);
@@ -869,7 +880,7 @@ export class Enemy {
           this.charging = 0;
           this.chargeLaneT = null;
           this.mesh.scale.set(1, 1, 1);
-          this.doAttack(ctx, dist, dx, dz, canSee, playerEye);
+          this.doAttack(ctx, dist, dx, dz, canSee, playerEye, target);
         } else if (this.stateT > tg + 0.35) {
           this.fired = false;
           this.attackCd = this.T.attackCd;
@@ -889,8 +900,16 @@ export class Enemy {
     this.animate(dt);
   }
 
-  doAttack(ctx, dist, dx, dz, canSee, playerEye) {
+  /**
+   * @param {object} ctx
+   * @param {number} dist Distance to the target body.
+   * @param {object} [target] The body being attacked — the local player, or co-op's
+   *   peer when the peer is nearer. Damage goes to whoever `dist` measured, or a
+   *   melee body would hurt the player from across the room.
+   */
+  doAttack(ctx, dist, dx, dz, canSee, playerEye, target = null) {
     const { player, projectiles, audio } = ctx;
+    const victim = target || player;
 
     if (this.T.lob) {
       // aim up so the arc lands on the player, not at their feet
@@ -916,7 +935,7 @@ export class Enemy {
       if (this.attackMode === 'slam') {
         const reach = this.T.meleeRange + 1.6;
         if (dist <= reach) {
-          player.damage(this.T.meleeDamage, from);
+          victim.damage(this.T.meleeDamage, from);
           ctx.effects.addShake(0.8);
         }
         ctx.effects.explosion({ x: this.pos.x, y: this.pos.y + 0.2, z: this.pos.z }, 1.3);
@@ -950,17 +969,8 @@ export class Enemy {
       ctx.effects.flash(new THREE.Vector3(from.x, from.y, from.z), 0xff6622, 6, 0.12, 10);
     } else {
       const inMelee = dist < this.T.meleeRange;
-      // co-op's second body is a body: a peer standing next to a brute took nothing
-      // because every melee branch reached for `ctx.player`
-      const peer = ctx.other && ctx.other.alive !== false ? ctx.other : null;
-      const peerDist = peer ? Math.hypot(peer.pos.x - this.pos.x, peer.pos.z - this.pos.z) : Infinity;
-      if (peer && peerDist < this.T.meleeRange && peerDist < dist) {
-        peer.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
-        audio.play('meleeHit', this.chestPos(), { pitch: this.T.voice || 1 });
-        return;
-      }
       if (inMelee) {
-        player.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
+        victim.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
         audio.play('meleeHit', this.chestPos(), { pitch: this.T.voice || 1 });
         return;
       }
@@ -972,7 +982,7 @@ export class Enemy {
       dir.x /= len; dir.y /= len; dir.z /= len;
       const blocked = hasLineOfSight(ctx.level, from, playerEye) === false;
       if (!blocked) {
-        player.damage(this.damage, from);
+        victim.damage(this.damage, from);
         ctx.effects.tracer(
           new THREE.Vector3(from.x, from.y, from.z),
           new THREE.Vector3(playerEye.x, playerEye.y, playerEye.z),
@@ -1425,12 +1435,18 @@ export class EnemyManager {
     this.fieldT -= dt;
     if (this.fieldT <= 0) {
       this.field = buildFlowField(this.level, player.pos.x, player.pos.z);
+      // and one to the peer, when there is a peer: a body that is hunting the
+      // second player needs a field that leads there
+      this.fieldPeer = other && other.alive !== false
+        ? buildFlowField(this.level, other.pos.x, other.pos.z)
+        : null;
       this.fieldT = 0.35;
     }
 
     const ctx = {
       level: this.level,
       field: this.field,
+      fieldPeer: this.fieldPeer,
       player,
       other,
       effects: this.effects,

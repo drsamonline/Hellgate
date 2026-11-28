@@ -2651,6 +2651,50 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== a body hunts the nearer player ==');
+{
+  // with a peer in the arena, a body that is closer to the peer hunts the peer —
+  // and with no peer the code path is exactly what it was
+  const { Coop } = await import('../play/src/coop.js');
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const peer = HG.coop;
+  const npc = HG.level.npc;
+  const spot = HG.level.reachableCells
+    .filter((c) => Math.hypot(c.wx - npc.wx, c.wz - npc.wz) > 16)
+    .sort((a, b) => b.wx - a.wx)[0];
+  const px = spot.wx, pz = spot.wz;
+  peer.body.pos.set(px, HG.floorHeightAt(HG.level, px, pz), pz);
+  HG.player.pos.set(px + 30, 0, pz);
+
+  // a body two metres from the peer, thirty from the player
+  HG.enemies.spawnAt('grunt', px + 2, pz, 1);
+  const grunt = HG.enemies.list[HG.enemies.list.length - 1];
+  grunt.pos.set(px + 2, peer.pos.y, pz);
+  grunt.mesh.position.set(px + 2, peer.pos.y, pz);
+  const peerHp = peer.hp;
+  const startX = grunt.pos.x;
+  let closestToPeer = Infinity;
+  let closestToPlayer = Infinity;
+  for (let i = 0; i < 240; i++) {
+    HG.update(1 / 60);
+    closestToPeer = Math.min(closestToPeer, Math.hypot(grunt.pos.x - peer.pos.x, grunt.pos.z - peer.pos.z));
+    closestToPlayer = Math.min(closestToPlayer, Math.hypot(grunt.pos.x - HG.player.pos.x, grunt.pos.z - HG.player.pos.z));
+  }
+  ok(closestToPeer < 3, 'the grunt closed on the peer (' + closestToPeer.toFixed(1) + ' m)');
+  ok(closestToPlayer > 20, 'and never went near the player 30 m away (' + closestToPlayer.toFixed(1) + ' m)');
+  ok(peer.hp < peerHp, 'and the peer takes it (' + peerHp + ' -> ' + peer.hp.toFixed(1) + ')');
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== a melee body hits the peer too ==');
 {
   // every melee branch reached for ctx.player, so a peer standing next to an
@@ -2677,13 +2721,14 @@ console.log('\n== a melee body hits the peer too ==');
 
   const hp0 = peer.hp;
   const playerHp0 = HG.player.health;
-  const eye = { x: HG.player.pos.x, y: HG.player.pos.y + 1.6, z: HG.player.pos.z };
-  const dx = HG.player.pos.x - brute.pos.x;
-  const dz = HG.player.pos.z - brute.pos.z;
+  // the attack is measured to the body it is aimed at: the peer, one metre away
+  const eye = { x: peer.pos.x, y: peer.pos.y + 1.6, z: peer.pos.z };
+  const dx = peer.pos.x - brute.pos.x;
+  const dz = peer.pos.z - brute.pos.z;
   const dist = Math.hypot(dx, dz);
   brute.doAttack(
     { level: HG.level, player: HG.player, other: peer, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, hud: HG.hud, camera: HG.camera },
-    dist, dx, dz, false, eye
+    dist, dx, dz, false, eye, peer
   );
   ok(peer.hp < hp0, 'the brute\'s melee lands on the peer (' + hp0 + ' -> ' + peer.hp + ')');
   ok(HG.player.health === playerHp0, 'and the player 14 m away is untouched');
