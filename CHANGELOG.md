@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.75.0 — 2026-11-28
+
+**A melee body can hit the peer.** Every melee branch reached for `ctx.player`, so a brute swinging next to your friend
+did nothing to them — and a peer who cannot be hurt by half the enemies is not in the fight.
+
+| Piece | What it does |
+| --- | --- |
+| `ctx.other` | `enemies.update()` takes the peer and puts it in the context every enemy sees |
+| the melee branch | hits **whichever body is nearer** — peer or player — with the same damage |
+| the attack trigger | a melee body already chasing you now also swings at a peer standing in its face |
+| a test | the brute's melee lands on the peer (**110 → 82.6**) · the player 14 m away is untouched · without a peer the same attack still hits the player (110 → 96.3) |
+
+**And what it is not, said plainly in `HANDOVER.md`:** the peer is a body that can be hit, not a second target the AI
+reasons about. Enemies still hunt the **local** player — the flow field is built from the player's cell and `dist` is
+player-relative through the whole state machine. A brute across the room from you walks past your friend. Making the
+peer a real target needs a second flow field and a target choice in every branch: a slice, not a line.
+
+**Two test lessons, both mine:** the first attempt fought the helper, who shoots anything near him, so the brute died of
+Keshi fire before it could swing; the second waited for an AI that never picks the peer as a target. The test drives the
+attack directly and asserts the thing that is actually true.
+
 ## 2.74.0 — 2026-11-28
 
 **Co-op is in the journey gate now.** Nothing in `audit-flow` touched co-op, which is how three connection bugs shipped

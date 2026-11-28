@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.74.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.75.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.74.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 179, `v1.0.0` → `v2.74.0` |
+| Version | 2.75.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 180, `v1.0.0` → `v2.75.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -219,6 +219,15 @@ wiped by the next call.
 - **`audit-flow` has a co-op step**: peer body in the scene, `PEER 110 / 110`, a stall with nobody there, damage
   reaching the HUD, and any page error fails it. Nothing looked at co-op before 2.74.0, which is how three connection
   bugs shipped behind a green pipeline.
+
+### Co-op: what the peer is, and is not
+
+- **A body that can be hit**: projectiles hit whoever is in the way, and a melee attack lands on the peer when the
+  peer is nearer than the player (`ctx.other`).
+- **Not a second target the AI reasons about**: enemies still hunt the *local* player — the flow field is built from
+  the player's cell, and `dist` is player-relative throughout the FSM. A brute across the room from you will walk past
+  your friend. Making the peer a real target means a second flow field and a target choice in every branch; that is a
+  slice of its own, not a line.
 
 ### The desync check is live, and it was half-blind
 

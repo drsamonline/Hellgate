@@ -2651,6 +2651,56 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== a melee body hits the peer too ==');
+{
+  // every melee branch reached for ctx.player, so a peer standing next to an
+  // attacking brute took nothing. Enemies still hunt the local player — the peer
+  // is a body that can be hit, not a second target the AI reasons about — so this
+  // drives the attack directly rather than waiting for the AI to pick the peer.
+  const { Coop } = await import('../play/src/coop.js');
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  HG.enemies.clear();
+  const peer = HG.coop;
+  ok(!!peer, 'there is a peer');
+
+  HG.enemies.spawnAt('brute', peer.pos.x + 1.2, peer.pos.z, 1);
+  const brute = HG.enemies.list[HG.enemies.list.length - 1];
+  brute.pos.set(peer.pos.x + 1.2, peer.pos.y, peer.pos.z);
+  brute.mesh.position.set(peer.pos.x + 1.2, peer.pos.y, peer.pos.z);
+  HG.player.pos.set(peer.pos.x + 14, 0, peer.pos.z + 14);
+
+  const hp0 = peer.hp;
+  const playerHp0 = HG.player.health;
+  const eye = { x: HG.player.pos.x, y: HG.player.pos.y + 1.6, z: HG.player.pos.z };
+  const dx = HG.player.pos.x - brute.pos.x;
+  const dz = HG.player.pos.z - brute.pos.z;
+  const dist = Math.hypot(dx, dz);
+  brute.doAttack(
+    { level: HG.level, player: HG.player, other: peer, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, hud: HG.hud, camera: HG.camera },
+    dist, dx, dz, false, eye
+  );
+  ok(peer.hp < hp0, 'the brute\'s melee lands on the peer (' + hp0 + ' -> ' + peer.hp + ')');
+  ok(HG.player.health === playerHp0, 'and the player 14 m away is untouched');
+
+  // with no peer, the same attack hits the player as it always did
+  const soloHp = HG.player.health;
+  HG.player.pos.set(brute.pos.x + 1, HG.player.pos.y, brute.pos.z);
+  brute.doAttack(
+    { level: HG.level, player: HG.player, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, hud: HG.hud, camera: HG.camera },
+    1, 1, 0, true, { x: HG.player.pos.x, y: HG.player.pos.y + 1.6, z: HG.player.pos.z }
+  );
+  ok(HG.player.health < soloHp, 'and without a peer the player takes it (' + soloHp + ' -> ' + HG.player.health + ')');
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== the two machines check they agree ==');
 {
   // Session.hash() existed and nothing ever called it: a desync was silent

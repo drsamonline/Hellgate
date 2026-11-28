@@ -3622,7 +3622,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.74.0';
+const BUILD = '2.75.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -3949,7 +3949,7 @@ function update(dt) {
   hud.setPrompt(near ? (TOUCH ? 'READ' : 'V  READ') : '');
   if (touchCleanup && touchCleanup.setReadable) touchCleanup.setReadable(!!near);
 
-  enemies.update(dt, player, projectiles);
+  enemies.update(dt, player, projectiles, coop && coop.alive ? coop : null);
   enemies.unstuck(dt, player);
   projectiles.update(dt, player, enemies, coop && coop.alive ? coop : null);
   if (companion) {

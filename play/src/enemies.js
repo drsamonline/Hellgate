@@ -813,7 +813,11 @@ export class Enemy {
 
         if (canSee && this.attackCd <= 0) {
           const inMelee = this.T.melee && dist < this.T.meleeRange;
-          if (dist < this.T.attackRange || inMelee) this.setState(STATE.ATTACK);
+          // a melee body with co-op's peer in its face has something to hit, even
+          // with the player across the room: without this the peer was melee-immune
+          const peerNear = this.T.melee && ctx.other && ctx.other.alive !== false
+            && Math.hypot(ctx.other.pos.x - this.pos.x, ctx.other.pos.z - this.pos.z) < this.T.meleeRange;
+          if (dist < this.T.attackRange || inMelee || peerNear) this.setState(STATE.ATTACK);
         }
         if (this.lostSight > 4) this.setState(STATE.IDLE);
         break;
@@ -946,6 +950,15 @@ export class Enemy {
       ctx.effects.flash(new THREE.Vector3(from.x, from.y, from.z), 0xff6622, 6, 0.12, 10);
     } else {
       const inMelee = dist < this.T.meleeRange;
+      // co-op's second body is a body: a peer standing next to a brute took nothing
+      // because every melee branch reached for `ctx.player`
+      const peer = ctx.other && ctx.other.alive !== false ? ctx.other : null;
+      const peerDist = peer ? Math.hypot(peer.pos.x - this.pos.x, peer.pos.z - this.pos.z) : Infinity;
+      if (peer && peerDist < this.T.meleeRange && peerDist < dist) {
+        peer.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
+        audio.play('meleeHit', this.chestPos(), { pitch: this.T.voice || 1 });
+        return;
+      }
       if (inMelee) {
         player.damage(this.T.meleeDamage * Math.min(2, 1 + 0.05 * (this.maxHp / 40)), this.chestPos());
         audio.play('meleeHit', this.chestPos(), { pitch: this.T.voice || 1 });
@@ -1399,7 +1412,14 @@ export class EnemyManager {
     return this.list.find((e) => e.alive && e.T.boss) || null;
   }
 
-  update(dt, player, projectiles) {
+  /**
+   * @param {number} dt
+   * @param {object} player The local player.
+   * @param {object} projectiles
+   * @param {object} [other] Co-op's second body: a body, so a melee attack aimed
+   *   at it has to land on it.
+   */
+  update(dt, player, projectiles, other = null) {
     // one field for every enemy, rebuilt from the player's cell a few times a
     // second: 1600 cells of BFS costs less than one enemy's line-of-sight check
     this.fieldT -= dt;
@@ -1412,6 +1432,7 @@ export class EnemyManager {
       level: this.level,
       field: this.field,
       player,
+      other,
       effects: this.effects,
       audio: this.audio,
       projectiles,
