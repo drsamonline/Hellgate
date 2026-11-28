@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.83.1 — 2026-11-28
+
+**The new controls gate failed on its first CI run — the third tool to hard-code this machine's Chromium.**
+
+| Piece | What it does |
+| --- | --- |
+| the fix | `audit-controls` reads `CHROME_PATH` first, then looks in the three usual places — the same pattern as `smoke`, `drawcalls`, `audit-flow` and `audit-run` |
+| **the guard, widened** | `check-stamp.mjs` now also fails on `executablePath: '/...'` — a hard-coded browser path is the same mistake wearing a different hat |
+| the tally | 2.66.1 a browser path · 2.82.1 a sandbox root · 2.83.0 the same browser path again |
+
+**Why the guard matters more than the fix:** each of these cost one CI run and one release, and each was invisible locally
+because the path existed here. The guard turns a class of mistake into a red build.
+
 ## 2.83.0 — 2026-11-28
 
 **The map and the codex could not be closed with Escape.** Found by turning `audit-controls` from a reporter into a gate —

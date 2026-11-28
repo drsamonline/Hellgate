@@ -17,7 +17,12 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(f).pipe(res);
 });
 await new Promise((r) => server.listen(PORT, r));
-const browser = await puppeteer.launch({ executablePath: '/usr/local/bin/chromium', args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'] });
+// CHROME_PATH first, then the usual places: this was hard-coded to this machine's
+// Chromium and threw "Browser was not found" on the runner the first time it ran
+// there. The third tool to make that mistake.
+const CHROME = process.env.CHROME_PATH
+  || ['/usr/local/bin/chromium', '/usr/bin/chromium', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
+const browser = await puppeteer.launch({ executablePath: CHROME, args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'] });
 const page = await browser.newPage();
 await page.setViewport({ width: 1000, height: 620 });
 page.on('pageerror', (e) => console.log('pageerror', e.message));

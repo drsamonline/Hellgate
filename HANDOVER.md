@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.83.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.83.1**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.83.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 189, `v1.0.0` → `v2.83.0` |
+| Version | 2.83.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 190, `v1.0.0` → `v2.83.1` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1137 in `test-game` + 1391 playability (all 32 levels) + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run`, `audit-controls` · by hand: `soak`, `lighthouse` |
@@ -168,6 +168,11 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### No tool may hard-code a path from one machine
+
+- **A browser path or a sandbox root in a tool is a bug that only shows on CI.** It has cost three runs (2.66.1, 2.82.1,
+  2.83.0). `check-stamp.mjs` fails on both shapes now: `executablePath: '/...'` and `'/scratch|/home|/Users/...'`.
 
 ### Every panel has an Escape
 

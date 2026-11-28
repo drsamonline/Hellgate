@@ -38,9 +38,13 @@ for (const f of fs.readdirSync(path.join(root, 'tools'))) {
   const text = fs.readFileSync(path.join(root, 'tools', f), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/^\s*\/\/.*$/gm, '');
+  // and a hard-coded BROWSER path is the same mistake wearing a different hat: it
+  // has cost three CI runs (2.66.1, 2.82.1, 2.83.0). CHROME_PATH or a lookup, never
+  // a literal.
   if (/['"`]\/(scratch|home|Users)\//.test(text)) hardCoded.push(f);
+  else if (/executablePath:\s*['"`]\//.test(text)) hardCoded.push(f + ' (browser path)');
 }
 console.log('import map stamped:', mapStamped);
 console.log('idempotent:', /every module URL carries/.test(check));
-console.log('no tool hard-codes a sandbox path:', hardCoded.length === 0, hardCoded.join(', '));
+console.log('no tool hard-codes a path from one machine:', hardCoded.length === 0, hardCoded.join(', '));
 process.exit(mapStamped && /every module URL carries/.test(check) && hardCoded.length === 0 ? 0 : 1);
