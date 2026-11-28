@@ -1,5 +1,25 @@
 # Changelog
 
+## 2.74.0 — 2026-11-28
+
+**Co-op is in the journey gate now.** Nothing in `audit-flow` touched co-op, which is how three connection bugs shipped
+behind a green pipeline: the offer without candidates, the link that died at the first level change, and the desync
+check nobody called.
+
+| The step asserts | In a real browser |
+| --- | --- |
+| a peer body exists | `HG.coop` after `?auto=1&level=1&coop=1` |
+| and it is in the scene | `coop.mesh.parent === HG.scene` |
+| the HUD reads it | `PEER 110 / 110` |
+| **it stalls with nobody there** | `session.starved > 0` — no peer, no step, no guess |
+| damage reaches the HUD | `PEER 70 / 110` after 40 |
+| nothing threw | a page error fails the step |
+
+The gate is **14 steps** now, and it runs in CI.
+
+**The lesson, one more time:** every gate that did not look at co-op was green while co-op could not connect. A test that
+does not exercise a feature is not evidence about it.
+
 ## 2.73.0 — 2026-11-28
 
 **The two machines now check they agree — and the check itself was half-blind.** `Session.hash()` existed since 2.46.0

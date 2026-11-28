@@ -159,6 +159,38 @@ await step('death and the game over screen', async () => {
   if (!btn) throw new Error('the game over screen has no button');
 });
 
+// the co-op path: the peer body, the HUD line, and a downed peer. Nothing in this
+// gate touched co-op until 2.74.0, which is how three connection bugs shipped
+// behind a green pipeline.
+await step('co-op: a peer in the arena', async () => {
+  const coop = await browser.newPage();
+  const errs = [];
+  coop.on('pageerror', (e) => errs.push(String(e.message || e).slice(0, 120)));
+  await coop.goto('http://127.0.0.1:9301/play/?auto=1&level=1&coop=1', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await coop.waitForFunction('window.HG && window.HG.game.state === "playing"', { timeout: 90000 });
+  await coop.waitForFunction('window.HG.coop', { timeout: 20000 });
+  await new Promise((r) => setTimeout(r, 1200));
+  const st = await coop.evaluate(() => ({
+    peer: !!window.HG.coop,
+    hud: document.getElementById('coop').textContent,
+    inScene: window.HG.coop.mesh.parent === window.HG.scene,
+    frames: window.HG.coop.frames,
+    starved: window.HG.coop.session.starved,
+  }));
+  if (!st.peer) throw new Error('no peer body in the arena');
+  if (!st.inScene) throw new Error('the peer body is not in the scene');
+  if (!/PEER 110 \/ 110/.test(st.hud)) throw new Error('the peer HUD reads "' + st.hud + '"');
+  // nobody is on the other end, so it must stall rather than guess
+  if (!(st.starved > 0)) throw new Error('the session did not report a stall with no peer (' + st.starved + ')');
+  // damage reaches the HUD
+  await coop.evaluate(() => window.HG.coop.damage(40));
+  await new Promise((r) => setTimeout(r, 700));
+  const hud2 = await coop.evaluate(() => document.getElementById('coop').textContent);
+  if (!/PEER 70 \/ 110/.test(hud2)) throw new Error('the peer HUD did not follow the damage: "' + hud2 + '"');
+  if (errs.length) throw new Error('page errors: ' + errs[0]);
+  await coop.close();
+});
+
 await browser.close();
 server.close();
 
