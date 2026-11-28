@@ -3811,6 +3811,24 @@ console.log('\n== the guns are models ==');
   ok(HG.weapons.muzzle.visible === false, 'and it goes out when the flash ends');
 }
 
+console.log('\n== the daily is the same run all day ==');
+{
+  const { dayKey, dailySeed, hash } = await import('../play/src/daily.js');
+  // the seed must not depend on anything but the date and the salt
+  const a = dailySeed(new Date(2026, 10, 28, 0, 1));
+  const b = dailySeed(new Date(2026, 10, 28, 23, 59));
+  ok(a === b, 'the same day is the same seed (' + a + ')');
+  const next = dailySeed(new Date(2026, 10, 29, 12, 0));
+  ok(next !== a, 'and the next day is a different one (' + next + ')');
+  // not merely a counter: two consecutive days are not adjacent seeds
+  ok(!/daily-\d+-\d+$/.test(next), 'the seed carries a hash, not a counter');
+  ok(dayKey(new Date(2026, 0, 5)) === '2026-01-05', 'the key pads a month and a day (' + dayKey(new Date(2026, 0, 5)) + ')');
+  ok(dayKey(new Date(2026, 11, 31)) === '2026-12-31', 'and the last day of the year (' + dayKey(new Date(2026, 11, 31)) + ')');
+  ok(hash('a') !== hash('b'), 'the hash separates two strings');
+  // the salt changes the run, which is how a second daily could exist
+  ok(dailySeed(new Date(2026, 10, 28), 'other') !== a, 'a different salt is a different run');
+}
+
 console.log('\n== every level\'s objective can be met ==');
 {
   // a level whose objective cannot be satisfied is a dead end 20 levels into a run

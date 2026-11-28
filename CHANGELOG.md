@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.81.0 — 2026-11-28
+
+**The daily mode said one thing and did another.** `daily.js` opened with *"one run a day, the same one for everybody"* —
+and then used the player's **local** date, so two people in different time zones were never playing the same run.
+
+| Piece | What it does |
+| --- | --- |
+| the code | unchanged: the local date is the right call. A daily that rolls at **05:30** for an Indian player because it is midnight in UTC is a worse daily for everybody east of Greenwich |
+| the comment | says what it does now, and names the cost: no shared run between zones — and the line that has to change if a leaderboard ever exists |
+| a test | the same day is the same seed · the next day is a different one · the seed carries a **hash, not a counter** · the key pads month and day (`2026-01-05`) · a different salt is a different run |
+
+**This is a documentation bug with a decision inside it.** The comment described a leaderboard the game does not have;
+the code served the player in front of it. The fix was to write down which one is intended, and to pin the behaviour so
+nobody "corrects" it by accident.
+
 ## 2.80.0 — 2026-11-28
 
 **A readiness pass: every gate run, every number checked.** No features. What the project claims, verified or corrected.

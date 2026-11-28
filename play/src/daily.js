@@ -1,14 +1,19 @@
 // ---------------------------------------------------------------------------
-// DAILY — one run a day, the same one for everybody.
+// DAILY — one run a day, the same one every time you open it.
 //
-// The seed is the date, hashed: no server, no account, and two people playing on
-// the same day get the same level, the same waves and the same spawns. The best
-// score for the day is kept beside it, so the run is worth repeating.
+// The seed is the date, hashed: no server, no account, and the same player on the
+// same day gets the same level, the same waves and the same spawns. The best score
+// for the day is kept beside it, so the run is worth repeating.
 //
-// The one rule that matters: the seed must not depend on anything but the date
-// and the salt. A daily that rolls differently per player is a leaderboard
-// comparing two different games — that bug is why this file exists rather than a
-// `Math.random()` call in the title screen.
+// The one rule that matters: the seed must not depend on anything but the date and
+// the salt. A daily that rolls differently on every launch is not a daily — that
+// bug is why this file exists rather than a `Math.random()` call in the title.
+//
+// The date is the player's LOCAL date, deliberately: their day is their own, and a
+// daily that rolls at 05:30 because it is midnight in UTC is a worse daily for
+// everybody east of Greenwich. The cost is that two players in different zones are
+// not playing the same run — there is no leaderboard here to compare them on, and
+// when there is, this is the line that has to change.
 // ---------------------------------------------------------------------------
 
 const KEY = 'hellgate.daily';
