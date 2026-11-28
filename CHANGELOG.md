@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.82.0 — 2026-11-28
+
+**The cache stamp skipped the import map.** `stamp-cache.mjs` appends `?v=<version>` to every module URL at deploy time,
+so a reload after a release is always the new code. It rewrote `play/src/*.js` and `play/index.html` — and left
+`"three": "./vendor/three.module.js"` alone, because that URL lives in an **import map**, not in a `from '...'`.
+
+| Piece | What it does |
+| --- | --- |
+| the gap | the one module URL a browser could keep forever. A three upgrade would have shipped new game code against a cached old three — the hardest kind of bug report to read |
+| the fix | a third pattern in the stamper for import-map entries |
+| a gate | `tools/check-stamp.mjs` runs the stamper in a **temp copy** — the source tree stays unstamped, which is the design — and asserts the import map is stamped and a second run changes nothing |
+| CI | the check is a step |
+
+**Why the source stays unstamped:** `stamp-cache.mjs` rewrites in place and runs only in the deploy workflow. A check
+that stamped the working tree would leave the repo dirty after every CI run, so the check copies first.
+
 ## 2.81.0 — 2026-11-28
 
 **The daily mode said one thing and did another.** `daily.js` opened with *"one run a day, the same one for everybody"* —

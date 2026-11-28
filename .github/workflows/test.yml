@@ -78,6 +78,11 @@ jobs:
       - name: No act is a wall
         run: node tools/balance-report.mjs check
 
+      # the deploy stamps module URLs so a reload is always the new code; this
+      # checks the stamp covers the import map too
+      - name: Every module URL is stamped
+        run: node tools/check-stamp.mjs
+
       - name: Browser smoke test
         run: node tools/smoke.mjs
 

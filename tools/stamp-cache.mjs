@@ -30,13 +30,18 @@ const files = [
 // './level.js' or "./level.js", with or without an existing ?v=
 const REL = /(from\s+['"])(\.\/[^'"?]+\.js)(\?v=[^'"]*)?(['"])/g;
 const SRC = /(src=")(\.\/[^"?]+\.js)(\?v=[^"]*)?(")/g;
+// and the import map: `"three": "./vendor/three.module.js"` is a module URL like
+// any other, and it was the one URL in the page this tool left alone. A three
+// upgrade would have shipped new game code against a cached old three.
+const MAP = /("\s*:\s*")(\.\/[^"?]+\.js)(\?v=[^"]*)?(")/g;
 
 let changed = 0;
 for (const file of files) {
   const before = fs.readFileSync(file, 'utf8');
   const after = before
     .replace(REL, (_, a, spec, _old, q) => a + spec + tag + q)
-    .replace(SRC, (_, a, spec, _old, q) => a + spec + tag + q);
+    .replace(SRC, (_, a, spec, _old, q) => a + spec + tag + q)
+    .replace(MAP, (_, a, spec, _old, q) => a + spec + tag + q);
   if (after === before) continue;
   changed++;
   if (!check) fs.writeFileSync(file, after);
