@@ -3825,6 +3825,21 @@ console.log('\n== every level\'s objective can be met ==');
     HG.game.state = 'playing';
     const L = HG.level;
     const obj = HG.game.objectiveType;
+    // the exit has to be a place you can walk to. `reachableCells` is the *spawn
+    // pool* — it deliberately excludes the exit room — so the honest check is that
+    // the exit room has a door to walk through, which is what the generator's own
+    // retry loop guarantees.
+    // door cells carry no room id, so the door into the exit room is found by
+    // adjacency: a cell of the exit room that has a door next to it
+    let exitHasDoor = false;
+    for (const c of L.cells) {
+      if (c.room !== L.exitRoom) continue;
+      for (const [ox, oz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const nb = L.cells[L.idx(c.x + ox, c.z + oz)];
+        if (nb && nb.door) exitHasDoor = true;
+      }
+    }
+    if (!exitHasDoor) problems.push('L' + row.n + ': the exit room has no door');
     if (obj === 'reach') {
       const ec = L.cells[L.idx(L.exit.cx, L.exit.cz)];
       if (!ec || ec.solid) problems.push('L' + row.n + ': the exit is in rock');
@@ -3839,6 +3854,11 @@ console.log('\n== every level\'s objective can be met ==');
       if (!(HG.game.relicsTotal > 0)) problems.push('L' + row.n + ': relics level with no relics');
       if (HG.game.relics.length !== HG.game.relicsTotal) {
         problems.push('L' + row.n + ': ' + HG.game.relicsTotal + ' relics asked for, ' + HG.game.relics.length + ' on the floor');
+      }
+      // a relic behind a wall is a level you cannot finish
+      for (const r of HG.game.relics) {
+        const cell = L.cells[L.idx(Math.round(r.x / 2), Math.round(r.z / 2))];
+        if (cell && cell.solid) problems.push('L' + row.n + ': a relic is inside rock');
       }
     } else {
       problems.push('L' + row.n + ': unknown objective ' + obj);

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.78.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.79.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.78.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 183, `v1.0.0` → `v2.78.0` |
+| Version | 2.79.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 184, `v1.0.0` → `v2.79.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -170,6 +170,9 @@ wiped by the next call.
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
 
 ### Every level can be finished
+
+- **`reachableCells` is the spawn pool, not "where you can walk"**: it excludes the exit room on purpose, so asking it
+  about the exit reports 32 false alarms. The exit room's door is found by adjacency — door cells carry no `room`.
 
 - **A test walks all 32 rows and asks whether each objective is satisfiable**: reach has an open, solid-free exit; clear
   has somewhere to spawn; survive has a clock; relics has as many on the floor as it asked for; a boss row has a boss.

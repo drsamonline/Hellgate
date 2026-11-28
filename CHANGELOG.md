@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.79.0 — 2026-11-28
+
+**The exit and the relics are checked too — after two wrong checks of my own.** 2.78.0 asked whether each objective was
+satisfiable; it did not ask whether the exit could be *walked to*, or whether a relic had spawned inside rock.
+
+| Attempt | What it actually measured |
+| --- | --- |
+| `reachableCells` contains the exit | **wrong**: that set is the *spawn pool* and deliberately excludes the exit room. All 32 levels reported "the exit is not reachable" — 32 false alarms |
+| `doors.filter(d => d.room === exitRoom)` | **wrong again**: door cells carry no `room`, so every level reported "the exit room has no door" |
+| the door found by **adjacency** | correct: an exit-room cell with a door beside it. 0 problems |
+| relics | each relic's cell must not be rock — 0 problems |
+
+**Two false alarms in a row is the useful outcome.** Both would have looked like catastrophic content bugs in a report;
+both were the test asking the wrong question of the right data. The third question is the one the generator actually
+guarantees, and it is now the one that is asserted.
+
 ## 2.78.0 — 2026-11-28
 
 **Every level's objective can be met — asserted over all 32.** A level whose objective cannot be satisfied is a dead end
