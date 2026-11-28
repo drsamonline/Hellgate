@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.82.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.82.1**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.82.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 187, `v1.0.0` → `v2.82.0` |
+| Version | 2.82.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 188, `v1.0.0` → `v2.82.1` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1137 in `test-game` + 1391 playability (all 32 levels) + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -168,6 +168,12 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### Tools must not know where they live
+
+- **Derive the root from `import.meta.url`**, never hard-code it. `check-stamp.mjs` shipped with `/scratch/work/Hellgate`
+  and `audit-controls.mjs` with `/scratch/work/repo`; both failed on the runner. `check-stamp.mjs` now scans `tools/` for
+  a hard-coded `/scratch`, `/home` or `/Users` path and fails CI.
 
 ### The cache stamp, and the URL it missed
 

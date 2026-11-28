@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.82.1 — 2026-11-28
+
+**The check that guards the deploy failed on the deploy runner — for the same reason the deploy could have.** It
+hard-coded `/scratch/work/Hellgate`, the path it was written in, and the CI job died with `ENOENT` before it checked
+anything.
+
+| Piece | What it does |
+| --- | --- |
+| the fix | the root is derived from `import.meta.url`, the way every other tool does it |
+| **the guard** | the same check now scans `tools/` for a hard-coded `/scratch`, `/home` or `/Users` path and fails |
+| another one found | `audit-controls.mjs` pointed at `/scratch/work/repo` — a path that has never existed anywhere. Fixed |
+| the detail | comments are stripped before the scan: this file's own header names the path to explain the bug |
+
+**Third time this class of bug has cost a CI run** — a hard-coded Chromium path in 2.66.1, a hard-coded root here, and
+the draw-call gate reading a stale scene before that. The pattern is the same every time: a tool that only works on the
+machine it was written on.
+
 ## 2.82.0 — 2026-11-28
 
 **The cache stamp skipped the import map.** `stamp-cache.mjs` appends `?v=<version>` to every module URL at deploy time,
