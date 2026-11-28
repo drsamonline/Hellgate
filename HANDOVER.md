@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.79.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.80.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,10 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.79.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 184, `v1.0.0` → `v2.79.0` |
+| Version | 2.80.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 185, `v1.0.0` → `v2.80.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
-| Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
+| Assertions | 1137 in `test-game` + 1391 playability (all 32 levels) + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
 | Arithmetic gates | `balance-report.mjs check` — no act lands more than 2.5x the act before it (in CI) |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
@@ -168,6 +168,11 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### The numbers in these docs
+
+- **They drift.** Both docs said *764* assertions in the suites while there were **1,137**. `check-claims.js` verifies the
+  numbers it knows about; the assertion count is not one of them. Read the suite, not the table.
 
 ### Every level can be finished
 

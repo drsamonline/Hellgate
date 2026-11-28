@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.79.0** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.80.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.79.0 (`VERSION` and `BUILD` agree) |
+| Version | 2.80.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
-| Tests | 1391 playability (all 32 levels) + 764 in the other three suites; eight static gates; smoke, flow, run, invariants |
+| Tests | **1,137** in `test-game` + **1,391** playability (all 32 levels) + level and geometry suites; eight static gates; smoke, flow, run, invariants, drawcalls, balance |
 | Modules | 48 in `play/src/` |
-| Releases | 184, `v1.0.0` → `v2.79.0` |
+| Releases | 185, `v1.0.0` → `v2.80.0` |
 | Performance | **131** draw calls a frame at the median, **170** at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
 
@@ -134,6 +134,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.77.0** | **The melee test drives the AI — and the handover was a release behind** |
 | **2.78.0** | **Every level's objective can be met — asserted over all 32** |
 | **2.79.0** | **The exit and the relics are checked too — after two wrong checks of my own** |
+| **2.80.0** | **A readiness pass — every gate run, every number checked** |
 
 ### 2.0.0 in detail
 

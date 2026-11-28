@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.80.0 — 2026-11-28
+
+**A readiness pass: every gate run, every number checked.** No features. What the project claims, verified or corrected.
+
+| Gate | Result |
+| --- | --- |
+| `test-game` | **1,137** assertions, green |
+| `test-playability` | **1,391**, all 32 levels, green |
+| `test-level` / `test-geometry` | green — 47 seeds, 10.7 rooms average, doors on 47/47 |
+| static (8) | green: claims, docs, links, pages, stub, meta, dead code, assets |
+| `balance-report check` | green — the act ladder is inside 2.5× per step |
+| `audit-flow` | **14 steps** clean, co-op included |
+| `audit-run` | every zone, every mode |
+| `drawcalls` | median **131**, worst **170**, **190** with a co-op peer — budget 200 |
+| `audit-invariants` | 8 targets × 9 checks, then the local browser gives out under SwiftShader |
+| `smoke` | **35 checks** pass, then a 20 s wait times out locally — CI runs it on real Chrome |
+
+**Two numbers in the docs were stale and are corrected:** `START-HERE.md` and `HANDOVER.md` both said *764* assertions in
+the other suites; it is **1,137**, and has been for weeks. The claims gate checks the numbers it knows about, and it did
+not know about this one.
+
 ## 2.79.0 — 2026-11-28
 
 **The exit and the relics are checked too — after two wrong checks of my own.** 2.78.0 asked whether each objective was
