@@ -13,7 +13,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { sampleCameraPath } from './campath.js';
+import { sampleCameraPath } from './campath.js?v=2.84.0';
 
 const HOLD = 2.6;      // seconds before it starts closing
 const OUT = 0.45;      // seconds of letterbox sliding away

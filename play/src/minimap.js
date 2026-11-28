@@ -6,7 +6,7 @@
 // cheap enough to run on a phone beside the game.
 // ---------------------------------------------------------------------------
 
-import { CELL } from './level.js';
+import { CELL } from './level.js?v=2.84.0';
 
 /** A small map of the floor: walls, exit, keycard, enemies, and you. */
 export class Minimap {

@@ -3,7 +3,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { circleBlocked, floorHeightAt, MAX_STEP } from './level.js';
+import { circleBlocked, floorHeightAt, MAX_STEP } from './level.js?v=2.84.0';
 
 /**
  * Collision radius of the player.

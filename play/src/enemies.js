@@ -4,10 +4,10 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { humanoid, quadruped, PROPORTIONS, rigMat, mergeJointMeshes } from './rig.js';
-import { getModel } from './models.js';
-import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js';
-import { simRand } from './simrng.js';
+import { humanoid, quadruped, PROPORTIONS, rigMat, mergeJointMeshes } from './rig.js?v=2.84.0';
+import { getModel } from './models.js?v=2.84.0';
+import { circleBlocked, floorHeightAt, hasLineOfSight, buildFlowField, flowStep, MAX_STEP } from './level.js?v=2.84.0';
+import { simRand } from './simrng.js?v=2.84.0';
 
 const STATE = { IDLE: 'IDLE', CHASE: 'CHASE', ATTACK: 'ATTACK', PAIN: 'PAIN', DEATH: 'DEATH' };
 

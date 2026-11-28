@@ -5,8 +5,8 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { makeRng } from './rng.js';
-import { CELL, floorHeightAt } from './level.js';
+import { makeRng } from './rng.js?v=2.84.0';
+import { CELL, floorHeightAt } from './level.js?v=2.84.0';
 
 /**
  * The notes left on the wall terminals.

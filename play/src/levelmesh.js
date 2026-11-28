@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { CELL, floorHeightAt } from './level.js';
+import { CELL, floorHeightAt } from './level.js?v=2.84.0';
 
 const WALL_KEY = ['wall_brick', 'wall_tech', 'wall_rust', 'wall_moss', 'wall_stained'];
 const FLOOR_KEY = ['floor_tile', 'floor_plate', 'floor_grate'];

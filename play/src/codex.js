@@ -10,7 +10,7 @@
 // a typo still finds the entry.
 // ---------------------------------------------------------------------------
 
-import { index } from './search.js';
+import { index } from './search.js?v=2.84.0';
 
 /** A short, honest sentence about how an enemy behaves. */
 function behaviour(T) {

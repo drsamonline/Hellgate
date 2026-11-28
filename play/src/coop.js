@@ -13,10 +13,10 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { Player } from './player.js';
-import { humanoid, mergeJointMeshes } from './rig.js';
-import { Session } from './net.js';
-import { raycastWalls, floorHeightAt } from './level.js';
+import { Player } from './player.js?v=2.84.0';
+import { humanoid, mergeJointMeshes } from './rig.js?v=2.84.0';
+import { Session } from './net.js?v=2.84.0';
+import { raycastWalls, floorHeightAt } from './level.js?v=2.84.0';
 
 /** The colour the second player is drawn in: a body you can tell from the NPC. */
 export const PEER_COLOR = 0x4a8a9a;

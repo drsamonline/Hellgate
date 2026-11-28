@@ -5,8 +5,8 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { buildCameraPath, sampleCameraPath } from './campath.js';
-import { CELL } from './level.js';
+import { buildCameraPath, sampleCameraPath } from './campath.js?v=2.84.0';
+import { CELL } from './level.js?v=2.84.0';
 
 // One cold open per zone, so five levels read as five places and not one arena
 // reskinned. A zone without its own panels falls back to the shared ones.

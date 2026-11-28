@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { hasLineOfSight } from './level.js';
+import { hasLineOfSight } from './level.js?v=2.84.0';
 
 // Two vectors reused every frame instead of allocated: the drone updates 60 times
 // a second and this was two objects per update, which is a steady drip into the

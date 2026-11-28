@@ -5,7 +5,7 @@
 // sector with its own floor height, ceiling height and texture ids.
 // ---------------------------------------------------------------------------
 
-import { makeRng } from './rng.js';
+import { makeRng } from './rng.js?v=2.84.0';
 
 /**
  * World units per grid cell.

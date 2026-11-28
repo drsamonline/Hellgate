@@ -3,8 +3,8 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { raycastWalls, floorHeightAt } from './level.js';
-import { simRand } from './simrng.js';
+import { raycastWalls, floorHeightAt } from './level.js?v=2.84.0';
+import { simRand } from './simrng.js?v=2.84.0';
 
 const ROCKET = { speed: 26, radius: 0.18, splash: 4.5, damage: 95, life: 5 };
 const FIREBALL = { speed: 13, radius: 0.22, splash: 1.4, damage: 15, life: 6 };

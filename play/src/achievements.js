@@ -14,7 +14,7 @@
 // table (same licence), rewritten against this game's state.
 // ---------------------------------------------------------------------------
 
-import { TYPES } from './enemies.js';
+import { TYPES } from './enemies.js?v=2.84.0';
 
 const KEY = 'hellgate.achievements';
 

@@ -10,7 +10,7 @@
 // `exportMap` writes and `importMap` reads.
 // ---------------------------------------------------------------------------
 
-import { exportMap } from './maps.js';
+import { exportMap } from './maps.js?v=2.84.0';
 
 /** The cells a person can paint, in the order the palette shows them. */
 export const PALETTE = [

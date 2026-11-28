@@ -13,7 +13,7 @@
 // make it a different place.
 // ---------------------------------------------------------------------------
 
-import { ZONES } from './world.js';
+import { ZONES } from './world.js?v=2.84.0';
 
 /**
  * Which boss closes each act.

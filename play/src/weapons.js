@@ -4,8 +4,8 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { raycastWalls } from './level.js';
-import { simRand } from './simrng.js';
+import { raycastWalls } from './level.js?v=2.84.0';
+import { simRand } from './simrng.js?v=2.84.0';
 
 /**
  * The four weapons: ammo, damage, cooldown, spread, range. `spin` is the time

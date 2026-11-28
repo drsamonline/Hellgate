@@ -13,7 +13,7 @@
 // of numbers and it is testable in Node.
 // ---------------------------------------------------------------------------
 
-import { CELL, buildFlowField, flowStep, floorHeightAt } from './level.js';
+import { CELL, buildFlowField, flowStep, floorHeightAt } from './level.js?v=2.84.0';
 
 /** Eye height above the floor, the same number the player's camera uses. */
 export const CAM_EYE = 1.62;

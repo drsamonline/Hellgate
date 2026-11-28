@@ -12,7 +12,7 @@
 // ---------------------------------------------------------------------------
 
 import * as THREE from 'three';
-import { loadGLB, measure } from './glb.js';
+import { loadGLB, measure } from './glb.js?v=2.84.0';
 
 const MODELS = new Map();
 const REPORT = { loaded: [], failed: [], missing: [] };

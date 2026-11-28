@@ -5,7 +5,7 @@
 
 import * as THREE from 'three';
 
-import { pixelise } from './pixel.js';
+import { pixelise } from './pixel.js?v=2.84.0';
 
 const S = 64;
 
