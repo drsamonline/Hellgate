@@ -3,6 +3,11 @@
 //
 //   node tools/soak.mjs                # 3 difficulties x 3 seeds, 90 s each
 //   node tools/soak.mjs hard 5         # one difficulty, five seeds
+//   node tools/soak.mjs --check        # the gate: one difficulty, one seed, 20 s,
+//                                      # and it FAILS on a NaN, a runaway list or a
+//                                      # crashed run. The table mode below exits 0
+//                                      # whatever it prints, which is why the header
+//                                      # claimed checks this file did not make.
 //
 // Be careful what you read into the numbers. The bot turns to the nearest enemy,
 // follows the flow field to it, fires when it has line of sight, and switches
@@ -26,10 +31,13 @@ if (!fs.existsSync(stub)) {
 await import('../tests/domstub.mjs');
 
 const DIFFS = ['easy', 'normal', 'hard'];
-const SECONDS = 90;
+const CHECK = process.argv.includes('--check');
+// the gate runs a short soak: 20 s is enough for four waves and a boss room, and
+// short enough to sit in CI beside the suites
+const SECONDS = CHECK ? 20 : 90;
 const DT = 1 / 60;
 
-const args = process.argv.slice(2);
+const args = process.argv.slice(2).filter((a) => a !== '--check');
 const onlyDiff = args[0] && DIFFS.includes(args[0]) ? args[0] : null;
 const seeds = Number(args[1]) || 3;
 
@@ -151,6 +159,19 @@ function play(seed, difficulty) {
   return {
     difficulty,
     seed,
+    // what a long run can go wrong with: a list that only grows, a position that
+    // turns into NaN, a physics step that stops returning
+    // the real shapes: particles are a fixed ring buffer (`parts`), so the number
+    // that can leak is the live count, not the array length; projectiles are a list
+    peak: {
+      enemies: HG.enemies.list.length,
+      particles: HG.effects && HG.effects.parts
+        ? HG.effects.parts.filter((q) => q && q.life > 0).length
+        : 0,
+      projectiles: HG.projectiles && HG.projectiles.list ? HG.projectiles.list.length : 0,
+    },
+    nan: !Number.isFinite(p.pos.x) || !Number.isFinite(p.pos.y) || !Number.isFinite(p.pos.z),
+    state: HG.game.state,
     survived: Math.round((HG.game.state === 'dead' ? SECONDS : SECONDS) * 0) || 0,
     alive: p.alive,
     wave: HG.game.wave,
@@ -164,10 +185,31 @@ function play(seed, difficulty) {
 }
 
 const rows = [];
-for (const d of onlyDiff ? [onlyDiff] : DIFFS) {
-  for (let i = 0; i < seeds; i++) {
+for (const d of CHECK ? ['normal'] : onlyDiff ? [onlyDiff] : DIFFS) {
+  for (let i = 0; i < (CHECK ? 1 : seeds); i++) {
     rows.push(play('balance-' + i, d));
   }
+}
+
+if (CHECK) {
+  // one difficulty, one seed, and every number has to be sane
+  const problems = [];
+  const r = rows[0];
+  if (r.nan) problems.push('the player position went NaN');
+  if (r.peak.enemies > 60) problems.push('the enemy list grew to ' + r.peak.enemies);
+  if (r.peak.projectiles > 400) problems.push('the projectile list grew to ' + r.peak.projectiles);
+  if (r.peak.particles > 600) problems.push('the live particle count passed its ring buffer: ' + r.peak.particles);
+  if (!r.alive && r.state !== 'dead') problems.push('the run ended in state ' + r.state);
+  console.log('soak check: ' + SECONDS + 's, ' + r.difficulty + ', seed ' + r.seed);
+  console.log('  peak enemies ' + r.peak.enemies + ' · projectiles ' + r.peak.projectiles +
+    ' · live particles ' + r.peak.particles + ' · wave ' + r.wave + ' · kills ' + r.kills);
+  if (problems.length) {
+    console.log('\nPROBLEMS (' + problems.length + ')');
+    for (const p of problems) console.log('  - ' + p);
+  } else {
+    console.log('\nSOAK CLEAN: ' + SECONDS + 's of play, every list bounded, every number finite');
+  }
+  process.exit(problems.length ? 1 : 0);
 }
 
 const byDiff = {};

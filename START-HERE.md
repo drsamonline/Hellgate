@@ -5,7 +5,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 ## The prompt to give the next session
 
 > Continue HELLGATE — a Doom-style 2.5D browser arena FPS at https://github.com/drsamonline/Hellgate,
-> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.83.1** on `main`.
+> live at https://drsamonline.github.io/Hellgate/play/. It is at **v2.84.0** on `main`.
 >
 > START BY READING, in this order: `START-HERE.md` (this), `HANDOVER.md`, `documentation/design-brief.md`,
 > `documentation/player-report.md`.
@@ -36,11 +36,11 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 
 | | |
 | --- | --- |
-| Version | 2.83.1 (`VERSION` and `BUILD` agree) |
+| Version | 2.84.0 (`VERSION` and `BUILD` agree) |
 | Branch | `main`, clean, pushed, CI green (tests + pages) |
 | Tests | **1,137** in `test-game` + **1,391** playability (all 32 levels) + level and geometry suites; eight static gates; smoke, flow, run, invariants, drawcalls, balance |
 | Modules | 48 in `play/src/` |
-| Releases | 190, `v1.0.0` → `v2.83.1` |
+| Releases | 191, `v1.0.0` → `v2.84.0` |
 | Performance | **131** draw calls a frame at the median, **170** at the worst level, budget 200 — `node tools/drawcalls.mjs` |
 | Roadmap | 61 shipped, 3 measured-and-rejected, 2 open of 66 |
 
@@ -140,6 +140,7 @@ A cold-start brief. Read this, then `HANDOVER.md`, then `documentation/design-br
 | **2.82.1** | **The stamp check hard-coded the sandbox path — and now scans for that mistake** |
 | **2.83.0** | **The map and the codex could not be closed with Escape — found by turning a reporter into a gate** |
 | **2.83.1** | **The new gate hard-coded the browser path — and the guard now catches that too** |
+| **2.84.0** | **The soak tool claimed to check NaNs and checked nothing — it can fail now** |
 
 ### 2.0.0 in detail
 

@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.84.0 — 2026-11-28
+
+**The soak tool claimed to check for NaNs and runaway state, and checked neither.** `soak.mjs` printed a table and exited
+0 whatever it found — its own header promised *"crashes, NaNs and runaway state"*.
+
+| Piece | What it does |
+| --- | --- |
+| `--check` | one difficulty, one seed, **20 s**: enough for several waves, short enough for CI |
+| the invariants | the player's position stays finite · the enemy list stays under 60 · projectiles under 400 · **live particles under the 600-slot ring buffer** · a dead run ended in `dead` |
+| the numbers | peak **5** enemies, **11** live particles, 0 projectiles (the bot's guns are hitscan) — every list flat over 20 s |
+| CI | a step |
+
+**And the probe was wrong twice before it was right:** the first version read `HG.effects.count`, which does not exist, so
+it reported **0 effects** for a run full of them — a green check that measured nothing. Particles are a fixed ring buffer
+(`parts`, 600 slots); the number that can leak is the **live** count, not the array length.
+
+**Two tools in two days that printed a table and could not fail.** The lesson holds: if it cannot go red, it is not a
+check.
+
 ## 2.83.1 — 2026-11-28
 
 **The new controls gate failed on its first CI run — the third tool to hard-code this machine's Chromium.**

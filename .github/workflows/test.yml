@@ -83,6 +83,12 @@ jobs:
       - name: Every module URL is stamped
         run: node tools/check-stamp.mjs
 
+      # a bot plays 20 s unattended: no NaN, no list that only grows, no crashed run.
+      # The table mode of this tool prints a summary and exits 0 whatever it finds;
+      # this is the part that can fail.
+      - name: Twenty seconds of play, checked
+        run: node tools/soak.mjs --check
+
       # every key on the keyboard, and every panel opened and closed again. It was
       # a reporter with a broken probe until 2.83.0: it read `.id` off a weapon
       # index and printed nothing it would fail on.

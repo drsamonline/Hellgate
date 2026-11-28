@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.83.1**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.84.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,10 +24,11 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.83.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 190, `v1.0.0` → `v2.83.1` |
+| Version | 2.84.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 191, `v1.0.0` → `v2.84.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1137 in `test-game` + 1391 playability (all 32 levels) + level and geometry suites |
+| Headless soak | `soak.mjs --check` — a bot plays 20 s; no NaN, no unbounded list (in CI) |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run`, `audit-controls` · by hand: `soak`, `lighthouse` |
 | Arithmetic gates | `balance-report.mjs check` — no act lands more than 2.5x the act before it · `check-stamp.mjs` — the deploy stamp covers the import map (both in CI) |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
@@ -168,6 +169,14 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### If it cannot go red, it is not a check
+
+- **`soak.mjs --check`** plays 20 s and fails on a NaN position, an enemy list over 60, projectiles over 400, live
+  particles past the 600-slot buffer, or a run that ended in a state that is not `dead`.
+- **Particles are a fixed ring buffer** (`effects.parts`, 600 slots): the number that can leak is the live count, not the
+  array length. The first version of this check read `effects.count`, which does not exist, and reported 0 for a run full
+  of them.
 
 ### No tool may hard-code a path from one machine
 
