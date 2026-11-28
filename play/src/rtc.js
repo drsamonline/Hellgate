@@ -18,6 +18,35 @@ export const SIGNAL_VERSION = 1;
 /** What the connection is for, so a stray channel cannot join a run. */
 export const SIGNAL_APP = 'hellgate';
 
+/**
+ * Wait until ICE gathering is done, so the SDP carries its candidates.
+ *
+ * Without this the offer is encoded the instant `setLocalDescription` returns —
+ * before any candidate has been gathered — and the pasted string contains none.
+ * There is no trickle channel here (the only transport is the paste), so a
+ * candidate-free SDP is a connection that never opens. Three seconds is the
+ * ceiling: a slow STUN server must not hang the button.
+ * @param {RTCPeerConnection} pc
+ * @param {number} [ms]
+ * @returns {Promise<void>}
+ */
+export function waitForIce(pc, ms = 3000) {
+  if (!pc || pc.iceGatheringState === 'complete') return Promise.resolve();
+  return new Promise((resolve) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      if (pc.removeEventListener) pc.removeEventListener('icegatheringstatechange', onChange);
+      resolve();
+    };
+    const onChange = () => { if (pc.iceGatheringState === 'complete') finish(); };
+    const timer = setTimeout(finish, ms);
+    if (pc.addEventListener) pc.addEventListener('icegatheringstatechange', onChange);
+  });
+}
+
 /** A signalling message as a string somebody can paste. */
 export function encodeSignal(kind, sdp) {
   const payload = { v: SIGNAL_VERSION, app: SIGNAL_APP, kind, sdp: String(sdp || '') };
@@ -66,6 +95,9 @@ export function rtcTransport(opts = {}) {
     return t;
   }
 
+  // STUN only, and that is a real limit: two machines behind symmetric NATs cannot
+  // find each other without a TURN relay, and a TURN relay is a server — the one
+  // thing this project does not have. Same-network and most home NATs work.
   const pc = new PC({ iceServers: opts.iceServers || [{ urls: 'stun:stun.l.google.com:19302' }] });
   t.pc = pc;
 
@@ -96,6 +128,7 @@ export function rtcTransport(opts = {}) {
     attach(pc.createDataChannel('hellgate'));
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
+    await waitForIce(pc);
     return encodeSignal('offer', pc.localDescription.sdp);
   };
 
@@ -106,6 +139,7 @@ export function rtcTransport(opts = {}) {
     await pc.setRemoteDescription({ type: 'offer', sdp: msg.sdp });
     const answer = await pc.createAnswer();
     await pc.setLocalDescription(answer);
+    await waitForIce(pc);
     return encodeSignal('answer', pc.localDescription.sdp);
   };
 

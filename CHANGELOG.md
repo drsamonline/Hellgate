@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.71.0 — 2026-11-28
+
+**The co-op offer was sent before it had any candidates.** This is the bug that would have made the first real
+two-machine test fail, and nothing in the suite could have caught it, because the suite's fake peer connection had no
+gathering to wait for.
+
+| Piece | What it does |
+| --- | --- |
+| the bug | `offer()` encoded `localDescription.sdp` the instant `setLocalDescription()` returned — **before ICE gathered a single candidate**. There is no trickle channel here: the paste *is* the transport, so a candidate-free SDP is a connection that never opens |
+| the fix | `waitForIce(pc, 3000)` — wait for `icegatheringstate === 'complete'`, with a three-second ceiling so a slow STUN server cannot hang the button |
+| a test | a fake peer connection that gathers slowly: the offer waits **39 ms**, the string **carries a candidate**, a stuck gather gives up, a finished one costs nothing |
+| the limit, said out loud | STUN only. Two machines behind **symmetric NATs** need a TURN relay, and a relay is a server — the one thing this project does not have. The panel says so under the state line |
+
+**Why the suite missed it:** every fake `RTCPeerConnection` in the tests returns an SDP instantly and never gathers. A
+test double that cannot reproduce the failure cannot catch it.
+
 ## 2.70.0 — 2026-11-27
 
 **Every brush says what it does.** Thirteen buttons with no explanation is thirteen guesses — and a `title` tooltip

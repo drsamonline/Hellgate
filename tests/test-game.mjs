@@ -2541,6 +2541,65 @@ console.log('\n== the co-op panel ==');
   document.getElementById('coopscreen').classList.remove('on');
 }
 
+console.log('\n== the offer waits for its candidates ==');
+{
+  // the offer was encoded the instant setLocalDescription returned — before ICE
+  // gathered — and there is no trickle channel here, so the pasted string carried
+  // no candidates and the connection could never open
+  const { rtcTransport, waitForIce } = await import('../play/src/rtc.js');
+
+  // a fake peer connection that gathers slowly, the way a real one does
+  class SlowPC {
+    constructor() {
+      this.localDescription = null;
+      this.iceGatheringState = 'new';
+      this._listeners = {};
+    }
+    addEventListener(type, fn) { (this._listeners[type] = this._listeners[type] || []).push(fn); }
+    removeEventListener(type, fn) {
+      const l = this._listeners[type] || [];
+      const i = l.indexOf(fn);
+      if (i >= 0) l.splice(i, 1);
+    }
+    createDataChannel() { return { readyState: 'open', send() {}, close() {} }; }
+    async createOffer() { return { type: 'offer', sdp: 'v=0' }; }
+    async createAnswer() { return { type: 'answer', sdp: 'v=0' }; }
+    async setLocalDescription(d) {
+      this.localDescription = d;
+      // gathering starts after setLocalDescription and finishes later
+      this.iceGatheringState = 'gathering';
+      setTimeout(() => {
+        this.localDescription = { ...d, sdp: d.sdp + '\r\na=candidate:1 1 udp 2130706431 192.168.1.9 54321 typ host' };
+        this.iceGatheringState = 'complete';
+        for (const fn of this._listeners.icegatheringstatechange || []) fn();
+      }, 40);
+    }
+    async setRemoteDescription() {}
+    close() {}
+  }
+
+  const t = rtcTransport({ RTCPeerConnection: SlowPC });
+  const started = Date.now();
+  const offerStr = await t.offer();
+  const waited = Date.now() - started;
+  const { decodeSignal } = await import('../play/src/rtc.js');
+  const sdp = decodeSignal(offerStr).sdp;
+  ok(waited >= 35, 'the offer waits for gathering (' + waited + ' ms)');
+  ok(/a=candidate/.test(sdp), 'and the string carries a candidate');
+  ok(t.pc.iceGatheringState === 'complete', 'gathering finished');
+
+  // a connection that never finishes gathering must not hang the button
+  const stuck = { iceGatheringState: 'gathering', addEventListener() {}, removeEventListener() {} };
+  const t0 = Date.now();
+  await waitForIce(stuck, 120);
+  ok(Date.now() - t0 < 1000, 'a stuck gather gives up rather than hanging');
+  // and one that is already complete returns at once
+  const quick = { iceGatheringState: 'complete', addEventListener() {}, removeEventListener() {} };
+  const t1 = Date.now();
+  await waitForIce(quick, 3000);
+  ok(Date.now() - t1 < 20, 'and a finished gather costs nothing');
+}
+
 console.log('\n== two machines, no server ==');
 {
   // the last piece: a wire between machines. No signalling server — two pastes,
