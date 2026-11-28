@@ -2721,16 +2721,15 @@ console.log('\n== a melee body hits the peer too ==');
 
   const hp0 = peer.hp;
   const playerHp0 = HG.player.health;
-  // the attack is measured to the body it is aimed at: the peer, one metre away
-  const eye = { x: peer.pos.x, y: peer.pos.y + 1.6, z: peer.pos.z };
-  const dx = peer.pos.x - brute.pos.x;
-  const dz = peer.pos.z - brute.pos.z;
-  const dist = Math.hypot(dx, dz);
-  brute.doAttack(
-    { level: HG.level, player: HG.player, other: peer, effects: HG.effects, audio: HG.audio, projectiles: HG.projectiles, hud: HG.hud, camera: HG.camera },
-    dist, dx, dz, false, eye, peer
-  );
-  ok(peer.hp < hp0, 'the brute\'s melee lands on the peer (' + hp0 + ' -> ' + peer.hp + ')');
+  // the AI itself, not a hand-driven attack: the brute picks the nearer body,
+  // walks to it and swings
+  let sawAttack = false;
+  for (let i = 0; i < 200; i++) {
+    HG.update(1 / 60);
+    if (brute.fired || brute.stateT > 0) sawAttack = true;
+  }
+  ok(sawAttack, 'the brute attacks on its own, with the peer the nearer body');
+  ok(peer.hp < hp0, 'and its melee lands on the peer (' + hp0 + ' -> ' + peer.hp + ')');
   ok(HG.player.health === playerHp0, 'and the player 14 m away is untouched');
 
   // with no peer, the same attack hits the player as it always did

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.76.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.77.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.76.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 181, `v1.0.0` → `v2.76.0` |
+| Version | 2.77.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 182, `v1.0.0` → `v2.77.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |

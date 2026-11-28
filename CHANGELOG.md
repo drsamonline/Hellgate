@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.77.0 — 2026-11-28
+
+**The melee test now drives the AI, not a hand-made attack.** 2.75.0's test called `doAttack()` directly, which proved
+the branch and nothing about the machine around it. The AI had, in fact, been fixed in 2.76.0 — the peer is picked as
+the target when it is nearer — and the test was still bypassing it.
+
+| Piece | What it does |
+| --- | --- |
+| the test | a brute one metre from the peer, the player 14 m away, **200 frames of the real game loop**: the brute picks the peer, walks to it and swings |
+| what it asserts | it attacks on its own · the peer goes **110 → 82.6** · the player 14 m away is untouched |
+| the doc | `HANDOVER.md` said enemies "still hunt the local player"; they have not since 2.76.0. Corrected |
+
+**A test that drives the function instead of the game proves the function.** That is the difference between 2.75.0's
+green assertion and this one — and it is why the second one found the documentation was a release behind the code.
+
 ## 2.76.0 — 2026-11-28
 
 **Enemies hunt the nearer player.** 2.75.0 made the peer hittable; it was still not a *target* — a brute across the room
