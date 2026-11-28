@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.72.0 — 2026-11-28
+
+**The peer connection survived exactly one level.** `spawnCoopIfWanted()` built a fresh `BroadcastChannel` on every
+level start, so a real connection made through the panel was dropped the first time the level changed — and the
+incoming half was never wired at all outside the panel's Start button.
+
+| Piece | What it does |
+| --- | --- |
+| outgoing | a ready `coopLink` wins over the local channel: the session sends over the peer connection on every level |
+| incoming | `coopUseLink()` wires `onmessage` too, so what the peer sends reaches whichever session is alive **now**, not the one that existed when the link opened |
+| a test | level 1 sends over the link · level 2 sends over the link · and the link has somewhere to deliver |
+
+**Both halves of one bug, found by asserting the second half.** The first test passed with only the outgoing direction
+wired — a session that talks and never listens looks identical from the sender's side.
+
 ## 2.71.0 — 2026-11-28
 
 **The co-op offer was sent before it had any candidates.** This is the bug that would have made the first real

@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.71.0**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.72.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,8 +24,8 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.71.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 176, `v1.0.0` → `v2.71.0` |
+| Version | 2.72.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 177, `v1.0.0` → `v2.72.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1391 playability (all 32 levels) + 1090 in `test-game` + level and geometry suites |
 | Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
@@ -213,6 +213,12 @@ wiped by the next call.
   finishes, Start the run begins a level with `coop.session.send` pointed at the data channel.
 - **The DOM stub has no markup classes**: `document.querySelectorAll('.screen')` finds nothing there. A test that
   asserts a screen is up has to `classList.add('screen')` first.
+
+### The link has to outlive a level
+
+- **`spawnCoopIfWanted()` prefers a ready `coopLink`** over building a `BroadcastChannel`, and wires **both**
+  directions (`coopUseLink()`). It built a new local channel per level before, so a real connection lasted one level —
+  and only the outgoing half was ever wired outside the panel.
 
 ### ICE, and why the first real co-op test would have failed
 

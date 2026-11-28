@@ -687,9 +687,18 @@ function spawnCoopIfWanted() {
   if (!coopWanted) return;
   disposeCoop();
   coop = new Coop({ scene, level, player: 0, proportions: PROPORTIONS.grunt });
-  coopTransport = broadcastTransport('hellgate-coop');
-  coopTransport.onmessage = (m) => coop && coop.session.receive(m);
-  coop.session.send = (m) => coopTransport && coopTransport.send(m);
+  // a connected peer connection wins over the local channel: `disposeCoop()` closes
+  // only the BroadcastChannel, and building one here for every level dropped the
+  // real link on the first level change
+  if (coopLink && coopLink.ready) {
+    // both directions: wiring only the outgoing half left every message the peer
+    // sent going nowhere
+    coopUseLink();
+  } else {
+    coopTransport = broadcastTransport('hellgate-coop');
+    coopTransport.onmessage = (m) => coop && coop.session.receive(m);
+    coop.session.send = (m) => coopTransport && coopTransport.send(m);
+  }
   coop.place(level.spawn.x + 1.5, level.spawn.z);
 }
 
@@ -2021,6 +2030,9 @@ function coopLinkOnce() {
 function coopUseLink() {
   if (!coopLink || !coop) return false;
   coop.session.send = (m) => coopLink.send(m);
+  // and the reverse direction has to be wired once: the link's messages go to
+  // whichever session is alive now, not to the one that existed when it opened
+  coopLink.onmessage = (m) => { if (coop) coop.session.receive(m); };
   return true;
 }
 
@@ -3586,7 +3598,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.71.0';
+const BUILD = '2.72.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -4220,6 +4232,8 @@ window.HG = {
   openEditor, playEditorMap, get editor() { return editor; }, mapLib,
   renderEditorHintForTest: () => renderEditorHint(),
   get coop() { return coop; },
+  coopSession: () => (coop ? coop.session : null),
+  setCoopTestLink: (l) => { coopLink = l; },
   openCoop, get coopLink() { return coopLink; }, coopUseLink,
   // the flag `?coop=1` sets, for the suite: one body, one channel, per level
   setCoopWanted(v) { coopWanted = !!v; },

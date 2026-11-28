@@ -2651,6 +2651,42 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== the link survives a level change ==');
+{
+  // disposeCoop() closes the BroadcastChannel; building a new one per level meant
+  // the real peer connection was dropped on the first level change
+  const sent = [];
+  const fakeLink = { ready: true, send: (m) => { sent.push(m); return true; }, onmessage: null, close() {} };
+  HG.setCoopTestLink(fakeLink);
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  ok(HG.coopSession().send !== undefined, 'the first level has a session');
+  HG.coopSession().send({ frame: 0, input: { keys: {} } });
+  ok(sent.length === 1, 'and it sends over the peer connection (' + sent.length + ')');
+
+  // next level: a new session, the same link
+  HG.beginLevel(2, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const before = sent.length;
+  HG.coopSession().send({ frame: 0, input: { keys: {} } });
+  ok(sent.length === before + 1, 'the next level still sends over it (' + (sent.length - before) + ')');
+  // and what arrives is handed to the live session
+  ok(typeof fakeLink.onmessage === 'function', 'the link has somewhere to deliver');
+  HG.setCoopTestLink(null);
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== the peer survives a level change ==');
 {
   // a run is more than one level: the peer has to be rebuilt for each, without
