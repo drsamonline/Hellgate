@@ -2651,6 +2651,51 @@ console.log('\n== two machines, no server ==');
     'no WebRTC is an inert transport, not a crash');
 }
 
+console.log('\n== the two machines check they agree ==');
+{
+  // Session.hash() existed and nothing ever called it: a desync was silent
+  const { Session, makeInput } = await import('../play/src/net.js');
+  const a = new Session({ player: 0 });
+  const b = new Session({ player: 1 });
+  const wire = [];
+  a.send = (m) => { wire.push(['a', m]); if (m.kind === 'hash') b.receiveHash(m); else b.receive(m); };
+  b.send = (m) => { wire.push(['b', m]); if (m.kind === 'hash') a.receiveHash(m); else a.receive(m); };
+
+  ok(a.sendHash(60, 'deadbeef') === true, 'a hash goes out');
+  ok(wire[0][1].kind === 'hash' && wire[0][1].frame === 60, 'tagged as a hash, with its frame');
+  ok(a.stats().inSync === true, 'a matching hash keeps them in sync');
+
+  // and a mismatch is caught, not ignored
+  b.sendHash(61, 'aaaaaaaa');
+  a.sendHash(61, 'bbbbbbbb');
+  ok(a.stats().desyncAt === 61, 'a mismatch is a desync at that frame (' + a.stats().desyncAt + ')');
+  ok(a.stats().inSync === false, 'and the session says so');
+
+  // the game surfaces it rather than dying quietly
+  HG.setCoopWanted(true);
+  HG.beginLevel(1, true);
+  HG.story.skip();
+  HG.chooseClass('marine');
+  HG.dialogue.skip();
+  HG.cinematic.skip();
+  HG.game.state = 'playing';
+  const sess = HG.coopSession();
+  ok(!!sess, 'the run has a session');
+  // an input message and a hash message both route correctly
+  sess.frame = 60;
+  const sent = [];
+  HG.setCoopTestLink({ ready: true, send: (m) => { sent.push(m); return true; }, onmessage: null, close() {} });
+  HG.coopUseLink();
+  HG.updateCoopTest(1 / 60);
+  const hashMsg = sent.find((m) => m.kind === 'hash');
+  ok(!!hashMsg, 'the loop sends a hash once a second (' + sent.length + ' messages)');
+  ok(/^[0-9a-f]{8}$/.test(hashMsg.hash || ''), 'and it is a state hash (' + (hashMsg && hashMsg.hash) + ')');
+  HG.setCoopTestLink(null);
+  HG.setCoopWanted(false);
+  HG.disposeCoop();
+  HG.enemies.clear();
+}
+
 console.log('\n== the link survives a level change ==');
 {
   // disposeCoop() closes the BroadcastChannel; building a new one per level meant

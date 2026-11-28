@@ -50,7 +50,8 @@ export class Session {
     this.remote = new Map();    // frame -> input
     this.pending = null;        // the local input not yet sent
     this.starved = 0;           // frames we could not play for want of the peer
-    this.hashes = [];           // [frame, hash] pairs for the desync check
+    this.hashes = [];           // our own [frame, hash] pairs
+    this.peerHashes = new Map(); // the peer's, kept until ours arrives
     this.desyncAt = -1;
   }
 
@@ -79,7 +80,9 @@ export class Session {
   /** Send whatever local input is waiting, if a transport is attached. */
   flush() {
     if (!this.pending || !this.send) return false;
-    this.send({ frame: this.pending.frame, input: this.pending.input });
+    // `kind` so one wire can carry two shapes: an input per frame, and a state
+    // hash every second
+    this.send({ kind: 'input', frame: this.pending.frame, input: this.pending.input });
     this.pending = null;
     return true;
   }
@@ -117,14 +120,42 @@ export class Session {
    */
   hash(frame, hash) {
     this.hashes.push({ frame, hash, mine: true });
+    // whichever arrives second does the comparison: a hash that arrives before
+    // ours has nothing to compare against, and dropping it meant half the
+    // mismatches went unseen
+    const theirs = this.peerHashes.get(frame);
+    if (theirs && theirs !== hash && this.desyncAt < 0) this.desyncAt = frame;
     return this;
+  }
+
+  /**
+   * Send a state hash to the peer. `hash()` records it locally; this puts it on
+   * the wire so the other machine can compare.
+   * @param {number} frame
+   * @param {string} hash
+   * @returns {boolean} True when it went out.
+   */
+  sendHash(frame, hash) {
+    if (!this.send) return false;
+    this.hash(frame, hash);
+    this.send({ kind: 'hash', frame, hash });
+    return true;
   }
 
   /** The peer's hash for a frame. */
   receiveHash(msg) {
     if (!msg || !Number.isFinite(msg.frame) || typeof msg.hash !== 'string') return false;
     const mine = this.hashes.find((h) => h.frame === msg.frame && h.mine);
-    if (mine && mine.hash !== msg.hash && this.desyncAt < 0) this.desyncAt = msg.frame;
+    if (mine) {
+      if (mine.hash !== msg.hash && this.desyncAt < 0) this.desyncAt = msg.frame;
+    } else {
+      this.peerHashes.set(msg.frame, msg.hash);
+      // and the map cannot grow without bound: a session is minutes long
+      if (this.peerHashes.size > 240) {
+        const oldest = Math.min(...this.peerHashes.keys());
+        this.peerHashes.delete(oldest);
+      }
+    }
     return true;
   }
 

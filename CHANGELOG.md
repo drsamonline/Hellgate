@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.73.0 — 2026-11-28
+
+**The two machines now check they agree — and the check itself was half-blind.** `Session.hash()` existed since 2.46.0
+and nothing ever called it, so a desync was silent. Wiring it found a second bug inside it.
+
+| Piece | What it does |
+| --- | --- |
+| the wire | one channel now carries two shapes: `{kind:'input'}` per frame and `{kind:'hash'}` once a second; `routeCoop()` sorts them |
+| the check | every 60 frames the loop sends `stateHash(game, player, enemies)`; a mismatch sets `desyncAt` |
+| the report | the game says so: **`OUT OF SYNC AT FRAME n`** on the HUD, and a line in the event log — a desync is now a fact the player sees, not a silent divergence |
+| **the bug in the check** | a hash that arrived **before** the local one was dropped, because `receiveHash()` only compared against a hash already recorded. Whichever side sent second was caught; the other half of all mismatches went unseen. It compares whichever arrives second now, and the peer's hashes are kept in a bounded map |
+
+**A test that proved the ordering:** send the peer's hash first and ours second — the mismatch is caught at frame 61, and
+`inSync` goes false.
+
 ## 2.72.0 — 2026-11-28
 
 **The peer connection survived exactly one level.** `spawnCoopIfWanted()` built a fresh `BroadcastChannel` on every

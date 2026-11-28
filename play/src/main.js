@@ -309,6 +309,19 @@ function disposeCoop() {
 }
 
 /**
+ * One message off the wire, whichever shape it is.
+ *
+ * Inputs keep the lockstep moving; hashes are the only thing that can tell the two
+ * machines they have drifted apart. Before this, `Session.hash()` existed and
+ * nothing ever called it, so a desync was silent.
+ */
+function routeCoop(m) {
+  if (!coop || !m) return;
+  if (m.kind === 'hash') coop.session.receiveHash(m);
+  else coop.session.receive(m);
+}
+
+/**
  * One frame of co-op: send what this side is doing, and step the peer's body by
  * whatever the peer sent. No peer, no step — a guess is a desync.
  */
@@ -321,6 +334,17 @@ function updateCoop(dt) {
   if (tick) {
     // player order, not local order: the peer is the other slot
     coop.step(dt, tick.inputs[coop.player === 0 ? 1 : 0]);
+  }
+  // once a second, say what the world looks like here, so the other machine can
+  // say whether it looks the same there
+  if (coop.session.frame > 0 && coop.session.frame % 60 === 0 && coop.session.frame !== coop.hashedAt) {
+    coop.hashedAt = coop.session.frame;
+    coop.session.sendHash(coop.session.frame, stateHash(game, player, enemies));
+  }
+  if (coop.session.desyncAt >= 0 && !coop.desyncShown) {
+    coop.desyncShown = true;
+    hud.toast('OUT OF SYNC AT FRAME ' + coop.session.desyncAt, 4);
+    note('coop desync at frame ' + coop.session.desyncAt);
   }
 }
 
@@ -696,7 +720,7 @@ function spawnCoopIfWanted() {
     coopUseLink();
   } else {
     coopTransport = broadcastTransport('hellgate-coop');
-    coopTransport.onmessage = (m) => coop && coop.session.receive(m);
+    coopTransport.onmessage = (m) => routeCoop(m);
     coop.session.send = (m) => coopTransport && coopTransport.send(m);
   }
   coop.place(level.spawn.x + 1.5, level.spawn.z);
@@ -2022,7 +2046,7 @@ function coopLinkOnce() {
     if (start) { start.disabled = false; start.classList.add('on'); }
   };
   coopLink.onclose = () => coopNote('connection closed');
-  coopLink.onmessage = (m) => { if (coop) coop.session.receive(m); };
+  coopLink.onmessage = (m) => routeCoop(m);
   return coopLink;
 }
 
@@ -3598,7 +3622,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.72.0';
+const BUILD = '2.73.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
@@ -4233,6 +4257,7 @@ window.HG = {
   renderEditorHintForTest: () => renderEditorHint(),
   get coop() { return coop; },
   coopSession: () => (coop ? coop.session : null),
+  updateCoopTest: (dt) => updateCoop(dt),
   setCoopTestLink: (l) => { coopLink = l; },
   openCoop, get coopLink() { return coopLink; }, coopUseLink,
   // the flag `?coop=1` sets, for the suite: one body, one channel, per level
