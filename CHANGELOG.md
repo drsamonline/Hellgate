@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.83.0 — 2026-11-28
+
+**The map and the codex could not be closed with Escape.** Found by turning `audit-controls` from a reporter into a gate —
+it printed a list and exited 0, and its weapon probe read `.id` off an index, so two working keys were reported as dead.
+
+| Bug | Detail |
+| --- | --- |
+| **the map** | `M` calls `pauseGame()` then `showZoneMap()`, which leaves the **pause screen on underneath the map**. Escape matched no branch — `map` was not in the ladder — so a keyboard player was stuck until they clicked |
+| **the codex** | `C` sets state `codex`, which Escape did not know either |
+| the fix | both have Escape branches now, and the map's Back button shares `closeZoneMap()` so the two cannot drift apart |
+| the gate | 17 keys, 4 panels: every key must change something, every panel must open and close. **CONTROLS CLEAN**, in CI |
+
+**Two false findings first:** `KeyN` is mute, not a panel — my panel map guessed and reported a working key as broken. The
+lesson is the same one as the rest of this week: a probe that cannot tell a bug from a guess produces neither.
+
 ## 2.82.1 — 2026-11-28
 
 **The check that guards the deploy failed on the deploy runner — for the same reason the deploy could have.** It

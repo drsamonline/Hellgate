@@ -35,24 +35,60 @@ await page.evaluate(() => { if (window.HG.dialogue && window.HG.dialogue.playing
 await page.waitForFunction('window.HG.game.state === "playing"', { timeout: 15000 });
 
 const keys = ['Tab', 'KeyJ', 'KeyC', 'KeyM', 'KeyN', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'KeyQ', 'KeyE', 'KeyR', 'KeyX', 'KeyV', 'KeyG', 'KeyF', 'Space'];
+const problems = [];
 const out = [];
 for (const code of keys) {
   const r = await page.evaluate(async (c) => {
     const HG = window.HG;
     if (HG.game.state !== 'playing') { HG.game.state = 'playing'; HG.hideScreens(); }
-    const before = { state: HG.game.state, weapon: HG.weapons.current ? HG.weapons.current.id : null, energy: HG.powers.energy, muted: HG.settings.muted };
-    const on = () => Array.from(document.querySelectorAll('.screen')).filter((e) => e.classList.contains('on')).map((e) => e.id);
-    const screensBefore = on();
+    // `weapons.current` is an INDEX, not an object: reading `.id` off it made every
+    // slot key look dead, which is how Digit3 and Digit4 were reported as broken
+    const snap = () => ({
+      state: HG.game.state,
+      weapon: HG.weapons.current,
+      energy: Math.round(HG.powers.energy * 1000) / 1000,
+      muted: HG.settings.muted,
+      screens: Array.from(document.querySelectorAll('.screen')).filter((e) => e.classList.contains('on')).map((e) => e.id).join(','),
+    });
+    const before = snap();
     document.dispatchEvent(new KeyboardEvent('keydown', { code: c, bubbles: true }));
     await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r())));
-    const after = { state: HG.game.state, weapon: HG.weapons.current ? HG.weapons.current.id : null, energy: HG.powers.energy, muted: HG.settings.muted };
-    const screensAfter = on();
-    const changed = JSON.stringify(before) !== JSON.stringify(after) || JSON.stringify(screensBefore) !== JSON.stringify(screensAfter);
-    return { code: c, changed, screensAfter, state: after.state };
+    const after = snap();
+    return { code: c, before, after, changed: JSON.stringify(before) !== JSON.stringify(after) };
   }, code);
   out.push(r);
+  if (!r.changed) problems.push('the key ' + code + ' does nothing');
   await page.evaluate(() => { window.HG.game.state = 'playing'; window.HG.hideScreens(); });
 }
-console.log('KEYS ' + JSON.stringify(out.filter((r) => !r.changed).map((r) => r.code)));
-console.log('SCREENS ' + JSON.stringify(out.map((r) => r.code + ':' + r.screensAfter.join('|')).filter((x) => x.includes('|'))));
+
+// the panels: each key opens one, Escape closes it
+// KeyN is mute, not a panel: the first version of this map guessed and reported a
+// working key as broken
+const panels = { Tab: 'inventory', KeyJ: 'diary', KeyC: 'codex', KeyM: 'map' };
+for (const [code, want] of Object.entries(panels)) {
+  await page.evaluate(() => { window.HG.game.state = 'playing'; window.HG.hideScreens(); });
+  await page.evaluate((c) => document.dispatchEvent(new KeyboardEvent('keydown', { code: c, bubbles: true })), code);
+  await new Promise((r) => setTimeout(r, 250));
+  const opened = await page.evaluate(() => Array.from(document.querySelectorAll('.screen')).filter((e) => e.classList.contains('on')).map((e) => e.id));
+  if (!opened.length) problems.push(code + ' opened no screen (expected ' + want + ')');
+  await page.evaluate(() => document.dispatchEvent(new KeyboardEvent('keydown', { code: 'Escape', bubbles: true })));
+  await new Promise((r) => setTimeout(r, 250));
+  const still = await page.evaluate(() => Array.from(document.querySelectorAll('.screen')).filter((e) => e.classList.contains('on')).length);
+  if (still) problems.push(code + ': Escape did not close the screen');
+}
+await page.evaluate(() => { window.HG.game.state = 'playing'; window.HG.hideScreens(); });
+
+console.log('keys: ' + out.length + ', screens: ' + Object.keys(panels).length);
+for (const r of out) {
+  console.log('  ' + r.code.padEnd(7) + (r.changed ? 'ok' : 'DEAD') + '  ' +
+    'weapon ' + r.before.weapon + '->' + r.after.weapon +
+    (r.after.screens ? '  screen ' + r.after.screens : ''));
+}
+if (problems.length) {
+  console.log('\nPROBLEMS (' + problems.length + ')');
+  for (const p of problems) console.log('  - ' + p);
+} else {
+  console.log('\nCONTROLS CLEAN: every key does something, every panel opens and closes');
+}
 await browser.close(); server.close();
+process.exit(problems.length ? 1 : 0);

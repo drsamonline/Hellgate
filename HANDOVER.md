@@ -1,6 +1,6 @@
 # HELLGATE — handover
 
-Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.82.1**, 2026-11-28.
+Everything a person or an agent needs to pick this up cold. Written at **v1.90.0**, 2026-11-22. Updated at **v2.83.0**, 2026-11-28.
 
 Read this first, then `documentation/architecture.md` for the module map and
 `documentation/audit.md` for what has been checked and what was deliberately left alone.
@@ -24,11 +24,11 @@ grenades, five powers, three classes, a branching story, a codex, achievements a
 
 | Metric | Value |
 | --- | --- |
-| Version | 2.82.1 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
-| Releases | 188, `v1.0.0` → `v2.82.1` |
+| Version | 2.83.0 (`VERSION`, and `BUILD` in `play/src/main.js` — they must match) |
+| Releases | 189, `v1.0.0` → `v2.83.0` |
 | Modules | 48 in `play/src/`, ~17,600 lines with both HTML files |
 | Assertions | 1137 in `test-game` + 1391 playability (all 32 levels) + level and geometry suites |
-| Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run` · by hand: `audit-controls`, `soak`, `lighthouse` |
+| Browser gates | in CI: `smoke`, `drawcalls`, `audit-invariants`, `audit-flow`, `audit-run`, `audit-controls` · by hand: `soak`, `lighthouse` |
 | Arithmetic gates | `balance-report.mjs check` — no act lands more than 2.5x the act before it · `check-stamp.mjs` — the deploy stamp covers the import map (both in CI) |
 | Static gates | claims 14/14, docs, links, pages, stub, dead-code |
 | Draw calls | **78–85** with eight imps in view, camera level (was 154–181); the old **43** was measured on a frame with no enemy drawn — see audit pass seventeen |
@@ -168,6 +168,12 @@ wiped by the next call.
 ### The peer's shot is visible
 
 - **A muzzle flash on every shot** (`effects.burst` at the eye). Without it a friend's kills arrive from nowhere.
+
+### Every panel has an Escape
+
+- **The map and the codex had no Escape branch.** `M` runs `pauseGame()` then `showZoneMap()`, so the pause screen stays on
+  underneath the map; Escape fell through every branch. `closeZoneMap()` is shared by Escape and the Back button.
+  `audit-controls` is a gate now: 17 keys must change something, 4 panels must open and close.
 
 ### Tools must not know where they live
 

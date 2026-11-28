@@ -83,6 +83,14 @@ jobs:
       - name: Every module URL is stamped
         run: node tools/check-stamp.mjs
 
+      # every key on the keyboard, and every panel opened and closed again. It was
+      # a reporter with a broken probe until 2.83.0: it read `.id` off a weapon
+      # index and printed nothing it would fail on.
+      - name: Every key and every panel
+        run: node tools/audit-controls.mjs
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+
       - name: Browser smoke test
         run: node tools/smoke.mjs
 

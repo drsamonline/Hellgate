@@ -3340,6 +3340,20 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault();
     return;
   }
+  // the map and the codex had no Escape branch at all: the map is reached by
+  // `pauseGame(); showZoneMap()`, which leaves the pause screen on underneath it,
+  // and Escape fell through every branch — a panel you could only leave with a
+  // mouse. Found by turning audit-controls from a reporter into a gate.
+  if (e.code === 'Escape' && game.state === 'map') {
+    closeZoneMap();
+    e.preventDefault();
+    return;
+  }
+  if (e.code === 'Escape' && game.state === 'codex') {
+    closeCodex();
+    e.preventDefault();
+    return;
+  }
   if (e.code === 'Escape') {
     if (game.state === 'playing') { pauseGame(); return; }
     if (game.state === 'paused') { resumeGame(); return; }
@@ -3561,20 +3575,25 @@ document.getElementById('levelSelectBtn')?.addEventListener('click', () => {
 });
 document.getElementById('loreClose')?.addEventListener('click', closeLore);
 document.getElementById('mapBtn')?.addEventListener('click', () => { mapReturn = game.state === 'cleared' ? 'cleared' : 'playing'; showZoneMap(); });
-document.getElementById('mapBack')?.addEventListener('click', () => {
-  // the map's Back button had no listener at all: a player on the map could not
-  // leave it without picking a zone, which restarts the run
-  if (mapReturn === 'cleared') { showScreen('cleared'); return; }
-  if (mapReturn === 'title') {
-    game.state = 'title';
-    showScreen('title');
-    return;
-  }
+/**
+ * Leave the map the way its Back button does, from the keyboard.
+ *
+ * The map is opened from the pause screen (`pauseGame()` then `showZoneMap()`), so
+ * closing it has to put the game back in `playing` and hide both screens.
+ */
+function closeZoneMap() {
+  if (mapReturn === 'cleared') { game.state = 'cleared'; showScreen('cleared'); return; }
+  if (mapReturn === 'title') { game.state = 'title'; showScreen('title'); return; }
   hideScreens();
   if (game.state === 'map') game.state = 'playing';
   requestLock();
   clock.getDelta();
-});
+}
+
+// the map's Back button had no listener at all once: a player on the map could not
+// leave it without picking a zone, which restarts the run. It shares closeZoneMap
+// with Escape now, so the two cannot drift apart.
+document.getElementById('mapBack')?.addEventListener('click', () => closeZoneMap());
 document.getElementById('mapFromCleared')?.addEventListener('click', () => { mapReturn = 'cleared'; showZoneMap(); });
 document.getElementById('clearedNext')?.addEventListener('click', () => {
   if (game.level >= STORY_LEVELS.length) {
@@ -3622,7 +3641,7 @@ function closeSettings() {
 // The build stamp exists because "I fixed it" and "you are running the old file"
 // look identical from a bug report. Bump this with VERSION; check-claims enforces
 // that they match.
-const BUILD = '2.82.1';
+const BUILD = '2.83.0';
 
 // ---------------------------------------------------------------------------
 // REPORT
