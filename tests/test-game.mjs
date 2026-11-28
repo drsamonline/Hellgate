@@ -3811,6 +3811,56 @@ console.log('\n== the guns are models ==');
   ok(HG.weapons.muzzle.visible === false, 'and it goes out when the flash ends');
 }
 
+console.log('\n== every level\'s objective can be met ==');
+{
+  // a level whose objective cannot be satisfied is a dead end 20 levels into a run
+  const { STORY_LEVELS, storyLevelZone, BOSS_FOR_ACT } = await import('../play/src/story-levels.js');
+  const problems = [];
+  for (const row of STORY_LEVELS) {
+    HG.beginLevel(row.n, true);
+    HG.story.skip();
+    HG.chooseClass('marine');
+    HG.dialogue.skip();
+    HG.cinematic.skip();
+    HG.game.state = 'playing';
+    const L = HG.level;
+    const obj = HG.game.objectiveType;
+    if (obj === 'reach') {
+      const ec = L.cells[L.idx(L.exit.cx, L.exit.cz)];
+      if (!ec || ec.solid) problems.push('L' + row.n + ': the exit is in rock');
+      if (!HG.game.exitOpen) problems.push('L' + row.n + ': reach level with a shut exit');
+    } else if (obj === 'clear') {
+      if (!L.reachableCells.some((c) => c.room >= 0 && c.room !== L.spawnRoom)) {
+        problems.push('L' + row.n + ': clear level with nowhere to spawn');
+      }
+    } else if (obj === 'survive') {
+      if (!(HG.game.objectiveT > 0)) problems.push('L' + row.n + ': survive level with no clock');
+    } else if (obj === 'relics') {
+      if (!(HG.game.relicsTotal > 0)) problems.push('L' + row.n + ': relics level with no relics');
+      if (HG.game.relics.length !== HG.game.relicsTotal) {
+        problems.push('L' + row.n + ': ' + HG.game.relicsTotal + ' relics asked for, ' + HG.game.relics.length + ' on the floor');
+      }
+    } else {
+      problems.push('L' + row.n + ': unknown objective ' + obj);
+    }
+    if (row.boss) {
+      const boss = BOSS_FOR_ACT[row.act];
+      if (!boss) problems.push('L' + row.n + ': boss level with no boss for act ' + row.act);
+      if (!HG.game.bossLevel) problems.push('L' + row.n + ': the row says boss, the run does not');
+    }
+    HG.enemies.clear();
+  }
+  ok(problems.length === 0, 'all 32 levels can be finished (' + problems.length + ' problems' +
+    (problems.length ? ': ' + problems.slice(0, 3).join(' · ') : '') + ')');
+  // `objective` on a row is an object: { type }
+  const kinds = {};
+  for (const row of STORY_LEVELS) {
+    const t = row.objective && row.objective.type;
+    kinds[t] = (kinds[t] || 0) + 1;
+  }
+  ok(Object.keys(kinds).length === 4, 'and all four objectives are used: ' + JSON.stringify(kinds));
+}
+
 console.log('\n== no act is a wall ==');
 {
   // the ladder is arithmetic (tools/balance-report.mjs), not a playtest: act 4 used

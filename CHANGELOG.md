@@ -1,5 +1,24 @@
 # Changelog
 
+## 2.78.0 — 2026-11-28
+
+**Every level's objective can be met — asserted over all 32.** A level whose objective cannot be satisfied is a dead end
+twenty levels into a run, and nothing checked it. The playability suite walks the levels; this asks whether each one can
+be *finished*.
+
+| Objective | What is asserted |
+| --- | --- |
+| reach (8) | the exit cell exists, is not rock, and the exit is open from the first frame |
+| clear (11) | there is somewhere to spawn that is not the start room |
+| survive (7) | the clock is above zero |
+| relics (6) | relics were asked for, and **as many are on the floor as were asked for** |
+| boss rows | the act has a boss, and the run agrees the level is a boss level |
+
+Result: **0 problems across 32 levels**, and all four objectives in use — `{"reach":8,"clear":11,"relics":6,"survive":7}`.
+
+**One test bug, mine:** the row's `objective` is an object (`{ type: 'reach' }`), not a string, so the first version
+counted 32 levels under `"[object Object]"` — the assertion caught it, which is what it is for.
+
 ## 2.77.0 — 2026-11-28
 
 **The melee test now drives the AI, not a hand-made attack.** 2.75.0's test called `doAttack()` directly, which proved
